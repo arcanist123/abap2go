@@ -205,7 +205,9 @@ for (const [name, body, refused] of ddicRefusals) {
 
 const reportRefusals: [string, string, RegExp][] = [
   ["DATA of a reference", "REPORT zprobe.\nDATA x TYPE REF TO object.", /:2:1: x: type .* is not supported yet/],
-  ["arithmetic", "REPORT zprobe.\nDATA x TYPE i.\nx = x + 1.", /:3:1: assignment of x \+ 1: only a literal or a variable/],
+  ["inline declaration of a calculation", "REPORT zprobe.\nDATA x TYPE i.\nDATA(y) = x + 1.", /:3:1: .*only variable = literal, variable or arithmetic expression/],
+  ["utclong operand", "REPORT zprobe.\nDATA u TYPE utclong.\nDATA x TYPE i.\nx = u + 1.", /utclong/],
+  ["a method call in an expression", "REPORT zprobe.\nDATA x TYPE i.\nx = cl_abap_random=>create( )->int( ) + 1.", /not supported|syntax check/],
   ["WRITE of an expression", "REPORT zprobe.\nDATA x TYPE i.\nWRITE x + 1.", /WRITE of x \+ 1: only a literal or a variable/],
   ["WRITE addition", "REPORT zprobe.\nWRITE 'a' COLOR 1.", /no additions/],
   ["WRITE of a constant", "REPORT zprobe.\nCONSTANTS c TYPE string VALUE `a`.\nWRITE c.", /statement Constant is not supported yet/],
@@ -224,6 +226,40 @@ for (const [name, source, refused] of reportRefusals) {
     assert.match(result.refused, refused);
   });
 }
+
+// Arithmetic: the calculation type table of docs/spec/calculation.md. The runtime's own tests run all its cells;
+// these check that the compiler builds the expression the source means.
+const calculations: [string, string, string][] = [
+  ["i division rounds half away from zero", "DATA a TYPE i VALUE 7.\nDATA r TYPE i.\nr = a / 2. out->write( r ).\nr = - a / 2. out->write( r ).", "4 \n4-\n"],
+  ["the result field takes part in the calculation type", "DATA a TYPE i VALUE 7.\nDATA p TYPE p LENGTH 8 DECIMALS 2.\np = a / 2. out->write( p ).", "3.50 \n"],
+  ["priorities, parentheses, ** from the right", "DATA r TYPE i.\nr = 2 + 3 * 4 ** 2 - ( 1 + 1 ) * 3 DIV 2. out->write( r ).\nr = 2 ** 3 ** 2. out->write( r ).", "47 \n512 \n"],
+  ["a string result calculates in p", "DATA s TYPE string.\ns = 1 / 3. out->write( s ).", "0.33333333333333 \n"],
+  ["assignment operators", "DATA r TYPE i VALUE 7.\nr += 3. r *= 2. r -= 1. r /= 4. out->write( r ).", "5 \n"],
+  ["abs, ipow, sqrt", "DATA a TYPE i VALUE -3.\nDATA r TYPE i.\nDATA f TYPE f.\nr = ipow( base = 2 exp = 10 ) + abs( a ). out->write( r ).\nf = sqrt( 16 ). out->write( f ).", "1027 \n4.0000000000000000E+00\n"],
+  ["a number literal beyond i is a p", "DATA r TYPE int8.\nr = 3000000000 + 1. out->write( r ).", "3000000001 \n"],
+  ["MOD and DIV are Euclidean", "DATA a TYPE i VALUE -7.\nDATA r TYPE i.\nr = a MOD 3. out->write( r ).\nr = a DIV 3. out->write( r ).", "2 \n3-\n"],
+];
+for (const [name, body, stdout] of calculations) {
+  test(`classrun arithmetic: ${name}`, () => {
+    assert.deepEqual(run("clas", classrun(body)), { stdout });
+  });
+}
+
+const calculationErrors: [string, string, RegExp][] = [
+  ["an interim result beyond i", "DATA r TYPE i VALUE 2147483647.\nr = r + 1 - 1.", /CX_SY_ARITHMETIC_OVERFLOW/],
+  ["division by zero", "DATA r TYPE i VALUE 1.\nDATA z TYPE i.\nr = r / z.", /CX_SY_ZERODIVIDE/],
+];
+for (const [name, body, failed] of calculationErrors) {
+  test(`classrun arithmetic error: ${name}`, () => {
+    const result = run("clas", classrun(body + "\nout->write( 'after' )."));
+    assert.equal(result.stdout, "");
+    assert.match(result.failed ?? "", failed);
+  });
+}
+
+test("report: WRITE of a calculated i", () => {
+  assert.deepEqual(run("prog", "REPORT zprobe.\nDATA x TYPE i VALUE 5.\nx = x * x - 1.\nWRITE x."), { stdout: "        24\n" });
+});
 
 // Classrun: one line per write, as open-steamgate's ZCL_OSD_CLASSRUN_OUT.
 const classruns: [string, string, string][] = [

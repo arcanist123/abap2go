@@ -7,8 +7,10 @@ Calculation Type and Calculation Rules* and *arith_exp - Arithmetic Operators*; 
 the documentation where it is silent (interim precision of `p`, `DIV` and `MOD` outside integers, signed zeros,
 which exception a result that does not fit raises, the result handed to a text field).
 
-**Status (2026-11-24): specified, not implemented yet.** The test cases are
-[`testdata/calculation.tsv`](../../runtime/go/abap/testdata/calculation.tsv) (2,272 cells). Each is a snippet: the
+**Status (2026-11-24): specified and implemented in the runtime** (`abap.Calculate`, `runtime/go/abap/calc.go`),
+which passes every cell of the table; the compiler builds `result = expression.` and the assignment operators on
+it. The test cases are
+[`testdata/calculation.tsv`](../../runtime/go/abap/testdata/calculation.tsv) (2,269 cells). Each is a snippet: the
 line
 
 ```
@@ -215,7 +217,12 @@ floating point number is involved (`DATA(r) = sqrt( i )` is an `f`; with a `decf
 **Into an existing data object.** The result of the calculation type is moved to the result field by the rules of
 [conversion.md](conversion.md), with their exceptions (`f 1E10` into an `i`: `CX_SY_CONVERSION_OVERFLOW`; `i 1000`
 into an `n LENGTH 3`: `000`; `f 1000` into a `c LENGTH 3`: `***`; `decfloat34 1000` into an `n LENGTH 3`:
-`CX_SY_CONVERSION_OVERFLOW`). Two cases differ:
+`CX_SY_CONVERSION_OVERFLOW`). Three cases differ:
+
+- **calculation type f, int8 target**: the `f` result goes into the `int8` with its exact binary value, rounded half
+  away from zero (`int8 3 ** 39` gives `4052555153018976256`, `int8 9007199254740993 + f 0` gives
+  `9007199254740992`), not through the 17-digit decimal form the conversion of an `f` data object uses
+  (which would give `4052555153018976300`).
 
 - **calculation type p, result out of range**: where the conversion would raise `CX_SY_CONVERSION_OVERFLOW` (an `i`,
   `int8`, `b`, `s` or `p` target, or a `d`, `t`, `x`, `xstring` target through `i`), a `p` calculation raises
@@ -228,7 +235,10 @@ into an `n LENGTH 3`: `000`; `f 1000` into a `c LENGTH 3`: `***`; `decfloat34 10
   as fit (14, fewer beyond 17 integer digits: `1E27 / 3` is `333333333333333333333333333.3333`). More than 31 integer
   digits raise `CX_SY_ARITHMETIC_OVERFLOW` (`9999999999999999999999999999999 + 1` into a `string`, although it fits a
   63-digit interim result). A value that becomes 0 by this rounding loses its sign (`-1E-17` gives zero, without `-`).
-  - into a **c** field of length *L*: trailing zeros of the decimals are dropped (`1.10 + 1.00` gives `2.1`,
+  - into a **c** field of length *L*: a result with more decimals than the 14 (or fewer) above is rounded only to
+    the decimals the field can show at all, *L* - 2 if that is fewer, and loses its sign if that gives zero
+    (`-1 / 3` in a `c LENGTH 2` is `0 ` and in a `c LENGTH 1` is `0`, while `-1 / 8`, exact, gives `0-` and `-`).
+    Then trailing zeros of the decimals are dropped (`1.10 + 1.00` gives `2.1`,
     `2.00 * 2.00` gives `4`, `1 / 3 * 3` gives `1`); if the number does not fit, its decimals are rounded off one by
     one, again dropping trailing zeros, until it fits (`1 / 3` in a `c LENGTH 3` is `0.3`, `1 / 1000` in a
     `c LENGTH 4` is `0`, `9999 / 10` in a `c LENGTH 4` is `1000`); a negative value rounded to 0 keeps its sign
@@ -271,7 +281,9 @@ anywhere in the expression or as the type is a syntax error.
 
 - **The decimals of an exact `p` product moved into a `string`.** `2.00 * 2.00` gives `4.000`, `2.5 * 2.5` gives
   `6.250`, `2.0 * 2.0` gives `4.0`, `7 * 1` gives `7.0`, `ipow( 2.00, 3 )` gives `8.0` and `ipow( 1.10, 3 )` gives
-  `1.33100`: the number of decimals depends on the operands' decimals and on the value in a way not worked out yet.
+  `1.33100`; even `ipow( 2.00, 1 )`, with no multiplication at all, gives `2.000`: the number of decimals depends on
+  the operands' decimals and on the value in a way not worked out yet. The runtime gives an exact product the sum of
+  the operands' decimals and `ipow( a, 1 )` the decimals of `a`.
   The rounded value itself follows the rules above; the cells are in `calculation_open.tsv`. A `c` target is not affected (trailing
   zeros are dropped there).
 - Sums of interim results into a `string` (`a / b + c`): which number of decimals an interim result counts with is

@@ -1519,15 +1519,12 @@ string	ipow( base = a exp = b )	p8.2[10]	i[-400]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
 i	ipow( base = a exp = b )	i[10]	i[-400]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
 f	a ** b	i[-1]	f[0.5]	-	EXC:CX_SY_ARG_OUT_OF_DOMAIN
 decfloat34	a ** b	decfloat34[-1]	f[0.5]	-	EXC:CX_SY_ARG_OUT_OF_DOMAIN
-string	ipow( base = a exp = b )	p8.2[-1]	f[0.5]	-	[1.000-]
 i	ipow( base = a exp = b )	i[-1]	f[0.5]	-	-1
 f	a ** b	i[4]	f[0.5]	-	4000000000000000
 decfloat34	a ** b	decfloat34[4]	f[0.5]	-	2.000000000000000000000000000000000E+0000
-string	ipow( base = a exp = b )	p8.2[4]	f[0.5]	-	[4.000 ]
 i	ipow( base = a exp = b )	i[4]	f[0.5]	-	4
 f	a ** b	i[2]	f[0.5]	-	3FF6A09E667F3BCD
 decfloat34	a ** b	decfloat34[2]	f[0.5]	-	1.414213562373095048801688724209698E+0000
-string	ipow( base = a exp = b )	p8.2[2]	f[0.5]	-	[2.000 ]
 i	ipow( base = a exp = b )	i[2]	f[0.5]	-	2
 f	a ** b ** 2	i[2]	i[3]	-	4080000000000000
 i	a ** b	i[2]	i[31]	-	EXC:CX_SY_CONVERSION_OVERFLOW

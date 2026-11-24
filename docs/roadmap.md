@@ -64,13 +64,25 @@ Done:
   - `WRITE` of a utclong (abaplint#4700, PR abaplint#4701), which now compiles
   - INT1 and INT2 keep their size (abaplint#4630, PR abaplint#4631): `b` and `s` are declared through data
     elements, and moves, `WRITE` and `out->write( )` follow their rules
+- arithmetic (2026-11-24): the calculation type table in the runtime (`abap.Calculate`, `calc.go`): the calculation
+  type from the operands and the result field (generic operands with their run-time type), `+ - * / DIV MOD **`,
+  the sign, `abs`, `sqrt` and `ipow` in `i`, `int8`, `p` (31 significant digits, the whole expression again with
+  63), `f` and `decfloat34` (with its scale), the overflow, division and domain exceptions, the result moved into
+  its field (c and string targets of `p` with their own text rules), inline declarations and `EXACT`; every cell of
+  `calculation.tsv` passes
+  - compiled: `result = expression.` and `+= -= *= /=` with variables, literals (a number beyond `i` is a `p`),
+    parentheses and the three functions, as an `abap.Expr` tree
 - the input is checked with abaplint's rules that stand in for ABAP syntax errors (`src/validation.ts`,
   `errorNamespace: "."`): an unknown type is an error (`unknown_types`), not a void type, and so are a method not
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
 
 Next:
-- [ ] arithmetic: the calculation type table ([spec/calculation.md](spec/calculation.md)) in the runtime, checked
-  against `calculation.tsv`, then compiled with the calculation type fixed at build time for static operands
+- [ ] typed fast paths for arithmetic: static operands of calculation type i, int8 and f as native Go operations
+  with overflow checks instead of the expression tree (`abap.Calculate` scans and converts at run time), checked
+  against `calculation.tsv`
+- [ ] arithmetic beyond `result = expression`: inline declarations (`DATA(r) = …`, the declared type of
+  [spec/calculation.md](spec/calculation.md)), `EXACT` and `CONV`, expressions as operands of `WRITE` and
+  `out->write( )`
 - [ ] typed fast paths for the common conversion cells (every cell goes through `math/big` now), checked against
   the same test cases
 - [ ] `WRITE` of dictionary types with their own output length (`sy-datum` in 10 characters with separators),
@@ -115,9 +127,9 @@ Done:
   expression calculates in (operands and result field, `**`, functions, generic operands, inline declarations),
   the rules of `+ - * / DIV MOD **` and `ipow( )` in `i`, `int8`, `p` (31, then 63 significant digits), `f` and
   `decfloat34` (scale, signed zeros), division by zero, the overflow classes, the result moved into its target
-  (a `p` result into `c` and `string`), assignment operators and `EXACT`; 2,272 test cases
+  (a `p` result into `c` and `string`), assignment operators and `EXACT`; 2,269 test cases
   (`runtime/go/abap/testdata/calculation.tsv`). Open: the decimals of an exact `p` product moved into a `string`
-  (61 cells in `calculation_open.tsv`), `COLLECT`, method and function module parameters
+  (64 cells in `calculation_open.tsv`), `COLLECT`, method and function module parameters
 
 Next:
 - [ ] structure rules of the conversion table: `MOVE-CORRESPONDING`, `CORRESPONDING`, flat structures with

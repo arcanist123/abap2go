@@ -47,7 +47,7 @@ export interface IRVariable {
   type: IRType;
 }
 
-export type IRStatement = IRListWrite | IRConsoleWrite | IRData | IRMove;
+export type IRStatement = IRListWrite | IRConsoleWrite | IRData | IRMove | IRCalculate;
 
 /** WRITE [/] of a literal or variable onto the basic list, formatted with the session's user settings. */
 export interface IRListWrite {
@@ -79,3 +79,22 @@ export interface IRMove {
   target: IRVariable;
   source: IRSource;
 }
+
+/**
+ * target = arithmetic expression: the calculation type table of docs/spec/calculation.md (abap.Calculate). The
+ * assignment operators (+= -= *= /=) are lowered to target = target op ( expression ).
+ */
+export interface IRCalculate {
+  kind: "calculate";
+  target: IRVariable;
+  expression: IRExpr;
+}
+
+export type IRArithOp = "+" | "-" | "*" | "/" | "DIV" | "MOD" | "**";
+
+/** An arithmetic expression. A number literal beyond the range of i is an operand of type p. */
+export type IRExpr =
+  | { kind: "operand"; source: IRSource }
+  | { kind: "binary"; op: IRArithOp; left: IRExpr; right: IRExpr }
+  | { kind: "unary"; fn: "-" | "abs" | "sqrt"; operand: IRExpr }
+  | { kind: "ipow"; base: IRExpr; exp: IRExpr };
