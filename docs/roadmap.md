@@ -56,14 +56,25 @@ Done:
     port
   - `WRITE` of a text literal ending in blanks and `WRITE ''` compile: a literal has its full length
   - open-steamgate's ANOMALY-2026-10-17-list-integer-width is a test case: `i` in 11 columns
-  - not compiled yet: `WRITE` of a utclong, which abaplint rejects (see section 1), and b and s (below)
+  - `WRITE` of a variable typed with a data element formats it as its built-in type when the data element (or its
+    domain) has the built-in output length and no conversion exit; any other dictionary or local type (`sy-datum`,
+    `LIKE`, `TYPES`, table fields) is refused for `WRITE`, since its own output length changes the output
+- the compiler runs on the abaplint fork (2026-11-24): `@abaplint/core` is built from the `abap2go` branch of
+  arcanist123/abaplint (upstream main plus the fixes abap2go needs, each also sent upstream) and vendored as
+  `vendor/abaplint-core-<version>.tgz` (`scripts/vendor-abaplint.sh` rebuilds it). On it now:
+  - `WRITE` of a utclong (abaplint#4700, PR abaplint#4701), which now compiles
+  - INT1 and INT2 keep their size (abaplint#4630, PR abaplint#4631): `b` and `s` are declared through data
+    elements, and moves, `WRITE` and `out->write( )` follow their rules
+- the input is checked the same way abaplint/transpiler checks its input (`src/validation.ts`, its rules and
+  `errorNamespace: "."`): an unknown type is an error (`unknown_types`), not a void type, and so are a method not
+  implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
 
 Next:
 - [ ] arithmetic, after the calculation type table
-- [ ] `b` and `s`: the runtime has their cells, but abaplint does not type them (DDIC INT1/INT2), so declarations
-  are refused; switch the compiler to the abaplint fork that types them, then map them in `irType`
 - [ ] typed fast paths for the common conversion cells (every cell goes through `math/big` now), checked against
   the same test cases
+- [ ] `WRITE` of dictionary types with their own output length (`sy-datum` in 10 characters with separators),
+  conversion exits, table fields
 - [ ] port the rest of the list processor as the compiler needs it: positions and lengths, `NO-GAP`,
   justification, `ULINE`, `SKIP`, `NEW-LINE`, then `TOP-OF-PAGE`; open-steamgate's `tools/gogen/testdata-list`
   and its ANORMALIES list entries are the test cases
@@ -149,17 +160,15 @@ All 380 open issues were read; the parser / check_syntax ones run through abapli
   design question for the abaplint maintainer, not raised. Valid code gets the wrong statement
 - [ ] side finding, no issue: `NEW lcl( )->attr = 1.` gives "Not an object reference, target" for any attribute.
   Check first that ABAP accepts it; if so, valid code is rejected
-- [ ] side finding, no issue yet: `WRITE u.` with `u TYPE utclong` gives "Source not character like"
-  (`5_syntax/statements/write.ts` checks `isCharLike` or `isHexLike`, and `TypeUtils.isCharLike` has no
-  `UTCLongType`). Valid code is rejected, and abap2go cannot compile it. The fix belongs in the WRITE check, not
-  in `isCharLike` (a utclong is not character-like for `CONCATENATE`)
 - [ ] dataset statements: #4644 (ENDIAN, TRUNCATE AT POSITION, SET DATASET ATTRIBUTES not parsed) and #4645
   (inline declarations not handled): valid code fails to parse or is mistyped
 
 - in flight: #4329 (`|` and `}` in EXEC SQL or an AMDP body taken as a string template, valid code mis-lexed) is
   in PR abaplint#4684
+- in flight: #4700 (`WRITE` of a utclong gives "Source not character like", valid code rejected) is in PR
+  abaplint#4701; already on the fork's `abap2go` branch
 
-Suggested order: #1809, the utclong WRITE check, then the dataset pair; `INSERT itab.` after asking the abaplint
+Suggested order: #1809, then the dataset pair; `INSERT itab.` after asking the abaplint
 maintainer.
 
 ### 2. open-abap-core: what an AOT service calls (TODO review on main `fbc211e`, 2026-11-23)

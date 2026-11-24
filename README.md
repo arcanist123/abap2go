@@ -5,7 +5,7 @@ comparable to Go, with no ABAP application server and no JavaScript runtime. A d
 allowed.
 
 **Status: first steps.** Small programs compile, as a report and as an `if_oo_adt_classrun` console class:
-elementary `DATA`, moves with ABAP's conversion rules, `WRITE` of literals and variables, `out->write( )`. Every
+elementary `DATA` (built-in types and data elements), moves with ABAP's conversion rules, `WRITE` of literals and variables, `out->write( )`. Every
 other construct is refused at build time. The design and the plan are in `docs/`.
 
 ## Try it
@@ -40,7 +40,9 @@ as a user from a user setup file: `out/hello/zhello --user-setup users.json --us
   through RTTI, as on SAP.
 - **One root per compilation.** An entry point (an HTTP handler, an RFC module, a report) and only what it reaches
   becomes one binary.
-- **Built on [abaplint](https://github.com/abaplint/abaplint)**, in TypeScript, emitting Go. The runtime
+- **Built on [abaplint](https://github.com/abaplint/abaplint)**, in TypeScript, emitting Go. abap2go uses a
+  build of [its fork](https://github.com/arcanist123/abaplint/tree/abap2go) (upstream plus the fixes abap2go
+  needs, each one also sent upstream), vendored in `vendor/`; `scripts/vendor-abaplint.sh` rebuilds it. The runtime
   environment (database, LUW, Open SQL lowering, locks, HTTP host) is borrowed from
   [open-steamgate](https://github.com/oisee/open-steamgate) (MIT).
 

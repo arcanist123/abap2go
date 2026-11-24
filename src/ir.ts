@@ -23,7 +23,7 @@ export interface IRClassrun {
   body: IRStatement[];
 }
 
-/** An elementary type, as the runtime's abap.Type. b and s are not declared by the compiler yet. */
+/** An elementary type, as the runtime's abap.Type. b and s come from DDIC INT1 and INT2. */
 export type IRType =
   | { kind: "c" | "n" | "x"; length: number }
   | { kind: "p"; length: number; decimals: number }
