@@ -49,13 +49,13 @@ export interface IRVariable {
 
 export type IRStatement = IRListWrite | IRConsoleWrite | IRData | IRMove;
 
-/** WRITE [/] of a literal, onto the basic list. */
+/** WRITE [/] of a literal or variable onto the basic list, formatted with the session's user settings. */
 export interface IRListWrite {
   kind: "list_write";
   /** `/` was given: start a new line first. */
   newLine: boolean;
-  /** The characters written. */
-  text: string;
+  /** What is written. A text literal is written as it is, with its trailing blanks; '' is one blank. */
+  value: IRSource;
 }
 
 /** out->write( data [name] ) on the classrun console. DATA is converted to string, as is NAME. */

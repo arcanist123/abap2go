@@ -48,27 +48,22 @@ Done:
   [spec/conversion.md](spec/conversion.md) with 11,702 test cases
   - compiled: `DATA x TYPE <elementary> [VALUE literal]`, `x = literal | variable`, `out->write( variable )`; an
     uncaught exception ends the program with a runtime error on stderr and exit code 1
+- `WRITE x` for all 16 elementary kinds (2026-11-24): a variable or number literal is formatted by the rules of
+  [spec/write.md](spec/write.md) (`abap.Format`, its own rules per kind, not the conversion to string) with the
+  session's user settings, and goes onto the list with its full output length
+  - user settings per session: the default settings, or a user from the user setup file (`--user-setup <file>
+    [--user <name>]`, JSON, the codes of the user master record); the database override comes with the database
+    port
+  - `WRITE` of a text literal ending in blanks and `WRITE ''` compile: a literal has its full length
+  - open-steamgate's ANOMALY-2026-10-17-list-integer-width is a test case: `i` in 11 columns
+  - not compiled yet: `WRITE` of a utclong, which abaplint rejects (see section 1), and b and s (below)
 
 Next:
-- [ ] `WRITE x` for all 16 elementary kinds: a variable is formatted into a string, and the string goes onto the
-  list. The formatting is not the conversion to `string` (that is what `out->write( )` uses): `WRITE` has its own
-  rules per kind, e.g. `i` in 11 columns, right-aligned, with thousands separators and the sign at the end; `d` in
-  the user's date format instead of `YYYYMMDD`; `p` with the user's decimal and thousands separators; `f` in
-  scientific notation in 24 columns. Steps:
-  - [ ] user settings per session (decimal notation, date format, ...) from the user setup file, as decided in
-    [aot_for_abap.md](aot_for_abap.md), in the simplest form that works; the database override comes with the
-    database port
-  - [ ] the output formatting table in [spec/](spec/) (see the critical path), for all kinds at once
-  - [ ] one formatting function in the runtime for all kinds, then `WRITE variable` in the compiler
-  - open-steamgate's ANOMALY-2026-10-17-list-integer-width is one of the test cases: it prints `6` where ABAP is
-    expected to print it in 11 columns
 - [ ] arithmetic, after the calculation type table
 - [ ] `b` and `s`: the runtime has their cells, but abaplint does not type them (DDIC INT1/INT2), so declarations
   are refused; switch the compiler to the abaplint fork that types them, then map them in `irType`
 - [ ] typed fast paths for the common conversion cells (every cell goes through `math/big` now), checked against
   the same test cases
-- [ ] `WRITE` of a `c` literal ending in blanks and `WRITE ''`: refused, because open-steamgate's converter drops
-  the blanks and SAP's result is not measured. Work out the expected output (keyword documentation)
 - [ ] port the rest of the list processor as the compiler needs it: positions and lengths, `NO-GAP`,
   justification, `ULINE`, `SKIP`, `NEW-LINE`, then `TOP-OF-PAGE`; open-steamgate's `tools/gogen/testdata-list`
   and its ANORMALIES list entries are the test cases
@@ -112,6 +107,9 @@ to also fix the JS runtime is a separate decision per issue and is not on the cr
 - formatting: #2182 template styles for decfloat, #2197 DECIMALS for int8, #2248 OUTPUT-LENGTH
 
 Done:
+- `WRITE` of the output formatting table, [spec/write.md](spec/write.md) (2026-11-24): output length and rule per
+  kind, the user settings it depends on (decimal notation, date format), and 916 test cases
+  (`runtime/go/abap/testdata/write.tsv`)
 - the conversion table, [spec/conversion.md](spec/conversion.md): the 16 × 16 matrix, a rule per cell with its
   exceptions and its keyword documentation section, all kinds including c, string, x, xstring, d, t and utclong,
   and 11,702 test cases (`runtime/go/abap/testdata/conversion*.tsv`), each one a snippet. The conversion cells of
@@ -121,9 +119,9 @@ Done:
 Next:
 - [ ] check the conversion cells of the issues above one by one against the spec and note each issue number at
   its rule; `MOVE-CORRESPONDING` and fragment views (#2229, #2222–#2227) are structure rules, still open
-- [ ] the output formatting table first, because the compiler's next step (`WRITE x`) needs it: `WRITE` for all
-  kinds, then string templates (`|{ x }|`, with their own rules) and `DESCRIBE … OUTPUT-LENGTH`; then the
-  comparison and calculation type tables, in the same form (spec file + test cases)
+- [ ] the rest of the output formatting table: string templates (`|{ x }|`, with their own rules), `DESCRIBE …
+  OUTPUT-LENGTH`, then the `WRITE` additions (`DECIMALS`, `NO-GROUPING`, date masks, `CURRENCY`, …) and `WRITE …
+  TO`; then the comparison and calculation type tables, in the same form (spec file + test cases)
 - [ ] cells still to work out, from the transpiler issues:
   - p: MOD, DIV, **, compares, ADD/SUBTRACT/..., COLLECT/SORT/READ by p, SELECT/INSERT with p columns, template
     SIGN/NUMBER/STYLE, EXACT, zero divide
@@ -151,13 +149,18 @@ All 380 open issues were read; the parser / check_syntax ones run through abapli
   design question for the abaplint maintainer, not raised. Valid code gets the wrong statement
 - [ ] side finding, no issue: `NEW lcl( )->attr = 1.` gives "Not an object reference, target" for any attribute.
   Check first that ABAP accepts it; if so, valid code is rejected
+- [ ] side finding, no issue yet: `WRITE u.` with `u TYPE utclong` gives "Source not character like"
+  (`5_syntax/statements/write.ts` checks `isCharLike` or `isHexLike`, and `TypeUtils.isCharLike` has no
+  `UTCLongType`). Valid code is rejected, and abap2go cannot compile it. The fix belongs in the WRITE check, not
+  in `isCharLike` (a utclong is not character-like for `CONCATENATE`)
 - [ ] dataset statements: #4644 (ENDIAN, TRUNCATE AT POSITION, SET DATASET ATTRIBUTES not parsed) and #4645
   (inline declarations not handled): valid code fails to parse or is mistyped
 
 - in flight: #4329 (`|` and `}` in EXEC SQL or an AMDP body taken as a string template, valid code mis-lexed) is
   in PR abaplint#4684
 
-Suggested order: #1809, then the dataset pair; `INSERT itab.` after asking the abaplint maintainer.
+Suggested order: #1809, the utclong WRITE check, then the dataset pair; `INSERT itab.` after asking the abaplint
+maintainer.
 
 ### 2. open-abap-core: what an AOT service calls (TODO review on main `fbc211e`, 2026-11-23)
 

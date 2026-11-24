@@ -25,17 +25,6 @@ export interface Literal {
   value: string;
 }
 
-/** The text literal a Source consists of, or a build error naming what it is instead. */
-export function sourceLiteral(source: abaplint.Nodes.ExpressionNode, where: Where, what: string): Literal {
-  const literal = source.getChildren().length === 1
-    ? source.findDirectExpression(Expressions.Constant)?.findDirectExpression(Expressions.ConstantString)
-    : undefined;
-  if (literal === undefined || literal.getChildren().length !== 1) {
-    throw new BuildError(`${what} ${source.concatTokens()}: only a literal is supported yet`, where);
-  }
-  return textLiteral(literal);
-}
-
 function textLiteral(literal: abaplint.Nodes.ExpressionNode): Literal {
   const raw = literal.getFirstToken().getStr();
   const quote = raw[0];
