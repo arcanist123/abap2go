@@ -1,7 +1,7 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
 import { IRClassrun, IRStatement } from "./ir";
-import { isNoop, literalToString, position, sourceLiteral, Where } from "./lower_common";
+import { isNoop, lowerData, lowerMove, lowerSource, position, Variables, Where } from "./lower_common";
 
 const { Statements, Expressions, Structures } = abaplint;
 
@@ -9,7 +9,7 @@ const CLASSRUN = "IF_OO_ADT_CLASSRUN";
 const MAIN = "IF_OO_ADT_CLASSRUN~MAIN";
 
 /** Lowers a class implementing IF_OO_ADT_CLASSRUN: what runs is creating an instance and calling MAIN. */
-export function lowerClassrun(obj: abaplint.Objects.Class): IRClassrun {
+export function lowerClassrun(registry: abaplint.IRegistry, obj: abaplint.Objects.Class): IRClassrun {
   const name = obj.getName();
   const definition = obj.getClassDefinition();
   if (definition === undefined) {
@@ -43,14 +43,19 @@ export function lowerClassrun(obj: abaplint.Objects.Class): IRClassrun {
     throw new BuildError(`root ${name}: METHOD ${MAIN.toLowerCase()} not found`);
   }
 
+  const variables = new Variables(registry, obj, file);
   const statements = method.findAllStatementNodes();
   const body: IRStatement[] = [];
   for (const statement of statements.slice(1, -1)) { // without METHOD and ENDMETHOD
     const where = position(file, statement);
     if (isNoop(statement)) {
       continue;
+    } else if (statement.get() instanceof Statements.Data) {
+      body.push(lowerData(statement, variables, where));
+    } else if (statement.get() instanceof Statements.Move) {
+      body.push(lowerMove(statement, variables, where));
     } else if (statement.get() instanceof Statements.Call) {
-      body.push(lowerOutWrite(statement, where));
+      body.push(lowerOutWrite(statement, variables, where));
     } else {
       throw new BuildError(`statement ${statement.get().constructor.name} is not supported yet`, where);
     }
@@ -58,9 +63,9 @@ export function lowerClassrun(obj: abaplint.Objects.Class): IRClassrun {
   return { kind: "classrun", name, body };
 }
 
-/** out->write( literal ). or out->write( data = literal [name = literal] ). */
-function lowerOutWrite(statement: abaplint.Nodes.StatementNode, where: Where): IRStatement {
-  const unsupported = () => new BuildError(`${statement.concatTokens()}: only out->write( ... ) with literals is supported yet`, where);
+/** out->write( x ). or out->write( data = x [name = y] ). with literals and variables. */
+function lowerOutWrite(statement: abaplint.Nodes.StatementNode, variables: Variables, where: Where): IRStatement {
+  const unsupported = () => new BuildError(`${statement.concatTokens()}: only out->write( ... ) is supported yet`, where);
 
   const chain = statement.findDirectExpression(Expressions.MethodCallChain);
   const parts = chain?.getChildren() ?? [];
@@ -102,7 +107,7 @@ function lowerOutWrite(statement: abaplint.Nodes.StatementNode, where: Where): I
   // DATA is TYPE any and is converted to a string by the console; NAME is TYPE string, converted when passed.
   return {
     kind: "console_write",
-    value: literalToString(sourceLiteral(data, where, "out->write of")),
-    name: name === undefined ? "" : literalToString(sourceLiteral(name, where, "out->write name")),
+    value: lowerSource(data, variables, where, "out->write of"),
+    name: name === undefined ? undefined : lowerSource(name, variables, where, "out->write name"),
   };
 }

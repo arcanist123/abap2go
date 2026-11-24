@@ -15,9 +15,9 @@ export function lowerRoot(registry: abaplint.IRegistry, rootName: string): IRRoo
   if (prog !== undefined && clas !== undefined) {
     throw new BuildError(`root ${name}: both a program and a class have this name`);
   } else if (prog !== undefined) {
-    return lowerReport(prog);
+    return lowerReport(registry, prog);
   } else if (clas !== undefined) {
-    return lowerClassrun(clas);
+    return lowerClassrun(registry, clas);
   }
   throw new BuildError(`root ${name}: no program or class of that name in the packages`);
 }

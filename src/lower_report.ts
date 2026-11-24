@@ -1,12 +1,12 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
 import { IRReport, IRStatement } from "./ir";
-import { isNoop, position, sourceLiteral, Where } from "./lower_common";
+import { isNoop, lowerData, lowerMove, position, sourceLiteral, Variables, Where } from "./lower_common";
 
 const { Statements, Expressions } = abaplint;
 
 /** Lowers an executable program. Only START-OF-SELECTION is supported, explicit or implicit. */
-export function lowerReport(obj: abaplint.Objects.Program): IRReport {
+export function lowerReport(registry: abaplint.IRegistry, obj: abaplint.Objects.Program): IRReport {
   const subc = /<SUBC>([^<]*)<\/SUBC>/.exec(obj.getXML() ?? "")?.[1];
   if (subc !== "1") {
     throw new BuildError(`root ${obj.getName()}: only executable programs (SUBC 1) can be roots, this one has SUBC ${subc ?? "unknown"}`);
@@ -16,6 +16,7 @@ export function lowerReport(obj: abaplint.Objects.Program): IRReport {
     throw new BuildError(`root ${obj.getName()}: expected one source file, found ${files.length}`);
   }
   const file = files[0];
+  const variables = new Variables(registry, obj, file);
 
   let lineSize: number | undefined;
   const body: IRStatement[] = [];
@@ -26,6 +27,10 @@ export function lowerReport(obj: abaplint.Objects.Program): IRReport {
       continue;
     } else if (kind instanceof Statements.Report) {
       lineSize = lowerReportStatement(statement, where);
+    } else if (kind instanceof Statements.Data) {
+      body.push(lowerData(statement, variables, where));
+    } else if (kind instanceof Statements.Move) {
+      body.push(lowerMove(statement, variables, where));
     } else if (kind instanceof Statements.Write) {
       body.push(lowerWrite(statement, where));
     } else {
