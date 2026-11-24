@@ -27,6 +27,36 @@ Priority, when choosing what to pick up next:
 - nothing that would stop ABAP from compiling ahead of time: nothing that needs a JS host or a compiler at run time
 - lint rules are out of scope: only the parser, check_syntax and the transpiler count
 
+This file is the source of status for abap2go and the work it needs in other repositories.
+
+## The compiler (status 2026-11-24)
+
+TypeScript on `@abaplint/core`, emitting Go (`src/`, runtime in `runtime/go`); `npm test` builds and runs small
+programs end to end and runs the Go runtime's tests. No CI yet.
+
+Done:
+- hello world, PR #1 (`a6f3f83`): an abapGit package is syntax-checked as v758, one root is lowered to a
+  plain-data IR and built into one native executable; anything else is refused at build time
+  - roots: a report (`WRITE [/] '<literal>'`, `START-OF-SELECTION` only) or a class implementing
+    `if_oo_adt_classrun` (`out->write( )` of literals)
+  - hosting follows open-steamgate (see the decision in [aot_for_abap.md](aot_for_abap.md)): open-abap-gui's
+    list layout (`ZCL_GG_HOST_LIST`, ported from the MIT upstream open-abap/open-abap-gui; the oisee fork's LICENSE
+    only says "todo"), the console as open-steamgate's `ZCL_OSD_CLASSRUN_OUT`, the build layout of osabap
+  - output streams: a list line goes to stdout as soon as it is finished, a console write at once
+
+Next:
+- [ ] to agree first: `DATA x TYPE i`, arithmetic, `WRITE x`. Starts the value model (native `int32`) and the
+  first formatting cells: integer output length 11, right-aligned, sign at the end (open-steamgate's
+  ANOMALY-2026-10-17-list-integer-width: it prints `6` where SAP is expected to print it in 11 columns)
+- [ ] `WRITE` of a `c` literal ending in blanks and `WRITE ''`: refused, because open-steamgate's converter drops
+  the blanks and SAP's result is not measured. Work out the expected output (keyword documentation)
+- [ ] port the rest of the list processor as the compiler needs it: positions and lengths, `NO-GAP`,
+  justification, `ULINE`, `SKIP`, `NEW-LINE`, then `TOP-OF-PAGE`; open-steamgate's `tools/gogen/testdata-list`
+  and its ANORMALIES list entries are the test cases
+- [ ] `out->write( )` of structures and tables (open-steamgate's format: a structure as one
+  `field: value, field: value` line, a table as a header row and tab-separated rows)
+- [ ] CI (Node and Go, `npm test`)
+
 ## Critical path: the specification of ABAP's rule tables
 
 [aot_for_abap.md](aot_for_abap.md) decided that the generic run-time rules must be **complete from the start**:
