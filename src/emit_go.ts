@@ -10,7 +10,8 @@ export function emitGo(root: IRRoot): string {
   out.push(`import "abap2go/abap"`);
   out.push("");
   out.push("func main() {");
-  out.push("\tabap.Run(func() {");
+  out.push("\tabap.Run(func(session *abap.Session) {");
+  out.push("\t\t_ = session");
   switch (root.kind) {
     case "report":
       out.push(`\t\tlist := abap.NewList(${root.lineSize ?? 0})`);
@@ -32,7 +33,7 @@ export function emitGo(root: IRRoot): string {
 function statement(s: IRStatement): string[] {
   switch (s.kind) {
     case "list_write":
-      return [`list.Write(${goString(s.text)}, ${s.newLine})`];
+      return [`list.Write(${listText(s.value)}, ${s.newLine})`];
     case "console_write":
       return [`out.Write(${toString(s.value)}, ${s.name === undefined ? `""` : toString(s.name)})`];
     case "data": {
@@ -52,6 +53,14 @@ function convert(source: IRSource, to: IRType): string {
     return operand(source);
   }
   return `abap.MustConvert[${goType(to)}](${goTypeValue(source.type)}, ${operand(source)}, ${goTypeValue(to)})`;
+}
+
+/** The text WRITE outputs: a text literal as it is, anything else formatted with the user settings. */
+function listText(source: IRSource): string {
+  if (source.kind === "literal" && (source.type.kind === "c" || source.type.kind === "string")) {
+    return goString(source.value);
+  }
+  return `abap.Format(session.Settings, ${goTypeValue(source.type)}, ${operand(source)})`;
 }
 
 function toString(source: IRSource): string {

@@ -6,7 +6,8 @@ package abap
 // end_line, flush, line_size), the list processor open-steamgate uses for native reports.
 // Copyright (c) 2022 Heliconia Labs, MIT License, see LICENSES/open-abap-gui.txt.
 //
-// Modelled so far: placement, the gap between fields, WRITE /, trailing blanks removed per line.
+// Modelled so far: placement, the gap between fields, WRITE /, trailing blanks removed per line, lines of blanks
+// only not output (the default of SET BLANK LINES).
 // Not yet ported: positions and lengths, NO-GAP, justification, ULINE, SKIP, NEW-LINE, pages and their events.
 // As in the original, a line is never wrapped at the list width, and lengths count characters.
 //
@@ -27,7 +28,8 @@ type List struct {
 	out      io.Writer
 	lineSize int
 	current  []rune
-	column   int // 1-based, where the next output goes before the gap rule
+	column   int  // 1-based, where the next output goes before the gap rule
+	written  bool // the current line has had an output, maybe of no characters
 }
 
 // NewList creates an empty basic list writing to standard output. lineSize 0 means no LINE-SIZE was given.
@@ -48,14 +50,17 @@ func (l *List) LineSize() int {
 }
 
 // Write outputs text: on a new line if newLine (WRITE /), else one blank after the previous output of the line.
+// The text has the output length of what is written, trailing blanks included; an empty string still counts as
+// an output, so the next one gets its blank.
 func (l *List) Write(text string, newLine bool) {
 	if newLine {
 		l.endLine()
 	}
-	if l.column > 1 {
+	if l.written {
 		l.column++
 	}
 	l.place(text)
+	l.written = true
 }
 
 // End finishes the list when the program ends: the current line, if it has output, is written.
@@ -72,20 +77,24 @@ func (l *List) place(text string) {
 }
 
 func (l *List) endLine() {
-	if len(l.current) == 0 && l.column <= 1 {
+	if !l.written {
 		return
 	}
 	l.flush()
 }
 
+// flush finishes the current line. A line of blanks only is not output.
 func (l *List) flush() {
 	n := len(l.current)
 	for n > 0 && l.current[n-1] == ' ' {
 		n--
 	}
-	writeLine(l.out, string(l.current[:n]))
+	if n > 0 {
+		writeLine(l.out, string(l.current[:n]))
+	}
 	l.current = l.current[:0]
 	l.column = 1
+	l.written = false
 }
 
 // writeLine writes one line at once, unbuffered, so it is visible while the program runs.

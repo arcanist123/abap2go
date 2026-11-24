@@ -30,8 +30,12 @@ const CLAS_XML = (name: string) => `<?xml version="1.0" encoding="utf-8"?>
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "abap2go-test-"));
 let counter = 0;
 
-/** Builds the root from one source file and returns its stdout, or the refusal message, or the runtime error. */
-function run(kind: "prog" | "clas", source: string): { stdout?: string; refused?: string; failed?: string } {
+/**
+ * Builds the root from one source file and returns its stdout, or the refusal message, or the runtime error.
+ * With a user setup, the executable runs with --user-setup pointing at it; a run it rejects (exit code 2) gives
+ * rejected with its message.
+ */
+function run(kind: "prog" | "clas", source: string, userSetup?: object): { stdout?: string; refused?: string; failed?: string; rejected?: string } {
   const dir = path.join(tmp, String(counter++));
   const name = kind === "prog" ? "ZPROBE" : "ZCL_PROBE";
   fs.mkdirSync(path.join(dir, "src"), { recursive: true });
@@ -47,12 +51,21 @@ function run(kind: "prog" | "clas", source: string): { stdout?: string; refused?
     }
     throw e;
   }
+  const args: string[] = [];
+  if (userSetup !== undefined) {
+    const file = path.join(dir, "users.json");
+    fs.writeFileSync(file, JSON.stringify(userSetup));
+    args.push("--user-setup", file);
+  }
   try {
-    return { stdout: execFileSync(exe, { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"] }) };
+    return { stdout: execFileSync(exe, args, { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"] }) };
   } catch (e) {
     const err = e as { status?: number; stdout?: string; stderr?: string };
     if (err.status === 1) {
       return { stdout: err.stdout, failed: err.stderr };
+    }
+    if (err.status === 2) {
+      return { stdout: err.stdout, rejected: err.stderr };
     }
     throw e;
   }
@@ -80,6 +93,10 @@ const reports: [string, string, string][] = [
   ["no wrap at the default width", `REPORT zprobe.\nWRITE '${"x".repeat(100)}'. WRITE '${"y".repeat(100)}'.`, `${"x".repeat(100)} ${"y".repeat(100)}\n`],
   ["characters outside ASCII count one column each", "REPORT zprobe.\nWRITE 'Grüße'. WRITE 'x'.", "Grüße x\n"],
   ["empty program writes nothing", "REPORT zprobe.", ""],
+  ["a text field literal has its full length, blanks included", "REPORT zprobe.\nWRITE 'a '. WRITE 'b'.", "a  b\n"],
+  ["'' is one blank", "REPORT zprobe.\nWRITE ''. WRITE 'b'.", "  b\n"],
+  ["an empty string at the start of a line still gets the gap", "REPORT zprobe.\nWRITE ``. WRITE 'b'.", " b\n"],
+  ["a line of blanks only is not output", "REPORT zprobe.\nWRITE / ''. WRITE / 'x'.", "x\n"],
 ];
 for (const [name, source, stdout] of reports) {
   test(`report: ${name}`, () => {
@@ -87,14 +104,44 @@ for (const [name, source, stdout] of reports) {
   });
 }
 
+// WRITE of variables and number literals, formatted by the rules of docs/spec/write.md. Without a user setup the
+// settings are the defaults: 1.234.567,89 and DD.MM.YYYY. The first case is open-steamgate's
+// ANOMALY-2026-10-17-list-integer-width: an i takes 11 columns.
+const US = { users: [{ user: "alice", decimalNotation: "X", dateFormat: "2" }] };
+const writes: [string, string, string, object?][] = [
+  ["i in 11 columns, right-aligned", "DATA i TYPE i VALUE 6.\nWRITE i.", "         6\n"],
+  ["a number literal is an i", "WRITE 1000. WRITE -5.", "     1.000           5-\n"],
+  ["p with separators, d in the date format", "DATA p TYPE p LENGTH 8 DECIMALS 2 VALUE '-1234.5'.\nDATA d TYPE d VALUE '20240229'.\nWRITE: p, d.",
+    "        1.234,50- 29022024\n"],
+  ["f in scientific notation, decfloat without its scale", "DATA f TYPE f VALUE '0.1'.\nDATA x TYPE decfloat34 VALUE '-1.50'.\nWRITE / f. WRITE / x.",
+    "  1,0000000000000001E-01\n" + " ".repeat(42) + "-1,5\n"],
+  ["n, x, c and t as they are", "DATA n TYPE n LENGTH 4 VALUE '12'.\nDATA x TYPE x LENGTH 2 VALUE 'AB01'.\nDATA c TYPE c LENGTH 4 VALUE 'ab'.\nDATA t TYPE t VALUE '123456'.\nWRITE: n, x, c, t, '|'.",
+    "0012 AB01 ab   123456 |\n"],
+  ["user setup: p and d", "DATA p TYPE p LENGTH 8 DECIMALS 2 VALUE '-1234.5'.\nDATA d TYPE d VALUE '20240229'.\nWRITE: p, d.",
+    "        1,234.50- 02292024\n", US],
+  ["user setup: i", "DATA i TYPE i VALUE -1234567.\nWRITE i.", " 1,234,567-\n", US],
+];
+for (const [name, body, stdout, userSetup] of writes) {
+  test(`report WRITE: ${name}`, () => {
+    assert.deepEqual(run("prog", "REPORT zprobe.\n" + body, userSetup), { stdout });
+  });
+}
+
+test("a user setup the runtime cannot use ends the program before it runs", () => {
+  const result = run("prog", "REPORT zprobe.\nWRITE 'a'.", { users: [{ user: "a", dateFormat: "A" }] });
+  assert.equal(result.stdout, "");
+  assert.match(result.rejected ?? "", /date format A is not supported yet/);
+});
+
 const reportRefusals: [string, string, RegExp][] = [
   ["DATA of a reference", "REPORT zprobe.\nDATA x TYPE REF TO object.", /:2:1: x: type .* is not supported yet/],
   ["arithmetic", "REPORT zprobe.\nDATA x TYPE i.\nx = x + 1.", /:3:1: assignment of x \+ 1: only a literal or a variable/],
-  ["WRITE of a variable", "REPORT zprobe.\nDATA x TYPE i.\nWRITE x.", /WRITE of x: only a literal/],
+  ["WRITE of an expression", "REPORT zprobe.\nDATA x TYPE i.\nWRITE x + 1.", /WRITE of x \+ 1: only a literal or a variable/],
   ["WRITE addition", "REPORT zprobe.\nWRITE 'a' COLOR 1.", /no additions/],
-  ["WRITE of a variable", "REPORT zprobe.\nCONSTANTS c TYPE string VALUE `a`.\nWRITE c.", /statement Constant is not supported yet/],
-  ["text field literal ending in blanks", "REPORT zprobe.\nWRITE 'a '.", /ending in blanks/],
-  ["empty text field literal", "REPORT zprobe.\nWRITE ''.", /ending in blanks/],
+  ["WRITE of a constant", "REPORT zprobe.\nCONSTANTS c TYPE string VALUE `a`.\nWRITE c.", /statement Constant is not supported yet/],
+  // Valid ABAP that abaplint rejects (its WRITE check does not count utclong as character-like); the runtime
+  // formats utclong already. Expected once abaplint accepts it: "29.02.2024 12:34:56,0000000    end\n".
+  ["WRITE of a utclong, abaplint gap", "REPORT zprobe.\nDATA u TYPE utclong.\nWRITE u. WRITE 'end'.", /Source not character like/],
   ["other events", "REPORT zprobe.\nINITIALIZATION.\nSTART-OF-SELECTION.\nWRITE 'a'.", /statement Initialization is not supported yet/],
   ["TOP-OF-PAGE", "REPORT zprobe.\nTOP-OF-PAGE.\nWRITE 'h'.\nSTART-OF-SELECTION.\nWRITE 'a'.", /statement TopOfPage is not supported yet/],
   ["REPORT addition", "REPORT zprobe MESSAGE-ID zz.\nWRITE 'a'.", /REPORT addition MESSAGE-ID/],

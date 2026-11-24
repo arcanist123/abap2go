@@ -4,7 +4,8 @@ An ahead-of-time (AOT) compiler for ABAP: ABAP compiled into standalone native e
 comparable to Go, with no ABAP application server and no JavaScript runtime. A database, embedded or external, is
 allowed.
 
-**Status: first steps.** Hello world compiles, as a report and as an `if_oo_adt_classrun` console class; every
+**Status: first steps.** Small programs compile, as a report and as an `if_oo_adt_classrun` console class:
+elementary `DATA`, moves with ABAP's conversion rules, `WRITE` of literals and variables, `out->write( )`. Every
 other construct is refused at build time. The design and the plan are in `docs/`.
 
 ## Try it
@@ -23,6 +24,10 @@ npm test            # end-to-end builds of small programs, and the Go runtime's 
 `node build/src/cli.js --input <abapGit package> [--input ...] --root <program or class> --out <folder>` compiles
 one root. Output goes to stdout while the program runs: a list line as soon as it is finished, a console line at
 each `out->write`.
+
+A compiled program runs with default user settings (decimal notation `1.234.567,89`, date format `DD.MM.YYYY`), or
+as a user from a user setup file: `out/hello/zhello --user-setup users.json --user alice`. The file format is in
+[docs/spec/write.md](docs/spec/write.md#the-user-setup-file).
 
 ## The idea in brief
 

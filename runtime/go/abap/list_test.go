@@ -59,3 +59,19 @@ func TestListNoWrap(t *testing.T) {
 		t.Fatalf("got %q, want %q", got, want)
 	}
 }
+
+// An empty output at the start of a line still gets the blank after it; a line of blanks only is not output.
+func TestListEmptyAndBlankOutputs(t *testing.T) {
+	var b strings.Builder
+	l := newList(&b, 0)
+	l.Write("", false)
+	l.Write("b", false)
+	l.Write(" ", true)
+	l.Write("x", true)
+	l.Write("a ", false)
+	l.Write("b", false)
+	l.End()
+	if got, want := b.String(), " b\nx a  b\n"; got != want {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
