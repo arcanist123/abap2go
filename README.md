@@ -31,5 +31,4 @@ allowed.
 
 ## License
 
-[Eclipse Public License 2.0](LICENSE). Code borrowed from MIT-licensed projects keeps its copyright notice and
-license text.
+[MIT](LICENSE). Code borrowed from other MIT-licensed projects keeps its copyright notice and license text.
