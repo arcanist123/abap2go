@@ -33,13 +33,16 @@ let counter = 0;
 /**
  * Builds the root from one source file and returns its stdout, or the refusal message, or the runtime error.
  * With a user setup, the executable runs with --user-setup pointing at it; a run it rejects (exit code 2) gives
- * rejected with its message.
+ * rejected with its message. files are more files of the package, by file name (data elements, domains).
  */
-function run(kind: "prog" | "clas", source: string, userSetup?: object): { stdout?: string; refused?: string; failed?: string; rejected?: string } {
+function run(kind: "prog" | "clas", source: string, userSetup?: object, files: Record<string, string> = {}): { stdout?: string; refused?: string; failed?: string; rejected?: string } {
   const dir = path.join(tmp, String(counter++));
   const name = kind === "prog" ? "ZPROBE" : "ZCL_PROBE";
   fs.mkdirSync(path.join(dir, "src"), { recursive: true });
   fs.writeFileSync(path.join(dir, ".abapgit.xml"), MANIFEST);
+  for (const [file, content] of Object.entries(files)) {
+    fs.writeFileSync(path.join(dir, "src", file), content);
+  }
   fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.abap`), source);
   fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.xml`), kind === "prog" ? PROG_XML(name) : CLAS_XML(name));
   let exe: string;
@@ -136,6 +139,69 @@ test("a user setup the runtime cannot use ends the program before it runs", () =
   assert.equal(result.stdout, "");
   assert.match(result.rejected ?? "", /date format A is not supported yet/);
 });
+
+// b and s come from DDIC INT1 and INT2. A data element, typed directly or through a domain, formats as its built-in
+// type when it has the same output length (3 for INT1, 6 for INT2) and no conversion exit; a domain's sign flag
+// does not change the output.
+const abapgit = (serializer: string, values: string) => `<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="${serializer}" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+${values}
+  </asx:values>
+ </asx:abap>
+</abapGit>
+`;
+const dtel = (name: string, fields: string) => ({
+  [`${name.toLowerCase()}.dtel.xml`]: abapgit("LCL_OBJECT_DTEL", `   <DD04V><ROLLNAME>${name}</ROLLNAME><DDLANGUAGE>E</DDLANGUAGE>${fields}<DDTEXT>t</DDTEXT></DD04V>`),
+});
+const doma = (name: string, fields: string) => ({
+  [`${name.toLowerCase()}.doma.xml`]: abapgit("LCL_OBJECT_DOMA", `   <DD01V><DOMNAME>${name}</DOMNAME><DDLANGUAGE>E</DDLANGUAGE>${fields}<DDTEXT>t</DDTEXT></DD01V>`),
+});
+const DDIC = {
+  ...dtel("ZBYTE", "<DATATYPE>INT1</DATATYPE><LENG>000003</LENG><OUTPUTLEN>000003</OUTPUTLEN>"),
+  ...dtel("ZSHORT", "<DATATYPE>INT2</DATATYPE><LENG>000005</LENG><OUTPUTLEN>000006</OUTPUTLEN>"),
+  ...doma("ZSHORT_NOSIGN", "<DATATYPE>INT2</DATATYPE><LENG>000005</LENG><OUTPUTLEN>000006</OUTPUTLEN>"),
+  ...dtel("ZSHORT_DOM", "<DOMNAME>ZSHORT_NOSIGN</DOMNAME><REFKIND>D</REFKIND>"),
+  ...dtel("ZINT_WIDE", "<DATATYPE>INT4</DATATYPE><LENG>000010</LENG><OUTPUTLEN>000015</OUTPUTLEN>"),
+  ...dtel("ZINT_EXIT", "<DATATYPE>INT4</DATATYPE><LENG>000010</LENG><OUTPUTLEN>000011</OUTPUTLEN><CONVEXIT>ZZZZ</CONVEXIT>"),
+  ...dtel("ZINT", "<DATATYPE>INT4</DATATYPE><LENG>000010</LENG><OUTPUTLEN>000011</OUTPUTLEN>"),
+};
+const ddicWrites: [string, string, string][] = [
+  ["b and s from data elements", "DATA s TYPE zshort VALUE -1234.\nDATA b TYPE zbyte VALUE 7.\nWRITE: s, b, '|'.", "1.234-  7  |\n"],
+  ["s through a domain without sign flag", "DATA s TYPE zshort_dom VALUE -1234.\nWRITE s.", "1.234-\n"],
+  ["b and s at their limits", "DATA s TYPE zshort VALUE 32767.\nDATA b TYPE zbyte VALUE 255.\nWRITE: / s, / b.", "32767\n255\n"],
+  ["an i data element with output length 11", "DATA i TYPE zint VALUE 6.\nWRITE i.", "         6\n"],
+  ["moves into b and s follow the conversion rules", "DATA s TYPE zshort.\nDATA b TYPE zbyte.\nDATA i TYPE i VALUE -300.\ns = i.\nb = '200'.\nWRITE: s, b.", "  300- 200\n"],
+];
+for (const [name, body, stdout] of ddicWrites) {
+  test(`report WRITE DDIC: ${name}`, () => {
+    assert.deepEqual(run("prog", "REPORT zprobe.\n" + body, undefined, DDIC), { stdout });
+  });
+}
+
+test("a move out of the range of b is an overflow", () => {
+  const result = run("prog", "REPORT zprobe.\nDATA b TYPE zbyte.\nb = 256.\nWRITE 'after'.", undefined, DDIC);
+  assert.equal(result.stdout, "");
+  assert.match(result.failed ?? "", /CX_SY_CONVERSION_OVERFLOW/);
+});
+
+test("classrun: out->write of b and s converts to string", () => {
+  assert.deepEqual(run("clas", classrun("DATA s TYPE zshort VALUE -5. DATA b TYPE zbyte VALUE 200. out->write( s ). out->write( b )."), undefined, DDIC),
+    { stdout: "5-\n200 \n" });
+});
+
+const ddicRefusals: [string, string, RegExp][] = [
+  ["a data element with another output length", "DATA i TYPE zint_wide.\nWRITE i.", /data element ZINT_WIDE has output length 15/],
+  ["a data element with a conversion exit", "DATA i TYPE zint_exit.\nWRITE i.", /conversion exit ZZZZ/],
+  ["a type from the system fields", "DATA d TYPE sy-datum.\nWRITE d.", /WRITE of d: typed with sy-datum/],
+  ["LIKE", "DATA a TYPE i.\nDATA b LIKE a.\nWRITE b.", /WRITE of b: typed with LIKE/],
+];
+for (const [name, body, refused] of ddicRefusals) {
+  test(`report WRITE DDIC refused: ${name}`, () => {
+    assert.match(run("prog", "REPORT zprobe.\n" + body, undefined, DDIC).refused ?? "", refused);
+  });
+}
 
 const reportRefusals: [string, string, RegExp][] = [
   ["DATA of a reference", "REPORT zprobe.\nDATA x TYPE REF TO object.", /:2:1: x: type .* is not supported yet/],

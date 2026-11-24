@@ -69,8 +69,10 @@ included: they count for the position of the next output (`WRITE 'a '. WRITE 'b'
 | utclong | 30 |
 
 These are the lengths of the built-in types. A data element from the dictionary has its own output length:
-`sy-datum` takes 10 characters and shows the separators of the date format. Dictionary types are not compiled
-yet.
+`sy-datum` takes 10 characters and shows the separators of the date format. b and s only come from the
+dictionary (INT1 and INT2, output lengths 3 and 6). A data element (typed directly or through a domain) with the
+output length of its built-in type and no conversion exit is expected to be written by the rules here; the sign
+flag of a domain does not change the output. The compiler refuses `WRITE` of any other dictionary type for now.
 
 ## Rules per kind
 
@@ -144,7 +146,7 @@ code 2. With a database, its user master records will override the file (see
 
 ## Known gaps
 
-- b and s are not declared by the compiler yet (see the roadmap); their rules are implemented and tested.
+- Dictionary types with their own output length or a conversion exit are refused for `WRITE`.
 - The date formats `7`–`C` and the 12-hour time formats (which may affect utclong) are not supported.
 - Formatting additions (`DD/MM/YYYY`, `CURRENCY`, `DECIMALS`, `NO-GROUPING`, `LEFT-JUSTIFIED`, `USING EDIT MASK`,
   …), `WRITE … TO`, and positions and lengths (`WRITE AT /10(5)`) are not specified yet.

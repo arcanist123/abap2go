@@ -56,19 +56,22 @@ Done:
     port
   - `WRITE` of a text literal ending in blanks and `WRITE ''` compile: a literal has its full length
   - open-steamgate's ANOMALY-2026-10-17-list-integer-width is a test case: `i` in 11 columns
-  - not compiled yet: b and s (below)
+  - `WRITE` of a variable typed with a data element formats it as its built-in type when the data element (or its
+    domain) has the built-in output length and no conversion exit; any other dictionary or local type (`sy-datum`,
+    `LIKE`, `TYPES`, table fields) is refused for `WRITE`, since its own output length changes the output
 - the compiler runs on the abaplint fork (2026-11-24): `@abaplint/core` is built from the `abap2go` branch of
   arcanist123/abaplint (upstream main plus the fixes abap2go needs, each also sent upstream) and vendored as
-  `vendor/abaplint-core-<version>.tgz` (`scripts/vendor-abaplint.sh` rebuilds it). Its first fix: `WRITE` of a
-  utclong (abaplint#4700, PR abaplint#4701), which now compiles
+  `vendor/abaplint-core-<version>.tgz` (`scripts/vendor-abaplint.sh` rebuilds it). On it now:
+  - `WRITE` of a utclong (abaplint#4700, PR abaplint#4701), which now compiles
+  - INT1 and INT2 keep their size (abaplint#4630, PR abaplint#4631): `b` and `s` are declared through data
+    elements, and moves, `WRITE` and `out->write( )` follow their rules
 
 Next:
 - [ ] arithmetic, after the calculation type table
-- [ ] `b` and `s`: the runtime has their cells, but abaplint does not type them (its DDIC mapping turns INT1/INT2
-  into `IntegerType`, see transpiler#2199), so declarations are refused; add the types to the fork's `abap2go`
-  branch (and upstream), then map them in `irType`
 - [ ] typed fast paths for the common conversion cells (every cell goes through `math/big` now), checked against
   the same test cases
+- [ ] `WRITE` of dictionary types with their own output length (`sy-datum` in 10 characters with separators),
+  conversion exits, table fields
 - [ ] port the rest of the list processor as the compiler needs it: positions and lengths, `NO-GAP`,
   justification, `ULINE`, `SKIP`, `NEW-LINE`, then `TOP-OF-PAGE`; open-steamgate's `tools/gogen/testdata-list`
   and its ANORMALIES list entries are the test cases

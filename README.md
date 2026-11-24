@@ -5,7 +5,7 @@ comparable to Go, with no ABAP application server and no JavaScript runtime. A d
 allowed.
 
 **Status: first steps.** Small programs compile, as a report and as an `if_oo_adt_classrun` console class:
-elementary `DATA`, moves with ABAP's conversion rules, `WRITE` of literals and variables, `out->write( )`. Every
+elementary `DATA` (built-in types and data elements), moves with ABAP's conversion rules, `WRITE` of literals and variables, `out->write( )`. Every
 other construct is refused at build time. The design and the plan are in `docs/`.
 
 ## Try it

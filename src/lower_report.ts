@@ -79,5 +79,9 @@ function lowerWrite(statement: abaplint.Nodes.StatementNode, variables: Variable
   if (!(source instanceof abaplint.Nodes.ExpressionNode) || !(source.get() instanceof Expressions.Source) || index + 2 !== children.length) {
     throw new BuildError("only WRITE [/] <literal or variable>. is supported yet, no additions", where);
   }
-  return { kind: "list_write", newLine, value: lowerSource(source, variables, where, "WRITE of") };
+  const value = lowerSource(source, variables, where, "WRITE of");
+  if (value.kind === "variable") {
+    variables.checkWriteFormat(value, where);
+  }
+  return { kind: "list_write", newLine, value };
 }
