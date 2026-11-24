@@ -213,6 +213,9 @@ const reportRefusals: [string, string, RegExp][] = [
   ["TOP-OF-PAGE", "REPORT zprobe.\nTOP-OF-PAGE.\nWRITE 'h'.\nSTART-OF-SELECTION.\nWRITE 'a'.", /statement TopOfPage is not supported yet/],
   ["REPORT addition", "REPORT zprobe MESSAGE-ID zz.\nWRITE 'a'.", /REPORT addition MESSAGE-ID/],
   ["syntax error", "REPORT zprobe.\nWRITE foo.", /do not pass the syntax check[\s\S]*"foo" not found/],
+  // checked as abaplint/transpiler checks its input: an unknown type is an error, not a void type
+  ["unknown type", "REPORT zprobe.\nDATA v TYPE matnr.", /do not pass the syntax check[\s\S]*MATNR not found[\s\S]*\[unknown_types\]/],
+  ["WHEN OTHERS not last", "REPORT zprobe.\nDATA i TYPE i.\nCASE i.\n  WHEN OTHERS.\n  WHEN 1.\nENDCASE.", /\[when_others_last\]/],
 ];
 for (const [name, source, refused] of reportRefusals) {
   test(`report refused: ${name}`, () => {

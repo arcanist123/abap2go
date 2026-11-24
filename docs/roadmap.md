@@ -65,6 +65,9 @@ Done:
   - `WRITE` of a utclong (abaplint#4700, PR abaplint#4701), which now compiles
   - INT1 and INT2 keep their size (abaplint#4630, PR abaplint#4631): `b` and `s` are declared through data
     elements, and moves, `WRITE` and `out->write( )` follow their rules
+- the input is checked the same way abaplint/transpiler checks its input (`src/validation.ts`, its rules and
+  `errorNamespace: "."`): an unknown type is an error (`unknown_types`), not a void type, and so are a method not
+  implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
 
 Next:
 - [ ] arithmetic, after the calculation type table
