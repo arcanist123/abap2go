@@ -33,3 +33,18 @@ var (
 	errNoDateTime   = &Exception{Class: CxConversionNoDateTime}
 	errNotSupported = &Exception{Class: CxConversionNotSupported}
 )
+
+// The exceptions of arithmetic expressions.
+const (
+	CxArithmeticOverflow = "CX_SY_ARITHMETIC_OVERFLOW"
+	CxZerodivide         = "CX_SY_ZERODIVIDE"
+	CxArgOutOfDomain     = "CX_SY_ARG_OUT_OF_DOMAIN"
+	CxConversionRounding = "CX_SY_CONVERSION_ROUNDING"
+)
+
+var (
+	errArithmeticOverflow = &Exception{Class: CxArithmeticOverflow}
+	errZerodivide         = &Exception{Class: CxZerodivide}
+	errArgOutOfDomain     = &Exception{Class: CxArgOutOfDomain}
+	errRounding           = &Exception{Class: CxConversionRounding}
+)

@@ -1,4 +1,4 @@
-import { IRRoot, IRSource, IRStatement, IRType, IRVariable } from "./ir";
+import { IRArithOp, IRExpr, IRRoot, IRSource, IRStatement, IRType, IRVariable } from "./ir";
 
 /** Emits package main for one root. The runtime is imported from the runtime module as `abap2go/abap`. */
 export function emitGo(root: IRRoot): string {
@@ -44,6 +44,26 @@ function statement(s: IRStatement): string[] {
     }
     case "move":
       return [`${goName(s.target)} = ${convert(s.source, s.target.type)}`];
+    case "calculate":
+      return [`${goName(s.target)} = abap.MustCalculate[${goType(s.target.type)}](${expr(s.expression)}, ${goTypeValue(s.target.type)})`];
+  }
+}
+
+const GO_OPS: Record<IRArithOp, string> = {
+  "+": "OpAdd", "-": "OpSubtract", "*": "OpMultiply", "/": "OpDivide", "DIV": "OpDiv", "MOD": "OpMod", "**": "OpPower",
+};
+
+/** The abap.Expr tree of an arithmetic expression. */
+function expr(e: IRExpr): string {
+  switch (e.kind) {
+    case "operand":
+      return `abap.Operand(${goTypeValue(e.source.type)}, ${operand(e.source)})`;
+    case "binary":
+      return `abap.Binary(abap.${GO_OPS[e.op]}, ${expr(e.left)}, ${expr(e.right)})`;
+    case "unary":
+      return `abap.${{ "-": "Negate", "abs": "Abs", "sqrt": "Sqrt" }[e.fn]}(${expr(e.operand)})`;
+    case "ipow":
+      return `abap.Ipow(${expr(e.base)}, ${expr(e.exp)})`;
   }
 }
 
@@ -75,7 +95,13 @@ function operand(source: IRSource): string {
   if (source.kind === "variable") {
     return goName(source);
   }
-  return source.type.kind === "i" ? `int32(${source.value})` : goString(source.value);
+  switch (source.type.kind) {
+    case "i":
+      return `int32(${source.value})`;
+    case "p":
+      return `abap.MustConvert[abap.Packed](abap.TypeString, ${goString(source.value)}, ${goTypeValue(source.type)})`;
+  }
+  return goString(source.value);
 }
 
 /** Variables get a prefix, so no ABAP name collides with a Go keyword or the generated names. */

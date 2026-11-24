@@ -43,7 +43,7 @@ export function lowerClassrun(registry: abaplint.IRegistry, obj: abaplint.Object
     throw new BuildError(`root ${name}: METHOD ${MAIN.toLowerCase()} not found`);
   }
 
-  const variables = new Variables(registry, obj, file);
+  const variables = new Variables(registry, obj, file, new Set(definition.methods.map(m => m.name.toLowerCase())));
   const statements = method.findAllStatementNodes();
   const body: IRStatement[] = [];
   for (const statement of statements.slice(1, -1)) { // without METHOD and ENDMETHOD

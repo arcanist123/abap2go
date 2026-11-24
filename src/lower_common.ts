@@ -1,6 +1,7 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
-import { IRData, IRLiteral, IRMove, IRSource, IRType, IRVariable } from "./ir";
+import { IRCalculate, IRData, IRLiteral, IRMove, IRSource, IRType, IRVariable } from "./ir";
+import { isArithmetic, lowerCalculate } from "./lower_arith";
 
 const { Expressions, BasicTypes } = abaplint;
 
@@ -54,8 +55,15 @@ export class Variables {
   private readonly spaghetti: abaplint.ISpaghettiScope;
   private readonly origins = new Map<string, TypeOrigin>();
 
-  constructor(private readonly registry: abaplint.IRegistry, obj: abaplint.ABAPObject, private readonly file: abaplint.ABAPFile) {
+  /** methods: the method names of the class being lowered, lower case; a method hides a built-in function. */
+  constructor(private readonly registry: abaplint.IRegistry, obj: abaplint.ABAPObject, private readonly file: abaplint.ABAPFile,
+      private readonly methods: ReadonlySet<string> = new Set()) {
     this.spaghetti = new abaplint.SyntaxLogic(registry, obj).run().spaghetti;
+  }
+
+  /** A method of this name is visible, so name( ) calls it, not a built-in function. */
+  hasMethod(name: string): boolean {
+    return this.methods.has(name.toLowerCase());
   }
 
   /** Records where the type of a declared variable comes from, from its DATA statement. */
@@ -237,18 +245,30 @@ export function lowerData(statement: abaplint.Nodes.StatementNode, variables: Va
   return { kind: "data", variable, value };
 }
 
-/** target = source. with a variable as target and a literal or variable as source. */
-export function lowerMove(statement: abaplint.Nodes.StatementNode, variables: Variables, where: Where): IRMove {
+/**
+ * target = source. with a variable as target and a literal, a variable or an arithmetic expression as source, and
+ * target += -= *= /= source.
+ */
+export function lowerMove(statement: abaplint.Nodes.StatementNode, variables: Variables, where: Where): IRMove | IRCalculate {
   const targets = statement.findDirectExpressions(Expressions.Target);
   const sources = statement.findDirectExpressions(Expressions.Source);
   const target = targets[0]?.concatTokens() ?? "";
+  const children = statement.getChildren();
+  const operator = children.slice(1, -2).map(c => c.concatTokens()).join("");
   if (targets.length !== 1 || sources.length !== 1 || !SIMPLE_NAME.test(target)
-      || statement.getChildren().length !== 4 || statement.getChildren()[1].concatTokens() !== "=") {
-    throw new BuildError(`${statement.concatTokens()}: only variable = literal or variable is supported yet`, where);
+      || !["=", "+=", "-=", "*=", "/="].includes(operator)) {
+    throw new BuildError(`${statement.concatTokens()}: only variable = literal, variable or arithmetic expression is supported yet`, where);
+  }
+  const variable = variables.find(target, statement, where);
+  if (operator !== "=") {
+    return lowerCalculate(variable, operator[0] as "+" | "-" | "*" | "/", sources[0], variables, where);
+  }
+  if (isArithmetic(sources[0])) {
+    return lowerCalculate(variable, undefined, sources[0], variables, where);
   }
   return {
     kind: "move",
-    target: variables.find(target, statement, where),
+    target: variable,
     source: lowerSource(sources[0], variables, where, "assignment of"),
   };
 }
