@@ -1,15 +1,14 @@
 # abap2go roadmap
 
-Issue numbers: `abaplint#` = abaplint/abaplint, `open-abap-core#` = open-abap/open-abap-core,
-`transpiler#` = abaplint/transpiler; a bare number belongs to the repository of its section.
+Issue numbers: `abaplint#` = abaplint/abaplint, `open-abap-core#` = open-abap/open-abap-core; a bare number
+belongs to the repository of its section.
 
 ## Purpose
 
 **The goal is an AOT compiler for ABAP:** ABAP compiled ahead of time into standalone executables that run at a
 speed comparable to Go, with no ABAP application server and no JS runtime (a database, embedded or external, is
 allowed). The design is [aot_for_abap.md](aot_for_abap.md). Work on abaplint and open-abap-core is listed here
-to the extent that it moves the AOT compiler forward. The JS transpiler is not a priority: its runtime does not
-carry over, and only its issues' snippets and expected behaviour are used, as cells of the specification.
+to the extent that it moves the AOT compiler forward.
 
 Priority, when choosing what to pick up next:
 1. **the specification of ABAP's rule tables** (the critical path, below): runtime-neutral, SAP is the reference
@@ -21,10 +20,10 @@ Priority, when choosing what to pick up next:
 
 - ABAP behaviour is the reference, not abaplint's rules. **Classic modern ABAP is the reference**: the current
   on-premise language with its modern syntax (7.40 and later), not ABAP Cloud
-- the expected behaviour is worked out (keyword documentation, the snippets in the issues) before it goes into a
-  test or a PR
+- the expected behaviour is worked out (keyword documentation) and written down as tests before it goes into code
+  or a PR
 - nothing that would stop ABAP from compiling ahead of time: nothing that needs a JS host or a compiler at run time
-- lint rules are out of scope: only the parser, check_syntax and the transpiler count
+- lint rules are out of scope: only the parser and check_syntax count
 
 This file is the source of status for abap2go and the work it needs in other repositories.
 
@@ -65,7 +64,7 @@ Done:
   - `WRITE` of a utclong (abaplint#4700, PR abaplint#4701), which now compiles
   - INT1 and INT2 keep their size (abaplint#4630, PR abaplint#4631): `b` and `s` are declared through data
     elements, and moves, `WRITE` and `out->write( )` follow their rules
-- the input is checked the same way abaplint/transpiler checks its input (`src/validation.ts`, its rules and
+- the input is checked with abaplint's rules that stand in for ABAP syntax errors (`src/validation.ts`,
   `errorNamespace: "."`): an unknown type is an error (`unknown_types`), not a void type, and so are a method not
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
 
@@ -91,9 +90,8 @@ RTTI, cannot ship before the rules are complete.
 
 **What is on the critical path is the specification, not any implementation.** For every cell: the expected
 behaviour (including the exception SAP raises), its source in the keyword documentation, and a test snippet. It is
-runtime-neutral: an AOT runtime implements it once in its own code, and the JS transpiler's runtime does not carry
-over. Expected behaviour is worked out as for everything in this file (keyword documentation, snippets); SAP is
-the reference, no runtime is.
+runtime-neutral: an AOT runtime implements it once in its own code. Expected behaviour is worked out from the
+keyword documentation and written down as test cases; SAP is the reference, no runtime is.
 
 The tables, over the elementary kinds `c n d t x string xstring i int8 b s p f decfloat16 decfloat34 utclong`
 (structures and tables follow component rules and fragment views):
@@ -105,39 +103,23 @@ The tables, over the elementary kinds `c n d t x string xstring i int8 b s p f d
 | calculation type | arithmetic, `COLLECT`, `DIV` / `MOD` / `**`, overflow classes |
 | output formatting | `WRITE`, string templates, `DESCRIBE … OUTPUT-LENGTH` |
 
-**Cells already worked out.** The transpiler issues below were found by checking the transpiler against ABAP's
-rules, so each one carries a snippet and its expected behaviour: they go into the specification as cells. Whether
-to also fix the JS runtime is a separate decision per issue and is not on the critical path.
-- conversion: #2243 int8 → d/t, #2196 c → int8, #2174 p → c, #2175 p → n, #2204 x ↔ n, #2179 decfloat34 →
-  c/string, #2213 decfloat34 → n, #2180 f → decfloat34, #2209 f → p, #2245 decfloat34 range, #2229 flat structures
-  with non-matching fragment views, #2222–#2227 CORRESPONDING
-- comparison: #2166 p with int8, #2139 AS TEXT
-- calculation type: #2259 text in scientific notation, #2253 int8 `/` with a p or f target, #2237 int8 with f,
-  #2165 `**` with int8, #2195 `ipow( )` with int8, #2167 p above 2^53, #2171 MOD with p, #2172 / #2218 / #2189 /
-  #2192 / #2188 overflow classes, #2177 / #2178 / #2181 / #2183 decfloat34
-- formatting: #2182 template styles for decfloat, #2197 DECIMALS for int8, #2248 OUTPUT-LENGTH
-
 Done:
 - `WRITE` of the output formatting table, [spec/write.md](spec/write.md) (2026-11-24): output length and rule per
   kind, the user settings it depends on (decimal notation, date format), and 916 test cases
   (`runtime/go/abap/testdata/write.tsv`)
 - the conversion table, [spec/conversion.md](spec/conversion.md): the 16 × 16 matrix, a rule per cell with its
   exceptions and its keyword documentation section, all kinds including c, string, x, xstring, d, t and utclong,
-  and 11,702 test cases (`runtime/go/abap/testdata/conversion*.tsv`), each one a snippet. The conversion cells of
-  the transpiler issues above (#2174 p → c, #2204 x ↔ n, #2209 f → p, #2243 int8 → d/t, …) fall under its rules,
-  but are not yet checked one by one
+  and 11,702 test cases (`runtime/go/abap/testdata/conversion*.tsv`), each one a snippet
 
 Next:
-- [ ] check the conversion cells of the issues above one by one against the spec and note each issue number at
-  its rule; `MOVE-CORRESPONDING` and fragment views (#2229, #2222–#2227) are structure rules, still open
-- [ ] the rest of the output formatting table: string templates (`|{ x }|`, with their own rules), `DESCRIBE …
-  OUTPUT-LENGTH`, then the `WRITE` additions (`DECIMALS`, `NO-GROUPING`, date masks, `CURRENCY`, …) and `WRITE …
-  TO`; then the comparison and calculation type tables, in the same form (spec file + test cases)
-- [ ] cells still to work out, from the transpiler issues:
-  - p: MOD, DIV, **, compares, ADD/SUBTRACT/..., COLLECT/SORT/READ by p, SELECT/INSERT with p columns, template
-    SIGN/NUMBER/STYLE, EXACT, zero divide
-  - #1963 int8 to and from x/xstring
-  - #2139 AS TEXT: check whether anything is left beyond the fixes in #2159/#2161
+- [ ] structure rules of the conversion table: `MOVE-CORRESPONDING`, `CORRESPONDING`, flat structures with
+  non-matching fragment views
+- [ ] the rest of the output formatting table: string templates (`|{ x }|`, with their own rules, including the
+  styles for decfloat), `DESCRIBE … OUTPUT-LENGTH`, then the `WRITE` additions (`DECIMALS`, `NO-GROUPING`, date
+  masks, `CURRENCY`, …) and `WRITE … TO`
+- [ ] the comparison table, in the same form (spec file + test cases): mixed kinds (p with int8, …), `AS TEXT`
+- [ ] the calculation type table, in the same form: int8 with p and f, `**` and `ipow( )`, `MOD` / `DIV` with p,
+  p beyond 2^53, decfloat34, text in scientific notation as an operand, overflow classes, zero divide, `EXACT`
 
 
 ## Work items
@@ -203,8 +185,7 @@ Most useful for AOT first:
     `num_multiparts`, `get_multipart` (parse by `boundary=`, serialize in `to_xstring`)
   - [ ] step 4, client: `send` writes cookies, multipart bodies and form fields (urlencoded POST body, check
     ABAP first); `receive` keeps array headers (`set-cookie` is skipped by `Array.isArray` today) and fills the
-    cookies; `refresh_request`; classic exceptions of `create_by_url` (`sy-subrc` forced to 0) once the
-    transpiler supports them
+    cookies; `refresh_request`; classic exceptions of `create_by_url` (`sy-subrc` forced to 0)
   - stay stubs: `create_by_destination`, `cl_web_http_client_manager=>create_by_http_destination` (SM59),
     `create_internal`, server sessions/XSRF/`logoff`/`send_page`/extension info, `server_cache_*`
 - [ ] conversions and date/time (~20): `cl_abap_datfm` (`conv_date_int_to_ext`, `conv_period_ext_to_int`),
@@ -282,8 +263,8 @@ Diagnostics only (no effect on what is accepted):
 
 Rules that replace the syntax check (2026-11-23). Some findings that ABAP gives as syntax errors come from rules,
 not from check_syntax: they can be switched off, and code that uses SyntaxLogic directly (e.g. downport) does not
-see them. Such checks belong in check_syntax. The transpiler already turns on unknown_types, implement_methods and
-begin_end_names next to check_syntax (`validation.ts`), so for those three the gain is consistency. Inventory done:
+see them. Such checks belong in check_syntax. abap2go already turns on unknown_types, implement_methods and
+begin_end_names next to check_syntax (`src/validation.ts`), so for those three the gain is consistency. Inventory done:
 on a snippet for each, check_syntax alone reports nothing and the rule reports it. ABAP is expected to give an
 error for:
 - unknown_types: unknown type (respects errorNamespace, keep that when moving)

@@ -50,7 +50,7 @@ as a user from a user setup file: `out/hello/zhello --user-setup users.json --us
 
 - [docs/aot_for_abap.md](docs/aot_for_abap.md): the design, its guiding principle and its decisions
 - [docs/roadmap.md](docs/roadmap.md): the critical path (the specification of ABAP's conversion, comparison and
-  calculation rules) and the work items in abaplint, open-abap-core and the transpiler
+  calculation rules) and the work items in abaplint and open-abap-core
 - [docs/open-steamgate-notes.md](docs/open-steamgate-notes.md): measurements of open-steamgate's Go backend, the
   closest prior art
 
