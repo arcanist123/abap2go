@@ -77,6 +77,21 @@ Done:
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
 
 Next:
+- [ ] take over the arithmetic tests of abaplint/transpiler as end-to-end fixtures: 157 ABAP snippets from
+  `test/operators/arithmetics*.ts`, `mod.ts` and `test/types/*_operations.ts`, `integer8_calculation_type.ts`,
+  `conversion_no_number.ts` (MIT), one file each with its source test named
+  - keep the snippets, not their expected values: the expected output of every snippet (list output, and whether
+    each `ASSERT` holds) is worked out again for ABAP, since older tests record the transpiler's own console output
+  - compile `ASSERT` with a relational expression on `abap.Compare`, the minimal form of `IF` below; the snippets
+    with `DATA`, moves, arithmetic, `WRITE` and `ASSERT` (about 120) run end to end, the others (`TRY`, `LOOP`,
+    `COLLECT`, templates, …) stay as fixtures waiting for their statements
+  - a difference is a bug in the runtime or a gap in a rule table, fixed through the spec and its cells
+- [ ] the sign binds after `**`: `src/lower_arith.ts` attaches a leading `-` to its operand, so `- a ** b` compiles
+  as `( - a ) ** b`; the same in the expression parser of `calculation_test.go`. Run `calculation_contexts.tsv` in the
+  tests (negative literals, `+` as a sign, templates, `CONV`, `ADD`, the result field after an exception)
+- [ ] `IF`, `ELSEIF`, `ELSE`, `CASE` and `WHILE` with relational expressions on `abap.Compare`, arithmetic operands
+  (one calculation type for both sides), `NOT`/`AND`/`OR`/`EQUIV` with short-circuit evaluation; checked against
+  `comparison_expr.tsv`
 - [ ] typed fast paths for arithmetic: static operands of calculation type i, int8 and f as native Go operations
   with overflow checks instead of the expression tree (`abap.Calculate` scans and converts at run time), checked
   against `calculation.tsv`
@@ -130,14 +145,45 @@ Done:
   (a `p` result into `c` and `string`), assignment operators and `EXACT`; 2,269 test cases
   (`runtime/go/abap/testdata/calculation.tsv`). Open: the decimals of an exact `p` product moved into a `string`
   (64 cells in `calculation_open.tsv`), `COLLECT`, method and function module parameters
+- the comparison table, [spec/comparison.md](spec/comparison.md) (2026-11-24): the comparison type of every pair of
+  elementary kinds, the rules per comparison type (text rounded to an integer and compared without a range, text in
+  `p` rounded to its decimals, `f` through its 17-digit form against `decfloat34`, padding and prefixes, the length
+  rules of `d` and `t` against text), the conversion errors that end the program (`CONVT_NO_NUMBER`,
+  `CONVT_OVERFLOW`, `CONVT_NO_DATETIME`, `COMPARE_NOT_SUPPORTED`), arithmetic expressions as operands (one calculation
+  type for both sides, also the comparison type), `NOT`/`AND`/`OR`/`EQUIV` with left-to-right short-circuit
+  evaluation, literals and the syntax errors; 26,244 grid cells (`comparison.tsv`), 3,000 held-out random cells
+  (`comparison_random.tsv`) and 404 logical-expression cells (`comparison_expr.tsv`). Implemented in the runtime as
+  `abap.Compare` (`compare.go`), which passes the grid and the held-out cells
+- precedence and overflow in the calculation type table (2026-11-24): `**` binds before the sign, the sign before
+  `* / DIV MOD`, a negative literal is one operand; overflow raises the same exception in assignments, assignment
+  operators, `ADD`/`SUBTRACT`/`MULTIPLY`/`DIVIDE`, `CONV`/`EXACT` (whose type takes part in the calculation type),
+  embedded expressions of string templates (operands only) and comparisons, and an arithmetic exception leaves the
+  result field unchanged; 699 cells (`calculation_contexts.tsv`), 380 of them checked against a precedence model
+
+What the tables have to settle, by example: the issues raised in abaplint/transpiler from #2019 on are one-off
+findings of exactly these rules. Of 73, 57 fall inside the four tables or the structure rules (conversion 17,
+calculation type and precision 11, overflow and range 8, structure moves 7, comparison 6, output formatting 6,
+precedence 2). The tables are to settle such cases systematically, as grids of cells (every operator, kind, boundary
+value and context), not one issue at a time; the snippets of those issues and PRs are a source of cells, and a cell
+whose expected behaviour contradicts a spec is reopened there.
 
 Next:
+- [ ] the target after `CX_SY_CONVERSION_OVERFLOW` (conversion table): an integer target is often left with a
+  truncated value (`b = i_300` leaves 44, `s = i_40000` -25536, `i = int8_3000000000` -1294967296, `b = c_'256'` 1),
+  while others keep their value; examples in the open points of `calculation.md`, a grid over all sources and
+  targets to do
+- [ ] the rest of the comparison table: the string and byte operators (`CO`, `CN`, `CA`, `NA`, `CS`, `NS`, `CP`,
+  `NP`, `BYTE-…`, `O`, `Z`, `M`), predicate expressions (`IS INITIAL`, `IS ASSIGNED`, `IN` ranges), structures,
+  internal tables and references, and the comparisons inside statements (`READ TABLE … WITH KEY`, table keys,
+  `SORT … AS TEXT`, `DELETE ADJACENT DUPLICATES`)
+- [ ] reopened in the conversion table: `int8` beyond the range of `i` into `d` (and `t`). `conversion.md` gives
+  `00000000` outside 1 to 3652060; using the lower four bytes as an `i` (2^32 + 738000 → `20210728`) is another
+  candidate, and the test cases do not tell the two apart
 - [ ] structure rules of the conversion table: `MOVE-CORRESPONDING`, `CORRESPONDING`, flat structures with
   non-matching fragment views
 - [ ] the rest of the output formatting table: string templates (`|{ x }|`, with their own rules, including the
   styles for decfloat), `DESCRIBE … OUTPUT-LENGTH`, then the `WRITE` additions (`DECIMALS`, `NO-GROUPING`, date
   masks, `CURRENCY`, …) and `WRITE … TO`
-- [ ] the comparison table, in the same form (spec file + test cases): mixed kinds (p with int8, …), `AS TEXT`
 - [ ] the rest of the calculation type table: the decimals of an exact `p` product moved into a `string`
   (`calculation_open.tsv`), `COLLECT`, arithmetic expressions as actual parameters, the other built-in numeric
   functions
