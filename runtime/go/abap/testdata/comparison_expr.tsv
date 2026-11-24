@@ -1,0 +1,409 @@
+# Logical expressions of the comparison table as test cases, see docs/spec/comparison.md.
+# Columns: logical expression, operands, expected result.
+# Operands: name=type[value] separated by blanks, set as in conversion.tsv (types as in calculation.tsv:
+# p16.2 is a p LENGTH 16 DECIMALS 2, p8_2 in a CONV is that type); - for none. Expected: T or F (the expression in
+# IF is true or false), EXC:<class> for an exception, SYNTAX for a statement that is a syntax error.
+a / 2 = 4	a=int8[7]	T
+a / 2 = 3	a=int8[7]	F
+a / 2 = + '3.5'	a=int8[7]	T
+a / 2 > 3	a=int8[7]	T
+a / 2 < + '3.6'	a=int8[7]	T
+a / 2 = + `3.5`	a=int8[7]	T
+a / 2 = f	a=int8[7] f=f[3.5] p=p16.2[3.5] d=decfloat34[3.5]	T
+a / 2 = p	a=int8[7] f=f[3.5] p=p16.2[3.5] d=decfloat34[3.5]	T
+a / 2 = d	a=int8[7] f=f[3.5] p=p16.2[3.5] d=decfloat34[3.5]	T
+a / 2 = 4 AND a / 2 = p	a=int8[7] f=f[3.5] p=p16.2[3.5] d=decfloat34[3.5]	T
+a / 2 = b / 2	a=i[7] b=i[8] p=p16.2[0]	T
+a / 2 + p = b / 2	a=i[7] b=i[8] p=p16.2[0]	F
+a / 2 = b / 2 + p	a=i[7] b=i[8] p=p16.2[0]	F
+a / 2 = b DIV 2	a=i[7] b=i[8] p=p16.2[0]	T
+a / 3 = 1	a=i[4]	T
+a / 3 > CONV decfloat34( 1 )	a=i[4]	T
+a / 3 > CONV f( 1 )	a=i[4]	T
+a / 3 > CONV int8( 1 )	a=i[4]	F
+a / 3 = CONV p8_2( 1 )	a=i[4]	F
+a / 3 * 3 = a	a=i[1]	F
+a / 3 * 3 = CONV p8_2( 1 )	a=i[1]	T
+a / 3 * 3 = CONV f( 1 )	a=i[1]	T
+a / 3 * 3 = CONV decfloat34( 1 )	a=i[1]	F
+a / 3 * 3 = CONV int8( 1 )	a=i[1]	F
+a / 3 * 3 = a	a=i[2]	F
+a / 3 * 3 = CONV p8_2( 2 )	a=i[2]	T
+a / 3 * 3 = CONV f( 2 )	a=i[2]	T
+a / 3 * 3 = CONV decfloat34( 2 )	a=i[2]	T
+a ** 2 = 49	a=i[7]	T
+a ** 2 = CONV decfloat34( 49 )	a=i[7]	T
+2 ** '0.5' * 2 ** '0.5' = 2	a=i[7]	F
+sqrt( 2 ) * sqrt( 2 ) = 2	a=i[7]	F
+a / 2 BETWEEN 4 AND 4	a=i[7]	T
+a / 2 BETWEEN + '3.5' AND + '3.5'	a=i[7]	T
+a / 2 NOT BETWEEN 4 AND 4	a=i[7]	F
++ c = 7	c=c10[7]	T
+c + 0 = 7	c=c10[7]	T
+- c = -7	c=c10[7]	T
++ c = + '7.0'	c=c10[7]	T
++ c = 10	c=c10[1E1]	EXC:CX_SY_CONVERSION_NO_NUMBER
++ c = CONV f( 10 )	c=c10[1E1]	T
++ c = CONV decfloat34( 10 )	c=c10[1E1]	T
++ c = 0	c=c10[abc]	EXC:CX_SY_CONVERSION_NO_NUMBER
+c + 0 = 0	c=c10[abc]	EXC:CX_SY_CONVERSION_NO_NUMBER
++ c = CONV f( 0 )	c=c10[abc]	EXC:CX_SY_CONVERSION_NO_NUMBER
++ c = 2	c=c10[1.5]	F
++ c = + '1.5'	c=c10[1.5]	T
++ c > 1	c=c10[1.5]	T
++ c > CONV int8( 1 )	c=c10[1.5]	T
++ x = 7	x=x4[00000007] d=d[00010108] t=t[000007]	T
++ d = 7	x=x4[00000007] d=d[00010108] t=t[000007]	T
++ t = 7	x=x4[00000007] d=d[00010108] t=t[000007]	T
+d + 0 = t + 0	x=x4[00000007] d=d[00010108] t=t[000007]	T
+d - t = 0	x=x4[00000007] d=d[00010108] t=t[000007]	T
+x + 0 = d + 0	x=x4[00000007] d=d[00010108] t=t[000007]	T
+m + 1 > 0	m=i[2147483647] k=int8[0] p=p8.0[0] f=f[0]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+m + 1 > k	m=i[2147483647] k=int8[0] p=p8.0[0] f=f[0]	T
+m + 1 > p	m=i[2147483647] k=int8[0] p=p8.0[0] f=f[0]	T
+m + 1 > f	m=i[2147483647] k=int8[0] p=p8.0[0] f=f[0]	T
+m + 1 > + '0'	m=i[2147483647] k=int8[0] p=p8.0[0] f=f[0]	T
+m + 1 > 3000000000	m=i[2147483647] k=int8[0] p=p8.0[0] f=f[0]	F
+m * m > 0	m=i[2147483647] k=int8[0] p=p8.0[0] f=f[0]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+m * m > CONV int8( 0 )	m=i[2147483647] k=int8[0] p=p8.0[0] f=f[0]	T
+m + 1 - 1 = m	m=i[2147483647] k=int8[0] p=p8.0[0] f=f[0]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+m + 1 - 1 = k + m	m=i[2147483647] k=int8[0] p=p8.0[0] f=f[0]	T
+m + 1 > 0	m=int8[9223372036854775807] p=p8.0[0]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+m + 1 > p	m=int8[9223372036854775807] p=p8.0[0]	T
+m + 1 > + '0'	m=int8[9223372036854775807] p=p8.0[0]	T
+m + 1 > 18446744073709551615	m=int8[9223372036854775807] p=p8.0[0]	F
+m * 2 > 0	m=int8[9223372036854775807] p=p8.0[0]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+m + 1 > 0	m=p16.0[9999999999999999999999999999999]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+m + 1 - 1 = m	m=p16.0[9999999999999999999999999999999]	T
+m * m > 0	m=p16.0[9999999999999999999999999999999]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+m * m * m * m > 0	m=p16.0[9999999999999999999999999999999]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+m * m > 0	m=f[1E300]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+m * m / m > 0	m=f[1E300]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+m * m > CONV decfloat34( 0 )	m=f[1E300]	T
+m * 10 > 0	m=decfloat34[9.999999999999999999999999999999999E6144]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+m + 1 > 0	m=decfloat34[9.999999999999999999999999999999999E6144]	T
+m * 10 / 10 > 0	m=decfloat34[9.999999999999999999999999999999999E6144]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a / z = 0	z=i[0] a=i[1]	EXC:CX_SY_ZERODIVIDE
+z / z = 0	z=i[0] a=i[1]	T
+a MOD z = 0	z=i[0] a=i[1]	EXC:CX_SY_ZERODIVIDE
+a / z > 0 OR a = 1	z=i[0] a=i[1]	EXC:CX_SY_ZERODIVIDE
+a = 1 OR a / z > 0	z=i[0] a=i[1]	T
+a / 2 = 4 AND a / 2 = + '3.5'	a=int8[7]	T
+a / 2 = 4 EQUIV a / 2 = + '3.5'	a=int8[7]	T
+NOT x = 1 AND y = 1	x=i[0] y=i[0] z=i[0]	F
+NOT x = 1 OR y = 1	x=i[0] y=i[0] z=i[0]	T
+x = 1 OR y = 1 AND z = 1	x=i[0] y=i[0] z=i[0]	F
+x = 1 AND y = 1 OR z = 1	x=i[0] y=i[0] z=i[0]	F
+x = 1 EQUIV y = 1 OR z = 1	x=i[0] y=i[0] z=i[0]	T
+x = 1 OR y = 1 EQUIV z = 1	x=i[0] y=i[0] z=i[0]	T
+x = 1 EQUIV y = 1 AND z = 1	x=i[0] y=i[0] z=i[0]	T
+x = 1 AND y = 1 EQUIV z = 1	x=i[0] y=i[0] z=i[0]	T
+NOT x = 1 EQUIV y = 1	x=i[0] y=i[0] z=i[0]	F
+NOT NOT x = 1	x=i[0] y=i[0] z=i[0]	F
+NOT ( x = 1 OR y = 1 )	x=i[0] y=i[0] z=i[0]	T
+x = 1 AND NOT y = 1 OR z = 1	x=i[0] y=i[0] z=i[0]	F
+NOT x = 1 AND NOT y = 1	x=i[0] y=i[0] z=i[0]	T
+( x = 1 OR y = 1 ) AND z = 1	x=i[0] y=i[0] z=i[0]	F
+x = 1 OR ( y = 1 AND z = 1 )	x=i[0] y=i[0] z=i[0]	F
+NOT x = 1 OR NOT y = 1 AND z = 1	x=i[0] y=i[0] z=i[0]	T
+x = 1 EQUIV ( y = 1 EQUIV z = 1 )	x=i[0] y=i[0] z=i[0]	F
+( x = 1 EQUIV y = 1 ) EQUIV z = 1	x=i[0] y=i[0] z=i[0]	F
+NOT ( x = 1 EQUIV y = 1 )	x=i[0] y=i[0] z=i[0]	F
+x = 1 OR y = 1 AND NOT z = 1	x=i[0] y=i[0] z=i[0]	F
+NOT x = 1 AND y = 1 OR NOT z = 1 AND x = 1	x=i[0] y=i[0] z=i[0]	F
+x <> 1 AND y = 1	x=i[0] y=i[0] z=i[0]	F
+x NE 1 OR y EQ 1	x=i[0] y=i[0] z=i[0]	T
+NOT x IS INITIAL AND y IS NOT INITIAL	x=i[0] y=i[0] z=i[0]	F
+x IS INITIAL OR NOT y IS INITIAL AND z IS INITIAL	x=i[0] y=i[0] z=i[0]	T
+NOT x = 1 AND y = 1	x=i[0] y=i[0] z=i[1]	F
+NOT x = 1 OR y = 1	x=i[0] y=i[0] z=i[1]	T
+x = 1 OR y = 1 AND z = 1	x=i[0] y=i[0] z=i[1]	F
+x = 1 AND y = 1 OR z = 1	x=i[0] y=i[0] z=i[1]	T
+x = 1 EQUIV y = 1 OR z = 1	x=i[0] y=i[0] z=i[1]	F
+x = 1 OR y = 1 EQUIV z = 1	x=i[0] y=i[0] z=i[1]	F
+x = 1 EQUIV y = 1 AND z = 1	x=i[0] y=i[0] z=i[1]	T
+x = 1 AND y = 1 EQUIV z = 1	x=i[0] y=i[0] z=i[1]	F
+NOT x = 1 EQUIV y = 1	x=i[0] y=i[0] z=i[1]	F
+NOT NOT x = 1	x=i[0] y=i[0] z=i[1]	F
+NOT ( x = 1 OR y = 1 )	x=i[0] y=i[0] z=i[1]	T
+x = 1 AND NOT y = 1 OR z = 1	x=i[0] y=i[0] z=i[1]	T
+NOT x = 1 AND NOT y = 1	x=i[0] y=i[0] z=i[1]	T
+( x = 1 OR y = 1 ) AND z = 1	x=i[0] y=i[0] z=i[1]	F
+x = 1 OR ( y = 1 AND z = 1 )	x=i[0] y=i[0] z=i[1]	F
+NOT x = 1 OR NOT y = 1 AND z = 1	x=i[0] y=i[0] z=i[1]	T
+x = 1 EQUIV ( y = 1 EQUIV z = 1 )	x=i[0] y=i[0] z=i[1]	T
+( x = 1 EQUIV y = 1 ) EQUIV z = 1	x=i[0] y=i[0] z=i[1]	T
+NOT ( x = 1 EQUIV y = 1 )	x=i[0] y=i[0] z=i[1]	F
+x = 1 OR y = 1 AND NOT z = 1	x=i[0] y=i[0] z=i[1]	F
+NOT x = 1 AND y = 1 OR NOT z = 1 AND x = 1	x=i[0] y=i[0] z=i[1]	F
+x <> 1 AND y = 1	x=i[0] y=i[0] z=i[1]	F
+x NE 1 OR y EQ 1	x=i[0] y=i[0] z=i[1]	T
+NOT x IS INITIAL AND y IS NOT INITIAL	x=i[0] y=i[0] z=i[1]	F
+x IS INITIAL OR NOT y IS INITIAL AND z IS INITIAL	x=i[0] y=i[0] z=i[1]	T
+NOT x = 1 AND y = 1	x=i[0] y=i[1] z=i[0]	T
+NOT x = 1 OR y = 1	x=i[0] y=i[1] z=i[0]	T
+x = 1 OR y = 1 AND z = 1	x=i[0] y=i[1] z=i[0]	F
+x = 1 AND y = 1 OR z = 1	x=i[0] y=i[1] z=i[0]	F
+x = 1 EQUIV y = 1 OR z = 1	x=i[0] y=i[1] z=i[0]	F
+x = 1 OR y = 1 EQUIV z = 1	x=i[0] y=i[1] z=i[0]	F
+x = 1 EQUIV y = 1 AND z = 1	x=i[0] y=i[1] z=i[0]	T
+x = 1 AND y = 1 EQUIV z = 1	x=i[0] y=i[1] z=i[0]	T
+NOT x = 1 EQUIV y = 1	x=i[0] y=i[1] z=i[0]	T
+NOT NOT x = 1	x=i[0] y=i[1] z=i[0]	F
+NOT ( x = 1 OR y = 1 )	x=i[0] y=i[1] z=i[0]	F
+x = 1 AND NOT y = 1 OR z = 1	x=i[0] y=i[1] z=i[0]	F
+NOT x = 1 AND NOT y = 1	x=i[0] y=i[1] z=i[0]	F
+( x = 1 OR y = 1 ) AND z = 1	x=i[0] y=i[1] z=i[0]	F
+x = 1 OR ( y = 1 AND z = 1 )	x=i[0] y=i[1] z=i[0]	F
+NOT x = 1 OR NOT y = 1 AND z = 1	x=i[0] y=i[1] z=i[0]	T
+x = 1 EQUIV ( y = 1 EQUIV z = 1 )	x=i[0] y=i[1] z=i[0]	T
+( x = 1 EQUIV y = 1 ) EQUIV z = 1	x=i[0] y=i[1] z=i[0]	T
+NOT ( x = 1 EQUIV y = 1 )	x=i[0] y=i[1] z=i[0]	T
+x = 1 OR y = 1 AND NOT z = 1	x=i[0] y=i[1] z=i[0]	T
+NOT x = 1 AND y = 1 OR NOT z = 1 AND x = 1	x=i[0] y=i[1] z=i[0]	T
+x <> 1 AND y = 1	x=i[0] y=i[1] z=i[0]	T
+x NE 1 OR y EQ 1	x=i[0] y=i[1] z=i[0]	T
+NOT x IS INITIAL AND y IS NOT INITIAL	x=i[0] y=i[1] z=i[0]	F
+x IS INITIAL OR NOT y IS INITIAL AND z IS INITIAL	x=i[0] y=i[1] z=i[0]	T
+NOT x = 1 AND y = 1	x=i[0] y=i[1] z=i[1]	T
+NOT x = 1 OR y = 1	x=i[0] y=i[1] z=i[1]	T
+x = 1 OR y = 1 AND z = 1	x=i[0] y=i[1] z=i[1]	T
+x = 1 AND y = 1 OR z = 1	x=i[0] y=i[1] z=i[1]	T
+x = 1 EQUIV y = 1 OR z = 1	x=i[0] y=i[1] z=i[1]	F
+x = 1 OR y = 1 EQUIV z = 1	x=i[0] y=i[1] z=i[1]	T
+x = 1 EQUIV y = 1 AND z = 1	x=i[0] y=i[1] z=i[1]	F
+x = 1 AND y = 1 EQUIV z = 1	x=i[0] y=i[1] z=i[1]	F
+NOT x = 1 EQUIV y = 1	x=i[0] y=i[1] z=i[1]	T
+NOT NOT x = 1	x=i[0] y=i[1] z=i[1]	F
+NOT ( x = 1 OR y = 1 )	x=i[0] y=i[1] z=i[1]	F
+x = 1 AND NOT y = 1 OR z = 1	x=i[0] y=i[1] z=i[1]	T
+NOT x = 1 AND NOT y = 1	x=i[0] y=i[1] z=i[1]	F
+( x = 1 OR y = 1 ) AND z = 1	x=i[0] y=i[1] z=i[1]	T
+x = 1 OR ( y = 1 AND z = 1 )	x=i[0] y=i[1] z=i[1]	T
+NOT x = 1 OR NOT y = 1 AND z = 1	x=i[0] y=i[1] z=i[1]	T
+x = 1 EQUIV ( y = 1 EQUIV z = 1 )	x=i[0] y=i[1] z=i[1]	F
+( x = 1 EQUIV y = 1 ) EQUIV z = 1	x=i[0] y=i[1] z=i[1]	F
+NOT ( x = 1 EQUIV y = 1 )	x=i[0] y=i[1] z=i[1]	T
+x = 1 OR y = 1 AND NOT z = 1	x=i[0] y=i[1] z=i[1]	F
+NOT x = 1 AND y = 1 OR NOT z = 1 AND x = 1	x=i[0] y=i[1] z=i[1]	T
+x <> 1 AND y = 1	x=i[0] y=i[1] z=i[1]	T
+x NE 1 OR y EQ 1	x=i[0] y=i[1] z=i[1]	T
+NOT x IS INITIAL AND y IS NOT INITIAL	x=i[0] y=i[1] z=i[1]	F
+x IS INITIAL OR NOT y IS INITIAL AND z IS INITIAL	x=i[0] y=i[1] z=i[1]	T
+NOT x = 1 AND y = 1	x=i[1] y=i[0] z=i[0]	F
+NOT x = 1 OR y = 1	x=i[1] y=i[0] z=i[0]	F
+x = 1 OR y = 1 AND z = 1	x=i[1] y=i[0] z=i[0]	T
+x = 1 AND y = 1 OR z = 1	x=i[1] y=i[0] z=i[0]	F
+x = 1 EQUIV y = 1 OR z = 1	x=i[1] y=i[0] z=i[0]	F
+x = 1 OR y = 1 EQUIV z = 1	x=i[1] y=i[0] z=i[0]	F
+x = 1 EQUIV y = 1 AND z = 1	x=i[1] y=i[0] z=i[0]	F
+x = 1 AND y = 1 EQUIV z = 1	x=i[1] y=i[0] z=i[0]	T
+NOT x = 1 EQUIV y = 1	x=i[1] y=i[0] z=i[0]	T
+NOT NOT x = 1	x=i[1] y=i[0] z=i[0]	T
+NOT ( x = 1 OR y = 1 )	x=i[1] y=i[0] z=i[0]	F
+x = 1 AND NOT y = 1 OR z = 1	x=i[1] y=i[0] z=i[0]	T
+NOT x = 1 AND NOT y = 1	x=i[1] y=i[0] z=i[0]	F
+( x = 1 OR y = 1 ) AND z = 1	x=i[1] y=i[0] z=i[0]	F
+x = 1 OR ( y = 1 AND z = 1 )	x=i[1] y=i[0] z=i[0]	T
+NOT x = 1 OR NOT y = 1 AND z = 1	x=i[1] y=i[0] z=i[0]	F
+x = 1 EQUIV ( y = 1 EQUIV z = 1 )	x=i[1] y=i[0] z=i[0]	T
+( x = 1 EQUIV y = 1 ) EQUIV z = 1	x=i[1] y=i[0] z=i[0]	T
+NOT ( x = 1 EQUIV y = 1 )	x=i[1] y=i[0] z=i[0]	T
+x = 1 OR y = 1 AND NOT z = 1	x=i[1] y=i[0] z=i[0]	T
+NOT x = 1 AND y = 1 OR NOT z = 1 AND x = 1	x=i[1] y=i[0] z=i[0]	T
+x <> 1 AND y = 1	x=i[1] y=i[0] z=i[0]	F
+x NE 1 OR y EQ 1	x=i[1] y=i[0] z=i[0]	F
+NOT x IS INITIAL AND y IS NOT INITIAL	x=i[1] y=i[0] z=i[0]	F
+x IS INITIAL OR NOT y IS INITIAL AND z IS INITIAL	x=i[1] y=i[0] z=i[0]	F
+NOT x = 1 AND y = 1	x=i[1] y=i[0] z=i[1]	F
+NOT x = 1 OR y = 1	x=i[1] y=i[0] z=i[1]	F
+x = 1 OR y = 1 AND z = 1	x=i[1] y=i[0] z=i[1]	T
+x = 1 AND y = 1 OR z = 1	x=i[1] y=i[0] z=i[1]	T
+x = 1 EQUIV y = 1 OR z = 1	x=i[1] y=i[0] z=i[1]	T
+x = 1 OR y = 1 EQUIV z = 1	x=i[1] y=i[0] z=i[1]	T
+x = 1 EQUIV y = 1 AND z = 1	x=i[1] y=i[0] z=i[1]	F
+x = 1 AND y = 1 EQUIV z = 1	x=i[1] y=i[0] z=i[1]	F
+NOT x = 1 EQUIV y = 1	x=i[1] y=i[0] z=i[1]	T
+NOT NOT x = 1	x=i[1] y=i[0] z=i[1]	T
+NOT ( x = 1 OR y = 1 )	x=i[1] y=i[0] z=i[1]	F
+x = 1 AND NOT y = 1 OR z = 1	x=i[1] y=i[0] z=i[1]	T
+NOT x = 1 AND NOT y = 1	x=i[1] y=i[0] z=i[1]	F
+( x = 1 OR y = 1 ) AND z = 1	x=i[1] y=i[0] z=i[1]	T
+x = 1 OR ( y = 1 AND z = 1 )	x=i[1] y=i[0] z=i[1]	T
+NOT x = 1 OR NOT y = 1 AND z = 1	x=i[1] y=i[0] z=i[1]	T
+x = 1 EQUIV ( y = 1 EQUIV z = 1 )	x=i[1] y=i[0] z=i[1]	F
+( x = 1 EQUIV y = 1 ) EQUIV z = 1	x=i[1] y=i[0] z=i[1]	F
+NOT ( x = 1 EQUIV y = 1 )	x=i[1] y=i[0] z=i[1]	T
+x = 1 OR y = 1 AND NOT z = 1	x=i[1] y=i[0] z=i[1]	T
+NOT x = 1 AND y = 1 OR NOT z = 1 AND x = 1	x=i[1] y=i[0] z=i[1]	F
+x <> 1 AND y = 1	x=i[1] y=i[0] z=i[1]	F
+x NE 1 OR y EQ 1	x=i[1] y=i[0] z=i[1]	F
+NOT x IS INITIAL AND y IS NOT INITIAL	x=i[1] y=i[0] z=i[1]	F
+x IS INITIAL OR NOT y IS INITIAL AND z IS INITIAL	x=i[1] y=i[0] z=i[1]	F
+NOT x = 1 AND y = 1	x=i[1] y=i[1] z=i[0]	F
+NOT x = 1 OR y = 1	x=i[1] y=i[1] z=i[0]	T
+x = 1 OR y = 1 AND z = 1	x=i[1] y=i[1] z=i[0]	T
+x = 1 AND y = 1 OR z = 1	x=i[1] y=i[1] z=i[0]	T
+x = 1 EQUIV y = 1 OR z = 1	x=i[1] y=i[1] z=i[0]	T
+x = 1 OR y = 1 EQUIV z = 1	x=i[1] y=i[1] z=i[0]	F
+x = 1 EQUIV y = 1 AND z = 1	x=i[1] y=i[1] z=i[0]	F
+x = 1 AND y = 1 EQUIV z = 1	x=i[1] y=i[1] z=i[0]	F
+NOT x = 1 EQUIV y = 1	x=i[1] y=i[1] z=i[0]	F
+NOT NOT x = 1	x=i[1] y=i[1] z=i[0]	T
+NOT ( x = 1 OR y = 1 )	x=i[1] y=i[1] z=i[0]	F
+x = 1 AND NOT y = 1 OR z = 1	x=i[1] y=i[1] z=i[0]	F
+NOT x = 1 AND NOT y = 1	x=i[1] y=i[1] z=i[0]	F
+( x = 1 OR y = 1 ) AND z = 1	x=i[1] y=i[1] z=i[0]	F
+x = 1 OR ( y = 1 AND z = 1 )	x=i[1] y=i[1] z=i[0]	T
+NOT x = 1 OR NOT y = 1 AND z = 1	x=i[1] y=i[1] z=i[0]	F
+x = 1 EQUIV ( y = 1 EQUIV z = 1 )	x=i[1] y=i[1] z=i[0]	F
+( x = 1 EQUIV y = 1 ) EQUIV z = 1	x=i[1] y=i[1] z=i[0]	F
+NOT ( x = 1 EQUIV y = 1 )	x=i[1] y=i[1] z=i[0]	F
+x = 1 OR y = 1 AND NOT z = 1	x=i[1] y=i[1] z=i[0]	T
+NOT x = 1 AND y = 1 OR NOT z = 1 AND x = 1	x=i[1] y=i[1] z=i[0]	T
+x <> 1 AND y = 1	x=i[1] y=i[1] z=i[0]	F
+x NE 1 OR y EQ 1	x=i[1] y=i[1] z=i[0]	T
+NOT x IS INITIAL AND y IS NOT INITIAL	x=i[1] y=i[1] z=i[0]	T
+x IS INITIAL OR NOT y IS INITIAL AND z IS INITIAL	x=i[1] y=i[1] z=i[0]	T
+NOT x = 1 AND y = 1	x=i[1] y=i[1] z=i[1]	F
+NOT x = 1 OR y = 1	x=i[1] y=i[1] z=i[1]	T
+x = 1 OR y = 1 AND z = 1	x=i[1] y=i[1] z=i[1]	T
+x = 1 AND y = 1 OR z = 1	x=i[1] y=i[1] z=i[1]	T
+x = 1 EQUIV y = 1 OR z = 1	x=i[1] y=i[1] z=i[1]	T
+x = 1 OR y = 1 EQUIV z = 1	x=i[1] y=i[1] z=i[1]	T
+x = 1 EQUIV y = 1 AND z = 1	x=i[1] y=i[1] z=i[1]	T
+x = 1 AND y = 1 EQUIV z = 1	x=i[1] y=i[1] z=i[1]	T
+NOT x = 1 EQUIV y = 1	x=i[1] y=i[1] z=i[1]	F
+NOT NOT x = 1	x=i[1] y=i[1] z=i[1]	T
+NOT ( x = 1 OR y = 1 )	x=i[1] y=i[1] z=i[1]	F
+x = 1 AND NOT y = 1 OR z = 1	x=i[1] y=i[1] z=i[1]	T
+NOT x = 1 AND NOT y = 1	x=i[1] y=i[1] z=i[1]	F
+( x = 1 OR y = 1 ) AND z = 1	x=i[1] y=i[1] z=i[1]	T
+x = 1 OR ( y = 1 AND z = 1 )	x=i[1] y=i[1] z=i[1]	T
+NOT x = 1 OR NOT y = 1 AND z = 1	x=i[1] y=i[1] z=i[1]	F
+x = 1 EQUIV ( y = 1 EQUIV z = 1 )	x=i[1] y=i[1] z=i[1]	T
+( x = 1 EQUIV y = 1 ) EQUIV z = 1	x=i[1] y=i[1] z=i[1]	T
+NOT ( x = 1 EQUIV y = 1 )	x=i[1] y=i[1] z=i[1]	F
+x = 1 OR y = 1 AND NOT z = 1	x=i[1] y=i[1] z=i[1]	T
+NOT x = 1 AND y = 1 OR NOT z = 1 AND x = 1	x=i[1] y=i[1] z=i[1]	F
+x <> 1 AND y = 1	x=i[1] y=i[1] z=i[1]	F
+x NE 1 OR y EQ 1	x=i[1] y=i[1] z=i[1]	T
+NOT x IS INITIAL AND y IS NOT INITIAL	x=i[1] y=i[1] z=i[1]	T
+x IS INITIAL OR NOT y IS INITIAL AND z IS INITIAL	x=i[1] y=i[1] z=i[1]	F
+x = 1 OR 1 / z = 1	x=i[0] z=i[0]	EXC:CX_SY_ZERODIVIDE
+x = 0 AND 1 / z = 1	x=i[0] z=i[0]	EXC:CX_SY_ZERODIVIDE
+x = 1 EQUIV 1 / z = 1	x=i[0] z=i[0]	EXC:CX_SY_ZERODIVIDE
+1 / z = 1 OR x = 1	x=i[0] z=i[0]	EXC:CX_SY_ZERODIVIDE
+NOT x = 1 OR 1 / z = 1	x=i[0] z=i[0]	T
+x = 0 AND 1 / z = 1 OR x = 1	x=i[0] z=i[0]	EXC:CX_SY_ZERODIVIDE
+x = 1 OR x = 0 AND 1 / z = 1	x=i[0] z=i[0]	EXC:CX_SY_ZERODIVIDE
+( x = 1 OR 1 / z = 1 ) AND x = 1	x=i[0] z=i[0]	EXC:CX_SY_ZERODIVIDE
+x = 1 OR 1 / z = 1 EQUIV x = 1	x=i[0] z=i[0]	EXC:CX_SY_ZERODIVIDE
+x = 1 OR 1 / z = 1	x=i[1] z=i[0]	T
+x = 0 AND 1 / z = 1	x=i[1] z=i[0]	F
+x = 1 EQUIV 1 / z = 1	x=i[1] z=i[0]	EXC:CX_SY_ZERODIVIDE
+1 / z = 1 OR x = 1	x=i[1] z=i[0]	EXC:CX_SY_ZERODIVIDE
+NOT x = 1 OR 1 / z = 1	x=i[1] z=i[0]	EXC:CX_SY_ZERODIVIDE
+x = 0 AND 1 / z = 1 OR x = 1	x=i[1] z=i[0]	T
+x = 1 OR x = 0 AND 1 / z = 1	x=i[1] z=i[0]	T
+( x = 1 OR 1 / z = 1 ) AND x = 1	x=i[1] z=i[0]	T
+x = 1 OR 1 / z = 1 EQUIV x = 1	x=i[1] z=i[0]	T
+a < 18446744073709551615	a=int8[9223372036854775807]	T
+a < 9223372036854775808	a=int8[9223372036854775807]	T
+a = 9223372036854775807	a=int8[9223372036854775807]	T
+a + 0 < 18446744073709551615	a=int8[9223372036854775807]	T
+a = 18446744073709551615	a=p16.0[18446744073709551615]	T
+a > 9223372036854775807	a=p16.0[18446744073709551615]	T
+a < 3000000000	a=i[2147483647]	T
+a < 2147483648	a=i[2147483647]	T
+a = '2147483647'	a=i[2147483647]	T
+a < '3000000000'	a=i[2147483647]	T
+a < `3000000000`	a=i[2147483647]	T
+a = '7'	a=i[7]	T
+a = ' 7 '	a=i[7]	T
+a = '7-'	a=i[7]	F
+a = `7`	a=i[7]	T
+a = '07'	a=i[7]	T
+a = '7.4'	a=i[7]	T
+a = '7.5'	a=i[7]	F
+a = '6.5'	a=i[7]	T
+a = '1-'	a=i[-1]	T
+a = '-1'	a=i[-1]	T
+a = ' 1-'	a=i[-1]	T
+a = `1-`	a=i[-1]	T
+c = `7 `	c=c10[7]	F
+c = '7 '	c=c10[7]	T
+c = `7`	c=c10[7]	T
+c = '7'	c=c10[7]	T
+c < `7 `	c=c10[7]	T
+c = 7	c=c10[7]	T
+c = '7.0'	c=c10[7]	F
+'-1' <> '1-'	-	T
+-1 = '1-'	-	T
+'a' > 'Z'	-	T
+'a' > 'B'	-	T
+'' = ` `	-	F
+' ' = ``	-	T
+'ab' < 'abc'	-	T
+`ab` < `abc`	-	T
+`ab ` > `ab`	-	T
+'ab ' = 'ab'	-	T
+boolc( 1 = 2 ) = abap_false	-	F
+xsdbool( 1 = 2 ) = abap_false	-	T
+boolc( 1 = 1 ) = abap_true	-	T
+boolc( 1 = 2 ) = ` `	-	T
+boolc( 1 = 2 ) = ``	-	F
+CONV t( '120000' ) = '12'	-	T
+CONV t( '123000' ) <> '12'	-	T
+CONV t( '120000' ) = `12`	-	T
+CONV t( '120000' ) = '120'	-	T
+CONV d( '20240229' ) = '20240229  '	-	T
+CONV d( '20240229' ) = '2024022900'	-	F
+CONV d( '20240229' ) = `20240229 `	-	T
+CONV d( '20240229' ) = '2024'	-	F
+utclong_current( ) > ``	-	T
+utclong_current( ) > ''	-	T
+CONV utclong( `` ) = ``	-	T
+CONV utclong( `` ) < utclong_current( )	-	T
+CONV f( '0.15' ) = CONV decfloat34( '0.15' )	-	F
+CONV f( '0.5' ) = CONV decfloat34( '0.5' )	-	T
+CONV f( '0.1' ) = CONV p8_2( '0.1' )	-	T
+CONV decfloat34( '1.0' ) = CONV decfloat34( '1.00' )	-	T
+CONV decfloat16( '0.1' ) = CONV decfloat34( '0.1' )	-	T
+CONV x8( '0102' ) = CONV xstring( '0102' )	-	F
+CONV x8( '0102' ) = CONV xstring( '01020000' )	-	F
+CONV x8( '0102' ) > CONV xstring( '0102' )	-	T
+1 = '1.0'	-	T
+'1' = '1.0'	-	F
+'1' = `1.0`	-	F
+7 / 2 = 4	-	T
+7 / 2 = + '3.5'	-	T
+abs( -7 ) = 7	-	T
+strlen( `abc` ) = 3	-	T
+CONV xstring( n ) = 'FF'	n=i[255]	T
+CONV xstring( n ) = `FF`	n=i[255]	T
+CONV xstring( n ) = n	n=i[255]	T
+CONV xstring( n ) = n	n=i[-1]	T
+a / 2 = '3.5'	a=int8[7]	SYNTAX
+a / 2 = `3.5`	a=int8[7]	SYNTAX
+a / 2 BETWEEN '3.5' AND '3.5'	a=int8[7]	SYNTAX
++ c = '1.5'	c=c10[1.5]	SYNTAX
+a + 0 = c	a=i[7] c=c10[7]	SYNTAX
+a + 0 = o	a=i[7] o=string[7]	SYNTAX
+a + 0 = o	a=i[7] o=n4[0007]	SYNTAX
+a + 0 = o	a=i[7] o=d[00010108]	SYNTAX
+a + 0 = o	a=i[7] o=x4[00000007]	SYNTAX
+a + 0 = o	a=i[7] o=utclong[]	SYNTAX
++ u = 0	u=utclong[]	SYNTAX
+a + 0 IS INITIAL	a=i[7]	SYNTAX
+d = t	d=d[20240229] t=t[120000]	SYNTAX
+u = o	u=utclong[] o=i[1]	SYNTAX
+u = o	u=utclong[] o=n4[0001]	SYNTAX
+u = o	u=utclong[] o=x4[00000001]	SYNTAX
+u = o	u=utclong[] o=d[20240229]	SYNTAX
+u = o	u=utclong[] o=t[120000]	SYNTAX
+u = o	u=utclong[] o=p8.2[1]	SYNTAX
+u = o	u=utclong[] o=f[1]	SYNTAX
+u = o	u=utclong[] o=decfloat34[1]	SYNTAX
+u = o	u=utclong[] o=xstring[01]	SYNTAX
+u = 1	u=utclong[]	SYNTAX

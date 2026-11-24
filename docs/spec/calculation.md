@@ -22,6 +22,10 @@ result = a / b * b.` with `1` as the expected content of `result`. The header of
 format, which reads values as [`conversion.tsv`](../../runtime/go/abap/testdata/conversion.tsv) does. A few cells
 have an expected value but no worked-out rule yet; they are kept apart in
 [`testdata/calculation_open.tsv`](../../runtime/go/abap/testdata/calculation_open.tsv) (see *Open points*).
+Priority and the sign, and overflow in every place an expression is calculated (assignment operators, `ADD` and
+its siblings, string templates, `CONV`, `EXACT`, inline declarations, the result field after an exception), are in
+[`testdata/calculation_contexts.tsv`](../../runtime/go/abap/testdata/calculation_contexts.tsv) (699 cells; specified,
+not run by the tests yet).
 
 Throughout, **rounding** is half away from zero (commercial rounding), as in [conversion.md](conversion.md).
 
@@ -100,6 +104,22 @@ Before the calculation every operand is converted to the calculation type with t
 | `MOD` | 2 | the remainder *r* of the Euclidean division, never negative |
 | `**` | 3, right to left | power (`2 ** 3 ** 2` is 512); makes the calculation type `f` or `decfloat34` |
 | `-` (sign) | | the negative; `- a` |
+
+**Priority and the sign.** From the strongest binding to the weakest:
+
+1. `**`, from right to left;
+2. the sign `-` (and `+`, which changes nothing) before an operand, also right after another operator
+   (`a * - b`, `- - a`);
+3. `*`, `/`, `DIV`, `MOD`, from left to right;
+4. `+`, `-`, from left to right.
+
+So a sign applies to the power, not to its base, also on the right of `**`: `- a ** b` is `-( a ** b )` (`- 7 ** 2`
+is -49) and `b ** - c ** b` is `b ** -( c ** b )`. It binds more strongly than the multiplicative operators:
+`- a MOD b` is `( - a ) MOD b` (`- 7 MOD 2` is 1, `- 7 DIV 2` is -4), `- a / b * c` is `( ( - a ) / b ) * c`. A
+negative number literal is a single operand, not a sign: `-7 ** 2` is 49, `-2 ** 2 ** 3` is 256 and `- 2 ** 2 ** 3`
+is -256. Left to right means `7 - 2 - 3` is 2, `7 / 2 * 3` is 10.5 in `p` and 12 in `i` (each division rounded),
+`7 DIV 2 * 3` is 9, `7 MOD 2 * 3` is 3 and `7 * 2 DIV 3` is 4. The function operands (`abs( - a ) ** b`) and
+parentheses (`( - a ) ** b`) bind as usual.
 
 `DIV` and `MOD` for the four sign combinations: `7 DIV 3` is 2 and `7 MOD 3` is 1; `-7 DIV 3` is -3, `-7 MOD 3` is
 2; `7 DIV -3` is -2, `7 MOD -3` is 1; `-7 DIV -3` is 3, `-7 MOD -3` is 2. The same holds with decimals:
@@ -259,7 +279,32 @@ into an `n LENGTH 3`: `000`; `f 1000` into a `c LENGTH 3`: `***`; `decfloat34 10
 
 **Assignment operators.** `result += a.` (and `-=`, `*=`, `/=`) is `result = result + ( a ).`: the result field is an
 operand and the target (`r TYPE p LENGTH 8 DECIMALS 2 VALUE '1.00'`, `r += 1 / 3` gives 1.33; `r TYPE i VALUE 1`,
-`r += p 0.5` gives 2; `r /= 0` raises `CX_SY_ZERODIVIDE`, unless `r` is 0).
+`r += p 0.5` gives 2; `r /= 0` raises `CX_SY_ZERODIVIDE`, unless `r` is 0). The statements `ADD a TO r`,
+`SUBTRACT a FROM r`, `MULTIPLY r BY a` and `DIVIDE r BY a` are the same as `r += a`, `r -= a`, `r *= a` and `r /= a`,
+exceptions included.
+
+**Other places an expression is calculated.** The rules hold wherever an arithmetic expression stands, with the
+calculation type taken from the operands and from what the result goes into:
+
+| Place | Data types involved besides the operands |
+|---|---|
+| `result = expression`, assignment operators, `ADD`, `SUBTRACT`, `MULTIPLY`, `DIVIDE` | the result field |
+| `DATA(result) = expression` | none (section 1) |
+| `CONV type( expression )`, `EXACT type( expression )` | `type` |
+| an embedded expression of a string template, `|{ expression }|` | none: `|{ i_7 / 2 }|` is `4`, `|{ c_7 / 2 }|` is `3.5` |
+| an operand of a relational expression | the operands of the whole comparison, see [comparison.md](comparison.md) |
+
+So an overflow raises the same exception in all of them: `|{ i_max + 1 }|` and `CONV i( i_max + 1 )` raise
+`CX_SY_ARITHMETIC_OVERFLOW` as `r = i_max + 1` into an `i` does, and `ADD 1 TO r` with `r` at the largest `int8`
+does too. A `p` result of an embedded expression is formatted as for a `string` target (`|{ p_7.00 / 3 }|` is
+`2.33333333333333`); the other formatting of embedded expressions belongs to the string templates of the output
+formatting table.
+
+**The result field after an exception.** When the calculation raises an exception (`CX_SY_ARITHMETIC_OVERFLOW`,
+`CX_SY_ZERODIVIDE`, `CX_SY_CONVERSION_NO_NUMBER`), the result field keeps its value: `r = i_max + 1` leaves `r` as it
+was, and so do `r += 1`, `ADD 1 TO r` and `DIVIDE r BY 0`. When the result is calculated but does not fit the result
+field (`CX_SY_CONVERSION_OVERFLOW`, and `CX_SY_ARITHMETIC_OVERFLOW` of a `p` calculation), an integer result field
+can be left with a value: see *Open points*.
 
 **EXACT.** `EXACT type( arithmetic expression )` calculates as above and raises `CX_SY_CONVERSION_ROUNDING` instead of
 rounding, in an interim result or when the result is moved into `type`: `EXACT p8_2( p 1 / 4 )` is 0.25,
@@ -278,6 +323,16 @@ anywhere in the expression or as the type is a syntax error.
 | `CX_SY_CONVERSION_ROUNDING` | `EXACT` when a value would be rounded |
 
 ## Open points
+
+- **What an integer target holds after `CX_SY_CONVERSION_OVERFLOW`.** A value that does not fit a `b`, `s` or `i`
+  target is often written in a truncated form before the exception is raised: `b = i_300` leaves 44 (300 modulo 256),
+  `b = i_-1` leaves 255, `s = i_40000` leaves -25536, `i = int8_3000000000` leaves -1294967296, `b = i_300 + p_0`
+  (a `p` calculation, `CX_SY_ARITHMETIC_OVERFLOW`) leaves 44, `b += i_300` from 5 leaves 49. From a text the value is
+  not the truncated number (`b = c_'256'` and `b = c_'300'` leave 1, `b = c_'-1'` leaves 255). An `f` source into an `i`,
+  a `p` target and `EXACT` leave the target unchanged. This is a rule of the conversion table (the move of a
+  value that does not fit); the cells written down so far are in
+  [`testdata/calculation_contexts.tsv`](../../runtime/go/abap/testdata/calculation_contexts.tsv) for `b` and `s`, the
+  others are examples, and a grid over all sources is still to be done.
 
 - **The decimals of an exact `p` product moved into a `string`.** `2.00 * 2.00` gives `4.000`, `2.5 * 2.5` gives
   `6.250`, `2.0 * 2.0` gives `4.0`, `7 * 1` gives `7.0`, `ipow( 2.00, 3 )` gives `8.0` and `ipow( 1.10, 3 )` gives
