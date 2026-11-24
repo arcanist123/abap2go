@@ -7,8 +7,9 @@ Issue numbers: `abaplint#` = abaplint/abaplint, `open-abap-core#` = open-abap/op
 
 **The goal is an AOT compiler for ABAP:** ABAP compiled ahead of time into standalone executables that run at a
 speed comparable to Go, with no ABAP application server and no JS runtime (a database, embedded or external, is
-allowed). The design is [aot_for_abap.md](aot_for_abap.md). Work on abaplint, open-abap-core and the transpiler
-is listed here to the extent that it moves the AOT compiler forward.
+allowed). The design is [aot_for_abap.md](aot_for_abap.md). Work on abaplint and open-abap-core is listed here
+to the extent that it moves the AOT compiler forward. The JS transpiler is not a priority: its runtime does not
+carry over, and only its issues' snippets and expected behaviour are used, as cells of the specification.
 
 Priority, when choosing what to pick up next:
 1. **the specification of ABAP's rule tables** (the critical path, below): runtime-neutral, SAP is the reference
@@ -17,8 +18,6 @@ Priority, when choosing what to pick up next:
    abaplint accepts, because the compiler's input is code that already activates
 3. **open-abap-core**: its pure-ABAP classes (RTTI, XML, JSON, HTTP, conversions, ...) are compiled into AOT
    binaries as they are; its kernel and JS parts do not carry over
-4. **transpiler**: only where it serves the AOT compiler. Fixing the JS runtime does not carry over; what does is
-   each issue's snippet and expected behaviour, which goes into the specification
 
 - ABAP behaviour is the reference, not abaplint's rules. **Classic modern ABAP is the reference**: the current
   on-premise language with its modern syntax (7.40 and later), not ABAP Cloud
@@ -113,6 +112,11 @@ Next:
 - [ ] check the conversion cells of the issues above one by one against the spec and note each issue number at
   its rule; `MOVE-CORRESPONDING` and fragment views (#2229, #2222–#2227) are structure rules, still open
 - [ ] the comparison table, then calculation type and output formatting, in the same form (spec file + test cases)
+- [ ] cells still to work out, from the transpiler issues:
+  - p: MOD, DIV, **, compares, ADD/SUBTRACT/..., COLLECT/SORT/READ by p, SELECT/INSERT with p columns, template
+    SIGN/NUMBER/STYLE, EXACT, zero divide
+  - #1963 int8 to and from x/xstring
+  - #2139 AS TEXT: check whether anything is left beyond the fixes in #2159/#2161
 
 
 ## Work items
@@ -123,7 +127,6 @@ is above. Below it, in order:
    activates, so these produce wrong native code or refuse a valid program
 2. open-abap-core: the pure-ABAP classes an AOT service actually calls (RTTI, JSON, the HTTP server side)
 3. abaplint: invalid ABAP that abaplint accepts. Correct to fix, but it barely affects AOT output
-4. transpiler: subordinate; its issues matter as cells of the specification, not as JS fixes
 
 ### 1. abaplint: valid ABAP mistreated (review on main `af7440a`, 2026-11-23)
 
@@ -288,34 +291,3 @@ ABAP, this belongs in the parser / check_syntax, not in a rule option.
 Testing note: `npm test`/`--parallel` gives 25-37 "statement type" failures, all 250ms timeouts under load, and a
 timeout skips the rest of that file. Serial: `npx mocha --no-config --no-package --recursive build/test/abap/syntax`
 (the package.json `spec` overrides a folder argument otherwise)
-
-### 4. transpiler: subordinate
-
-Fixing the JS runtime does not carry over to AOT. What carries over is each issue's snippet and expected behaviour,
-which goes into the specification (see the critical path). The items below are kept for that reason; a JS fix PR is
-a separate, optional decision per issue.
-
-Specification cells still to work out (formerly "type-by-type review"):
-- [ ] p: MOD, DIV, **, compares, ADD/SUBTRACT/..., COLLECT/SORT/READ by p, SELECT/INSERT with p columns, template
-  SIGN/NUMBER/STYLE, EXACT, zero divide
-- [ ] #1963 int8 to and from x/xstring disagree with ABAP
-- [ ] #2139 AS TEXT (SORT, FOR GROUPS, LOOP GROUP BY fixed by #2159/#2161): check whether anything is left and close
-- [ ] not reviewed yet: c, string, x, xstring, d, t, utclong (the same list as under the critical path)
-
-JS fixes in flight (optional):
-- [ ] #2189 f to i beyond the range (in PR #2218 together with #2192, check what it covers before more PRs):
-  CX_SY_CONVERSION_OVERFLOW in the f/decfloat branch of `Integer.set( )` only. The int8 target after #2169 is
-  merged (both touch `integer8.ts`); the other sources in the comments (int8, p, text, n to i/int8) as later PRs
-  of the same pattern
-- [ ] #2259 (raised 2026-11-23) text in scientific notation in arithmetic: calculation type f loses the exponent
-  (`'2E1' * '3'` gives 6, 60 expected), p/i give 2 instead of CX_SY_CONVERSION_NO_NUMBER; cause `parseInt` in
-  `_parse.ts` and the text-with-Integer shortcuts in add/minus/multiply
-
-Not relevant for AOT, not picked up:
-- abaplint#4615 follow-up: `transpile_types.ts` emits ddicName only for Character and Structure, so RTTI
-  `is_ddic_type( )` for i, string, n, x and tables needs a transpiler PR (JS runtime only)
-- abaplint#4619 follow-up: a transpiler test that `!lines( )` works
-
-- testing: `rm -rf build && npx tsc` in the transpiler root (stale compiled tests of other branches stay in
-  `build/` otherwise), then `npx mocha --no-config --no-package --recursive --require source-map-support/register
-  build/test`; the 163 "Top level tests, Database" need Postgres and fail locally on every branch
