@@ -86,6 +86,7 @@ the closed world is defined well.
    | OData (SEGW) | the DPC's `/iwbep/` runtime interface |
    | BAdI implementation | the BAdI interface |
    | ABAP Unit | `FOR TESTING` |
+   | Console class | `if_oo_adt_classrun` |
    | RFC function modules, reports, jobs | their own markers (remote-enabled flag, program type) |
 
    The marker says what can be a root; which root a binary is built for is chosen by naming it as the compilation
@@ -425,6 +426,25 @@ from the program.
     shape with a run-time dictionary.
   - *When:* level 1 once the generic path is measured as a bottleneck; level 2 when a real hot path needs it.
     Measure first what a generic operation costs against typed code.
+
+- **Hosting follows open-steamgate; its AOT compiler does not.** Whatever open-steamgate provides as host
+  (list processing, the console, the build layout, later the database, LUW, locks and HTTP) is reused; its
+  compiler (frontend, IR, emitter, value model) is not. Decided 2026-11-24 with the first hello world:
+  - *Reports* run their basic list through open-abap-gui's classic list processor (`ZCL_GG_HOST_LIST`, MIT),
+    ported to the Go runtime: one blank between outputs, `WRITE /` starts a line, no wrap at the list width
+    (default 132), lengths count characters, trailing blanks removed per line, the standard page header not
+    written. Only `START-OF-SELECTION` (explicit or implicit) is supported; every other event is a build error.
+  - *Output streams.* Where open-steamgate hands the list over when the program ends, abap2go writes each list
+    line to stdout as soon as it is finished: layout only looks at the current line, so a finished line never
+    changes. Statements that read or change earlier lines (`READ LINE`, `MODIFY LINE`) are build errors for now.
+  - *`if_oo_adt_classrun` is a root kind*, for console programs: an instance is created and `main` runs with
+    the console as `out`. `out->write` writes one line at once, unbuffered, formatted as open-steamgate's
+    `ZCL_OSD_CLASSRUN_OUT` does (a value converted to string, `name = value` with a name). The interfaces come
+    from open-abap-core, in the built-in library package `lib/`.
+  - *Build layout* as open-steamgate's osabap: the generated root is `package main` in `cmd/<root>` inside a copy
+    of the runtime module, built with `-trimpath` and a stripped binary. No layered packages until build time
+    matters.
+  - *Release:* the input is checked as ABAP 7.58.
 
 ## What the static-name rule costs (measured 2026-11-24)
 
