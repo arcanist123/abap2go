@@ -1,7 +1,8 @@
 # AOT for ABAP
 
 Design notes for compiling ABAP ahead of time into a standalone native executable. Worked out in a discussion on
-2026-11-24. Several points rest on measurements of open-steamgate's ABAP-to-Go backend (gogen), summarised where they are used.
+2026-11-24. Several points rest on measurements of open-steamgate's ABAP-to-Go backend (gogen), in
+[open-steamgate-notes.md](open-steamgate-notes.md). The work items are in [roadmap.md](roadmap.md).
 Decisions and the (now empty) open points are at the end.
 
 ## Guiding principle
@@ -33,7 +34,7 @@ What the rule demands:
   cover every pair of type kinds the language allows, or every generic operation whose operand kinds the compiler
   cannot bound is a build error.
 - **The compiler's own type decisions must be exact.** A miscompilation such as two different structures merged
-  into one type (a bug of this kind was found in gogen) is exactly the kind of bug the rule forbids.
+  into one type (a bug of this kind was found in gogen: [oisee/open-steamgate#1012](https://github.com/oisee/open-steamgate/issues/1012)) is exactly the kind of bug the rule forbids.
 - **Optimisations must be invisible.** Trimming, specialisation and devirtualisation may not change what the
   program does.
 
@@ -183,7 +184,7 @@ from the program.
 - **Specialising at build time** is the way to recover speed there: when the actual type behind a `TYPE any`
   parameter is known at the call site, compile a typed copy of the method. That is what .NET's source generators do
   for serializers.
-- Value representation decides speed more than the backend does (measured on gogen, 2026-11-24): `p` must be fixed-point
+- Value representation decides speed more than the backend does (measured on gogen, see [open-steamgate-notes.md](open-steamgate-notes.md)): `p` must be fixed-point
   integers and not decimal text, HASHED and SORTED tables need a real hash map and binary search, a method call must
   not cost a closure plus a defer, and APPEND must not use reflection.
 
