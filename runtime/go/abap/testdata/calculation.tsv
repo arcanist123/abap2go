@@ -1,0 +1,2281 @@
+# The cells of the calculation type table as test cases, see docs/spec/calculation.md.
+# Columns: target, expression, operands a, b and c, expected result.
+# An operand is type[value], set as in conversion.tsv (a c, n, d or t holds exactly the characters given, any other
+# type gets the given text converted to it); <a>=type[value] is a field symbol TYPE any assigned to such a variable;
+# - is an unused operand. The target is the type of the result field of `result = expression.`; type[value] is a
+# result field with that start value for an assignment operator (`result += a.`); DATA is an inline declaration
+# `DATA(result) = expression.`, whose expected result is type:value. Values read as in conversion.tsv: text in [],
+# x and xstring as hex digits, f as the hex digits of its IEEE 754 bits, decfloat as d.ddd with a four-digit
+# exponent, p with all its decimals. EXC: names the exception raised, SYNTAX means the statement is a syntax error.
+i	a * b * 2 / 4	i[1]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	( a / 3 * 3 - 1 ) * b * b	i[1]	int8[1000000000000000000]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b * b	i[1]	i[3]	-	0
+i	a / b	i[1]	i[3]	-	0
+i	a * b * 2 / 4	int8[1]	i[2147483647]	-	1073741824
+i	( a / 3 * 3 - 1 ) * b * b	int8[1]	int8[1000000000000000000]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b * b	int8[1]	i[3]	-	0
+int8	a / b * b	i[1]	i[3]	-	0
+int8	a * b * 2 / 4	i[1]	i[2147483647]	-	1073741824
+int8	a / b	i[1]	i[3]	-	0
+i	a * b * 2 / 4	b[1]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	( a / 3 * 3 - 1 ) * b * b	b[1]	int8[1000000000000000000]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b * b	b[1]	i[3]	-	0
+b	a / b * b	i[1]	i[3]	-	0
+b	a * b * 2 / 4	i[1]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+b	a / b	i[1]	i[3]	-	0
+i	a * b * 2 / 4	s[1]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	( a / 3 * 3 - 1 ) * b * b	s[1]	int8[1000000000000000000]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b * b	s[1]	i[3]	-	0
+s	a / b * b	i[1]	i[3]	-	0
+s	a * b * 2 / 4	i[1]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+s	a / b	i[1]	i[3]	-	0
+i	a * b * 2 / 4	p8.2[1]	i[2147483647]	-	1073741824
+i	( a / 3 * 3 - 1 ) * b * b	p8.2[1]	int8[1000000000000000000]	-	-100000
+i	a / b * b	p8.2[1]	i[3]	-	1
+p8.2	a / b * b	i[1]	i[3]	-	1.00
+p8.2	a * b * 2 / 4	i[1]	i[2147483647]	-	1073741823.50
+p8.2	a / b	i[1]	i[3]	-	0.33
+i	a * b * 2 / 4	p16.0[1]	i[2147483647]	-	1073741824
+i	( a / 3 * 3 - 1 ) * b * b	p16.0[1]	int8[1000000000000000000]	-	-100000
+i	a / b * b	p16.0[1]	i[3]	-	1
+p16.0	a / b * b	i[1]	i[3]	-	1
+p16.0	a * b * 2 / 4	i[1]	i[2147483647]	-	1073741824
+p16.0	a / b	i[1]	i[3]	-	0
+i	a * b * 2 / 4	f[1]	i[2147483647]	-	1073741824
+i	( a / 3 * 3 - 1 ) * b * b	f[1]	int8[1000000000000000000]	-	0
+i	a / b * b	f[1]	i[3]	-	1
+f	a / b * b	i[1]	i[3]	-	3FF0000000000000
+f	a * b * 2 / 4	i[1]	i[2147483647]	-	41CFFFFFFFC00000
+f	a / b	i[1]	i[3]	-	3FD5555555555555
+i	a * b * 2 / 4	decfloat16[1]	i[2147483647]	-	1073741824
+i	( a / 3 * 3 - 1 ) * b * b	decfloat16[1]	int8[1000000000000000000]	-	-100
+i	a / b * b	decfloat16[1]	i[3]	-	1
+decfloat16	a / b * b	i[1]	i[3]	-	1.000000000000000E+0000
+decfloat16	a * b * 2 / 4	i[1]	i[2147483647]	-	1.0737418235E+0009
+decfloat16	a / b	i[1]	i[3]	-	3.333333333333333E-0001
+i	a * b * 2 / 4	decfloat34[1]	i[2147483647]	-	1073741824
+i	( a / 3 * 3 - 1 ) * b * b	decfloat34[1]	int8[1000000000000000000]	-	-100
+i	a / b * b	decfloat34[1]	i[3]	-	1
+decfloat34	a / b * b	i[1]	i[3]	-	9.999999999999999999999999999999999E-0001
+decfloat34	a * b * 2 / 4	i[1]	i[2147483647]	-	1.0737418235E+0009
+decfloat34	a / b	i[1]	i[3]	-	3.333333333333333333333333333333333E-0001
+i	a * b * 2 / 4	c10[1]	i[2147483647]	-	1073741824
+i	( a / 3 * 3 - 1 ) * b * b	c10[1]	int8[1000000000000000000]	-	-100000
+i	a / b * b	c10[1]	i[3]	-	1
+c10	a / b * b	i[1]	i[3]	-	[        1 ]
+c10	a * b * 2 / 4	i[1]	i[2147483647]	-	[1073741824]
+c10	a / b	i[1]	i[3]	-	[0.33333333]
+i	a * b * 2 / 4	n10[0000000001]	i[2147483647]	-	1073741824
+i	( a / 3 * 3 - 1 ) * b * b	n10[0000000001]	int8[1000000000000000000]	-	-100000
+i	a / b * b	n10[0000000001]	i[3]	-	1
+n10	a / b * b	i[1]	i[3]	-	[0000000001]
+n10	a * b * 2 / 4	i[1]	i[2147483647]	-	[1073741824]
+n10	a / b	i[1]	i[3]	-	[0000000000]
+i	a * b * 2 / 4	string[1]	i[2147483647]	-	1073741824
+i	( a / 3 * 3 - 1 ) * b * b	string[1]	int8[1000000000000000000]	-	-100000
+i	a / b * b	string[1]	i[3]	-	1
+string	a / b * b	i[1]	i[3]	-	[1.00000000000000 ]
+string	a / b	i[1]	i[3]	-	[0.33333333333333 ]
+i	a * b * 2 / 4	d[00010102]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	( a / 3 * 3 - 1 ) * b * b	d[00010102]	int8[1000000000000000000]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b * b	d[00010102]	i[3]	-	0
+d	a / b * b	i[1]	i[3]	-	[00000000]
+d	a * b * 2 / 4	i[1]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+d	a / b	i[1]	i[3]	-	[00000000]
+i	a * b * 2 / 4	t[000001]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	( a / 3 * 3 - 1 ) * b * b	t[000001]	int8[1000000000000000000]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b * b	t[000001]	i[3]	-	0
+t	a / b * b	i[1]	i[3]	-	[000000]
+t	a * b * 2 / 4	i[1]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+t	a / b	i[1]	i[3]	-	[000000]
+i	a * b * 2 / 4	x4[00000001]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	( a / 3 * 3 - 1 ) * b * b	x4[00000001]	int8[1000000000000000000]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b * b	x4[00000001]	i[3]	-	0
+x4	a / b * b	i[1]	i[3]	-	00000000
+x4	a * b * 2 / 4	i[1]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+x4	a / b	i[1]	i[3]	-	00000000
+i	a * b * 2 / 4	xstring[01]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	( a / 3 * 3 - 1 ) * b * b	xstring[01]	int8[1000000000000000000]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b * b	xstring[01]	i[3]	-	0
+xstring	a / b * b	i[1]	i[3]	-	00
+xstring	a * b * 2 / 4	i[1]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+xstring	a / b	i[1]	i[3]	-	00
+i	<a> / 2 * 2	<a>=i[7]	-	-	8
+i	<a> / 2 * 2	<a>=int8[7]	-	-	8
+i	<a> / 2 * 2	<a>=p8.2[7]	-	-	7
+i	<a> / 2 * 2	<a>=c4[7]	-	-	7
+i	<a> / 2 * 2	<a>=string[7]	-	-	7
+i	<a> / 2 * 2	<a>=n3[007]	-	-	7
+i	<a> / 2 * 2	<a>=f[7]	-	-	7
+i	<a> / 2 * 2	<a>=decfloat34[7]	-	-	7
+i	<a> / 2 * 2	<a>=x4[00000007]	-	-	8
+i	<a> / 2 * 2	<a>=d[00010108]	-	-	8
+i	<a> / 2 * 2	<a>=t[000007]	-	-	8
+i	a + b	i[7]	i[2]	-	9
+i	a - b	i[7]	i[2]	-	5
+i	a * b	i[7]	i[2]	-	14
+i	a / b	i[7]	i[2]	-	4
+i	a DIV b	i[7]	i[2]	-	3
+i	a MOD b	i[7]	i[2]	-	1
+i	a + b	i[7]	i[-2]	-	5
+i	a - b	i[7]	i[-2]	-	9
+i	a * b	i[7]	i[-2]	-	-14
+i	a / b	i[7]	i[-2]	-	-4
+i	a DIV b	i[7]	i[-2]	-	-3
+i	a MOD b	i[7]	i[-2]	-	1
+i	a + b	i[7]	i[3]	-	10
+i	a - b	i[7]	i[3]	-	4
+i	a * b	i[7]	i[3]	-	21
+i	a / b	i[7]	i[3]	-	2
+i	a DIV b	i[7]	i[3]	-	2
+i	a MOD b	i[7]	i[3]	-	1
+i	a + b	i[7]	i[-3]	-	4
+i	a - b	i[7]	i[-3]	-	10
+i	a * b	i[7]	i[-3]	-	-21
+i	a / b	i[7]	i[-3]	-	-2
+i	a DIV b	i[7]	i[-3]	-	-2
+i	a MOD b	i[7]	i[-3]	-	1
+i	a + b	i[7]	i[0]	-	7
+i	a - b	i[7]	i[0]	-	7
+i	a * b	i[7]	i[0]	-	0
+i	a / b	i[7]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a DIV b	i[7]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a MOD b	i[7]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a + b	i[7]	i[1]	-	8
+i	a - b	i[7]	i[1]	-	6
+i	a * b	i[7]	i[1]	-	7
+i	a / b	i[7]	i[1]	-	7
+i	a DIV b	i[7]	i[1]	-	7
+i	a MOD b	i[7]	i[1]	-	0
+i	a + b	i[7]	i[-1]	-	6
+i	a - b	i[7]	i[-1]	-	8
+i	a * b	i[7]	i[-1]	-	-7
+i	a / b	i[7]	i[-1]	-	-7
+i	a DIV b	i[7]	i[-1]	-	-7
+i	a MOD b	i[7]	i[-1]	-	0
+i	a + b	i[7]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a - b	i[7]	i[2147483647]	-	-2147483640
+i	a * b	i[7]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[7]	i[2147483647]	-	0
+i	a DIV b	i[7]	i[2147483647]	-	0
+i	a MOD b	i[7]	i[2147483647]	-	7
+i	a + b	i[-7]	i[2]	-	-5
+i	a - b	i[-7]	i[2]	-	-9
+i	a * b	i[-7]	i[2]	-	-14
+i	a / b	i[-7]	i[2]	-	-4
+i	a DIV b	i[-7]	i[2]	-	-4
+i	a MOD b	i[-7]	i[2]	-	1
+i	a + b	i[-7]	i[-2]	-	-9
+i	a - b	i[-7]	i[-2]	-	-5
+i	a * b	i[-7]	i[-2]	-	14
+i	a / b	i[-7]	i[-2]	-	4
+i	a DIV b	i[-7]	i[-2]	-	4
+i	a MOD b	i[-7]	i[-2]	-	1
+i	a + b	i[-7]	i[3]	-	-4
+i	a - b	i[-7]	i[3]	-	-10
+i	a * b	i[-7]	i[3]	-	-21
+i	a / b	i[-7]	i[3]	-	-2
+i	a DIV b	i[-7]	i[3]	-	-3
+i	a MOD b	i[-7]	i[3]	-	2
+i	a + b	i[-7]	i[-3]	-	-10
+i	a - b	i[-7]	i[-3]	-	-4
+i	a * b	i[-7]	i[-3]	-	21
+i	a / b	i[-7]	i[-3]	-	2
+i	a DIV b	i[-7]	i[-3]	-	3
+i	a MOD b	i[-7]	i[-3]	-	2
+i	a + b	i[-7]	i[0]	-	-7
+i	a - b	i[-7]	i[0]	-	-7
+i	a * b	i[-7]	i[0]	-	0
+i	a / b	i[-7]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a DIV b	i[-7]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a MOD b	i[-7]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a + b	i[-7]	i[1]	-	-6
+i	a - b	i[-7]	i[1]	-	-8
+i	a * b	i[-7]	i[1]	-	-7
+i	a / b	i[-7]	i[1]	-	-7
+i	a DIV b	i[-7]	i[1]	-	-7
+i	a MOD b	i[-7]	i[1]	-	0
+i	a + b	i[-7]	i[-1]	-	-8
+i	a - b	i[-7]	i[-1]	-	-6
+i	a * b	i[-7]	i[-1]	-	7
+i	a / b	i[-7]	i[-1]	-	7
+i	a DIV b	i[-7]	i[-1]	-	7
+i	a MOD b	i[-7]	i[-1]	-	0
+i	a + b	i[-7]	i[2147483647]	-	2147483640
+i	a - b	i[-7]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a * b	i[-7]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[-7]	i[2147483647]	-	0
+i	a DIV b	i[-7]	i[2147483647]	-	-1
+i	a MOD b	i[-7]	i[2147483647]	-	2147483640
+i	a + b	i[5]	i[2]	-	7
+i	a - b	i[5]	i[2]	-	3
+i	a * b	i[5]	i[2]	-	10
+i	a / b	i[5]	i[2]	-	3
+i	a DIV b	i[5]	i[2]	-	2
+i	a MOD b	i[5]	i[2]	-	1
+i	a + b	i[5]	i[-2]	-	3
+i	a - b	i[5]	i[-2]	-	7
+i	a * b	i[5]	i[-2]	-	-10
+i	a / b	i[5]	i[-2]	-	-3
+i	a DIV b	i[5]	i[-2]	-	-2
+i	a MOD b	i[5]	i[-2]	-	1
+i	a + b	i[5]	i[3]	-	8
+i	a - b	i[5]	i[3]	-	2
+i	a * b	i[5]	i[3]	-	15
+i	a / b	i[5]	i[3]	-	2
+i	a DIV b	i[5]	i[3]	-	1
+i	a MOD b	i[5]	i[3]	-	2
+i	a + b	i[5]	i[-3]	-	2
+i	a - b	i[5]	i[-3]	-	8
+i	a * b	i[5]	i[-3]	-	-15
+i	a / b	i[5]	i[-3]	-	-2
+i	a DIV b	i[5]	i[-3]	-	-1
+i	a MOD b	i[5]	i[-3]	-	2
+i	a + b	i[5]	i[0]	-	5
+i	a - b	i[5]	i[0]	-	5
+i	a * b	i[5]	i[0]	-	0
+i	a / b	i[5]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a DIV b	i[5]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a MOD b	i[5]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a + b	i[5]	i[1]	-	6
+i	a - b	i[5]	i[1]	-	4
+i	a * b	i[5]	i[1]	-	5
+i	a / b	i[5]	i[1]	-	5
+i	a DIV b	i[5]	i[1]	-	5
+i	a MOD b	i[5]	i[1]	-	0
+i	a + b	i[5]	i[-1]	-	4
+i	a - b	i[5]	i[-1]	-	6
+i	a * b	i[5]	i[-1]	-	-5
+i	a / b	i[5]	i[-1]	-	-5
+i	a DIV b	i[5]	i[-1]	-	-5
+i	a MOD b	i[5]	i[-1]	-	0
+i	a + b	i[5]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a - b	i[5]	i[2147483647]	-	-2147483642
+i	a * b	i[5]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[5]	i[2147483647]	-	0
+i	a DIV b	i[5]	i[2147483647]	-	0
+i	a MOD b	i[5]	i[2147483647]	-	5
+i	a + b	i[-5]	i[2]	-	-3
+i	a - b	i[-5]	i[2]	-	-7
+i	a * b	i[-5]	i[2]	-	-10
+i	a / b	i[-5]	i[2]	-	-3
+i	a DIV b	i[-5]	i[2]	-	-3
+i	a MOD b	i[-5]	i[2]	-	1
+i	a + b	i[-5]	i[-2]	-	-7
+i	a - b	i[-5]	i[-2]	-	-3
+i	a * b	i[-5]	i[-2]	-	10
+i	a / b	i[-5]	i[-2]	-	3
+i	a DIV b	i[-5]	i[-2]	-	3
+i	a MOD b	i[-5]	i[-2]	-	1
+i	a + b	i[-5]	i[3]	-	-2
+i	a - b	i[-5]	i[3]	-	-8
+i	a * b	i[-5]	i[3]	-	-15
+i	a / b	i[-5]	i[3]	-	-2
+i	a DIV b	i[-5]	i[3]	-	-2
+i	a MOD b	i[-5]	i[3]	-	1
+i	a + b	i[-5]	i[-3]	-	-8
+i	a - b	i[-5]	i[-3]	-	-2
+i	a * b	i[-5]	i[-3]	-	15
+i	a / b	i[-5]	i[-3]	-	2
+i	a DIV b	i[-5]	i[-3]	-	2
+i	a MOD b	i[-5]	i[-3]	-	1
+i	a + b	i[-5]	i[0]	-	-5
+i	a - b	i[-5]	i[0]	-	-5
+i	a * b	i[-5]	i[0]	-	0
+i	a / b	i[-5]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a DIV b	i[-5]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a MOD b	i[-5]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a + b	i[-5]	i[1]	-	-4
+i	a - b	i[-5]	i[1]	-	-6
+i	a * b	i[-5]	i[1]	-	-5
+i	a / b	i[-5]	i[1]	-	-5
+i	a DIV b	i[-5]	i[1]	-	-5
+i	a MOD b	i[-5]	i[1]	-	0
+i	a + b	i[-5]	i[-1]	-	-6
+i	a - b	i[-5]	i[-1]	-	-4
+i	a * b	i[-5]	i[-1]	-	5
+i	a / b	i[-5]	i[-1]	-	5
+i	a DIV b	i[-5]	i[-1]	-	5
+i	a MOD b	i[-5]	i[-1]	-	0
+i	a + b	i[-5]	i[2147483647]	-	2147483642
+i	a - b	i[-5]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a * b	i[-5]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[-5]	i[2147483647]	-	0
+i	a DIV b	i[-5]	i[2147483647]	-	-1
+i	a MOD b	i[-5]	i[2147483647]	-	2147483642
+i	a + b	i[0]	i[2]	-	2
+i	a - b	i[0]	i[2]	-	-2
+i	a * b	i[0]	i[2]	-	0
+i	a / b	i[0]	i[2]	-	0
+i	a DIV b	i[0]	i[2]	-	0
+i	a MOD b	i[0]	i[2]	-	0
+i	a + b	i[0]	i[-2]	-	-2
+i	a - b	i[0]	i[-2]	-	2
+i	a * b	i[0]	i[-2]	-	0
+i	a / b	i[0]	i[-2]	-	0
+i	a DIV b	i[0]	i[-2]	-	0
+i	a MOD b	i[0]	i[-2]	-	0
+i	a + b	i[0]	i[3]	-	3
+i	a - b	i[0]	i[3]	-	-3
+i	a * b	i[0]	i[3]	-	0
+i	a / b	i[0]	i[3]	-	0
+i	a DIV b	i[0]	i[3]	-	0
+i	a MOD b	i[0]	i[3]	-	0
+i	a + b	i[0]	i[-3]	-	-3
+i	a - b	i[0]	i[-3]	-	3
+i	a * b	i[0]	i[-3]	-	0
+i	a / b	i[0]	i[-3]	-	0
+i	a DIV b	i[0]	i[-3]	-	0
+i	a MOD b	i[0]	i[-3]	-	0
+i	a + b	i[0]	i[0]	-	0
+i	a - b	i[0]	i[0]	-	0
+i	a * b	i[0]	i[0]	-	0
+i	a / b	i[0]	i[0]	-	0
+i	a DIV b	i[0]	i[0]	-	0
+i	a MOD b	i[0]	i[0]	-	0
+i	a + b	i[0]	i[1]	-	1
+i	a - b	i[0]	i[1]	-	-1
+i	a * b	i[0]	i[1]	-	0
+i	a / b	i[0]	i[1]	-	0
+i	a DIV b	i[0]	i[1]	-	0
+i	a MOD b	i[0]	i[1]	-	0
+i	a + b	i[0]	i[-1]	-	-1
+i	a - b	i[0]	i[-1]	-	1
+i	a * b	i[0]	i[-1]	-	0
+i	a / b	i[0]	i[-1]	-	0
+i	a DIV b	i[0]	i[-1]	-	0
+i	a MOD b	i[0]	i[-1]	-	0
+i	a + b	i[0]	i[2147483647]	-	2147483647
+i	a - b	i[0]	i[2147483647]	-	-2147483647
+i	a * b	i[0]	i[2147483647]	-	0
+i	a / b	i[0]	i[2147483647]	-	0
+i	a DIV b	i[0]	i[2147483647]	-	0
+i	a MOD b	i[0]	i[2147483647]	-	0
+i	a + b	i[1]	i[2]	-	3
+i	a - b	i[1]	i[2]	-	-1
+i	a * b	i[1]	i[2]	-	2
+i	a / b	i[1]	i[2]	-	1
+i	a DIV b	i[1]	i[2]	-	0
+i	a MOD b	i[1]	i[2]	-	1
+i	a + b	i[1]	i[-2]	-	-1
+i	a - b	i[1]	i[-2]	-	3
+i	a * b	i[1]	i[-2]	-	-2
+i	a / b	i[1]	i[-2]	-	-1
+i	a DIV b	i[1]	i[-2]	-	0
+i	a MOD b	i[1]	i[-2]	-	1
+i	a + b	i[1]	i[3]	-	4
+i	a - b	i[1]	i[3]	-	-2
+i	a * b	i[1]	i[3]	-	3
+i	a DIV b	i[1]	i[3]	-	0
+i	a MOD b	i[1]	i[3]	-	1
+i	a + b	i[1]	i[-3]	-	-2
+i	a - b	i[1]	i[-3]	-	4
+i	a * b	i[1]	i[-3]	-	-3
+i	a / b	i[1]	i[-3]	-	0
+i	a DIV b	i[1]	i[-3]	-	0
+i	a MOD b	i[1]	i[-3]	-	1
+i	a + b	i[1]	i[0]	-	1
+i	a - b	i[1]	i[0]	-	1
+i	a * b	i[1]	i[0]	-	0
+i	a / b	i[1]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a DIV b	i[1]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a MOD b	i[1]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a + b	i[1]	i[1]	-	2
+i	a - b	i[1]	i[1]	-	0
+i	a * b	i[1]	i[1]	-	1
+i	a / b	i[1]	i[1]	-	1
+i	a DIV b	i[1]	i[1]	-	1
+i	a MOD b	i[1]	i[1]	-	0
+i	a + b	i[1]	i[-1]	-	0
+i	a - b	i[1]	i[-1]	-	2
+i	a * b	i[1]	i[-1]	-	-1
+i	a / b	i[1]	i[-1]	-	-1
+i	a DIV b	i[1]	i[-1]	-	-1
+i	a MOD b	i[1]	i[-1]	-	0
+i	a + b	i[1]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a - b	i[1]	i[2147483647]	-	-2147483646
+i	a * b	i[1]	i[2147483647]	-	2147483647
+i	a / b	i[1]	i[2147483647]	-	0
+i	a DIV b	i[1]	i[2147483647]	-	0
+i	a MOD b	i[1]	i[2147483647]	-	1
+i	a + b	i[2147483647]	i[2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a - b	i[2147483647]	i[2]	-	2147483645
+i	a * b	i[2147483647]	i[2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[2147483647]	i[2]	-	1073741824
+i	a DIV b	i[2147483647]	i[2]	-	1073741823
+i	a MOD b	i[2147483647]	i[2]	-	1
+i	a + b	i[2147483647]	i[-2]	-	2147483645
+i	a - b	i[2147483647]	i[-2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a * b	i[2147483647]	i[-2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[2147483647]	i[-2]	-	-1073741824
+i	a DIV b	i[2147483647]	i[-2]	-	-1073741823
+i	a MOD b	i[2147483647]	i[-2]	-	1
+i	a + b	i[2147483647]	i[3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a - b	i[2147483647]	i[3]	-	2147483644
+i	a * b	i[2147483647]	i[3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[2147483647]	i[3]	-	715827882
+i	a DIV b	i[2147483647]	i[3]	-	715827882
+i	a MOD b	i[2147483647]	i[3]	-	1
+i	a + b	i[2147483647]	i[-3]	-	2147483644
+i	a - b	i[2147483647]	i[-3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a * b	i[2147483647]	i[-3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[2147483647]	i[-3]	-	-715827882
+i	a DIV b	i[2147483647]	i[-3]	-	-715827882
+i	a MOD b	i[2147483647]	i[-3]	-	1
+i	a + b	i[2147483647]	i[0]	-	2147483647
+i	a - b	i[2147483647]	i[0]	-	2147483647
+i	a * b	i[2147483647]	i[0]	-	0
+i	a / b	i[2147483647]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a DIV b	i[2147483647]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a MOD b	i[2147483647]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a + b	i[2147483647]	i[1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a - b	i[2147483647]	i[1]	-	2147483646
+i	a * b	i[2147483647]	i[1]	-	2147483647
+i	a / b	i[2147483647]	i[1]	-	2147483647
+i	a DIV b	i[2147483647]	i[1]	-	2147483647
+i	a MOD b	i[2147483647]	i[1]	-	0
+i	a + b	i[2147483647]	i[-1]	-	2147483646
+i	a - b	i[2147483647]	i[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a * b	i[2147483647]	i[-1]	-	-2147483647
+i	a / b	i[2147483647]	i[-1]	-	-2147483647
+i	a DIV b	i[2147483647]	i[-1]	-	-2147483647
+i	a MOD b	i[2147483647]	i[-1]	-	0
+i	a + b	i[2147483647]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a - b	i[2147483647]	i[2147483647]	-	0
+i	a * b	i[2147483647]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[2147483647]	i[2147483647]	-	1
+i	a DIV b	i[2147483647]	i[2147483647]	-	1
+i	a MOD b	i[2147483647]	i[2147483647]	-	0
+i	a + b	i[-2147483648]	i[2]	-	-2147483646
+i	a - b	i[-2147483648]	i[2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a * b	i[-2147483648]	i[2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[-2147483648]	i[2]	-	-1073741824
+i	a DIV b	i[-2147483648]	i[2]	-	-1073741824
+i	a MOD b	i[-2147483648]	i[2]	-	0
+i	a + b	i[-2147483648]	i[-2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a - b	i[-2147483648]	i[-2]	-	-2147483646
+i	a * b	i[-2147483648]	i[-2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[-2147483648]	i[-2]	-	1073741824
+i	a DIV b	i[-2147483648]	i[-2]	-	1073741824
+i	a MOD b	i[-2147483648]	i[-2]	-	0
+i	a + b	i[-2147483648]	i[3]	-	-2147483645
+i	a - b	i[-2147483648]	i[3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a * b	i[-2147483648]	i[3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[-2147483648]	i[3]	-	-715827883
+i	a DIV b	i[-2147483648]	i[3]	-	-715827883
+i	a MOD b	i[-2147483648]	i[3]	-	1
+i	a + b	i[-2147483648]	i[-3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a - b	i[-2147483648]	i[-3]	-	-2147483645
+i	a * b	i[-2147483648]	i[-3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[-2147483648]	i[-3]	-	715827883
+i	a DIV b	i[-2147483648]	i[-3]	-	715827883
+i	a MOD b	i[-2147483648]	i[-3]	-	1
+i	a + b	i[-2147483648]	i[0]	-	-2147483648
+i	a - b	i[-2147483648]	i[0]	-	-2147483648
+i	a * b	i[-2147483648]	i[0]	-	0
+i	a / b	i[-2147483648]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a DIV b	i[-2147483648]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a MOD b	i[-2147483648]	i[0]	-	EXC:CX_SY_ZERODIVIDE
+i	a + b	i[-2147483648]	i[1]	-	-2147483647
+i	a - b	i[-2147483648]	i[1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a * b	i[-2147483648]	i[1]	-	-2147483648
+i	a / b	i[-2147483648]	i[1]	-	-2147483648
+i	a DIV b	i[-2147483648]	i[1]	-	-2147483648
+i	a MOD b	i[-2147483648]	i[1]	-	0
+i	a + b	i[-2147483648]	i[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a - b	i[-2147483648]	i[-1]	-	-2147483647
+i	a * b	i[-2147483648]	i[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[-2147483648]	i[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a DIV b	i[-2147483648]	i[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a MOD b	i[-2147483648]	i[-1]	-	0
+i	a + b	i[-2147483648]	i[2147483647]	-	-1
+i	a - b	i[-2147483648]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a * b	i[-2147483648]	i[2147483647]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a / b	i[-2147483648]	i[2147483647]	-	-1
+i	a DIV b	i[-2147483648]	i[2147483647]	-	-2
+i	a MOD b	i[-2147483648]	i[2147483647]	-	2147483646
+int8	a + b	int8[7]	int8[2]	-	9
+int8	a - b	int8[7]	int8[2]	-	5
+int8	a * b	int8[7]	int8[2]	-	14
+int8	a / b	int8[7]	int8[2]	-	4
+int8	a DIV b	int8[7]	int8[2]	-	3
+int8	a MOD b	int8[7]	int8[2]	-	1
+int8	a + b	int8[7]	int8[-2]	-	5
+int8	a - b	int8[7]	int8[-2]	-	9
+int8	a * b	int8[7]	int8[-2]	-	-14
+int8	a / b	int8[7]	int8[-2]	-	-4
+int8	a DIV b	int8[7]	int8[-2]	-	-3
+int8	a MOD b	int8[7]	int8[-2]	-	1
+int8	a + b	int8[7]	int8[3]	-	10
+int8	a - b	int8[7]	int8[3]	-	4
+int8	a * b	int8[7]	int8[3]	-	21
+int8	a / b	int8[7]	int8[3]	-	2
+int8	a DIV b	int8[7]	int8[3]	-	2
+int8	a MOD b	int8[7]	int8[3]	-	1
+int8	a + b	int8[7]	int8[0]	-	7
+int8	a - b	int8[7]	int8[0]	-	7
+int8	a * b	int8[7]	int8[0]	-	0
+int8	a / b	int8[7]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a DIV b	int8[7]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a MOD b	int8[7]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a + b	int8[7]	int8[-1]	-	6
+int8	a - b	int8[7]	int8[-1]	-	8
+int8	a * b	int8[7]	int8[-1]	-	-7
+int8	a / b	int8[7]	int8[-1]	-	-7
+int8	a DIV b	int8[7]	int8[-1]	-	-7
+int8	a MOD b	int8[7]	int8[-1]	-	0
+int8	a + b	int8[7]	int8[9223372036854775807]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a - b	int8[7]	int8[9223372036854775807]	-	-9223372036854775800
+int8	a * b	int8[7]	int8[9223372036854775807]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[7]	int8[9223372036854775807]	-	0
+int8	a DIV b	int8[7]	int8[9223372036854775807]	-	0
+int8	a MOD b	int8[7]	int8[9223372036854775807]	-	7
+int8	a + b	int8[-7]	int8[2]	-	-5
+int8	a - b	int8[-7]	int8[2]	-	-9
+int8	a * b	int8[-7]	int8[2]	-	-14
+int8	a / b	int8[-7]	int8[2]	-	-4
+int8	a DIV b	int8[-7]	int8[2]	-	-4
+int8	a MOD b	int8[-7]	int8[2]	-	1
+int8	a + b	int8[-7]	int8[-2]	-	-9
+int8	a - b	int8[-7]	int8[-2]	-	-5
+int8	a * b	int8[-7]	int8[-2]	-	14
+int8	a / b	int8[-7]	int8[-2]	-	4
+int8	a DIV b	int8[-7]	int8[-2]	-	4
+int8	a MOD b	int8[-7]	int8[-2]	-	1
+int8	a + b	int8[-7]	int8[3]	-	-4
+int8	a - b	int8[-7]	int8[3]	-	-10
+int8	a * b	int8[-7]	int8[3]	-	-21
+int8	a / b	int8[-7]	int8[3]	-	-2
+int8	a DIV b	int8[-7]	int8[3]	-	-3
+int8	a MOD b	int8[-7]	int8[3]	-	2
+int8	a + b	int8[-7]	int8[0]	-	-7
+int8	a - b	int8[-7]	int8[0]	-	-7
+int8	a * b	int8[-7]	int8[0]	-	0
+int8	a / b	int8[-7]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a DIV b	int8[-7]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a MOD b	int8[-7]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a + b	int8[-7]	int8[-1]	-	-8
+int8	a - b	int8[-7]	int8[-1]	-	-6
+int8	a * b	int8[-7]	int8[-1]	-	7
+int8	a / b	int8[-7]	int8[-1]	-	7
+int8	a DIV b	int8[-7]	int8[-1]	-	7
+int8	a MOD b	int8[-7]	int8[-1]	-	0
+int8	a + b	int8[-7]	int8[9223372036854775807]	-	9223372036854775800
+int8	a - b	int8[-7]	int8[9223372036854775807]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a * b	int8[-7]	int8[9223372036854775807]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[-7]	int8[9223372036854775807]	-	0
+int8	a DIV b	int8[-7]	int8[9223372036854775807]	-	-1
+int8	a MOD b	int8[-7]	int8[9223372036854775807]	-	9223372036854775800
+int8	a + b	int8[0]	int8[2]	-	2
+int8	a - b	int8[0]	int8[2]	-	-2
+int8	a * b	int8[0]	int8[2]	-	0
+int8	a / b	int8[0]	int8[2]	-	0
+int8	a DIV b	int8[0]	int8[2]	-	0
+int8	a MOD b	int8[0]	int8[2]	-	0
+int8	a + b	int8[0]	int8[-2]	-	-2
+int8	a - b	int8[0]	int8[-2]	-	2
+int8	a * b	int8[0]	int8[-2]	-	0
+int8	a / b	int8[0]	int8[-2]	-	0
+int8	a DIV b	int8[0]	int8[-2]	-	0
+int8	a MOD b	int8[0]	int8[-2]	-	0
+int8	a + b	int8[0]	int8[3]	-	3
+int8	a - b	int8[0]	int8[3]	-	-3
+int8	a * b	int8[0]	int8[3]	-	0
+int8	a / b	int8[0]	int8[3]	-	0
+int8	a DIV b	int8[0]	int8[3]	-	0
+int8	a MOD b	int8[0]	int8[3]	-	0
+int8	a + b	int8[0]	int8[0]	-	0
+int8	a - b	int8[0]	int8[0]	-	0
+int8	a * b	int8[0]	int8[0]	-	0
+int8	a / b	int8[0]	int8[0]	-	0
+int8	a DIV b	int8[0]	int8[0]	-	0
+int8	a MOD b	int8[0]	int8[0]	-	0
+int8	a + b	int8[0]	int8[-1]	-	-1
+int8	a - b	int8[0]	int8[-1]	-	1
+int8	a * b	int8[0]	int8[-1]	-	0
+int8	a / b	int8[0]	int8[-1]	-	0
+int8	a DIV b	int8[0]	int8[-1]	-	0
+int8	a MOD b	int8[0]	int8[-1]	-	0
+int8	a + b	int8[0]	int8[9223372036854775807]	-	9223372036854775807
+int8	a - b	int8[0]	int8[9223372036854775807]	-	-9223372036854775807
+int8	a * b	int8[0]	int8[9223372036854775807]	-	0
+int8	a / b	int8[0]	int8[9223372036854775807]	-	0
+int8	a DIV b	int8[0]	int8[9223372036854775807]	-	0
+int8	a MOD b	int8[0]	int8[9223372036854775807]	-	0
+int8	a + b	int8[9223372036854775807]	int8[2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a - b	int8[9223372036854775807]	int8[2]	-	9223372036854775805
+int8	a * b	int8[9223372036854775807]	int8[2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[9223372036854775807]	int8[2]	-	4611686018427387904
+int8	a DIV b	int8[9223372036854775807]	int8[2]	-	4611686018427387903
+int8	a MOD b	int8[9223372036854775807]	int8[2]	-	1
+int8	a + b	int8[9223372036854775807]	int8[-2]	-	9223372036854775805
+int8	a - b	int8[9223372036854775807]	int8[-2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a * b	int8[9223372036854775807]	int8[-2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[9223372036854775807]	int8[-2]	-	-4611686018427387904
+int8	a DIV b	int8[9223372036854775807]	int8[-2]	-	-4611686018427387903
+int8	a MOD b	int8[9223372036854775807]	int8[-2]	-	1
+int8	a + b	int8[9223372036854775807]	int8[3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a - b	int8[9223372036854775807]	int8[3]	-	9223372036854775804
+int8	a * b	int8[9223372036854775807]	int8[3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[9223372036854775807]	int8[3]	-	3074457345618258602
+int8	a DIV b	int8[9223372036854775807]	int8[3]	-	3074457345618258602
+int8	a MOD b	int8[9223372036854775807]	int8[3]	-	1
+int8	a + b	int8[9223372036854775807]	int8[0]	-	9223372036854775807
+int8	a - b	int8[9223372036854775807]	int8[0]	-	9223372036854775807
+int8	a * b	int8[9223372036854775807]	int8[0]	-	0
+int8	a / b	int8[9223372036854775807]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a DIV b	int8[9223372036854775807]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a MOD b	int8[9223372036854775807]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a + b	int8[9223372036854775807]	int8[-1]	-	9223372036854775806
+int8	a - b	int8[9223372036854775807]	int8[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a * b	int8[9223372036854775807]	int8[-1]	-	-9223372036854775807
+int8	a / b	int8[9223372036854775807]	int8[-1]	-	-9223372036854775807
+int8	a DIV b	int8[9223372036854775807]	int8[-1]	-	-9223372036854775807
+int8	a MOD b	int8[9223372036854775807]	int8[-1]	-	0
+int8	a + b	int8[9223372036854775807]	int8[9223372036854775807]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a - b	int8[9223372036854775807]	int8[9223372036854775807]	-	0
+int8	a * b	int8[9223372036854775807]	int8[9223372036854775807]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[9223372036854775807]	int8[9223372036854775807]	-	1
+int8	a DIV b	int8[9223372036854775807]	int8[9223372036854775807]	-	1
+int8	a MOD b	int8[9223372036854775807]	int8[9223372036854775807]	-	0
+int8	a + b	int8[-9223372036854775808]	int8[2]	-	-9223372036854775806
+int8	a - b	int8[-9223372036854775808]	int8[2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a * b	int8[-9223372036854775808]	int8[2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[-9223372036854775808]	int8[2]	-	-4611686018427387904
+int8	a DIV b	int8[-9223372036854775808]	int8[2]	-	-4611686018427387904
+int8	a MOD b	int8[-9223372036854775808]	int8[2]	-	0
+int8	a + b	int8[-9223372036854775808]	int8[-2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a - b	int8[-9223372036854775808]	int8[-2]	-	-9223372036854775806
+int8	a * b	int8[-9223372036854775808]	int8[-2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[-9223372036854775808]	int8[-2]	-	4611686018427387904
+int8	a DIV b	int8[-9223372036854775808]	int8[-2]	-	4611686018427387904
+int8	a MOD b	int8[-9223372036854775808]	int8[-2]	-	0
+int8	a + b	int8[-9223372036854775808]	int8[3]	-	-9223372036854775805
+int8	a - b	int8[-9223372036854775808]	int8[3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a * b	int8[-9223372036854775808]	int8[3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[-9223372036854775808]	int8[3]	-	-3074457345618258603
+int8	a DIV b	int8[-9223372036854775808]	int8[3]	-	-3074457345618258603
+int8	a MOD b	int8[-9223372036854775808]	int8[3]	-	1
+int8	a + b	int8[-9223372036854775808]	int8[0]	-	-9223372036854775808
+int8	a - b	int8[-9223372036854775808]	int8[0]	-	-9223372036854775808
+int8	a * b	int8[-9223372036854775808]	int8[0]	-	0
+int8	a / b	int8[-9223372036854775808]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a DIV b	int8[-9223372036854775808]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a MOD b	int8[-9223372036854775808]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a + b	int8[-9223372036854775808]	int8[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a - b	int8[-9223372036854775808]	int8[-1]	-	-9223372036854775807
+int8	a * b	int8[-9223372036854775808]	int8[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[-9223372036854775808]	int8[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a DIV b	int8[-9223372036854775808]	int8[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a MOD b	int8[-9223372036854775808]	int8[-1]	-	0
+int8	a + b	int8[-9223372036854775808]	int8[9223372036854775807]	-	-1
+int8	a - b	int8[-9223372036854775808]	int8[9223372036854775807]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a * b	int8[-9223372036854775808]	int8[9223372036854775807]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[-9223372036854775808]	int8[9223372036854775807]	-	-1
+int8	a DIV b	int8[-9223372036854775808]	int8[9223372036854775807]	-	-2
+int8	a MOD b	int8[-9223372036854775808]	int8[9223372036854775807]	-	9223372036854775806
+int8	a + b	int8[4611686018427387904]	int8[2]	-	4611686018427387906
+int8	a - b	int8[4611686018427387904]	int8[2]	-	4611686018427387902
+int8	a * b	int8[4611686018427387904]	int8[2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[4611686018427387904]	int8[2]	-	2305843009213693952
+int8	a DIV b	int8[4611686018427387904]	int8[2]	-	2305843009213693952
+int8	a MOD b	int8[4611686018427387904]	int8[2]	-	0
+int8	a + b	int8[4611686018427387904]	int8[-2]	-	4611686018427387902
+int8	a - b	int8[4611686018427387904]	int8[-2]	-	4611686018427387906
+int8	a * b	int8[4611686018427387904]	int8[-2]	-	-9223372036854775808
+int8	a / b	int8[4611686018427387904]	int8[-2]	-	-2305843009213693952
+int8	a DIV b	int8[4611686018427387904]	int8[-2]	-	-2305843009213693952
+int8	a MOD b	int8[4611686018427387904]	int8[-2]	-	0
+int8	a + b	int8[4611686018427387904]	int8[3]	-	4611686018427387907
+int8	a - b	int8[4611686018427387904]	int8[3]	-	4611686018427387901
+int8	a * b	int8[4611686018427387904]	int8[3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[4611686018427387904]	int8[3]	-	1537228672809129301
+int8	a DIV b	int8[4611686018427387904]	int8[3]	-	1537228672809129301
+int8	a MOD b	int8[4611686018427387904]	int8[3]	-	1
+int8	a + b	int8[4611686018427387904]	int8[0]	-	4611686018427387904
+int8	a - b	int8[4611686018427387904]	int8[0]	-	4611686018427387904
+int8	a * b	int8[4611686018427387904]	int8[0]	-	0
+int8	a / b	int8[4611686018427387904]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a DIV b	int8[4611686018427387904]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a MOD b	int8[4611686018427387904]	int8[0]	-	EXC:CX_SY_ZERODIVIDE
+int8	a + b	int8[4611686018427387904]	int8[-1]	-	4611686018427387903
+int8	a - b	int8[4611686018427387904]	int8[-1]	-	4611686018427387905
+int8	a * b	int8[4611686018427387904]	int8[-1]	-	-4611686018427387904
+int8	a / b	int8[4611686018427387904]	int8[-1]	-	-4611686018427387904
+int8	a DIV b	int8[4611686018427387904]	int8[-1]	-	-4611686018427387904
+int8	a MOD b	int8[4611686018427387904]	int8[-1]	-	0
+int8	a + b	int8[4611686018427387904]	int8[9223372036854775807]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a - b	int8[4611686018427387904]	int8[9223372036854775807]	-	-4611686018427387903
+int8	a * b	int8[4611686018427387904]	int8[9223372036854775807]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a / b	int8[4611686018427387904]	int8[9223372036854775807]	-	1
+int8	a DIV b	int8[4611686018427387904]	int8[9223372036854775807]	-	0
+int8	a MOD b	int8[4611686018427387904]	int8[9223372036854775807]	-	4611686018427387904
+i	a + 1 - 1	i[2147483647]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a + 1 - 1	i[2147483647]	-	-	2147483647
+i	a + 1 - 1 + b	i[2147483647]	int8[0]	-	2147483647
+i	- a	i[-2147483648]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	abs( a )	i[-2147483648]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	- a	i[-2147483648]	-	-	2147483648
+i	a * a / a	i[100000]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a * a / a	i[100000]	-	-	100000
+int8	- a	int8[-9223372036854775808]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a + 1 - 1	int8[9223372036854775807]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+p16.0	a + 1 - 1	int8[9223372036854775807]	-	-	9223372036854775807
+b	a + b	b[200]	b[100]	-	EXC:CX_SY_CONVERSION_OVERFLOW
+b	a + b - b	b[200]	b[100]	-	200
+b	a - b	b[0]	b[1]	-	EXC:CX_SY_CONVERSION_OVERFLOW
+s	a + b	s[32767]	s[1]	-	EXC:CX_SY_CONVERSION_OVERFLOW
+s	a * b / b	s[32767]	s[2]	-	32767
+DATA	a + b	b[200]	b[100]	-	i:300
+p8.2	a / b	i[7]	i[2]	-	3.50
+int8	a * b	i[2147483647]	i[2147483647]	-	4611686014132420609
+p16.0	a * b	i[2147483647]	i[2147483647]	-	4611686014132420609
+f	a * b	i[2147483647]	i[2147483647]	-	43CFFFFFFF800000
+p16.6	a + b	p8.2[5.20]	p8.2[1.10]	-	6.300000
+p16.6	a - b	p8.2[5.20]	p8.2[1.10]	-	4.100000
+p16.6	a * b	p8.2[5.20]	p8.2[1.10]	-	5.720000
+p16.6	a / b	p8.2[5.20]	p8.2[1.10]	-	4.727273
+p16.6	a DIV b	p8.2[5.20]	p8.2[1.10]	-	4.000000
+p16.6	a MOD b	p8.2[5.20]	p8.2[1.10]	-	0.800000
+p16.6	a + b	p8.2[5.20]	p8.2[-1.10]	-	4.100000
+p16.6	a - b	p8.2[5.20]	p8.2[-1.10]	-	6.300000
+p16.6	a * b	p8.2[5.20]	p8.2[-1.10]	-	-5.720000
+p16.6	a / b	p8.2[5.20]	p8.2[-1.10]	-	-4.727273
+p16.6	a DIV b	p8.2[5.20]	p8.2[-1.10]	-	-4.000000
+p16.6	a MOD b	p8.2[5.20]	p8.2[-1.10]	-	0.800000
+p16.6	a + b	p8.2[5.20]	p8.2[3.00]	-	8.200000
+p16.6	a - b	p8.2[5.20]	p8.2[3.00]	-	2.200000
+p16.6	a * b	p8.2[5.20]	p8.2[3.00]	-	15.600000
+p16.6	a / b	p8.2[5.20]	p8.2[3.00]	-	1.733333
+p16.6	a DIV b	p8.2[5.20]	p8.2[3.00]	-	1.000000
+p16.6	a MOD b	p8.2[5.20]	p8.2[3.00]	-	2.200000
+p16.6	a + b	p8.2[5.20]	p8.2[0.00]	-	5.200000
+p16.6	a - b	p8.2[5.20]	p8.2[0.00]	-	5.200000
+p16.6	a * b	p8.2[5.20]	p8.2[0.00]	-	0.000000
+p16.6	a / b	p8.2[5.20]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a DIV b	p8.2[5.20]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a MOD b	p8.2[5.20]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a + b	p8.2[5.20]	p8.2[2.00]	-	7.200000
+p16.6	a - b	p8.2[5.20]	p8.2[2.00]	-	3.200000
+p16.6	a * b	p8.2[5.20]	p8.2[2.00]	-	10.400000
+p16.6	a / b	p8.2[5.20]	p8.2[2.00]	-	2.600000
+p16.6	a DIV b	p8.2[5.20]	p8.2[2.00]	-	2.000000
+p16.6	a MOD b	p8.2[5.20]	p8.2[2.00]	-	1.200000
+p16.6	a + b	p8.2[5.20]	p8.2[0.07]	-	5.270000
+p16.6	a - b	p8.2[5.20]	p8.2[0.07]	-	5.130000
+p16.6	a * b	p8.2[5.20]	p8.2[0.07]	-	0.364000
+p16.6	a / b	p8.2[5.20]	p8.2[0.07]	-	74.285714
+p16.6	a DIV b	p8.2[5.20]	p8.2[0.07]	-	74.000000
+p16.6	a MOD b	p8.2[5.20]	p8.2[0.07]	-	0.020000
+p16.6	a + b	p8.2[-5.20]	p8.2[1.10]	-	-4.100000
+p16.6	a - b	p8.2[-5.20]	p8.2[1.10]	-	-6.300000
+p16.6	a * b	p8.2[-5.20]	p8.2[1.10]	-	-5.720000
+p16.6	a / b	p8.2[-5.20]	p8.2[1.10]	-	-4.727273
+p16.6	a DIV b	p8.2[-5.20]	p8.2[1.10]	-	-5.000000
+p16.6	a MOD b	p8.2[-5.20]	p8.2[1.10]	-	0.300000
+p16.6	a + b	p8.2[-5.20]	p8.2[-1.10]	-	-6.300000
+p16.6	a - b	p8.2[-5.20]	p8.2[-1.10]	-	-4.100000
+p16.6	a * b	p8.2[-5.20]	p8.2[-1.10]	-	5.720000
+p16.6	a / b	p8.2[-5.20]	p8.2[-1.10]	-	4.727273
+p16.6	a DIV b	p8.2[-5.20]	p8.2[-1.10]	-	5.000000
+p16.6	a MOD b	p8.2[-5.20]	p8.2[-1.10]	-	0.300000
+p16.6	a + b	p8.2[-5.20]	p8.2[3.00]	-	-2.200000
+p16.6	a - b	p8.2[-5.20]	p8.2[3.00]	-	-8.200000
+p16.6	a * b	p8.2[-5.20]	p8.2[3.00]	-	-15.600000
+p16.6	a / b	p8.2[-5.20]	p8.2[3.00]	-	-1.733333
+p16.6	a DIV b	p8.2[-5.20]	p8.2[3.00]	-	-2.000000
+p16.6	a MOD b	p8.2[-5.20]	p8.2[3.00]	-	0.800000
+p16.6	a + b	p8.2[-5.20]	p8.2[0.00]	-	-5.200000
+p16.6	a - b	p8.2[-5.20]	p8.2[0.00]	-	-5.200000
+p16.6	a * b	p8.2[-5.20]	p8.2[0.00]	-	0.000000
+p16.6	a / b	p8.2[-5.20]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a DIV b	p8.2[-5.20]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a MOD b	p8.2[-5.20]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a + b	p8.2[-5.20]	p8.2[2.00]	-	-3.200000
+p16.6	a - b	p8.2[-5.20]	p8.2[2.00]	-	-7.200000
+p16.6	a * b	p8.2[-5.20]	p8.2[2.00]	-	-10.400000
+p16.6	a / b	p8.2[-5.20]	p8.2[2.00]	-	-2.600000
+p16.6	a DIV b	p8.2[-5.20]	p8.2[2.00]	-	-3.000000
+p16.6	a MOD b	p8.2[-5.20]	p8.2[2.00]	-	0.800000
+p16.6	a + b	p8.2[-5.20]	p8.2[0.07]	-	-5.130000
+p16.6	a - b	p8.2[-5.20]	p8.2[0.07]	-	-5.270000
+p16.6	a * b	p8.2[-5.20]	p8.2[0.07]	-	-0.364000
+p16.6	a / b	p8.2[-5.20]	p8.2[0.07]	-	-74.285714
+p16.6	a DIV b	p8.2[-5.20]	p8.2[0.07]	-	-75.000000
+p16.6	a MOD b	p8.2[-5.20]	p8.2[0.07]	-	0.050000
+p16.6	a + b	p8.2[7.00]	p8.2[1.10]	-	8.100000
+p16.6	a - b	p8.2[7.00]	p8.2[1.10]	-	5.900000
+p16.6	a * b	p8.2[7.00]	p8.2[1.10]	-	7.700000
+p16.6	a / b	p8.2[7.00]	p8.2[1.10]	-	6.363636
+p16.6	a DIV b	p8.2[7.00]	p8.2[1.10]	-	6.000000
+p16.6	a MOD b	p8.2[7.00]	p8.2[1.10]	-	0.400000
+p16.6	a + b	p8.2[7.00]	p8.2[-1.10]	-	5.900000
+p16.6	a - b	p8.2[7.00]	p8.2[-1.10]	-	8.100000
+p16.6	a * b	p8.2[7.00]	p8.2[-1.10]	-	-7.700000
+p16.6	a / b	p8.2[7.00]	p8.2[-1.10]	-	-6.363636
+p16.6	a DIV b	p8.2[7.00]	p8.2[-1.10]	-	-6.000000
+p16.6	a MOD b	p8.2[7.00]	p8.2[-1.10]	-	0.400000
+p16.6	a + b	p8.2[7.00]	p8.2[3.00]	-	10.000000
+p16.6	a - b	p8.2[7.00]	p8.2[3.00]	-	4.000000
+p16.6	a * b	p8.2[7.00]	p8.2[3.00]	-	21.000000
+p16.6	a / b	p8.2[7.00]	p8.2[3.00]	-	2.333333
+p16.6	a DIV b	p8.2[7.00]	p8.2[3.00]	-	2.000000
+p16.6	a MOD b	p8.2[7.00]	p8.2[3.00]	-	1.000000
+p16.6	a + b	p8.2[7.00]	p8.2[0.00]	-	7.000000
+p16.6	a - b	p8.2[7.00]	p8.2[0.00]	-	7.000000
+p16.6	a * b	p8.2[7.00]	p8.2[0.00]	-	0.000000
+p16.6	a / b	p8.2[7.00]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a DIV b	p8.2[7.00]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a MOD b	p8.2[7.00]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a + b	p8.2[7.00]	p8.2[2.00]	-	9.000000
+p16.6	a - b	p8.2[7.00]	p8.2[2.00]	-	5.000000
+p16.6	a * b	p8.2[7.00]	p8.2[2.00]	-	14.000000
+p16.6	a / b	p8.2[7.00]	p8.2[2.00]	-	3.500000
+p16.6	a DIV b	p8.2[7.00]	p8.2[2.00]	-	3.000000
+p16.6	a MOD b	p8.2[7.00]	p8.2[2.00]	-	1.000000
+p16.6	a + b	p8.2[7.00]	p8.2[0.07]	-	7.070000
+p16.6	a - b	p8.2[7.00]	p8.2[0.07]	-	6.930000
+p16.6	a * b	p8.2[7.00]	p8.2[0.07]	-	0.490000
+p16.6	a / b	p8.2[7.00]	p8.2[0.07]	-	100.000000
+p16.6	a DIV b	p8.2[7.00]	p8.2[0.07]	-	100.000000
+p16.6	a MOD b	p8.2[7.00]	p8.2[0.07]	-	0.000000
+p16.6	a + b	p8.2[0.00]	p8.2[1.10]	-	1.100000
+p16.6	a - b	p8.2[0.00]	p8.2[1.10]	-	-1.100000
+p16.6	a * b	p8.2[0.00]	p8.2[1.10]	-	0.000000
+p16.6	a / b	p8.2[0.00]	p8.2[1.10]	-	0.000000
+p16.6	a DIV b	p8.2[0.00]	p8.2[1.10]	-	0.000000
+p16.6	a MOD b	p8.2[0.00]	p8.2[1.10]	-	0.000000
+p16.6	a + b	p8.2[0.00]	p8.2[-1.10]	-	-1.100000
+p16.6	a - b	p8.2[0.00]	p8.2[-1.10]	-	1.100000
+p16.6	a * b	p8.2[0.00]	p8.2[-1.10]	-	0.000000
+p16.6	a / b	p8.2[0.00]	p8.2[-1.10]	-	0.000000
+p16.6	a DIV b	p8.2[0.00]	p8.2[-1.10]	-	0.000000
+p16.6	a MOD b	p8.2[0.00]	p8.2[-1.10]	-	0.000000
+p16.6	a + b	p8.2[0.00]	p8.2[3.00]	-	3.000000
+p16.6	a - b	p8.2[0.00]	p8.2[3.00]	-	-3.000000
+p16.6	a * b	p8.2[0.00]	p8.2[3.00]	-	0.000000
+p16.6	a / b	p8.2[0.00]	p8.2[3.00]	-	0.000000
+p16.6	a DIV b	p8.2[0.00]	p8.2[3.00]	-	0.000000
+p16.6	a MOD b	p8.2[0.00]	p8.2[3.00]	-	0.000000
+p16.6	a + b	p8.2[0.00]	p8.2[0.00]	-	0.000000
+p16.6	a - b	p8.2[0.00]	p8.2[0.00]	-	0.000000
+p16.6	a * b	p8.2[0.00]	p8.2[0.00]	-	0.000000
+p16.6	a / b	p8.2[0.00]	p8.2[0.00]	-	0.000000
+p16.6	a DIV b	p8.2[0.00]	p8.2[0.00]	-	0.000000
+p16.6	a MOD b	p8.2[0.00]	p8.2[0.00]	-	0.000000
+p16.6	a + b	p8.2[0.00]	p8.2[2.00]	-	2.000000
+p16.6	a - b	p8.2[0.00]	p8.2[2.00]	-	-2.000000
+p16.6	a * b	p8.2[0.00]	p8.2[2.00]	-	0.000000
+p16.6	a / b	p8.2[0.00]	p8.2[2.00]	-	0.000000
+p16.6	a DIV b	p8.2[0.00]	p8.2[2.00]	-	0.000000
+p16.6	a MOD b	p8.2[0.00]	p8.2[2.00]	-	0.000000
+p16.6	a + b	p8.2[0.00]	p8.2[0.07]	-	0.070000
+p16.6	a - b	p8.2[0.00]	p8.2[0.07]	-	-0.070000
+p16.6	a * b	p8.2[0.00]	p8.2[0.07]	-	0.000000
+p16.6	a / b	p8.2[0.00]	p8.2[0.07]	-	0.000000
+p16.6	a DIV b	p8.2[0.00]	p8.2[0.07]	-	0.000000
+p16.6	a MOD b	p8.2[0.00]	p8.2[0.07]	-	0.000000
+p16.6	a + b	p8.2[1.00]	p8.2[1.10]	-	2.100000
+p16.6	a - b	p8.2[1.00]	p8.2[1.10]	-	-0.100000
+p16.6	a * b	p8.2[1.00]	p8.2[1.10]	-	1.100000
+p16.6	a / b	p8.2[1.00]	p8.2[1.10]	-	0.909091
+p16.6	a DIV b	p8.2[1.00]	p8.2[1.10]	-	0.000000
+p16.6	a MOD b	p8.2[1.00]	p8.2[1.10]	-	1.000000
+p16.6	a + b	p8.2[1.00]	p8.2[-1.10]	-	-0.100000
+p16.6	a - b	p8.2[1.00]	p8.2[-1.10]	-	2.100000
+p16.6	a * b	p8.2[1.00]	p8.2[-1.10]	-	-1.100000
+p16.6	a / b	p8.2[1.00]	p8.2[-1.10]	-	-0.909091
+p16.6	a DIV b	p8.2[1.00]	p8.2[-1.10]	-	0.000000
+p16.6	a MOD b	p8.2[1.00]	p8.2[-1.10]	-	1.000000
+p16.6	a + b	p8.2[1.00]	p8.2[3.00]	-	4.000000
+p16.6	a - b	p8.2[1.00]	p8.2[3.00]	-	-2.000000
+p16.6	a * b	p8.2[1.00]	p8.2[3.00]	-	3.000000
+p16.6	a / b	p8.2[1.00]	p8.2[3.00]	-	0.333333
+p16.6	a DIV b	p8.2[1.00]	p8.2[3.00]	-	0.000000
+p16.6	a MOD b	p8.2[1.00]	p8.2[3.00]	-	1.000000
+p16.6	a + b	p8.2[1.00]	p8.2[0.00]	-	1.000000
+p16.6	a - b	p8.2[1.00]	p8.2[0.00]	-	1.000000
+p16.6	a * b	p8.2[1.00]	p8.2[0.00]	-	0.000000
+p16.6	a / b	p8.2[1.00]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a DIV b	p8.2[1.00]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a MOD b	p8.2[1.00]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a + b	p8.2[1.00]	p8.2[2.00]	-	3.000000
+p16.6	a - b	p8.2[1.00]	p8.2[2.00]	-	-1.000000
+p16.6	a * b	p8.2[1.00]	p8.2[2.00]	-	2.000000
+p16.6	a / b	p8.2[1.00]	p8.2[2.00]	-	0.500000
+p16.6	a DIV b	p8.2[1.00]	p8.2[2.00]	-	0.000000
+p16.6	a MOD b	p8.2[1.00]	p8.2[2.00]	-	1.000000
+p16.6	a + b	p8.2[1.00]	p8.2[0.07]	-	1.070000
+p16.6	a - b	p8.2[1.00]	p8.2[0.07]	-	0.930000
+p16.6	a * b	p8.2[1.00]	p8.2[0.07]	-	0.070000
+p16.6	a / b	p8.2[1.00]	p8.2[0.07]	-	14.285714
+p16.6	a DIV b	p8.2[1.00]	p8.2[0.07]	-	14.000000
+p16.6	a MOD b	p8.2[1.00]	p8.2[0.07]	-	0.020000
+p16.6	a + b	p8.2[-7.50]	p8.2[1.10]	-	-6.400000
+p16.6	a - b	p8.2[-7.50]	p8.2[1.10]	-	-8.600000
+p16.6	a * b	p8.2[-7.50]	p8.2[1.10]	-	-8.250000
+p16.6	a / b	p8.2[-7.50]	p8.2[1.10]	-	-6.818182
+p16.6	a DIV b	p8.2[-7.50]	p8.2[1.10]	-	-7.000000
+p16.6	a MOD b	p8.2[-7.50]	p8.2[1.10]	-	0.200000
+p16.6	a + b	p8.2[-7.50]	p8.2[-1.10]	-	-8.600000
+p16.6	a - b	p8.2[-7.50]	p8.2[-1.10]	-	-6.400000
+p16.6	a * b	p8.2[-7.50]	p8.2[-1.10]	-	8.250000
+p16.6	a / b	p8.2[-7.50]	p8.2[-1.10]	-	6.818182
+p16.6	a DIV b	p8.2[-7.50]	p8.2[-1.10]	-	7.000000
+p16.6	a MOD b	p8.2[-7.50]	p8.2[-1.10]	-	0.200000
+p16.6	a + b	p8.2[-7.50]	p8.2[3.00]	-	-4.500000
+p16.6	a - b	p8.2[-7.50]	p8.2[3.00]	-	-10.500000
+p16.6	a * b	p8.2[-7.50]	p8.2[3.00]	-	-22.500000
+p16.6	a / b	p8.2[-7.50]	p8.2[3.00]	-	-2.500000
+p16.6	a DIV b	p8.2[-7.50]	p8.2[3.00]	-	-3.000000
+p16.6	a MOD b	p8.2[-7.50]	p8.2[3.00]	-	1.500000
+p16.6	a + b	p8.2[-7.50]	p8.2[0.00]	-	-7.500000
+p16.6	a - b	p8.2[-7.50]	p8.2[0.00]	-	-7.500000
+p16.6	a * b	p8.2[-7.50]	p8.2[0.00]	-	0.000000
+p16.6	a / b	p8.2[-7.50]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a DIV b	p8.2[-7.50]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a MOD b	p8.2[-7.50]	p8.2[0.00]	-	EXC:CX_SY_ZERODIVIDE
+p16.6	a + b	p8.2[-7.50]	p8.2[2.00]	-	-5.500000
+p16.6	a - b	p8.2[-7.50]	p8.2[2.00]	-	-9.500000
+p16.6	a * b	p8.2[-7.50]	p8.2[2.00]	-	-15.000000
+p16.6	a / b	p8.2[-7.50]	p8.2[2.00]	-	-3.750000
+p16.6	a DIV b	p8.2[-7.50]	p8.2[2.00]	-	-4.000000
+p16.6	a MOD b	p8.2[-7.50]	p8.2[2.00]	-	0.500000
+p16.6	a + b	p8.2[-7.50]	p8.2[0.07]	-	-7.430000
+p16.6	a - b	p8.2[-7.50]	p8.2[0.07]	-	-7.570000
+p16.6	a * b	p8.2[-7.50]	p8.2[0.07]	-	-0.525000
+p16.6	a / b	p8.2[-7.50]	p8.2[0.07]	-	-107.142857
+p16.6	a DIV b	p8.2[-7.50]	p8.2[0.07]	-	-108.000000
+p16.6	a MOD b	p8.2[-7.50]	p8.2[0.07]	-	0.060000
+p16.14	a / b	p8.2[1]	p8.2[3]	-	0.33333333333333
+p16.14	a / b * b	p8.2[1]	p8.2[3]	-	1.00000000000000
+p16.14	a / b	p8.2[2]	p8.2[3]	-	0.66666666666667
+string	a / b	p8.2[1]	p8.2[3]	-	[0.33333333333333 ]
+string	a / b	p8.2[2]	p8.2[3]	-	[0.66666666666667 ]
+string	a / b * b	p8.2[1]	p8.2[3]	-	[1.00000000000000 ]
+string	a / b * b - 1	p8.2[1]	p8.2[3]	-	[0.00000000000000 ]
+string	a / b	p16.0[1000000]	p8.2[3]	-	[333333.33333333333333 ]
+string	a / b	p16.0[1000000000000000000000000000]	p8.2[3]	-	[333333333333333333333333333.3333 ]
+string	a / b	p16.0[9999999999999999999999999999999]	p8.2[3]	-	[3333333333333333333333333333333 ]
+string	a + b	p16.0[9999999999999999999999999999999]	p16.0[1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+p16.0	a + b - b	p16.0[9999999999999999999999999999999]	p16.0[1]	-	9999999999999999999999999999999
+string	a * b	p16.0[9999999999999999999999999999999]	p16.0[9999999999999999999999999999999]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+p16.0	a * b / b	p16.0[9999999999999999999999999999999]	p16.0[9999999999999999999999999999999]	-	9999999999999999999999999999999
+string	a * b * 10	p16.0[9999999999999999999999999999999]	p16.0[9999999999999999999999999999999]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+string	a * b * 100 / b	p16.0[9999999999999999999999999999999]	p16.0[9999999999999999999999999999999]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+p16.0	a / b * b	p16.0[9999999999999999999999999999999]	p8.2[3]	-	9999999999999999999999999999999
+string	a / b	p16.0[9999999999999999999999999999999]	p8.2[0.01]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+string	a / b	p8.2[0.01]	p16.0[9999999999999999999999999999999]	-	[0.00000000000000 ]
+string	a / b * b	p8.2[0.01]	p16.0[9999999999999999999999999999999]	-	[0.01000000000000 ]
+string	a / b * b	p8.2[1]	p16.0[9999999999999999999999999999999]	-	[1.00000000000000 ]
+string	a * b * b * b * b * b * b * b * b * b * b * b * b * b * b * b	p8.2[0.01]	p8.2[0.01]	-	[0.00000000000000 ]
+string	a * b * b * b * b * b * b * b * b * b * b * b * b * b * b * b * 1000000	p8.2[0.01]	p8.2[0.01]	-	[0.00000000000000 ]
+p16.0	a + b	p16.0[9007199254740993]	p16.0[0]	-	9007199254740993
+p16.0	a + b	p16.0[9007199254740993]	f[0]	-	9007199254740992
+p16.2	a + b	int8[9223372036854775807]	p8.2[0.5]	-	9223372036854775807.50
+int8	a + b	int8[9223372036854775807]	p8.2[0.5]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a + b	int8[9223372036854775807]	p8.2[1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a + b - b	int8[9223372036854775807]	p8.2[1]	-	9223372036854775807
+int8	a + b	int8[9223372036854775807]	f[0]	-	EXC:CX_SY_CONVERSION_OVERFLOW
+p16.0	a + b	int8[9223372036854775807]	f[0]	-	9223372036854775800
+int8	a + b	int8[9007199254740993]	f[0]	-	9007199254740992
+int8	a + b	int8[9007199254740993]	decfloat16[0]	-	9007199254740993
+p8.2	a / b	p8.2[2]	p8.2[3]	-	0.67
+p8.2	a / b	p8.2[-2]	p8.2[3]	-	-0.67
+p8.2	a * b	p8.2[0.05]	p8.2[0.1]	-	0.01
+p8.2	a * b	p8.2[-0.05]	p8.2[0.1]	-	-0.01
+p8.3	a * b	p8.2[0.05]	p8.2[0.1]	-	0.005
+i	a / b	p8.2[5]	p8.2[2]	-	3
+i	a / b	p8.2[-5]	p8.2[2]	-	-3
+i	a + 0	p8.2[2.5]	-	-	3
+i	a + 0	p8.2[-2.5]	-	-	-3
+i	a + 0	p16.0[3000000000]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+b	a + 0	p16.0[3000000000]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+b	a + 0	p8.2[300]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+p8.2	a * b	p8.2[99999.99]	p8.2[99999.99]	-	9999998000.00
+p3.1	a * b	p8.2[99999.99]	p8.2[99999.99]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+p8.2	- a	p8.2[0.5]	-	-	-0.50
+string	- a * b	p8.2[0]	p8.2[0]	-	[0 ]
+p8.4	a DIV b	p8.2[5.2]	p8.2[1.1]	-	4.0000
+p8.4	a MOD b	p8.2[5.2]	p8.2[1.1]	-	0.8000
+p8.4	a DIV b	p8.2[-5.2]	p8.2[1.1]	-	-5.0000
+p8.4	a MOD b	p8.2[-5.2]	p8.2[1.1]	-	0.3000
+p8.2	a MOD b	p16.0[9999999999999999999999999999999]	p8.2[0.07]	-	0.04
+string	a DIV b	p16.0[9999999999999999999999999999999]	p8.2[0.07]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a + b	f[7.5]	f[2]	-	4023000000000000
+f	a - b	f[7.5]	f[2]	-	4016000000000000
+f	a * b	f[7.5]	f[2]	-	402E000000000000
+f	a / b	f[7.5]	f[2]	-	400E000000000000
+f	a DIV b	f[7.5]	f[2]	-	4008000000000000
+f	a MOD b	f[7.5]	f[2]	-	3FF8000000000000
+f	a + b	f[7.5]	f[-2]	-	4016000000000000
+f	a - b	f[7.5]	f[-2]	-	4023000000000000
+f	a * b	f[7.5]	f[-2]	-	C02E000000000000
+f	a / b	f[7.5]	f[-2]	-	C00E000000000000
+f	a DIV b	f[7.5]	f[-2]	-	C008000000000000
+f	a MOD b	f[7.5]	f[-2]	-	3FF8000000000000
+f	a + b	f[7.5]	f[0]	-	401E000000000000
+f	a - b	f[7.5]	f[0]	-	401E000000000000
+f	a * b	f[7.5]	f[0]	-	0000000000000000
+f	a / b	f[7.5]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a DIV b	f[7.5]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a MOD b	f[7.5]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a + b	f[7.5]	f[1E-308]	-	401E000000000000
+f	a - b	f[7.5]	f[1E-308]	-	401E000000000000
+f	a * b	f[7.5]	f[1E-308]	-	002AF72442612914
+f	a / b	f[7.5]	f[1E-308]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a DIV b	f[7.5]	f[1E-308]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a MOD b	f[7.5]	f[1E-308]	-	0000000000000000
+f	a + b	f[7.5]	f[3]	-	4025000000000000
+f	a - b	f[7.5]	f[3]	-	4012000000000000
+f	a * b	f[7.5]	f[3]	-	4036800000000000
+f	a / b	f[7.5]	f[3]	-	4004000000000000
+f	a DIV b	f[7.5]	f[3]	-	4000000000000000
+f	a MOD b	f[7.5]	f[3]	-	3FF8000000000000
+f	a + b	f[7.5]	f[0.1]	-	401E666666666666
+f	a - b	f[7.5]	f[0.1]	-	401D99999999999A
+f	a * b	f[7.5]	f[0.1]	-	3FE8000000000000
+f	a / b	f[7.5]	f[0.1]	-	4052C00000000000
+f	a DIV b	f[7.5]	f[0.1]	-	4052C00000000000
+f	a MOD b	f[7.5]	f[0.1]	-	0000000000000000
+f	a + b	f[-7.5]	f[2]	-	C016000000000000
+f	a - b	f[-7.5]	f[2]	-	C023000000000000
+f	a * b	f[-7.5]	f[2]	-	C02E000000000000
+f	a / b	f[-7.5]	f[2]	-	C00E000000000000
+f	a DIV b	f[-7.5]	f[2]	-	C010000000000000
+f	a MOD b	f[-7.5]	f[2]	-	3FE0000000000000
+f	a + b	f[-7.5]	f[-2]	-	C023000000000000
+f	a - b	f[-7.5]	f[-2]	-	C016000000000000
+f	a * b	f[-7.5]	f[-2]	-	402E000000000000
+f	a / b	f[-7.5]	f[-2]	-	400E000000000000
+f	a DIV b	f[-7.5]	f[-2]	-	4010000000000000
+f	a MOD b	f[-7.5]	f[-2]	-	3FE0000000000000
+f	a + b	f[-7.5]	f[0]	-	C01E000000000000
+f	a - b	f[-7.5]	f[0]	-	C01E000000000000
+f	a * b	f[-7.5]	f[0]	-	8000000000000000
+f	a / b	f[-7.5]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a DIV b	f[-7.5]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a MOD b	f[-7.5]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a + b	f[-7.5]	f[1E-308]	-	C01E000000000000
+f	a - b	f[-7.5]	f[1E-308]	-	C01E000000000000
+f	a * b	f[-7.5]	f[1E-308]	-	802AF72442612914
+f	a / b	f[-7.5]	f[1E-308]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a DIV b	f[-7.5]	f[1E-308]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a MOD b	f[-7.5]	f[1E-308]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a + b	f[-7.5]	f[3]	-	C012000000000000
+f	a - b	f[-7.5]	f[3]	-	C025000000000000
+f	a * b	f[-7.5]	f[3]	-	C036800000000000
+f	a / b	f[-7.5]	f[3]	-	C004000000000000
+f	a DIV b	f[-7.5]	f[3]	-	C008000000000000
+f	a MOD b	f[-7.5]	f[3]	-	3FF8000000000000
+f	a + b	f[-7.5]	f[0.1]	-	C01D99999999999A
+f	a - b	f[-7.5]	f[0.1]	-	C01E666666666666
+f	a * b	f[-7.5]	f[0.1]	-	BFE8000000000000
+f	a / b	f[-7.5]	f[0.1]	-	C052C00000000000
+f	a DIV b	f[-7.5]	f[0.1]	-	C052C00000000000
+f	a MOD b	f[-7.5]	f[0.1]	-	0000000000000000
+f	a + b	f[1E308]	f[2]	-	7FE1CCF385EBC8A0
+f	a - b	f[1E308]	f[2]	-	7FE1CCF385EBC8A0
+f	a * b	f[1E308]	f[2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a / b	f[1E308]	f[2]	-	7FD1CCF385EBC8A0
+f	a DIV b	f[1E308]	f[2]	-	7FD1CCF385EBC8A0
+f	a MOD b	f[1E308]	f[2]	-	0000000000000000
+f	a + b	f[1E308]	f[-2]	-	7FE1CCF385EBC8A0
+f	a - b	f[1E308]	f[-2]	-	7FE1CCF385EBC8A0
+f	a * b	f[1E308]	f[-2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a / b	f[1E308]	f[-2]	-	FFD1CCF385EBC8A0
+f	a DIV b	f[1E308]	f[-2]	-	FFD1CCF385EBC8A0
+f	a MOD b	f[1E308]	f[-2]	-	0000000000000000
+f	a + b	f[1E308]	f[0]	-	7FE1CCF385EBC8A0
+f	a - b	f[1E308]	f[0]	-	7FE1CCF385EBC8A0
+f	a * b	f[1E308]	f[0]	-	0000000000000000
+f	a / b	f[1E308]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a DIV b	f[1E308]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a MOD b	f[1E308]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a + b	f[1E308]	f[1E-308]	-	7FE1CCF385EBC8A0
+f	a - b	f[1E308]	f[1E-308]	-	7FE1CCF385EBC8A0
+f	a * b	f[1E308]	f[1E-308]	-	3FEFFFFFFFFFFFFF
+f	a / b	f[1E308]	f[1E-308]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a DIV b	f[1E308]	f[1E-308]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a MOD b	f[1E308]	f[1E-308]	-	0000000000000000
+f	a + b	f[1E308]	f[3]	-	7FE1CCF385EBC8A0
+f	a - b	f[1E308]	f[3]	-	7FE1CCF385EBC8A0
+f	a * b	f[1E308]	f[3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a / b	f[1E308]	f[3]	-	7FC7BBEF5D3A60D5
+f	a DIV b	f[1E308]	f[3]	-	7FC7BBEF5D3A60D5
+f	a MOD b	f[1E308]	f[3]	-	0000000000000000
+f	a + b	f[1E308]	f[0.1]	-	7FE1CCF385EBC8A0
+f	a - b	f[1E308]	f[0.1]	-	7FE1CCF385EBC8A0
+f	a * b	f[1E308]	f[0.1]	-	7FAC7B1F3CAC7434
+f	a / b	f[1E308]	f[0.1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a DIV b	f[1E308]	f[0.1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a MOD b	f[1E308]	f[0.1]	-	0000000000000000
+f	a + b	f[0]	f[2]	-	4000000000000000
+f	a - b	f[0]	f[2]	-	C000000000000000
+f	a * b	f[0]	f[2]	-	0000000000000000
+f	a / b	f[0]	f[2]	-	0000000000000000
+f	a DIV b	f[0]	f[2]	-	0000000000000000
+f	a MOD b	f[0]	f[2]	-	0000000000000000
+f	a + b	f[0]	f[-2]	-	C000000000000000
+f	a - b	f[0]	f[-2]	-	4000000000000000
+f	a * b	f[0]	f[-2]	-	8000000000000000
+f	a / b	f[0]	f[-2]	-	0000000000000000
+f	a DIV b	f[0]	f[-2]	-	0000000000000000
+f	a MOD b	f[0]	f[-2]	-	0000000000000000
+f	a + b	f[0]	f[0]	-	0000000000000000
+f	a - b	f[0]	f[0]	-	0000000000000000
+f	a * b	f[0]	f[0]	-	0000000000000000
+f	a / b	f[0]	f[0]	-	0000000000000000
+f	a DIV b	f[0]	f[0]	-	0000000000000000
+f	a MOD b	f[0]	f[0]	-	0000000000000000
+f	a + b	f[0]	f[1E-308]	-	000730D67819E8D2
+f	a - b	f[0]	f[1E-308]	-	800730D67819E8D2
+f	a * b	f[0]	f[1E-308]	-	0000000000000000
+f	a / b	f[0]	f[1E-308]	-	0000000000000000
+f	a DIV b	f[0]	f[1E-308]	-	0000000000000000
+f	a MOD b	f[0]	f[1E-308]	-	0000000000000000
+f	a + b	f[0]	f[3]	-	4008000000000000
+f	a - b	f[0]	f[3]	-	C008000000000000
+f	a * b	f[0]	f[3]	-	0000000000000000
+f	a / b	f[0]	f[3]	-	0000000000000000
+f	a DIV b	f[0]	f[3]	-	0000000000000000
+f	a MOD b	f[0]	f[3]	-	0000000000000000
+f	a + b	f[0]	f[0.1]	-	3FB999999999999A
+f	a - b	f[0]	f[0.1]	-	BFB999999999999A
+f	a * b	f[0]	f[0.1]	-	0000000000000000
+f	a / b	f[0]	f[0.1]	-	0000000000000000
+f	a DIV b	f[0]	f[0.1]	-	0000000000000000
+f	a MOD b	f[0]	f[0.1]	-	0000000000000000
+f	a + b	f[1]	f[2]	-	4008000000000000
+f	a - b	f[1]	f[2]	-	BFF0000000000000
+f	a * b	f[1]	f[2]	-	4000000000000000
+f	a / b	f[1]	f[2]	-	3FE0000000000000
+f	a DIV b	f[1]	f[2]	-	0000000000000000
+f	a MOD b	f[1]	f[2]	-	3FF0000000000000
+f	a + b	f[1]	f[-2]	-	BFF0000000000000
+f	a - b	f[1]	f[-2]	-	4008000000000000
+f	a * b	f[1]	f[-2]	-	C000000000000000
+f	a / b	f[1]	f[-2]	-	BFE0000000000000
+f	a DIV b	f[1]	f[-2]	-	8000000000000000
+f	a MOD b	f[1]	f[-2]	-	3FF0000000000000
+f	a + b	f[1]	f[0]	-	3FF0000000000000
+f	a - b	f[1]	f[0]	-	3FF0000000000000
+f	a * b	f[1]	f[0]	-	0000000000000000
+f	a / b	f[1]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a DIV b	f[1]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a MOD b	f[1]	f[0]	-	EXC:CX_SY_ZERODIVIDE
+f	a + b	f[1]	f[1E-308]	-	3FF0000000000000
+f	a - b	f[1]	f[1E-308]	-	3FF0000000000000
+f	a * b	f[1]	f[1E-308]	-	000730D67819E8D2
+f	a / b	f[1]	f[1E-308]	-	7FE1CCF385EBC8A0
+f	a DIV b	f[1]	f[1E-308]	-	7FE1CCF385EBC8A0
+f	a MOD b	f[1]	f[1E-308]	-	3CA0000000000000
+f	a + b	f[1]	f[3]	-	4010000000000000
+f	a - b	f[1]	f[3]	-	C000000000000000
+f	a * b	f[1]	f[3]	-	4008000000000000
+f	a / b	f[1]	f[3]	-	3FD5555555555555
+f	a DIV b	f[1]	f[3]	-	0000000000000000
+f	a MOD b	f[1]	f[3]	-	3FF0000000000000
+f	a + b	f[1]	f[0.1]	-	3FF199999999999A
+f	a - b	f[1]	f[0.1]	-	3FECCCCCCCCCCCCD
+f	a * b	f[1]	f[0.1]	-	3FB999999999999A
+f	a / b	f[1]	f[0.1]	-	4024000000000000
+f	a DIV b	f[1]	f[0.1]	-	4024000000000000
+f	a MOD b	f[1]	f[0.1]	-	0000000000000000
+f	a + b	f[-0]	f[2]	-	4000000000000000
+f	a - b	f[-0]	f[2]	-	C000000000000000
+f	a * b	f[-0]	f[2]	-	0000000000000000
+f	a / b	f[-0]	f[2]	-	0000000000000000
+f	a DIV b	f[-0]	f[2]	-	0000000000000000
+f	a MOD b	f[-0]	f[2]	-	0000000000000000
+f	a + b	f[-0]	f[-2]	-	C000000000000000
+f	a - b	f[-0]	f[-2]	-	4000000000000000
+f	a * b	f[-0]	f[-2]	-	8000000000000000
+f	a / b	f[-0]	f[-2]	-	0000000000000000
+f	a DIV b	f[-0]	f[-2]	-	0000000000000000
+f	a MOD b	f[-0]	f[-2]	-	0000000000000000
+f	a + b	f[-0]	f[0]	-	0000000000000000
+f	a - b	f[-0]	f[0]	-	0000000000000000
+f	a * b	f[-0]	f[0]	-	0000000000000000
+f	a / b	f[-0]	f[0]	-	0000000000000000
+f	a DIV b	f[-0]	f[0]	-	0000000000000000
+f	a MOD b	f[-0]	f[0]	-	0000000000000000
+f	a + b	f[-0]	f[1E-308]	-	000730D67819E8D2
+f	a - b	f[-0]	f[1E-308]	-	800730D67819E8D2
+f	a * b	f[-0]	f[1E-308]	-	0000000000000000
+f	a / b	f[-0]	f[1E-308]	-	0000000000000000
+f	a DIV b	f[-0]	f[1E-308]	-	0000000000000000
+f	a MOD b	f[-0]	f[1E-308]	-	0000000000000000
+f	a + b	f[-0]	f[3]	-	4008000000000000
+f	a - b	f[-0]	f[3]	-	C008000000000000
+f	a * b	f[-0]	f[3]	-	0000000000000000
+f	a / b	f[-0]	f[3]	-	0000000000000000
+f	a DIV b	f[-0]	f[3]	-	0000000000000000
+f	a MOD b	f[-0]	f[3]	-	0000000000000000
+f	a + b	f[-0]	f[0.1]	-	3FB999999999999A
+f	a - b	f[-0]	f[0.1]	-	BFB999999999999A
+f	a * b	f[-0]	f[0.1]	-	0000000000000000
+f	a / b	f[-0]	f[0.1]	-	0000000000000000
+f	a DIV b	f[-0]	f[0.1]	-	0000000000000000
+f	a MOD b	f[-0]	f[0.1]	-	0000000000000000
+f	a * b	f[1E-308]	f[1E-10]	-	00000000000316A2
+f	a * b	f[1E-308]	f[1E-20]	-	0000000000000000
+f	a * b / b	f[1E300]	f[1E300]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a + b	f[0.1]	f[0.2]	-	3FD3333333333334
+p16.14	a + b	f[0.1]	f[0.2]	-	0.30000000000000
+decfloat34	a + b	f[0.1]	f[0.2]	-	3.0000000000000002E-0001
+i	a + 0	f[2.5]	-	-	3
+i	a + 0	f[-2.5]	-	-	-3
+i	a + 0	f[1E10]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+p16.0	a + 0	f[1E300]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+f	- a	f[1E-5]	-	-	BEE4F8B588E368F1
+f	- a	f[0]	-	-	0000000000000000
+f	a + b - b	f[1E308]	f[1E308]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	a DIV b	f[7.5]	i[2]	-	3
+f	a DIV b	f[1E20]	f[3]	-	43FCE97CA0F21055
+f	a MOD b	f[1E20]	f[3]	-	0000000000000000
+decfloat34	a + b	decfloat34[5.2]	decfloat34[1.1]	-	6.3E+0000
+decfloat34	a - b	decfloat34[5.2]	decfloat34[1.1]	-	4.1E+0000
+decfloat34	a * b	decfloat34[5.2]	decfloat34[1.1]	-	5.72E+0000
+decfloat34	a / b	decfloat34[5.2]	decfloat34[1.1]	-	4.727272727272727272727272727272727E+0000
+decfloat34	a DIV b	decfloat34[5.2]	decfloat34[1.1]	-	4E+0000
+decfloat34	a MOD b	decfloat34[5.2]	decfloat34[1.1]	-	8E-0001
+decfloat34	a + b	decfloat34[5.2]	decfloat34[-1.1]	-	4.1E+0000
+decfloat34	a - b	decfloat34[5.2]	decfloat34[-1.1]	-	6.3E+0000
+decfloat34	a * b	decfloat34[5.2]	decfloat34[-1.1]	-	-5.72E+0000
+decfloat34	a / b	decfloat34[5.2]	decfloat34[-1.1]	-	-4.727272727272727272727272727272727E+0000
+decfloat34	a DIV b	decfloat34[5.2]	decfloat34[-1.1]	-	-4E+0000
+decfloat34	a MOD b	decfloat34[5.2]	decfloat34[-1.1]	-	8E-0001
+decfloat34	a + b	decfloat34[5.2]	decfloat34[3]	-	8.2E+0000
+decfloat34	a - b	decfloat34[5.2]	decfloat34[3]	-	2.2E+0000
+decfloat34	a * b	decfloat34[5.2]	decfloat34[3]	-	1.56E+0001
+decfloat34	a / b	decfloat34[5.2]	decfloat34[3]	-	1.733333333333333333333333333333333E+0000
+decfloat34	a DIV b	decfloat34[5.2]	decfloat34[3]	-	1E+0000
+decfloat34	a MOD b	decfloat34[5.2]	decfloat34[3]	-	2.2E+0000
+decfloat34	a + b	decfloat34[5.2]	decfloat34[0]	-	5.2E+0000
+decfloat34	a - b	decfloat34[5.2]	decfloat34[0]	-	5.2E+0000
+decfloat34	a * b	decfloat34[5.2]	decfloat34[0]	-	0E-0001
+decfloat34	a / b	decfloat34[5.2]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a DIV b	decfloat34[5.2]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a MOD b	decfloat34[5.2]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a + b	decfloat34[5.2]	decfloat34[1.00]	-	6.20E+0000
+decfloat34	a - b	decfloat34[5.2]	decfloat34[1.00]	-	4.20E+0000
+decfloat34	a * b	decfloat34[5.2]	decfloat34[1.00]	-	5.200E+0000
+decfloat34	a / b	decfloat34[5.2]	decfloat34[1.00]	-	5.2E+0000
+decfloat34	a DIV b	decfloat34[5.2]	decfloat34[1.00]	-	5E+0000
+decfloat34	a MOD b	decfloat34[5.2]	decfloat34[1.00]	-	2.0E-0001
+decfloat34	a + b	decfloat34[5.2]	decfloat34[1E-6143]	-	5.200000000000000000000000000000000E+0000
+decfloat34	a - b	decfloat34[5.2]	decfloat34[1E-6143]	-	5.200000000000000000000000000000000E+0000
+decfloat34	a * b	decfloat34[5.2]	decfloat34[1E-6143]	-	5.2E-6143
+decfloat34	a / b	decfloat34[5.2]	decfloat34[1E-6143]	-	5.20000000000000000000000000000000E+6143
+decfloat34	a DIV b	decfloat34[5.2]	decfloat34[1E-6143]	-	5.20000000000000000000000000000000E+6143
+decfloat34	a MOD b	decfloat34[5.2]	decfloat34[1E-6143]	-	0E-0032
+decfloat34	a + b	decfloat34[-5.2]	decfloat34[1.1]	-	-4.1E+0000
+decfloat34	a - b	decfloat34[-5.2]	decfloat34[1.1]	-	-6.3E+0000
+decfloat34	a * b	decfloat34[-5.2]	decfloat34[1.1]	-	-5.72E+0000
+decfloat34	a / b	decfloat34[-5.2]	decfloat34[1.1]	-	-4.727272727272727272727272727272727E+0000
+decfloat34	a DIV b	decfloat34[-5.2]	decfloat34[1.1]	-	-5E+0000
+decfloat34	a MOD b	decfloat34[-5.2]	decfloat34[1.1]	-	3E-0001
+decfloat34	a + b	decfloat34[-5.2]	decfloat34[-1.1]	-	-6.3E+0000
+decfloat34	a - b	decfloat34[-5.2]	decfloat34[-1.1]	-	-4.1E+0000
+decfloat34	a * b	decfloat34[-5.2]	decfloat34[-1.1]	-	5.72E+0000
+decfloat34	a / b	decfloat34[-5.2]	decfloat34[-1.1]	-	4.727272727272727272727272727272727E+0000
+decfloat34	a DIV b	decfloat34[-5.2]	decfloat34[-1.1]	-	5E+0000
+decfloat34	a MOD b	decfloat34[-5.2]	decfloat34[-1.1]	-	3E-0001
+decfloat34	a + b	decfloat34[-5.2]	decfloat34[3]	-	-2.2E+0000
+decfloat34	a - b	decfloat34[-5.2]	decfloat34[3]	-	-8.2E+0000
+decfloat34	a * b	decfloat34[-5.2]	decfloat34[3]	-	-1.56E+0001
+decfloat34	a / b	decfloat34[-5.2]	decfloat34[3]	-	-1.733333333333333333333333333333333E+0000
+decfloat34	a DIV b	decfloat34[-5.2]	decfloat34[3]	-	-2E+0000
+decfloat34	a MOD b	decfloat34[-5.2]	decfloat34[3]	-	8E-0001
+decfloat34	a + b	decfloat34[-5.2]	decfloat34[0]	-	-5.2E+0000
+decfloat34	a - b	decfloat34[-5.2]	decfloat34[0]	-	-5.2E+0000
+decfloat34	a * b	decfloat34[-5.2]	decfloat34[0]	-	-0E-0001
+decfloat34	a / b	decfloat34[-5.2]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a DIV b	decfloat34[-5.2]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a MOD b	decfloat34[-5.2]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a + b	decfloat34[-5.2]	decfloat34[1.00]	-	-4.20E+0000
+decfloat34	a - b	decfloat34[-5.2]	decfloat34[1.00]	-	-6.20E+0000
+decfloat34	a * b	decfloat34[-5.2]	decfloat34[1.00]	-	-5.200E+0000
+decfloat34	a / b	decfloat34[-5.2]	decfloat34[1.00]	-	-5.2E+0000
+decfloat34	a DIV b	decfloat34[-5.2]	decfloat34[1.00]	-	-6E+0000
+decfloat34	a MOD b	decfloat34[-5.2]	decfloat34[1.00]	-	8.0E-0001
+decfloat34	a + b	decfloat34[-5.2]	decfloat34[1E-6143]	-	-5.200000000000000000000000000000000E+0000
+decfloat34	a - b	decfloat34[-5.2]	decfloat34[1E-6143]	-	-5.200000000000000000000000000000000E+0000
+decfloat34	a * b	decfloat34[-5.2]	decfloat34[1E-6143]	-	-5.2E-6143
+decfloat34	a / b	decfloat34[-5.2]	decfloat34[1E-6143]	-	-5.20000000000000000000000000000000E+6143
+decfloat34	a DIV b	decfloat34[-5.2]	decfloat34[1E-6143]	-	-5.20000000000000000000000000000000E+6143
+decfloat34	a MOD b	decfloat34[-5.2]	decfloat34[1E-6143]	-	0E-0032
+decfloat34	a + b	decfloat34[1.00]	decfloat34[1.1]	-	2.10E+0000
+decfloat34	a - b	decfloat34[1.00]	decfloat34[1.1]	-	-1.0E-0001
+decfloat34	a * b	decfloat34[1.00]	decfloat34[1.1]	-	1.100E+0000
+decfloat34	a / b	decfloat34[1.00]	decfloat34[1.1]	-	9.090909090909090909090909090909091E-0001
+decfloat34	a DIV b	decfloat34[1.00]	decfloat34[1.1]	-	0E+0000
+decfloat34	a MOD b	decfloat34[1.00]	decfloat34[1.1]	-	1.00E+0000
+decfloat34	a + b	decfloat34[1.00]	decfloat34[-1.1]	-	-1.0E-0001
+decfloat34	a - b	decfloat34[1.00]	decfloat34[-1.1]	-	2.10E+0000
+decfloat34	a * b	decfloat34[1.00]	decfloat34[-1.1]	-	-1.100E+0000
+decfloat34	a / b	decfloat34[1.00]	decfloat34[-1.1]	-	-9.090909090909090909090909090909091E-0001
+decfloat34	a DIV b	decfloat34[1.00]	decfloat34[-1.1]	-	-0E+0000
+decfloat34	a MOD b	decfloat34[1.00]	decfloat34[-1.1]	-	1.00E+0000
+decfloat34	a + b	decfloat34[1.00]	decfloat34[3]	-	4.00E+0000
+decfloat34	a - b	decfloat34[1.00]	decfloat34[3]	-	-2.00E+0000
+decfloat34	a * b	decfloat34[1.00]	decfloat34[3]	-	3.00E+0000
+decfloat34	a / b	decfloat34[1.00]	decfloat34[3]	-	3.333333333333333333333333333333333E-0001
+decfloat34	a DIV b	decfloat34[1.00]	decfloat34[3]	-	0E+0000
+decfloat34	a MOD b	decfloat34[1.00]	decfloat34[3]	-	1.00E+0000
+decfloat34	a + b	decfloat34[1.00]	decfloat34[0]	-	1.00E+0000
+decfloat34	a - b	decfloat34[1.00]	decfloat34[0]	-	1.00E+0000
+decfloat34	a * b	decfloat34[1.00]	decfloat34[0]	-	0E-0002
+decfloat34	a / b	decfloat34[1.00]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a DIV b	decfloat34[1.00]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a MOD b	decfloat34[1.00]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a + b	decfloat34[1.00]	decfloat34[1.00]	-	2.00E+0000
+decfloat34	a - b	decfloat34[1.00]	decfloat34[1.00]	-	0E-0002
+decfloat34	a * b	decfloat34[1.00]	decfloat34[1.00]	-	1.0000E+0000
+decfloat34	a / b	decfloat34[1.00]	decfloat34[1.00]	-	1E+0000
+decfloat34	a DIV b	decfloat34[1.00]	decfloat34[1.00]	-	1E+0000
+decfloat34	a MOD b	decfloat34[1.00]	decfloat34[1.00]	-	0E-0002
+decfloat34	a + b	decfloat34[1.00]	decfloat34[1E-6143]	-	1.000000000000000000000000000000000E+0000
+decfloat34	a - b	decfloat34[1.00]	decfloat34[1E-6143]	-	1.000000000000000000000000000000000E+0000
+decfloat34	a * b	decfloat34[1.00]	decfloat34[1E-6143]	-	1.00E-6143
+decfloat34	a / b	decfloat34[1.00]	decfloat34[1E-6143]	-	1.00000000000000000000000000000000E+6143
+decfloat34	a DIV b	decfloat34[1.00]	decfloat34[1E-6143]	-	1.00000000000000000000000000000000E+6143
+decfloat34	a MOD b	decfloat34[1.00]	decfloat34[1E-6143]	-	0E-0032
+decfloat34	a + b	decfloat34[0]	decfloat34[1.1]	-	1.1E+0000
+decfloat34	a - b	decfloat34[0]	decfloat34[1.1]	-	-1.1E+0000
+decfloat34	a * b	decfloat34[0]	decfloat34[1.1]	-	0E-0001
+decfloat34	a / b	decfloat34[0]	decfloat34[1.1]	-	0E+0000
+decfloat34	a DIV b	decfloat34[0]	decfloat34[1.1]	-	0E+0000
+decfloat34	a MOD b	decfloat34[0]	decfloat34[1.1]	-	0E+0000
+decfloat34	a + b	decfloat34[0]	decfloat34[-1.1]	-	-1.1E+0000
+decfloat34	a - b	decfloat34[0]	decfloat34[-1.1]	-	1.1E+0000
+decfloat34	a * b	decfloat34[0]	decfloat34[-1.1]	-	-0E-0001
+decfloat34	a / b	decfloat34[0]	decfloat34[-1.1]	-	0E+0000
+decfloat34	a DIV b	decfloat34[0]	decfloat34[-1.1]	-	0E+0000
+decfloat34	a MOD b	decfloat34[0]	decfloat34[-1.1]	-	0E+0000
+decfloat34	a + b	decfloat34[0]	decfloat34[3]	-	3E+0000
+decfloat34	a - b	decfloat34[0]	decfloat34[3]	-	-3E+0000
+decfloat34	a * b	decfloat34[0]	decfloat34[3]	-	0E+0000
+decfloat34	a / b	decfloat34[0]	decfloat34[3]	-	0E+0000
+decfloat34	a DIV b	decfloat34[0]	decfloat34[3]	-	0E+0000
+decfloat34	a MOD b	decfloat34[0]	decfloat34[3]	-	0E+0000
+decfloat34	a + b	decfloat34[0]	decfloat34[0]	-	0E+0000
+decfloat34	a - b	decfloat34[0]	decfloat34[0]	-	0E+0000
+decfloat34	a * b	decfloat34[0]	decfloat34[0]	-	0E+0000
+decfloat34	a / b	decfloat34[0]	decfloat34[0]	-	0E+0000
+decfloat34	a DIV b	decfloat34[0]	decfloat34[0]	-	0E+0000
+decfloat34	a MOD b	decfloat34[0]	decfloat34[0]	-	0E+0000
+decfloat34	a + b	decfloat34[0]	decfloat34[1.00]	-	1.00E+0000
+decfloat34	a - b	decfloat34[0]	decfloat34[1.00]	-	-1.00E+0000
+decfloat34	a * b	decfloat34[0]	decfloat34[1.00]	-	0E-0002
+decfloat34	a / b	decfloat34[0]	decfloat34[1.00]	-	0E+0000
+decfloat34	a DIV b	decfloat34[0]	decfloat34[1.00]	-	0E+0000
+decfloat34	a MOD b	decfloat34[0]	decfloat34[1.00]	-	0E+0000
+decfloat34	a + b	decfloat34[0]	decfloat34[1E-6143]	-	1E-6143
+decfloat34	a - b	decfloat34[0]	decfloat34[1E-6143]	-	-1E-6143
+decfloat34	a * b	decfloat34[0]	decfloat34[1E-6143]	-	0E-6143
+decfloat34	a / b	decfloat34[0]	decfloat34[1E-6143]	-	0E+0000
+decfloat34	a DIV b	decfloat34[0]	decfloat34[1E-6143]	-	0E+0000
+decfloat34	a MOD b	decfloat34[0]	decfloat34[1E-6143]	-	0E+0000
+decfloat34	a + b	decfloat34[1E6144]	decfloat34[1.1]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a - b	decfloat34[1E6144]	decfloat34[1.1]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a * b	decfloat34[1E6144]	decfloat34[1.1]	-	1.100000000000000000000000000000000E+6144
+decfloat34	a / b	decfloat34[1E6144]	decfloat34[1.1]	-	9.090909090909090909090909090909091E+6143
+decfloat34	a DIV b	decfloat34[1E6144]	decfloat34[1.1]	-	9.090909090909090909090909090909091E+6143
+decfloat34	a MOD b	decfloat34[1E6144]	decfloat34[1.1]	-	0E+6111
+decfloat34	a + b	decfloat34[1E6144]	decfloat34[-1.1]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a - b	decfloat34[1E6144]	decfloat34[-1.1]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a * b	decfloat34[1E6144]	decfloat34[-1.1]	-	-1.100000000000000000000000000000000E+6144
+decfloat34	a / b	decfloat34[1E6144]	decfloat34[-1.1]	-	-9.090909090909090909090909090909091E+6143
+decfloat34	a DIV b	decfloat34[1E6144]	decfloat34[-1.1]	-	-9.090909090909090909090909090909091E+6143
+decfloat34	a MOD b	decfloat34[1E6144]	decfloat34[-1.1]	-	0E+6111
+decfloat34	a + b	decfloat34[1E6144]	decfloat34[3]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a - b	decfloat34[1E6144]	decfloat34[3]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a * b	decfloat34[1E6144]	decfloat34[3]	-	3.000000000000000000000000000000000E+6144
+decfloat34	a / b	decfloat34[1E6144]	decfloat34[3]	-	3.333333333333333333333333333333333E+6143
+decfloat34	a DIV b	decfloat34[1E6144]	decfloat34[3]	-	3.333333333333333333333333333333333E+6143
+decfloat34	a MOD b	decfloat34[1E6144]	decfloat34[3]	-	1E+6110
+decfloat34	a + b	decfloat34[1E6144]	decfloat34[0]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a - b	decfloat34[1E6144]	decfloat34[0]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a * b	decfloat34[1E6144]	decfloat34[0]	-	0E+6111
+decfloat34	a / b	decfloat34[1E6144]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a DIV b	decfloat34[1E6144]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a MOD b	decfloat34[1E6144]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a + b	decfloat34[1E6144]	decfloat34[1.00]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a - b	decfloat34[1E6144]	decfloat34[1.00]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a * b	decfloat34[1E6144]	decfloat34[1.00]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a / b	decfloat34[1E6144]	decfloat34[1.00]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a DIV b	decfloat34[1E6144]	decfloat34[1.00]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a MOD b	decfloat34[1E6144]	decfloat34[1.00]	-	0E+6111
+decfloat34	a + b	decfloat34[1E6144]	decfloat34[1E-6143]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a - b	decfloat34[1E6144]	decfloat34[1E-6143]	-	1.000000000000000000000000000000000E+6144
+decfloat34	a * b	decfloat34[1E6144]	decfloat34[1E-6143]	-	1.000000000000000000000000000000000E+0001
+decfloat34	a / b	decfloat34[1E6144]	decfloat34[1E-6143]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+decfloat34	a DIV b	decfloat34[1E6144]	decfloat34[1E-6143]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+decfloat34	a MOD b	decfloat34[1E6144]	decfloat34[1E-6143]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+decfloat34	a + b	decfloat34[1.0]	decfloat34[1.1]	-	2.1E+0000
+decfloat34	a - b	decfloat34[1.0]	decfloat34[1.1]	-	-1E-0001
+decfloat34	a * b	decfloat34[1.0]	decfloat34[1.1]	-	1.10E+0000
+decfloat34	a / b	decfloat34[1.0]	decfloat34[1.1]	-	9.090909090909090909090909090909091E-0001
+decfloat34	a DIV b	decfloat34[1.0]	decfloat34[1.1]	-	0E+0000
+decfloat34	a MOD b	decfloat34[1.0]	decfloat34[1.1]	-	1.0E+0000
+decfloat34	a + b	decfloat34[1.0]	decfloat34[-1.1]	-	-1E-0001
+decfloat34	a - b	decfloat34[1.0]	decfloat34[-1.1]	-	2.1E+0000
+decfloat34	a * b	decfloat34[1.0]	decfloat34[-1.1]	-	-1.10E+0000
+decfloat34	a / b	decfloat34[1.0]	decfloat34[-1.1]	-	-9.090909090909090909090909090909091E-0001
+decfloat34	a DIV b	decfloat34[1.0]	decfloat34[-1.1]	-	-0E+0000
+decfloat34	a MOD b	decfloat34[1.0]	decfloat34[-1.1]	-	1.0E+0000
+decfloat34	a + b	decfloat34[1.0]	decfloat34[3]	-	4.0E+0000
+decfloat34	a - b	decfloat34[1.0]	decfloat34[3]	-	-2.0E+0000
+decfloat34	a * b	decfloat34[1.0]	decfloat34[3]	-	3.0E+0000
+decfloat34	a / b	decfloat34[1.0]	decfloat34[3]	-	3.333333333333333333333333333333333E-0001
+decfloat34	a DIV b	decfloat34[1.0]	decfloat34[3]	-	0E+0000
+decfloat34	a MOD b	decfloat34[1.0]	decfloat34[3]	-	1.0E+0000
+decfloat34	a + b	decfloat34[1.0]	decfloat34[0]	-	1.0E+0000
+decfloat34	a - b	decfloat34[1.0]	decfloat34[0]	-	1.0E+0000
+decfloat34	a * b	decfloat34[1.0]	decfloat34[0]	-	0E-0001
+decfloat34	a / b	decfloat34[1.0]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a DIV b	decfloat34[1.0]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a MOD b	decfloat34[1.0]	decfloat34[0]	-	EXC:CX_SY_ZERODIVIDE
+decfloat34	a + b	decfloat34[1.0]	decfloat34[1.00]	-	2.00E+0000
+decfloat34	a - b	decfloat34[1.0]	decfloat34[1.00]	-	0E-0002
+decfloat34	a * b	decfloat34[1.0]	decfloat34[1.00]	-	1.000E+0000
+decfloat34	a / b	decfloat34[1.0]	decfloat34[1.00]	-	1E+0000
+decfloat34	a DIV b	decfloat34[1.0]	decfloat34[1.00]	-	1E+0000
+decfloat34	a MOD b	decfloat34[1.0]	decfloat34[1.00]	-	0E-0002
+decfloat34	a + b	decfloat34[1.0]	decfloat34[1E-6143]	-	1.000000000000000000000000000000000E+0000
+decfloat34	a - b	decfloat34[1.0]	decfloat34[1E-6143]	-	1.000000000000000000000000000000000E+0000
+decfloat34	a * b	decfloat34[1.0]	decfloat34[1E-6143]	-	1.0E-6143
+decfloat34	a / b	decfloat34[1.0]	decfloat34[1E-6143]	-	1.00000000000000000000000000000000E+6143
+decfloat34	a DIV b	decfloat34[1.0]	decfloat34[1E-6143]	-	1.00000000000000000000000000000000E+6143
+decfloat34	a MOD b	decfloat34[1.0]	decfloat34[1E-6143]	-	0E-0032
+decfloat34	a * b	decfloat34[1.5]	decfloat34[2.0]	-	3.00E+0000
+decfloat34	a / b	decfloat34[1.00]	decfloat34[1.0]	-	1.0E+0000
+decfloat34	a / b	decfloat34[1]	decfloat34[1.00]	-	1E+0000
+decfloat34	a / b	decfloat34[6]	decfloat34[2]	-	3E+0000
+decfloat34	a / b	decfloat34[1]	decfloat34[4]	-	2.5E-0001
+decfloat34	a / b	decfloat34[1E2]	decfloat34[4]	-	2.5E+0001
+decfloat34	a / b	decfloat34[100]	decfloat34[1E2]	-	1.00E+0000
+decfloat34	a / b	decfloat34[2]	decfloat34[3]	-	6.666666666666666666666666666666667E-0001
+decfloat34	sqrt( a )	decfloat34[4.00]	-	-	2.0E+0000
+decfloat34	sqrt( a )	decfloat34[2]	-	-	1.414213562373095048801688724209698E+0000
+decfloat34	sqrt( a )	decfloat34[1.0000]	-	-	1.00E+0000
+decfloat34	a / b	decfloat34[1E-6176]	decfloat34[10]	-	0E-6176
+decfloat34	a + b	decfloat34[9.999999999999999999999999999999999E6144]	decfloat34[1]	-	9.999999999999999999999999999999999E+6144
+decfloat34	a * 10	decfloat34[9.999999999999999999999999999999999E6144]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+decfloat34	a + b	decfloat34[1234567890123456789012345678901234]	decfloat34[0.5]	-	1.234567890123456789012345678901235E+0033
+decfloat34	a + b	decfloat34[1234567890123456789012345678901233]	decfloat34[0.5]	-	1.234567890123456789012345678901234E+0033
+decfloat34	a + b	decfloat34[-0]	decfloat34[0]	-	0E+0000
+decfloat34	a + b	decfloat34[-0]	decfloat34[-0]	-	-0E+0000
+decfloat34	- a	decfloat34[0]	-	-	-0E+0000
+decfloat34	a * b	decfloat34[0]	decfloat34[-1]	-	-0E+0000
+decfloat16	a * b	decfloat16[1.5]	decfloat16[1.5]	-	2.25E+0000
+decfloat16	a + b	decfloat16[1234567890123456]	decfloat16[0.5]	-	1.234567890123457E+0015
+decfloat16	a / b	decfloat16[1]	decfloat16[3]	-	3.333333333333333E-0001
+decfloat16	a * 10	decfloat16[9.999999999999999E384]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+decfloat16	a * 10 / 10	decfloat16[9.999999999999999E384]	-	-	9.999999999999999E+0384
+p16.14	a / b	decfloat34[1]	decfloat34[3]	-	0.33333333333333
+i	a + 0	decfloat34[2.5]	-	-	3
+i	a + 0	decfloat34[1E20]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+f	a + 0	decfloat34[1E400]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+decfloat34	a + b	decfloat34[1]	f[0.1]	-	1.10000000000000001E+0000
+decfloat34	a + b	p8.2[1.50]	decfloat34[0]	-	1.50E+0000
+decfloat34	a * b	p8.2[1.50]	i[2]	-	3.00E+0000
+f	a ** b	i[2]	i[3]	-	4020000000000000
+decfloat34	a ** b	decfloat34[2]	i[3]	-	8E+0000
+i	ipow( base = a exp = b )	i[2]	i[3]	-	8
+f	a ** b	i[2]	i[-1]	-	3FE0000000000000
+decfloat34	a ** b	decfloat34[2]	i[-1]	-	5E-0001
+i	ipow( base = a exp = b )	i[2]	i[-1]	-	1
+f	a ** b	i[-8]	i[3]	-	C080000000000000
+decfloat34	a ** b	decfloat34[-8]	i[3]	-	-5.12E+0002
+i	ipow( base = a exp = b )	i[-8]	i[3]	-	-512
+f	a ** b	i[-8]	i[0]	-	3FF0000000000000
+decfloat34	a ** b	decfloat34[-8]	i[0]	-	1E+0000
+string	ipow( base = a exp = b )	p8.2[-8]	i[0]	-	[1 ]
+i	ipow( base = a exp = b )	i[-8]	i[0]	-	1
+f	a ** b	i[0]	i[0]	-	3FF0000000000000
+decfloat34	a ** b	decfloat34[0]	i[0]	-	1E+0000
+string	ipow( base = a exp = b )	p8.2[0]	i[0]	-	[1 ]
+i	ipow( base = a exp = b )	i[0]	i[0]	-	1
+f	a ** b	i[0]	i[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+decfloat34	a ** b	decfloat34[0]	i[-1]	-	EXC:CX_SY_ARG_OUT_OF_DOMAIN
+string	ipow( base = a exp = b )	p8.2[0]	i[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	ipow( base = a exp = b )	i[0]	i[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a ** b	i[0]	i[2]	-	0000000000000000
+decfloat34	a ** b	decfloat34[0]	i[2]	-	0E+0000
+i	ipow( base = a exp = b )	i[0]	i[2]	-	0
+f	a ** b	i[2]	i[31]	-	41E0000000000000
+decfloat34	a ** b	decfloat34[2]	i[31]	-	2.147483648E+0009
+i	ipow( base = a exp = b )	i[2]	i[31]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a ** b	i[2]	i[1024]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+decfloat34	a ** b	decfloat34[2]	i[1024]	-	1.797693134862315907729305190789025E+0308
+string	ipow( base = a exp = b )	p8.2[2]	i[1024]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	ipow( base = a exp = b )	i[2]	i[1024]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a ** b	i[10]	i[-400]	-	0000000000000000
+decfloat34	a ** b	decfloat34[10]	i[-400]	-	1E-0400
+string	ipow( base = a exp = b )	p8.2[10]	i[-400]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i	ipow( base = a exp = b )	i[10]	i[-400]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a ** b	i[-1]	f[0.5]	-	EXC:CX_SY_ARG_OUT_OF_DOMAIN
+decfloat34	a ** b	decfloat34[-1]	f[0.5]	-	EXC:CX_SY_ARG_OUT_OF_DOMAIN
+string	ipow( base = a exp = b )	p8.2[-1]	f[0.5]	-	[1.000-]
+i	ipow( base = a exp = b )	i[-1]	f[0.5]	-	-1
+f	a ** b	i[4]	f[0.5]	-	4000000000000000
+decfloat34	a ** b	decfloat34[4]	f[0.5]	-	2.000000000000000000000000000000000E+0000
+string	ipow( base = a exp = b )	p8.2[4]	f[0.5]	-	[4.000 ]
+i	ipow( base = a exp = b )	i[4]	f[0.5]	-	4
+f	a ** b	i[2]	f[0.5]	-	3FF6A09E667F3BCD
+decfloat34	a ** b	decfloat34[2]	f[0.5]	-	1.414213562373095048801688724209698E+0000
+string	ipow( base = a exp = b )	p8.2[2]	f[0.5]	-	[2.000 ]
+i	ipow( base = a exp = b )	i[2]	f[0.5]	-	2
+f	a ** b ** 2	i[2]	i[3]	-	4080000000000000
+i	a ** b	i[2]	i[31]	-	EXC:CX_SY_CONVERSION_OVERFLOW
+int8	ipow( base = a exp = b )	i[2]	i[31]	-	2147483648
+int8	ipow( base = a exp = b )	int8[2]	i[63]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	ipow( base = a exp = b )	int8[3]	i[39]	-	4052555153018976267
+int8	a ** b	int8[3]	i[39]	-	4052555153018976256
+string	a ** b	p8.2[1.1]	i[2]	-	[1.2100000000000002E+00]
+i	ipow( base = a exp = b )	i[2]	p8.2[2.5]	-	8
+i	ipow( base = a exp = b )	i[2]	p8.2[2.4]	-	4
+decfloat34	a ** b	decfloat34[1.0]	i[2]	-	1.00E+0000
+decfloat34	ipow( base = a exp = b )	decfloat34[1.0]	i[2]	-	1.00E+0000
+p16.4	a + 0	c10[1E2]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+f	a + b	c10[1E2]	f[0]	-	4059000000000000
+decfloat34	a + b	c10[1E2]	decfloat34[0]	-	1.00E+0002
+i	a * 2	string[1E2]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+p16.4	a + 0	c10[1.5]	-	-	1.5000
+f	a + b	c10[1.5]	f[0]	-	3FF8000000000000
+decfloat34	a + b	c10[1.5]	decfloat34[0]	-	1.5E+0000
+i	a * 2	string[1.5]	-	-	3
+p16.4	a + 0	c10[ 7 ]	-	-	7.0000
+f	a + b	c10[ 7 ]	f[0]	-	401C000000000000
+decfloat34	a + b	c10[ 7 ]	decfloat34[0]	-	7E+0000
+i	a * 2	string[ 7 ]	-	-	14
+p16.4	a + 0	c10[abc]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+f	a + b	c10[abc]	f[0]	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+decfloat34	a + b	c10[abc]	decfloat34[0]	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+i	a * 2	string[abc]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+p16.4	a + 0	c10[]	-	-	0.0000
+f	a + b	c10[]	f[0]	-	0000000000000000
+decfloat34	a + b	c10[]	decfloat34[0]	-	0E+0000
+i	a * 2	string[]	-	-	0
+p16.4	a + 0	c10[1,5]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+f	a + b	c10[1,5]	f[0]	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+decfloat34	a + b	c10[1,5]	decfloat34[0]	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+i	a * 2	string[1,5]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+p16.4	a + 0	c10[- 3]	-	-	-3.0000
+f	a + b	c10[- 3]	f[0]	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+decfloat34	a + b	c10[- 3]	decfloat34[0]	-	-3E+0000
+i	a * 2	string[- 3]	-	-	-6
+p16.4	a + 0	c10[7-]	-	-	-7.0000
+f	a + b	c10[7-]	f[0]	-	C01C000000000000
+decfloat34	a + b	c10[7-]	decfloat34[0]	-	-7E+0000
+i	a * 2	string[7-]	-	-	-14
+p16.4	a + 0	c10[1e2]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+f	a + b	c10[1e2]	f[0]	-	4059000000000000
+decfloat34	a + b	c10[1e2]	decfloat34[0]	-	1.00E+0002
+i	a * 2	string[1e2]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+p16.4	a + 0	c10[ 1.5E-1]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+f	a + b	c10[ 1.5E-1]	f[0]	-	3FC3333333333333
+decfloat34	a + b	c10[ 1.5E-1]	decfloat34[0]	-	1.5E-0001
+i	a * 2	string[ 1.5E-1]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+p16.4	a + 0	c10[1 2]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+f	a + b	c10[1 2]	f[0]	-	3FF0000000000000
+decfloat34	a + b	c10[1 2]	decfloat34[0]	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+i	a * 2	string[1 2]	-	-	EXC:CX_SY_CONVERSION_NO_NUMBER
+p16.4	a + 0	c10[0.5]	-	-	0.5000
+f	a + b	c10[0.5]	f[0]	-	3FE0000000000000
+decfloat34	a + b	c10[0.5]	decfloat34[0]	-	5E-0001
+i	a * 2	string[0.5]	-	-	1
+i	a + 0	c10[3000000000]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+c10	a / b	c10[1]	c10[3]	-	[0.33333333]
+string	a / b	c10[2]	c10[3]	-	[0.66666666666667 ]
+c10	a / b * b	c10[7]	c10[2]	-	[        7 ]
+i	a + 0	x4[0000000A]	-	-	10
+i	a + 0	x4[FFFFFFFF]	-	-	-1
+i	a + 0	x4[80000000]	-	-	-2147483648
+i	a + 1	x4[7FFFFFFF]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+int8	a + 1	x4[7FFFFFFF]	-	-	2147483648
+int8	a + 0	xstring[FFFFFFFFFF]	-	-	1099511627775
+x4	a / b	x4[00000007]	i[2]	-	00000004
+p8.2	a / b	x4[00000007]	i[2]	-	3.50
+d	a + 1	d[20240229]	-	-	[20240301]
+i	a + 1	d[20240229]	-	-	738947
+i	a - b	d[20240229]	d[20240101]	-	59
+t	a + 1	t[235959]	-	-	[000000]
+p8.2	a / 2	d[20240229]	-	-	369473.00
+i	a * 1000	d[20240229]	-	-	738946000
+p8.2	EXACT p8_2( a / b )	p8.2[1]	p8.2[3]	-	EXC:CX_SY_CONVERSION_ROUNDING
+p8.2	EXACT p8_2( a / b )	p8.2[1]	p8.2[4]	-	0.25
+p8.2	EXACT p8_2( a / b )	p8.2[1]	p8.2[8]	-	EXC:CX_SY_CONVERSION_ROUNDING
+decfloat34	EXACT #( a / b )	i[1]	i[3]	-	EXC:CX_SY_CONVERSION_ROUNDING
+i	EXACT i( a / b )	i[1]	i[4]	-	EXC:CX_SY_CONVERSION_ROUNDING
+i	EXACT i( a / b )	i[4]	i[2]	-	2
+decfloat34	EXACT decfloat34( a / b )	decfloat34[1]	decfloat34[3]	-	EXC:CX_SY_CONVERSION_ROUNDING
+DATA	a / b	i[1]	i[3]	-	i:0
+DATA	a + a	i[1]	-	-	i:2
+DATA	a / b	int8[1]	i[3]	-	int8:0
+DATA	a + a	int8[1]	-	-	int8:2
+DATA	a / b	b[1]	i[3]	-	i:0
+DATA	a + a	b[1]	-	-	i:2
+DATA	a / b	s[1]	i[3]	-	i:0
+DATA	a + a	s[1]	-	-	i:2
+DATA	a / b	p8.2[1]	i[3]	-	p8.0:0
+DATA	a + a	p8.2[1]	-	-	p8.0:2
+DATA	a / b	p16.0[1]	i[3]	-	p8.0:0
+DATA	a + a	p16.0[1]	-	-	p8.0:2
+DATA	a / b	f[1]	i[3]	-	f:3FD5555555555555
+DATA	a + a	f[1]	-	-	f:4000000000000000
+DATA	a / b	decfloat16[1]	i[3]	-	decfloat16:3.333333333333333E-0001
+DATA	a + a	decfloat16[1]	-	-	decfloat16:2E+0000
+DATA	a / b	decfloat34[1]	i[3]	-	decfloat34:3.333333333333333333333333333333333E-0001
+DATA	a + a	decfloat34[1]	-	-	decfloat34:2E+0000
+DATA	a / b	c10[1]	i[3]	-	p8.0:0
+DATA	a + a	c10[1]	-	-	p8.0:2
+DATA	a / b	n10[0000000001]	i[3]	-	p8.0:0
+DATA	a + a	n10[0000000001]	-	-	p8.0:2
+DATA	a / b	string[1]	i[3]	-	p8.0:0
+DATA	a + a	string[1]	-	-	p8.0:2
+DATA	a / b	d[00010102]	i[3]	-	i:0
+DATA	a + a	d[00010102]	-	-	i:2
+DATA	a / b	t[000001]	i[3]	-	i:0
+DATA	a + a	t[000001]	-	-	i:2
+DATA	a / b	x4[00000001]	i[3]	-	i:0
+DATA	a + a	x4[00000001]	-	-	i:2
+DATA	a / b	xstring[01]	i[3]	-	i:0
+DATA	a + a	xstring[01]	-	-	i:2
+DATA	a ** b	i[2]	i[10]	-	f:4090000000000000
+DATA	a ** b	decfloat16[2]	i[10]	-	decfloat16:1.024E+0003
+DATA	a ** b	p8.2[2]	i[10]	-	f:4090000000000000
+DATA	ipow( base = a exp = b )	i[2]	i[10]	-	i:1024
+DATA	ipow( base = a exp = b )	int8[2]	i[10]	-	int8:1024
+DATA	ipow( base = a exp = b )	p8.2[2]	i[10]	-	p8.0:1024
+DATA	ipow( base = a exp = b )	f[2]	i[10]	-	f:4090000000000000
+DATA	ipow( base = a exp = b )	decfloat16[2]	i[10]	-	decfloat16:1.024E+0003
+DATA	ipow( base = a exp = b )	i[2]	p8.2[3]	-	i:8
+DATA	abs( a ) + 0	i[7]	-	-	i:7
+DATA	sqrt( a )	i[7]	-	-	f:40052A7FA9D2F8EA
+DATA	sqrt( a )	decfloat16[7]	-	-	decfloat16:2.645751311064591E+0000
+DATA	- a	i[7]	-	-	i:-7
+DATA	a * a * a	p8.2[7]	-	-	p8.0:343
+DATA	1 / 3	i[1]	-	-	i:0
+DATA	a + 3000000000	i[1]	-	-	p8.0:3000000001
+DATA	a + '2'	i[1]	-	-	p8.0:3
+DATA	a + `2`	i[1]	-	-	p8.0:3
+DATA	a + '1.5'	i[1]	-	-	p8.0:3
+DATA	<a> + 1	<a>=c4[7]	-	-	decfloat34:8E+0000
+DATA	<a> + 1	<a>=x4[00000007]	-	-	decfloat34:8E+0000
+p16.0	( a / 3 * 3 - a ) * b * b	p16.14[0.0000000001]	p16.0[100000000000000000000]	-	0
+p16.0	( a / 3 * 3 - a ) * b	p16.0[1000000000]	p16.0[100000000000000000000]	-	0
+p16.0	( a / 3 * 3 - a ) * b * b	p16.0[1]	p16.0[100000000000000000000]	-	-1000000000
+p16.0	( a / 3 * 3 - a ) * b * b + c * 10 - c * 10	p16.0[1]	p16.0[100000000000000000000]	p16.0[9999999999999999999999999999999]	0
+p16.14	a / 3 + b * 10 - b * 10	p16.0[1]	p16.0[9999999999999999999999999999999]	-	0.33333333333333
+string	a / 3 + b * 10 - b * 10	p16.0[1]	p16.0[9999999999999999999999999999999]	-	[0.33333333333333 ]
+string	a / 3 + b * 10 - b * 10	p16.0[2]	p16.0[9999999999999999999999999999999]	-	[0.66666666666667 ]
+p16.0	( a / 3 * 3 - a ) * b * b	p16.0[2]	p16.0[100000000000000000000]	-	0
+p16.0	( a / 3 * 3 - a ) * b * b	p16.0[-2]	p16.0[100000000000000000000]	-	0
+p16.0	( a / b * b - a ) * c * c	p16.0[1]	p16.0[7]	p16.0[100000000000000000000]	-3000000000
+p16.0	( a / b * b - a ) * c	p16.0[1000000000000000]	p16.0[3]	p16.0[100000000000000000000]	-10000
+c20	a * b	p8.2[2.00]	p8.2[2.00]	-	[                  4 ]
+c20	a * b	p8.2[1.10]	p8.2[1.10]	-	[               1.21 ]
+string	a + b	p8.2[1.10]	p8.2[1.00]	-	[2.10 ]
+c20	a + b	p8.2[1.10]	p8.2[1.00]	-	[                2.1 ]
+c20	a * b	p8.2[0.50]	p8.2[2.00]	-	[                  1 ]
+string	a / b	p8.2[5.20]	p8.2[2.00]	-	[2.6 ]
+c20	a / b	p8.2[5.20]	p8.2[2.00]	-	[                2.6 ]
+string	a / b	p8.2[7.00]	p8.2[2.00]	-	[3.5 ]
+c20	a / b	p8.2[7.00]	p8.2[2.00]	-	[                3.5 ]
+string	a / b	p8.2[1.00]	p8.2[8.00]	-	[0.125 ]
+c20	a / b	p8.2[1.00]	p8.2[8.00]	-	[              0.125 ]
+string	a / b	p8.2[1.00]	p8.2[3.00]	-	[0.33333333333333 ]
+c20	a / b	p8.2[1.00]	p8.2[3.00]	-	[   0.33333333333333 ]
+string	a - b	p8.2[1.00]	p8.2[1.00]	-	[0 ]
+c20	a - b	p8.2[1.00]	p8.2[1.00]	-	[                  0 ]
+c20	a * b	p8.2[0.10]	p8.2[0.10]	-	[               0.01 ]
+c20	a * b	p8.2[2.50]	p8.2[4.00]	-	[                 10 ]
+string	a / b	p8.2[100.00]	p8.2[7.00]	-	[14.28571428571429 ]
+c20	a / b	p8.2[100.00]	p8.2[7.00]	-	[  14.28571428571429 ]
+string	a DIV b	p8.2[1.00]	p8.2[3.00]	-	[0 ]
+c20	a DIV b	p8.2[1.00]	p8.2[3.00]	-	[                  0 ]
+string	a MOD b	p8.2[7.00]	p8.2[3.00]	-	[1 ]
+c20	a MOD b	p8.2[7.00]	p8.2[3.00]	-	[                  1 ]
+string	a MOD b	p8.2[7.10]	p8.2[3.00]	-	[1.1 ]
+c20	a MOD b	p8.2[7.10]	p8.2[3.00]	-	[                1.1 ]
+string	a / b	i[7]	i[2]	-	[3.5 ]
+string	a / b	i[6]	i[2]	-	[3 ]
+c3	a * b	i[7]	i[1]	-	[ 7 ]
+c1	a * b	i[7]	i[1]	-	[7]
+c1	a * b	i[-7]	i[1]	-	[*]
+c3	a / b	i[1]	i[3]	-	[0.3]
+c1	a / b	i[1]	i[3]	-	[0]
+c3	a / b	i[2]	i[3]	-	[0.7]
+c5	a * b	i[2147483647]	i[3]	-	[*0941]
+n3	a * b	i[2147483647]	i[3]	-	[941]
+n12	a * b	i[-2147483647]	i[3]	-	[006442450941]
+n3	a / b	i[1]	i[3]	-	[000]
+n3	a / b	i[2]	i[3]	-	[001]
+string	a / b	p16.0[9999999999999999999999999999999]	i[10]	-	[999999999999999999999999999999.9 ]
+c40	a / b	p16.0[9999999999999999999999999999999]	i[10]	-	[       999999999999999999999999999999.9 ]
+c40	a * b	p16.0[999999999999999999999999999999]	i[1]	-	[         999999999999999999999999999999 ]
+string	a * b	f[0.5]	i[1]	-	[5.0000000000000000E-01]
+string	a * b	decfloat34[0.50]	i[1]	-	[0.50]
+c10	a * b	decfloat34[0.50]	i[1]	-	[      0.50]
+p16.10	ipow( base = a exp = b )	p8.2[2.00]	i[1]	-	2.0000000000
+p16.10	ipow( base = a exp = b )	p8.2[1.10]	i[1]	-	1.1000000000
+i	ipow( base = a exp = b )	i[3]	i[1]	-	3
+decfloat34	ipow( base = a exp = b )	decfloat34[1.10]	i[1]	-	1.10E+0000
+decfloat34	a ** b	decfloat34[1.10]	i[1]	-	1.10E+0000
+p16.10	ipow( base = a exp = b )	p8.2[2.00]	i[2]	-	4.0000000000
+p16.10	ipow( base = a exp = b )	p8.2[1.10]	i[2]	-	1.2100000000
+i	ipow( base = a exp = b )	i[3]	i[2]	-	9
+decfloat34	ipow( base = a exp = b )	decfloat34[1.10]	i[2]	-	1.2100E+0000
+decfloat34	a ** b	decfloat34[1.10]	i[2]	-	1.2100E+0000
+p16.10	ipow( base = a exp = b )	p8.2[2.00]	i[3]	-	8.0000000000
+p16.10	ipow( base = a exp = b )	p8.2[1.10]	i[3]	-	1.3310000000
+i	ipow( base = a exp = b )	i[3]	i[3]	-	27
+decfloat34	ipow( base = a exp = b )	decfloat34[1.10]	i[3]	-	1.331000E+0000
+decfloat34	a ** b	decfloat34[1.10]	i[3]	-	1.331000E+0000
+p16.10	ipow( base = a exp = b )	p8.2[2.00]	i[4]	-	16.0000000000
+p16.10	ipow( base = a exp = b )	p8.2[1.10]	i[4]	-	1.4641000000
+i	ipow( base = a exp = b )	i[3]	i[4]	-	81
+decfloat34	ipow( base = a exp = b )	decfloat34[1.10]	i[4]	-	1.46410000E+0000
+decfloat34	a ** b	decfloat34[1.10]	i[4]	-	1.46410000E+0000
+p16.10	ipow( base = a exp = b )	p8.2[2.00]	i[5]	-	32.0000000000
+p16.10	ipow( base = a exp = b )	p8.2[1.10]	i[5]	-	1.6105100000
+i	ipow( base = a exp = b )	i[3]	i[5]	-	243
+decfloat34	ipow( base = a exp = b )	decfloat34[1.10]	i[5]	-	1.6105100000E+0000
+decfloat34	a ** b	decfloat34[1.10]	i[5]	-	1.6105100000E+0000
+p16.10	ipow( base = a exp = b )	p8.2[2.00]	i[6]	-	64.0000000000
+p16.10	ipow( base = a exp = b )	p8.2[1.10]	i[6]	-	1.7715610000
+i	ipow( base = a exp = b )	i[3]	i[6]	-	729
+decfloat34	ipow( base = a exp = b )	decfloat34[1.10]	i[6]	-	1.771561000000E+0000
+decfloat34	a ** b	decfloat34[1.10]	i[6]	-	1.771561000000E+0000
+string	ipow( base = a exp = b )	p8.2[1.10]	i[-1]	-	[0.90909090909091 ]
+p16.10	ipow( base = a exp = b )	p8.2[2.00]	i[-1]	-	0.5000000000
+p16.10	ipow( base = a exp = b )	p8.2[1.10]	i[-1]	-	0.9090909091
+i	ipow( base = a exp = b )	i[3]	i[-1]	-	0
+decfloat34	ipow( base = a exp = b )	decfloat34[1.10]	i[-1]	-	9.090909090909090909090909090909091E-0001
+decfloat34	a ** b	decfloat34[1.10]	i[-1]	-	9.090909090909090909090909090909091E-0001
+string	ipow( base = a exp = b )	p8.2[1.10]	i[-3]	-	[0.75131480090158 ]
+p16.10	ipow( base = a exp = b )	p8.2[2.00]	i[-3]	-	0.1250000000
+p16.10	ipow( base = a exp = b )	p8.2[1.10]	i[-3]	-	0.7513148009
+i	ipow( base = a exp = b )	i[3]	i[-3]	-	0
+decfloat34	ipow( base = a exp = b )	decfloat34[1.10]	i[-3]	-	7.513148009015777610818933132982720E-0001
+decfloat34	a ** b	decfloat34[1.10]	i[-3]	-	7.513148009015777610818933132982720E-0001
+i	ipow( base = a exp = b )	p8.2[1.5]	i[2]	-	2
+i	ipow( base = a exp = b )	p8.2[-1.5]	i[2]	-	2
+p16.10	ipow( base = a exp = b )	p8.2[1.5]	p8.2[2.5]	-	3.3750000000
+p16.10	ipow( base = a exp = b )	p8.2[1.5]	p8.2[-2.5]	-	0.2962962963
+i	ipow( base = a exp = b )	i[2]	string[3]	-	8
+i	ipow( base = a exp = b )	i[2]	string[3.5]	-	16
+i	ipow( base = a exp = b )	i[-1]	i[-3]	-	-1
+i	ipow( base = a exp = b )	i[-2]	i[-1]	-	-1
+i	ipow( base = a exp = b )	i[-2]	i[-2]	-	0
+i	ipow( base = a exp = b )	i[2]	i[-2]	-	0
+i	ipow( base = a exp = b ) * 2 / 2	i[2]	i[30]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+p16.6	ipow( base = a exp = b ) / 3	i[2]	i[10]	-	341.333333
+f	ipow( base = a exp = b )	f[2]	i[-1074]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	ipow( base = a exp = b )	f[2]	i[1024]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	ipow( base = a exp = b )	f[0]	i[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+decfloat34	ipow( base = a exp = b )	decfloat34[0]	i[-1]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a ** b	f[-8]	f[0.5]	-	EXC:CX_SY_ARG_OUT_OF_DOMAIN
+f	a ** b	f[0]	f[-0.5]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a ** b	f[0]	f[0.5]	-	0000000000000000
+f	a ** b	f[-8]	f[3]	-	C080000000000000
+f	a ** b	f[-8]	f[1E20]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+f	a ** b	f[1E-200]	f[2]	-	0000000000000000
+f	a ** b	f[1E200]	f[2]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+decfloat34	a ** b	decfloat34[-8]	decfloat34[3]	-	-5.12E+0002
+decfloat34	a ** b	decfloat34[-8]	decfloat34[3.0]	-	-5.12E+0002
+decfloat34	a ** b	decfloat34[4]	decfloat34[0.5]	-	2.000000000000000000000000000000000E+0000
+decfloat34	a ** b	decfloat34[1E3000]	i[3]	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+decfloat34	a ** b	decfloat34[0]	decfloat34[-0.5]	-	EXC:CX_SY_ARG_OUT_OF_DOMAIN
+DATA	a / b	decfloat16[1]	decfloat34[3]	-	decfloat34:3.333333333333333333333333333333333E-0001
+DATA	a / b	decfloat16[1]	f[3]	-	decfloat16:3.333333333333333E-0001
+DATA	a / b	decfloat16[1]	p8.2[3]	-	decfloat16:3.333333333333333E-0001
+DATA	a / b	decfloat16[1]	decfloat16[3]	-	decfloat16:3.333333333333333E-0001
+DATA	a * 10	decfloat16[9.999999999999999E384]	-	-	decfloat16:EXC:CX_SY_CONVERSION_OVERFLOW
+DATA	a * 10 / 10	decfloat16[9.999999999999999E384]	-	-	decfloat16:9.999999999999999E+0384
+DATA	a / b * b	decfloat16[1]	i[3]	-	decfloat16:1.000000000000000E+0000
+decfloat34	a / b * b	decfloat16[1]	i[3]	-	9.999999999999999999999999999999999E-0001
+DATA	a / b	int8[1]	f[3]	-	f:3FD5555555555555
+DATA	a + b	int8[1]	p8.2[3]	-	p8.0:4
+DATA	a + b	f[1]	decfloat34[3]	-	decfloat34:4E+0000
+DATA	CONV decfloat16( a / b )	i[1]	i[3]	-	decfloat16:3.333333333333333E-0001
+DATA	<a> + 1	<a>=decfloat16[7]	-	-	decfloat34:8E+0000
+DATA	<a> + 1	<a>=f[7]	-	-	decfloat34:8E+0000
+DATA	<a> + 1	<a>=i[7]	-	-	decfloat34:8E+0000
+DATA	<a> + 1	<a>=p8.2[7.5]	-	-	decfloat34:8.50E+0000
+i	a + 0	int8[3000000000]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+b	a + 0	int8[300]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+s	a + 0	i[40000]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+p3.1	a + 0	i[1000]	-	-	1000.0
+n3	a + 0	i[1000]	-	-	[000]
+c3	a + 0	i[1000]	-	-	[*00]
+x1	a + 0	i[1000]	-	-	E8
+p3.1	a + 0	p8.2[1000]	-	-	1000.0
+p3.1	a + 0	f[1000]	-	-	1000.0
+p3.1	a + 0	decfloat34[1000]	-	-	1000.0
+n3	a + 0	decfloat34[1000]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+c3	a + 0	decfloat34[1000]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+c3	a + 0	f[1000]	-	-	[***]
+int8	a + 0	f[1E10]	-	-	10000000000
+int8	a + 0	f[1E19]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+int8	a + 0	decfloat34[1E19]	-	-	EXC:CX_SY_CONVERSION_OVERFLOW
+int8	a + 0	p16.0[10000000000000000000]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+d	a + 0	p16.0[1000]	-	-	[00030928]
+x4	a + 0	p16.0[3000000000]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+xstring	a + 0	p16.0[3000000000]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+t	a + 0	p16.0[3000000000]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+d	a + 0	p8.2[1.5]	-	-	[00010103]
+x4	a + 0	p8.2[1.5]	-	-	00000002
+p8.2[1.00]	+= a / b	i[1]	i[3]	-	1.33
+i[1]	+= a	p8.2[0.5]	-	-	2
+i[2147483647]	+= a	i[1]	-	-	EXC:CX_SY_ARITHMETIC_OVERFLOW
+i[7]	/= a	i[2]	-	-	4
+i[7]	/= a	i[0]	-	-	EXC:CX_SY_ZERODIVIDE
+i[0]	/= a	i[0]	-	-	0
+i[1]	*= a	f[0.5]	-	-	1
+c1	a / b	p16.0[1]	p16.0[3]	-	[0]
+c2	a / b	p16.0[1]	p16.0[3]	-	[0 ]
+c3	a / b	p16.0[1]	p16.0[3]	-	[0.3]
+c4	a / b	p16.0[1]	p16.0[3]	-	[0.33]
+c5	a / b	p16.0[1]	p16.0[3]	-	[0.333]
+c6	a / b	p16.0[1]	p16.0[3]	-	[0.3333]
+c8	a / b	p16.0[1]	p16.0[3]	-	[0.333333]
+c20	a / b	p16.0[1]	p16.0[3]	-	[   0.33333333333333 ]
+string	a / b	p16.0[1]	p16.0[3]	-	[0.33333333333333 ]
+c1	a / b	p16.0[-1]	p16.0[3]	-	[0]
+c2	a / b	p16.0[-1]	p16.0[3]	-	[0 ]
+c3	a / b	p16.0[-1]	p16.0[3]	-	[ 0-]
+c4	a / b	p16.0[-1]	p16.0[3]	-	[0.3-]
+c5	a / b	p16.0[-1]	p16.0[3]	-	[0.33-]
+c6	a / b	p16.0[-1]	p16.0[3]	-	[0.333-]
+c8	a / b	p16.0[-1]	p16.0[3]	-	[0.33333-]
+c20	a / b	p16.0[-1]	p16.0[3]	-	[   0.33333333333333-]
+string	a / b	p16.0[-1]	p16.0[3]	-	[0.33333333333333-]
+c1	a / b	p16.0[2]	p16.0[3]	-	[1]
+c2	a / b	p16.0[2]	p16.0[3]	-	[1 ]
+c3	a / b	p16.0[2]	p16.0[3]	-	[0.7]
+c4	a / b	p16.0[2]	p16.0[3]	-	[0.67]
+c5	a / b	p16.0[2]	p16.0[3]	-	[0.667]
+c6	a / b	p16.0[2]	p16.0[3]	-	[0.6667]
+c8	a / b	p16.0[2]	p16.0[3]	-	[0.666667]
+c20	a / b	p16.0[2]	p16.0[3]	-	[   0.66666666666667 ]
+string	a / b	p16.0[2]	p16.0[3]	-	[0.66666666666667 ]
+c1	a / b	p16.0[-2]	p16.0[3]	-	[*]
+c2	a / b	p16.0[-2]	p16.0[3]	-	[1-]
+c3	a / b	p16.0[-2]	p16.0[3]	-	[ 1-]
+c4	a / b	p16.0[-2]	p16.0[3]	-	[0.7-]
+c5	a / b	p16.0[-2]	p16.0[3]	-	[0.67-]
+c6	a / b	p16.0[-2]	p16.0[3]	-	[0.667-]
+c8	a / b	p16.0[-2]	p16.0[3]	-	[0.66667-]
+c20	a / b	p16.0[-2]	p16.0[3]	-	[   0.66666666666667-]
+string	a / b	p16.0[-2]	p16.0[3]	-	[0.66666666666667-]
+c1	a / b	p16.0[10]	p16.0[3]	-	[3]
+c2	a / b	p16.0[10]	p16.0[3]	-	[3 ]
+c3	a / b	p16.0[10]	p16.0[3]	-	[3.3]
+c4	a / b	p16.0[10]	p16.0[3]	-	[3.33]
+c5	a / b	p16.0[10]	p16.0[3]	-	[3.333]
+c6	a / b	p16.0[10]	p16.0[3]	-	[3.3333]
+c8	a / b	p16.0[10]	p16.0[3]	-	[3.333333]
+c20	a / b	p16.0[10]	p16.0[3]	-	[   3.33333333333333 ]
+string	a / b	p16.0[10]	p16.0[3]	-	[3.33333333333333 ]
+c1	a / b	p16.0[-10]	p16.0[3]	-	[*]
+c2	a / b	p16.0[-10]	p16.0[3]	-	[3-]
+c3	a / b	p16.0[-10]	p16.0[3]	-	[ 3-]
+c4	a / b	p16.0[-10]	p16.0[3]	-	[3.3-]
+c5	a / b	p16.0[-10]	p16.0[3]	-	[3.33-]
+c6	a / b	p16.0[-10]	p16.0[3]	-	[3.333-]
+c8	a / b	p16.0[-10]	p16.0[3]	-	[3.33333-]
+c20	a / b	p16.0[-10]	p16.0[3]	-	[   3.33333333333333-]
+string	a / b	p16.0[-10]	p16.0[3]	-	[3.33333333333333-]
+c1	a / b	p16.0[1]	p16.0[8]	-	[0]
+c2	a / b	p16.0[1]	p16.0[8]	-	[0 ]
+c3	a / b	p16.0[1]	p16.0[8]	-	[0.1]
+c4	a / b	p16.0[1]	p16.0[8]	-	[0.13]
+c5	a / b	p16.0[1]	p16.0[8]	-	[0.125]
+c6	a / b	p16.0[1]	p16.0[8]	-	[0.125 ]
+c8	a / b	p16.0[1]	p16.0[8]	-	[  0.125 ]
+c20	a / b	p16.0[1]	p16.0[8]	-	[              0.125 ]
+string	a / b	p16.0[1]	p16.0[8]	-	[0.125 ]
+c1	a / b	p16.0[-1]	p16.0[8]	-	[-]
+c2	a / b	p16.0[-1]	p16.0[8]	-	[0-]
+c3	a / b	p16.0[-1]	p16.0[8]	-	[ 0-]
+c4	a / b	p16.0[-1]	p16.0[8]	-	[0.1-]
+c5	a / b	p16.0[-1]	p16.0[8]	-	[0.13-]
+c6	a / b	p16.0[-1]	p16.0[8]	-	[0.125-]
+c8	a / b	p16.0[-1]	p16.0[8]	-	[  0.125-]
+c20	a / b	p16.0[-1]	p16.0[8]	-	[              0.125-]
+string	a / b	p16.0[-1]	p16.0[8]	-	[0.125-]
+c1	a / b	p16.0[1000]	p16.0[3]	-	[*]
+c2	a / b	p16.0[1000]	p16.0[3]	-	[*3]
+c3	a / b	p16.0[1000]	p16.0[3]	-	[333]
+c4	a / b	p16.0[1000]	p16.0[3]	-	[333 ]
+c5	a / b	p16.0[1000]	p16.0[3]	-	[333.3]
+c6	a / b	p16.0[1000]	p16.0[3]	-	[333.33]
+c8	a / b	p16.0[1000]	p16.0[3]	-	[333.3333]
+c20	a / b	p16.0[1000]	p16.0[3]	-	[ 333.33333333333333 ]
+string	a / b	p16.0[1000]	p16.0[3]	-	[333.33333333333333 ]
+c1	a / b	p16.0[-1000]	p16.0[3]	-	[*]
+c2	a / b	p16.0[-1000]	p16.0[3]	-	[*-]
+c3	a / b	p16.0[-1000]	p16.0[3]	-	[*3-]
+c4	a / b	p16.0[-1000]	p16.0[3]	-	[333-]
+c5	a / b	p16.0[-1000]	p16.0[3]	-	[ 333-]
+c6	a / b	p16.0[-1000]	p16.0[3]	-	[333.3-]
+c8	a / b	p16.0[-1000]	p16.0[3]	-	[333.333-]
+c20	a / b	p16.0[-1000]	p16.0[3]	-	[ 333.33333333333333-]
+string	a / b	p16.0[-1000]	p16.0[3]	-	[333.33333333333333-]
+c1	a / b	p16.0[7]	p16.0[1]	-	[7]
+c2	a / b	p16.0[7]	p16.0[1]	-	[7 ]
+c3	a / b	p16.0[7]	p16.0[1]	-	[ 7 ]
+c4	a / b	p16.0[7]	p16.0[1]	-	[  7 ]
+c5	a / b	p16.0[7]	p16.0[1]	-	[   7 ]
+c6	a / b	p16.0[7]	p16.0[1]	-	[    7 ]
+c8	a / b	p16.0[7]	p16.0[1]	-	[      7 ]
+c20	a / b	p16.0[7]	p16.0[1]	-	[                  7 ]
+string	a / b	p16.0[7]	p16.0[1]	-	[7 ]
+c1	a / b	p16.0[-7]	p16.0[1]	-	[*]
+c2	a / b	p16.0[-7]	p16.0[1]	-	[7-]
+c3	a / b	p16.0[-7]	p16.0[1]	-	[ 7-]
+c4	a / b	p16.0[-7]	p16.0[1]	-	[  7-]
+c5	a / b	p16.0[-7]	p16.0[1]	-	[   7-]
+c6	a / b	p16.0[-7]	p16.0[1]	-	[    7-]
+c8	a / b	p16.0[-7]	p16.0[1]	-	[      7-]
+c20	a / b	p16.0[-7]	p16.0[1]	-	[                  7-]
+string	a / b	p16.0[-7]	p16.0[1]	-	[7-]
+c1	a / b	p16.0[123456]	p16.0[1]	-	[*]
+c2	a / b	p16.0[123456]	p16.0[1]	-	[*6]
+c3	a / b	p16.0[123456]	p16.0[1]	-	[*56]
+c4	a / b	p16.0[123456]	p16.0[1]	-	[*456]
+c5	a / b	p16.0[123456]	p16.0[1]	-	[*3456]
+c6	a / b	p16.0[123456]	p16.0[1]	-	[123456]
+c8	a / b	p16.0[123456]	p16.0[1]	-	[ 123456 ]
+c20	a / b	p16.0[123456]	p16.0[1]	-	[             123456 ]
+string	a / b	p16.0[123456]	p16.0[1]	-	[123456 ]
+c1	a / b	p16.0[-123456]	p16.0[1]	-	[*]
+c2	a / b	p16.0[-123456]	p16.0[1]	-	[*-]
+c3	a / b	p16.0[-123456]	p16.0[1]	-	[*6-]
+c4	a / b	p16.0[-123456]	p16.0[1]	-	[*56-]
+c5	a / b	p16.0[-123456]	p16.0[1]	-	[*456-]
+c6	a / b	p16.0[-123456]	p16.0[1]	-	[*3456-]
+c8	a / b	p16.0[-123456]	p16.0[1]	-	[ 123456-]
+c20	a / b	p16.0[-123456]	p16.0[1]	-	[             123456-]
+string	a / b	p16.0[-123456]	p16.0[1]	-	[123456-]
+c1	a / b	p16.0[0]	p16.0[1]	-	[0]
+c2	a / b	p16.0[0]	p16.0[1]	-	[0 ]
+c3	a / b	p16.0[0]	p16.0[1]	-	[ 0 ]
+c4	a / b	p16.0[0]	p16.0[1]	-	[  0 ]
+c5	a / b	p16.0[0]	p16.0[1]	-	[   0 ]
+c6	a / b	p16.0[0]	p16.0[1]	-	[    0 ]
+c8	a / b	p16.0[0]	p16.0[1]	-	[      0 ]
+c20	a / b	p16.0[0]	p16.0[1]	-	[                  0 ]
+string	a / b	p16.0[0]	p16.0[1]	-	[0 ]
+c1	a / b	p16.0[1]	p16.0[1000]	-	[0]
+c2	a / b	p16.0[1]	p16.0[1000]	-	[0 ]
+c3	a / b	p16.0[1]	p16.0[1000]	-	[ 0 ]
+c4	a / b	p16.0[1]	p16.0[1000]	-	[  0 ]
+c5	a / b	p16.0[1]	p16.0[1000]	-	[0.001]
+c6	a / b	p16.0[1]	p16.0[1000]	-	[0.001 ]
+c8	a / b	p16.0[1]	p16.0[1000]	-	[  0.001 ]
+c20	a / b	p16.0[1]	p16.0[1000]	-	[              0.001 ]
+string	a / b	p16.0[1]	p16.0[1000]	-	[0.001 ]
+c1	a / b	p16.0[-1]	p16.0[1000]	-	[-]
+c2	a / b	p16.0[-1]	p16.0[1000]	-	[0-]
+c3	a / b	p16.0[-1]	p16.0[1000]	-	[ 0-]
+c4	a / b	p16.0[-1]	p16.0[1000]	-	[  0-]
+c5	a / b	p16.0[-1]	p16.0[1000]	-	[   0-]
+c6	a / b	p16.0[-1]	p16.0[1000]	-	[0.001-]
+c8	a / b	p16.0[-1]	p16.0[1000]	-	[  0.001-]
+c20	a / b	p16.0[-1]	p16.0[1000]	-	[              0.001-]
+string	a / b	p16.0[-1]	p16.0[1000]	-	[0.001-]
+c1	a / b	p16.0[1]	p16.0[3000]	-	[0]
+c2	a / b	p16.0[1]	p16.0[3000]	-	[0 ]
+c3	a / b	p16.0[1]	p16.0[3000]	-	[ 0 ]
+c4	a / b	p16.0[1]	p16.0[3000]	-	[  0 ]
+c5	a / b	p16.0[1]	p16.0[3000]	-	[   0 ]
+c6	a / b	p16.0[1]	p16.0[3000]	-	[0.0003]
+c8	a / b	p16.0[1]	p16.0[3000]	-	[0.000333]
+c20	a / b	p16.0[1]	p16.0[3000]	-	[   0.00033333333333 ]
+string	a / b	p16.0[1]	p16.0[3000]	-	[0.00033333333333 ]
+c1	a / b	p16.0[-5]	p16.0[1000]	-	[-]
+c2	a / b	p16.0[-5]	p16.0[1000]	-	[0-]
+c3	a / b	p16.0[-5]	p16.0[1000]	-	[ 0-]
+c4	a / b	p16.0[-5]	p16.0[1000]	-	[  0-]
+c5	a / b	p16.0[-5]	p16.0[1000]	-	[0.01-]
+c6	a / b	p16.0[-5]	p16.0[1000]	-	[0.005-]
+c8	a / b	p16.0[-5]	p16.0[1000]	-	[  0.005-]
+c20	a / b	p16.0[-5]	p16.0[1000]	-	[              0.005-]
+string	a / b	p16.0[-5]	p16.0[1000]	-	[0.005-]
+c1	a / b	p16.0[999]	p16.0[1]	-	[*]
+c2	a / b	p16.0[999]	p16.0[1]	-	[*9]
+c3	a / b	p16.0[999]	p16.0[1]	-	[999]
+c4	a / b	p16.0[999]	p16.0[1]	-	[999 ]
+c5	a / b	p16.0[999]	p16.0[1]	-	[ 999 ]
+c6	a / b	p16.0[999]	p16.0[1]	-	[  999 ]
+c8	a / b	p16.0[999]	p16.0[1]	-	[    999 ]
+c20	a / b	p16.0[999]	p16.0[1]	-	[                999 ]
+string	a / b	p16.0[999]	p16.0[1]	-	[999 ]
+c1	a / b	p16.0[9999]	p16.0[10]	-	[*]
+c2	a / b	p16.0[9999]	p16.0[10]	-	[*0]
+c3	a / b	p16.0[9999]	p16.0[10]	-	[*00]
+c4	a / b	p16.0[9999]	p16.0[10]	-	[1000]
+c5	a / b	p16.0[9999]	p16.0[10]	-	[999.9]
+c6	a / b	p16.0[9999]	p16.0[10]	-	[999.9 ]
+c8	a / b	p16.0[9999]	p16.0[10]	-	[  999.9 ]
+c20	a / b	p16.0[9999]	p16.0[10]	-	[              999.9 ]
+string	a / b	p16.0[9999]	p16.0[10]	-	[999.9 ]
+c1	a / b	p16.0[-999]	p16.0[10]	-	[*]
+c2	a / b	p16.0[-999]	p16.0[10]	-	[*-]
+c3	a / b	p16.0[-999]	p16.0[10]	-	[*0-]
+c4	a / b	p16.0[-999]	p16.0[10]	-	[100-]
+c5	a / b	p16.0[-999]	p16.0[10]	-	[99.9-]
+c6	a / b	p16.0[-999]	p16.0[10]	-	[ 99.9-]
+c8	a / b	p16.0[-999]	p16.0[10]	-	[   99.9-]
+c20	a / b	p16.0[-999]	p16.0[10]	-	[               99.9-]
+string	a / b	p16.0[-999]	p16.0[10]	-	[99.9-]
+c1	a / b	p16.0[5]	p16.0[100]	-	[0]
+c2	a / b	p16.0[5]	p16.0[100]	-	[0 ]
+c3	a / b	p16.0[5]	p16.0[100]	-	[0.1]
+c4	a / b	p16.0[5]	p16.0[100]	-	[0.05]
+c5	a / b	p16.0[5]	p16.0[100]	-	[0.05 ]
+c6	a / b	p16.0[5]	p16.0[100]	-	[ 0.05 ]
+c8	a / b	p16.0[5]	p16.0[100]	-	[   0.05 ]
+c20	a / b	p16.0[5]	p16.0[100]	-	[               0.05 ]
+string	a / b	p16.0[5]	p16.0[100]	-	[0.05 ]
+c1	a / b	p16.0[1]	p16.0[100000000000000000]	-	[0]
+c2	a / b	p16.0[1]	p16.0[100000000000000000]	-	[0 ]
+c3	a / b	p16.0[1]	p16.0[100000000000000000]	-	[ 0 ]
+c4	a / b	p16.0[1]	p16.0[100000000000000000]	-	[  0 ]
+c5	a / b	p16.0[1]	p16.0[100000000000000000]	-	[   0 ]
+c6	a / b	p16.0[1]	p16.0[100000000000000000]	-	[    0 ]
+c8	a / b	p16.0[1]	p16.0[100000000000000000]	-	[      0 ]
+c20	a / b	p16.0[1]	p16.0[100000000000000000]	-	[                  0 ]
+string	a / b	p16.0[1]	p16.0[100000000000000000]	-	[0.00000000000000 ]
+string	a + b	p8.0[7]	p8.0[1]	-	[8 ]
+string	a - b	p8.0[7]	p8.0[1]	-	[6 ]
+string	a + b	p8.1[2.5]	p8.1[2.5]	-	[5.0 ]
+string	a - b	p8.1[2.5]	p8.1[2.5]	-	[0 ]
+string	a + b	p8.1[2.0]	p8.1[2.0]	-	[4.0 ]
+string	a - b	p8.1[2.0]	p8.1[2.0]	-	[0 ]
+string	a + b	p8.2[2.00]	p8.0[1]	-	[3.00 ]
+string	a - b	p8.2[2.00]	p8.0[1]	-	[1.00 ]
+string	a + b	p8.4[2.0000]	p8.4[2.0000]	-	[4.0000 ]
+string	a - b	p8.4[2.0000]	p8.4[2.0000]	-	[0 ]
+string	a + b	p8.2[1.50]	p8.3[2.000]	-	[3.500 ]
+string	a - b	p8.2[1.50]	p8.3[2.000]	-	[0.500-]
+string	a + b	p8.0[3]	p8.0[3]	-	[6 ]
+string	a - b	p8.0[3]	p8.0[3]	-	[0 ]
+string	a + b	p8.1[0.1]	p8.0[1]	-	[1.1 ]
+string	a - b	p8.1[0.1]	p8.0[1]	-	[0.9-]
+string	a + b	p8.2[0.01]	p8.0[1]	-	[1.01 ]
+string	a - b	p8.2[0.01]	p8.0[1]	-	[0.99-]
+string	a + b	p8.3[0.001]	p8.0[1]	-	[1.001 ]
+string	a - b	p8.3[0.001]	p8.0[1]	-	[0.999-]
+string	a + b	p8.4[0.0001]	p8.0[1]	-	[1.0001 ]
+string	a - b	p8.4[0.0001]	p8.0[1]	-	[0.9999-]
+string	a + b	p8.5[0.00001]	p8.0[1]	-	[1.00001 ]
+string	a - b	p8.5[0.00001]	p8.0[1]	-	[0.99999-]
+string	a + b	p8.0[7]	p8.0[3]	-	[10 ]
+string	a - b	p8.0[7]	p8.0[3]	-	[4 ]
+string	a + b	p8.0[12]	p8.0[12]	-	[24 ]
+string	a - b	p8.0[12]	p8.0[12]	-	[0 ]
+string	a + b	p8.0[123]	p8.0[123]	-	[246 ]
+string	a - b	p8.0[123]	p8.0[123]	-	[0 ]
+string	a + b	p8.2[1.23]	p8.0[1]	-	[2.23 ]
+string	a - b	p8.2[1.23]	p8.0[1]	-	[0.23 ]
+string	a + b	p8.2[12.34]	p8.0[1]	-	[13.34 ]
+string	a - b	p8.2[12.34]	p8.0[1]	-	[11.34 ]
+c14	a / b	p16.0[1]	p16.0[3]	-	[0.333333333333]
+c16	a / b	p16.0[1]	p16.0[3]	-	[0.33333333333333]
+c17	a / b	p16.0[1]	p16.0[3]	-	[0.33333333333333 ]
+c30	a / b	p16.0[1]	p16.0[3]	-	[             0.33333333333333 ]
+c31	a / b	p16.0[1]	p16.0[3]	-	[              0.33333333333333 ]
+c32	a / b	p16.0[1]	p16.0[3]	-	[               0.33333333333333 ]
+c33	a / b	p16.0[1]	p16.0[3]	-	[                0.33333333333333 ]
+c40	a / b	p16.0[1]	p16.0[3]	-	[                       0.33333333333333 ]
+c14	a / b	p16.0[-1]	p16.0[3]	-	[0.33333333333-]
+c16	a / b	p16.0[-1]	p16.0[3]	-	[0.3333333333333-]
+c17	a / b	p16.0[-1]	p16.0[3]	-	[0.33333333333333-]
+c30	a / b	p16.0[-1]	p16.0[3]	-	[             0.33333333333333-]
+c31	a / b	p16.0[-1]	p16.0[3]	-	[              0.33333333333333-]
+c32	a / b	p16.0[-1]	p16.0[3]	-	[               0.33333333333333-]
+c33	a / b	p16.0[-1]	p16.0[3]	-	[                0.33333333333333-]
+c40	a / b	p16.0[-1]	p16.0[3]	-	[                       0.33333333333333-]
+c14	a / b	p16.0[2]	p16.0[3]	-	[0.666666666667]
+c16	a / b	p16.0[2]	p16.0[3]	-	[0.66666666666667]
+c17	a / b	p16.0[2]	p16.0[3]	-	[0.66666666666667 ]
+c30	a / b	p16.0[2]	p16.0[3]	-	[             0.66666666666667 ]
+c31	a / b	p16.0[2]	p16.0[3]	-	[              0.66666666666667 ]
+c32	a / b	p16.0[2]	p16.0[3]	-	[               0.66666666666667 ]
+c33	a / b	p16.0[2]	p16.0[3]	-	[                0.66666666666667 ]
+c40	a / b	p16.0[2]	p16.0[3]	-	[                       0.66666666666667 ]
+c14	a / b	p16.0[1]	p16.0[3000]	-	[0.000333333333]
+c16	a / b	p16.0[1]	p16.0[3000]	-	[0.00033333333333]
+c17	a / b	p16.0[1]	p16.0[3000]	-	[0.00033333333333 ]
+c30	a / b	p16.0[1]	p16.0[3000]	-	[             0.00033333333333 ]
+c31	a / b	p16.0[1]	p16.0[3000]	-	[              0.00033333333333 ]
+c32	a / b	p16.0[1]	p16.0[3000]	-	[               0.00033333333333 ]
+c33	a / b	p16.0[1]	p16.0[3000]	-	[                0.00033333333333 ]
+c40	a / b	p16.0[1]	p16.0[3000]	-	[                       0.00033333333333 ]
+c14	a / b	p16.0[1]	p16.0[100000000000000000]	-	[            0 ]
+c16	a / b	p16.0[1]	p16.0[100000000000000000]	-	[              0 ]
+c17	a / b	p16.0[1]	p16.0[100000000000000000]	-	[               0 ]
+c30	a / b	p16.0[1]	p16.0[100000000000000000]	-	[                            0 ]
+c31	a / b	p16.0[1]	p16.0[100000000000000000]	-	[                             0 ]
+c32	a / b	p16.0[1]	p16.0[100000000000000000]	-	[                              0 ]
+c33	a / b	p16.0[1]	p16.0[100000000000000000]	-	[                               0 ]
+c40	a / b	p16.0[1]	p16.0[100000000000000000]	-	[                                      0 ]
+c14	a / b	p16.0[-1]	p16.0[100000000000000000]	-	[            0 ]
+c16	a / b	p16.0[-1]	p16.0[100000000000000000]	-	[              0 ]
+c17	a / b	p16.0[-1]	p16.0[100000000000000000]	-	[               0 ]
+c30	a / b	p16.0[-1]	p16.0[100000000000000000]	-	[                            0 ]
+c31	a / b	p16.0[-1]	p16.0[100000000000000000]	-	[                             0 ]
+c32	a / b	p16.0[-1]	p16.0[100000000000000000]	-	[                              0 ]
+c33	a / b	p16.0[-1]	p16.0[100000000000000000]	-	[                               0 ]
+c40	a / b	p16.0[-1]	p16.0[100000000000000000]	-	[                                      0 ]
+string	a / b	p16.0[-1]	p16.0[100000000000000000]	-	[0.00000000000000 ]
+c14	a / b	p16.0[1000000]	p16.0[3]	-	[333333.3333333]
+c16	a / b	p16.0[1000000]	p16.0[3]	-	[333333.333333333]
+c17	a / b	p16.0[1000000]	p16.0[3]	-	[333333.3333333333]
+c30	a / b	p16.0[1000000]	p16.0[3]	-	[        333333.33333333333333 ]
+c31	a / b	p16.0[1000000]	p16.0[3]	-	[         333333.33333333333333 ]
+c32	a / b	p16.0[1000000]	p16.0[3]	-	[          333333.33333333333333 ]
+c33	a / b	p16.0[1000000]	p16.0[3]	-	[           333333.33333333333333 ]
+c40	a / b	p16.0[1000000]	p16.0[3]	-	[                  333333.33333333333333 ]
+string	a / b	p16.0[1000000]	p16.0[3]	-	[333333.33333333333333 ]
+c14	a / b	p16.0[1000000000000000]	p16.0[3]	-	[*3333333333333]
+c16	a / b	p16.0[1000000000000000]	p16.0[3]	-	[333333333333333 ]
+c17	a / b	p16.0[1000000000000000]	p16.0[3]	-	[333333333333333.3]
+c30	a / b	p16.0[1000000000000000]	p16.0[3]	-	[333333333333333.33333333333333]
+c31	a / b	p16.0[1000000000000000]	p16.0[3]	-	[333333333333333.33333333333333 ]
+c32	a / b	p16.0[1000000000000000]	p16.0[3]	-	[ 333333333333333.33333333333333 ]
+c33	a / b	p16.0[1000000000000000]	p16.0[3]	-	[  333333333333333.33333333333333 ]
+c40	a / b	p16.0[1000000000000000]	p16.0[3]	-	[         333333333333333.33333333333333 ]
+string	a / b	p16.0[1000000000000000]	p16.0[3]	-	[333333333333333.33333333333333 ]
+c14	a / b	p16.0[1000000000000000000000000000]	p16.0[3]	-	[*3333333333333]
+c16	a / b	p16.0[1000000000000000000000000000]	p16.0[3]	-	[*333333333333333]
+c17	a / b	p16.0[1000000000000000000000000000]	p16.0[3]	-	[*3333333333333333]
+c30	a / b	p16.0[1000000000000000000000000000]	p16.0[3]	-	[333333333333333333333333333.33]
+c31	a / b	p16.0[1000000000000000000000000000]	p16.0[3]	-	[333333333333333333333333333.333]
+c32	a / b	p16.0[1000000000000000000000000000]	p16.0[3]	-	[333333333333333333333333333.3333]
+c33	a / b	p16.0[1000000000000000000000000000]	p16.0[3]	-	[333333333333333333333333333.3333 ]
+c40	a / b	p16.0[1000000000000000000000000000]	p16.0[3]	-	[       333333333333333333333333333.3333 ]
+string	a / b	p16.0[1000000000000000000000000000]	p16.0[3]	-	[333333333333333333333333333.3333 ]
+c14	a / b	p16.0[-1000000000000000000000000000]	p16.0[3]	-	[*333333333333-]
+c16	a / b	p16.0[-1000000000000000000000000000]	p16.0[3]	-	[*33333333333333-]
+c17	a / b	p16.0[-1000000000000000000000000000]	p16.0[3]	-	[*333333333333333-]
+c30	a / b	p16.0[-1000000000000000000000000000]	p16.0[3]	-	[333333333333333333333333333.3-]
+c31	a / b	p16.0[-1000000000000000000000000000]	p16.0[3]	-	[333333333333333333333333333.33-]
+c32	a / b	p16.0[-1000000000000000000000000000]	p16.0[3]	-	[333333333333333333333333333.333-]
+c33	a / b	p16.0[-1000000000000000000000000000]	p16.0[3]	-	[333333333333333333333333333.3333-]
+c40	a / b	p16.0[-1000000000000000000000000000]	p16.0[3]	-	[       333333333333333333333333333.3333-]
+string	a / b	p16.0[-1000000000000000000000000000]	p16.0[3]	-	[333333333333333333333333333.3333-]
+c14	a / b	p16.0[9999999999999999999999999999999]	p16.0[3]	-	[*3333333333333]
+c16	a / b	p16.0[9999999999999999999999999999999]	p16.0[3]	-	[*333333333333333]
+c17	a / b	p16.0[9999999999999999999999999999999]	p16.0[3]	-	[*3333333333333333]
+c30	a / b	p16.0[9999999999999999999999999999999]	p16.0[3]	-	[*33333333333333333333333333333]
+c31	a / b	p16.0[9999999999999999999999999999999]	p16.0[3]	-	[3333333333333333333333333333333]
+c32	a / b	p16.0[9999999999999999999999999999999]	p16.0[3]	-	[3333333333333333333333333333333 ]
+c33	a / b	p16.0[9999999999999999999999999999999]	p16.0[3]	-	[ 3333333333333333333333333333333 ]
+c40	a / b	p16.0[9999999999999999999999999999999]	p16.0[3]	-	[        3333333333333333333333333333333 ]
+string	a / b	p16.0[9999999999999999999999999999999]	p16.0[3]	-	[3333333333333333333333333333333 ]
+c14	a / b	p16.0[9999999999999999999999999999999]	p16.0[10]	-	[*0000000000000]
+c16	a / b	p16.0[9999999999999999999999999999999]	p16.0[10]	-	[*000000000000000]
+c17	a / b	p16.0[9999999999999999999999999999999]	p16.0[10]	-	[*0000000000000000]
+c30	a / b	p16.0[9999999999999999999999999999999]	p16.0[10]	-	[*00000000000000000000000000000]
+c31	a / b	p16.0[9999999999999999999999999999999]	p16.0[10]	-	[1000000000000000000000000000000]
+c32	a / b	p16.0[9999999999999999999999999999999]	p16.0[10]	-	[999999999999999999999999999999.9]
+c33	a / b	p16.0[9999999999999999999999999999999]	p16.0[10]	-	[999999999999999999999999999999.9 ]
+c40	a / b	p16.0[9999999999999999999999999999999]	p16.0[10]	-	[       999999999999999999999999999999.9 ]
+string	a / b	p16.0[9999999999999999999999999999999]	p16.0[10]	-	[999999999999999999999999999999.9 ]
+c14	a / b	p16.0[9999999999999999999999999999999]	p16.0[100]	-	[*0000000000000]
+c16	a / b	p16.0[9999999999999999999999999999999]	p16.0[100]	-	[*000000000000000]
+c17	a / b	p16.0[9999999999999999999999999999999]	p16.0[100]	-	[*0000000000000000]
+c30	a / b	p16.0[9999999999999999999999999999999]	p16.0[100]	-	[100000000000000000000000000000]
+c31	a / b	p16.0[9999999999999999999999999999999]	p16.0[100]	-	[100000000000000000000000000000 ]
+c32	a / b	p16.0[9999999999999999999999999999999]	p16.0[100]	-	[99999999999999999999999999999.99]
+c33	a / b	p16.0[9999999999999999999999999999999]	p16.0[100]	-	[99999999999999999999999999999.99 ]
+c40	a / b	p16.0[9999999999999999999999999999999]	p16.0[100]	-	[       99999999999999999999999999999.99 ]
+string	a / b	p16.0[9999999999999999999999999999999]	p16.0[100]	-	[99999999999999999999999999999.99 ]
+c14	a / b	p16.0[9999999999999999999999999999999]	p16.0[7]	-	[*1428571428571]
+c16	a / b	p16.0[9999999999999999999999999999999]	p16.0[7]	-	[*571428571428571]
+c17	a / b	p16.0[9999999999999999999999999999999]	p16.0[7]	-	[*8571428571428571]
+c30	a / b	p16.0[9999999999999999999999999999999]	p16.0[7]	-	[*28571428571428571428571428571]
+c31	a / b	p16.0[9999999999999999999999999999999]	p16.0[7]	-	[1428571428571428571428571428571]
+c32	a / b	p16.0[9999999999999999999999999999999]	p16.0[7]	-	[1428571428571428571428571428571 ]
+c33	a / b	p16.0[9999999999999999999999999999999]	p16.0[7]	-	[ 1428571428571428571428571428571 ]
+c40	a / b	p16.0[9999999999999999999999999999999]	p16.0[7]	-	[        1428571428571428571428571428571 ]
+string	a / b	p16.0[9999999999999999999999999999999]	p16.0[7]	-	[1428571428571428571428571428571 ]
+c14	a * b	p16.0[9999999999999999999999999999999]	p16.0[1]	-	[*9999999999999]
+c16	a * b	p16.0[9999999999999999999999999999999]	p16.0[1]	-	[*999999999999999]
+c17	a * b	p16.0[9999999999999999999999999999999]	p16.0[1]	-	[*9999999999999999]
+c30	a * b	p16.0[9999999999999999999999999999999]	p16.0[1]	-	[*99999999999999999999999999999]
+c31	a * b	p16.0[9999999999999999999999999999999]	p16.0[1]	-	[9999999999999999999999999999999]
+c32	a * b	p16.0[9999999999999999999999999999999]	p16.0[1]	-	[9999999999999999999999999999999 ]
+c33	a * b	p16.0[9999999999999999999999999999999]	p16.0[1]	-	[ 9999999999999999999999999999999 ]
+c40	a * b	p16.0[9999999999999999999999999999999]	p16.0[1]	-	[        9999999999999999999999999999999 ]
+string	a * b	p16.0[9999999999999999999999999999999]	p16.0[1]	-	[9999999999999999999999999999999 ]
+c14	a * b	p16.0[-9999999999999999999999999999999]	p16.0[1]	-	[*999999999999-]
+c16	a * b	p16.0[-9999999999999999999999999999999]	p16.0[1]	-	[*99999999999999-]
+c17	a * b	p16.0[-9999999999999999999999999999999]	p16.0[1]	-	[*999999999999999-]
+c30	a * b	p16.0[-9999999999999999999999999999999]	p16.0[1]	-	[*9999999999999999999999999999-]
+c31	a * b	p16.0[-9999999999999999999999999999999]	p16.0[1]	-	[*99999999999999999999999999999-]
+c32	a * b	p16.0[-9999999999999999999999999999999]	p16.0[1]	-	[9999999999999999999999999999999-]
+c33	a * b	p16.0[-9999999999999999999999999999999]	p16.0[1]	-	[ 9999999999999999999999999999999-]
+c40	a * b	p16.0[-9999999999999999999999999999999]	p16.0[1]	-	[        9999999999999999999999999999999-]
+string	a * b	p16.0[-9999999999999999999999999999999]	p16.0[1]	-	[9999999999999999999999999999999-]
+c14	a / b	p16.0[1]	p16.0[7]	-	[0.142857142857]
+c16	a / b	p16.0[1]	p16.0[7]	-	[0.14285714285714]
+c17	a / b	p16.0[1]	p16.0[7]	-	[0.14285714285714 ]
+c30	a / b	p16.0[1]	p16.0[7]	-	[             0.14285714285714 ]
+c31	a / b	p16.0[1]	p16.0[7]	-	[              0.14285714285714 ]
+c32	a / b	p16.0[1]	p16.0[7]	-	[               0.14285714285714 ]
+c33	a / b	p16.0[1]	p16.0[7]	-	[                0.14285714285714 ]
+c40	a / b	p16.0[1]	p16.0[7]	-	[                       0.14285714285714 ]
+string	a / b	p16.0[1]	p16.0[7]	-	[0.14285714285714 ]
+c14	a / b	p16.0[1]	p16.0[8]	-	[        0.125 ]
+c16	a / b	p16.0[1]	p16.0[8]	-	[          0.125 ]
+c17	a / b	p16.0[1]	p16.0[8]	-	[           0.125 ]
+c30	a / b	p16.0[1]	p16.0[8]	-	[                        0.125 ]
+c31	a / b	p16.0[1]	p16.0[8]	-	[                         0.125 ]
+c32	a / b	p16.0[1]	p16.0[8]	-	[                          0.125 ]
+c33	a / b	p16.0[1]	p16.0[8]	-	[                           0.125 ]
+c40	a / b	p16.0[1]	p16.0[8]	-	[                                  0.125 ]
+c14	a / b	p16.0[7]	p16.0[1]	-	[            7 ]
+c16	a / b	p16.0[7]	p16.0[1]	-	[              7 ]
+c17	a / b	p16.0[7]	p16.0[1]	-	[               7 ]
+c30	a / b	p16.0[7]	p16.0[1]	-	[                            7 ]
+c31	a / b	p16.0[7]	p16.0[1]	-	[                             7 ]
+c32	a / b	p16.0[7]	p16.0[1]	-	[                              7 ]
+c33	a / b	p16.0[7]	p16.0[1]	-	[                               7 ]
+c40	a / b	p16.0[7]	p16.0[1]	-	[                                      7 ]
+c30	a * b	p8.2[2.00]	p8.2[2.00]	-	[                            4 ]
+c30	a + b	p8.2[2.00]	p8.2[2.00]	-	[                            4 ]
+c40	a * b	p8.2[2.00]	p8.2[2.00]	-	[                                      4 ]
+c40	a + b	p8.2[2.00]	p8.2[2.00]	-	[                                      4 ]
+string	a + b	p8.2[2.00]	p8.2[2.00]	-	[4.00 ]
+c30	a * b	p8.2[1.10]	p8.2[1.10]	-	[                         1.21 ]
+c30	a + b	p8.2[1.10]	p8.2[1.10]	-	[                          2.2 ]
+c40	a * b	p8.2[1.10]	p8.2[1.10]	-	[                                   1.21 ]
+c40	a + b	p8.2[1.10]	p8.2[1.10]	-	[                                    2.2 ]
+string	a + b	p8.2[1.10]	p8.2[1.10]	-	[2.20 ]
+c30	a * b	p8.1[2.5]	p8.1[2.5]	-	[                         6.25 ]
+c30	a + b	p8.1[2.5]	p8.1[2.5]	-	[                            5 ]
+c40	a * b	p8.1[2.5]	p8.1[2.5]	-	[                                   6.25 ]
+c40	a + b	p8.1[2.5]	p8.1[2.5]	-	[                                      5 ]
+c30	a * b	p8.0[7]	p8.0[1]	-	[                            7 ]
+c30	a + b	p8.0[7]	p8.0[1]	-	[                            8 ]
+c40	a * b	p8.0[7]	p8.0[1]	-	[                                      7 ]
+c40	a + b	p8.0[7]	p8.0[1]	-	[                                      8 ]
+c30	a * b	p8.2[1.10]	p8.2[1.00]	-	[                          1.1 ]
+c30	a + b	p8.2[1.10]	p8.2[1.00]	-	[                          2.1 ]
+c40	a * b	p8.2[1.10]	p8.2[1.00]	-	[                                    1.1 ]
+c40	a + b	p8.2[1.10]	p8.2[1.00]	-	[                                    2.1 ]
+c30	ipow( base = a exp = b )	p8.2[1.10]	i[3]	-	[                        1.331 ]
+c30	ipow( base = a exp = b )	p8.2[2.00]	i[3]	-	[                            8 ]
+c40	ipow( base = a exp = b )	p8.2[1.10]	i[3]	-	[                                  1.331 ]
+c40	ipow( base = a exp = b )	p8.2[2.00]	i[3]	-	[                                      8 ]
+i	a + 1	utclong[]	-	-	SYNTAX
+f	EXACT f( a + b )	f[0.1]	f[0.2]	-	SYNTAX

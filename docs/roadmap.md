@@ -69,7 +69,8 @@ Done:
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
 
 Next:
-- [ ] arithmetic, after the calculation type table
+- [ ] arithmetic: the calculation type table ([spec/calculation.md](spec/calculation.md)) in the runtime, checked
+  against `calculation.tsv`, then compiled with the calculation type fixed at build time for static operands
 - [ ] typed fast paths for the common conversion cells (every cell goes through `math/big` now), checked against
   the same test cases
 - [ ] `WRITE` of dictionary types with their own output length (`sy-datum` in 10 characters with separators),
@@ -110,6 +111,13 @@ Done:
 - the conversion table, [spec/conversion.md](spec/conversion.md): the 16 × 16 matrix, a rule per cell with its
   exceptions and its keyword documentation section, all kinds including c, string, x, xstring, d, t and utclong,
   and 11,702 test cases (`runtime/go/abap/testdata/conversion*.tsv`), each one a snippet
+- the calculation type table, [spec/calculation.md](spec/calculation.md) (2026-11-24): which type an arithmetic
+  expression calculates in (operands and result field, `**`, functions, generic operands, inline declarations),
+  the rules of `+ - * / DIV MOD **` and `ipow( )` in `i`, `int8`, `p` (31, then 63 significant digits), `f` and
+  `decfloat34` (scale, signed zeros), division by zero, the overflow classes, the result moved into its target
+  (a `p` result into `c` and `string`), assignment operators and `EXACT`; 2,272 test cases
+  (`runtime/go/abap/testdata/calculation.tsv`). Open: the decimals of an exact `p` product moved into a `string`
+  (61 cells in `calculation_open.tsv`), `COLLECT`, method and function module parameters
 
 Next:
 - [ ] structure rules of the conversion table: `MOVE-CORRESPONDING`, `CORRESPONDING`, flat structures with
@@ -118,8 +126,9 @@ Next:
   styles for decfloat), `DESCRIBE … OUTPUT-LENGTH`, then the `WRITE` additions (`DECIMALS`, `NO-GROUPING`, date
   masks, `CURRENCY`, …) and `WRITE … TO`
 - [ ] the comparison table, in the same form (spec file + test cases): mixed kinds (p with int8, …), `AS TEXT`
-- [ ] the calculation type table, in the same form: int8 with p and f, `**` and `ipow( )`, `MOD` / `DIV` with p,
-  p beyond 2^53, decfloat34, text in scientific notation as an operand, overflow classes, zero divide, `EXACT`
+- [ ] the rest of the calculation type table: the decimals of an exact `p` product moved into a `string`
+  (`calculation_open.tsv`), `COLLECT`, arithmetic expressions as actual parameters, the other built-in numeric
+  functions
 
 
 ## Work items
