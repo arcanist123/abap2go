@@ -144,8 +144,6 @@ code 2. With a database, its user master records will override the file (see
 
 ## Known gaps
 
-- abaplint rejects `WRITE` of a utclong ("Source not character like": its check does not count utclong as
-  character-like), so the compiler cannot build it yet, although the runtime formats it.
 - b and s are not declared by the compiler yet (see the roadmap); their rules are implemented and tested.
 - The date formats `7`–`C` and the 12-hour time formats (which may affect utclong) are not supported.
 - Formatting additions (`DD/MM/YYYY`, `CURRENCY`, `DECIMALS`, `NO-GROUPING`, `LEFT-JUSTIFIED`, `USING EDIT MASK`,

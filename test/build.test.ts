@@ -115,10 +115,14 @@ const writes: [string, string, string, object?][] = [
     "        1.234,50- 29022024\n"],
   ["f in scientific notation, decfloat without its scale", "DATA f TYPE f VALUE '0.1'.\nDATA x TYPE decfloat34 VALUE '-1.50'.\nWRITE / f. WRITE / x.",
     "  1,0000000000000001E-01\n" + " ".repeat(42) + "-1,5\n"],
+  ["utclong in 30 columns", "DATA u TYPE utclong.\nDATA s TYPE string VALUE `2024-02-29T12:34:56`.\nu = s.\nWRITE u. WRITE 'end'.",
+    "29.02.2024 12:34:56,0000000    end\n"],
   ["n, x, c and t as they are", "DATA n TYPE n LENGTH 4 VALUE '12'.\nDATA x TYPE x LENGTH 2 VALUE 'AB01'.\nDATA c TYPE c LENGTH 4 VALUE 'ab'.\nDATA t TYPE t VALUE '123456'.\nWRITE: n, x, c, t, '|'.",
     "0012 AB01 ab   123456 |\n"],
   ["user setup: p and d", "DATA p TYPE p LENGTH 8 DECIMALS 2 VALUE '-1234.5'.\nDATA d TYPE d VALUE '20240229'.\nWRITE: p, d.",
     "        1,234.50- 02292024\n", US],
+  ["user setup: utclong", "DATA u TYPE utclong.\nDATA s TYPE string VALUE `2024-02-29T12:34:56`.\nu = s.\nWRITE u. WRITE 'end'.",
+    "02/29/2024 12:34:56.0000000    end\n", US],
   ["user setup: i", "DATA i TYPE i VALUE -1234567.\nWRITE i.", " 1,234,567-\n", US],
 ];
 for (const [name, body, stdout, userSetup] of writes) {
@@ -139,9 +143,6 @@ const reportRefusals: [string, string, RegExp][] = [
   ["WRITE of an expression", "REPORT zprobe.\nDATA x TYPE i.\nWRITE x + 1.", /WRITE of x \+ 1: only a literal or a variable/],
   ["WRITE addition", "REPORT zprobe.\nWRITE 'a' COLOR 1.", /no additions/],
   ["WRITE of a constant", "REPORT zprobe.\nCONSTANTS c TYPE string VALUE `a`.\nWRITE c.", /statement Constant is not supported yet/],
-  // Valid ABAP that abaplint rejects (its WRITE check does not count utclong as character-like); the runtime
-  // formats utclong already. Expected once abaplint accepts it: "29.02.2024 12:34:56,0000000    end\n".
-  ["WRITE of a utclong, abaplint gap", "REPORT zprobe.\nDATA u TYPE utclong.\nWRITE u. WRITE 'end'.", /Source not character like/],
   ["other events", "REPORT zprobe.\nINITIALIZATION.\nSTART-OF-SELECTION.\nWRITE 'a'.", /statement Initialization is not supported yet/],
   ["TOP-OF-PAGE", "REPORT zprobe.\nTOP-OF-PAGE.\nWRITE 'h'.\nSTART-OF-SELECTION.\nWRITE 'a'.", /statement TopOfPage is not supported yet/],
   ["REPORT addition", "REPORT zprobe MESSAGE-ID zz.\nWRITE 'a'.", /REPORT addition MESSAGE-ID/],

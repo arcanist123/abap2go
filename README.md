@@ -40,7 +40,9 @@ as a user from a user setup file: `out/hello/zhello --user-setup users.json --us
   through RTTI, as on SAP.
 - **One root per compilation.** An entry point (an HTTP handler, an RFC module, a report) and only what it reaches
   becomes one binary.
-- **Built on [abaplint](https://github.com/abaplint/abaplint)**, in TypeScript, emitting Go. The runtime
+- **Built on [abaplint](https://github.com/abaplint/abaplint)**, in TypeScript, emitting Go. abap2go uses a
+  build of [its fork](https://github.com/arcanist123/abaplint/tree/abap2go) (upstream plus the fixes abap2go
+  needs, each one also sent upstream), vendored in `vendor/`; `scripts/vendor-abaplint.sh` rebuilds it. The runtime
   environment (database, LUW, Open SQL lowering, locks, HTTP host) is borrowed from
   [open-steamgate](https://github.com/oisee/open-steamgate) (MIT).
 
