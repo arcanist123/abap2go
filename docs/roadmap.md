@@ -50,9 +50,19 @@ Done:
     uncaught exception ends the program with a runtime error on stderr and exit code 1
 
 Next:
-- [ ] to agree first: arithmetic and `WRITE x`. The value model is in place; next come the first formatting
-  cells: integer output length 11, right-aligned, sign at the end (open-steamgate's
-  ANOMALY-2026-10-17-list-integer-width: it prints `6` where SAP is expected to print it in 11 columns)
+- [ ] `WRITE x` for all 16 elementary kinds: a variable is formatted into a string, and the string goes onto the
+  list. The formatting is not the conversion to `string` (that is what `out->write( )` uses): `WRITE` has its own
+  rules per kind, e.g. `i` in 11 columns, right-aligned, with thousands separators and the sign at the end; `d` in
+  the user's date format instead of `YYYYMMDD`; `p` with the user's decimal and thousands separators; `f` in
+  scientific notation in 24 columns. Steps:
+  - [ ] user settings per session (decimal notation, date format, ...) from the user setup file, as decided in
+    [aot_for_abap.md](aot_for_abap.md), in the simplest form that works; the database override comes with the
+    database port
+  - [ ] the output formatting table in [spec/](spec/) (see the critical path), for all kinds at once
+  - [ ] one formatting function in the runtime for all kinds, then `WRITE variable` in the compiler
+  - open-steamgate's ANOMALY-2026-10-17-list-integer-width is one of the test cases: it prints `6` where ABAP is
+    expected to print it in 11 columns
+- [ ] arithmetic, after the calculation type table
 - [ ] `b` and `s`: the runtime has their cells, but abaplint does not type them (DDIC INT1/INT2), so declarations
   are refused; switch the compiler to the abaplint fork that types them, then map them in `irType`
 - [ ] typed fast paths for the common conversion cells (every cell goes through `math/big` now), checked against
@@ -111,7 +121,9 @@ Done:
 Next:
 - [ ] check the conversion cells of the issues above one by one against the spec and note each issue number at
   its rule; `MOVE-CORRESPONDING` and fragment views (#2229, #2222–#2227) are structure rules, still open
-- [ ] the comparison table, then calculation type and output formatting, in the same form (spec file + test cases)
+- [ ] the output formatting table first, because the compiler's next step (`WRITE x`) needs it: `WRITE` for all
+  kinds, then string templates (`|{ x }|`, with their own rules) and `DESCRIBE … OUTPUT-LENGTH`; then the
+  comparison and calculation type tables, in the same form (spec file + test cases)
 - [ ] cells still to work out, from the transpiler issues:
   - p: MOD, DIV, **, compares, ADD/SUBTRACT/..., COLLECT/SORT/READ by p, SELECT/INSERT with p columns, template
     SIGN/NUMBER/STYLE, EXACT, zero divide

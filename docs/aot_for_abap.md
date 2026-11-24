@@ -444,7 +444,21 @@ from the program.
   - *Build layout* as open-steamgate's osabap: the generated root is `package main` in `cmd/<root>` inside a copy
     of the runtime module, built with `-trimpath` and a stripped binary. No layered packages until build time
     matters.
-  - *Release:* the input is checked as ABAP 7.58.
+  - *Release:* the input is checked as `v758`.
+
+- **User settings come from a user config file; a database overrides it.** What ABAP takes from the user master
+  record (user name, logon language, date format, decimal notation, time format, time zone) is per user, not per
+  process: a service root serves many users at once. Decided 2026-11-24:
+  - *Without a database* the settings come from a user config file, one record per user. A run as any user is
+    reproduced by giving that user's record; tests run the same program under different records.
+  - *With a database* the file is validated against the database and overwritten by it: where the two differ, the
+    database's values are used.
+  - *Per session, not per process:* the user is chosen when a session starts (a command-line run names it, an
+    HTTP root takes it from the request), and `SET COUNTRY` / `SET LOCALE` change the settings for that session
+    only. Runtime code that depends on them (`WRITE` formatting first) takes the session's settings as a
+    parameter and never reads a global.
+  - *Two files:* the user setup (the records above) and the database connection setup (one per deployment).
+    Both start as simple as possible; their format is not a design question for now.
 
 ## What the static-name rule costs (measured 2026-11-24)
 
