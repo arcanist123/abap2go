@@ -1,4 +1,4 @@
-import { IRRoot, IRStatement } from "./ir";
+import { IRRoot, IRSource, IRStatement, IRType, IRVariable } from "./ir";
 
 /** Emits package main for one root. The runtime is imported from the runtime module as `abap2go/abap`. */
 export function emitGo(root: IRRoot): string {
@@ -10,29 +10,104 @@ export function emitGo(root: IRRoot): string {
   out.push(`import "abap2go/abap"`);
   out.push("");
   out.push("func main() {");
+  out.push("\tabap.Run(func() {");
   switch (root.kind) {
     case "report":
-      out.push(`\tlist := abap.NewList(${root.lineSize ?? 0})`);
-      root.body.forEach(s => out.push("\t" + statement(s)));
-      out.push("\tlist.End()");
+      out.push(`\t\tlist := abap.NewList(${root.lineSize ?? 0})`);
+      root.body.forEach(s => out.push(...statement(s).map(l => "\t\t" + l)));
+      out.push("\t\tlist.End()");
       break;
     case "classrun":
-      out.push("\tout := abap.NewConsole()");
-      root.body.forEach(s => out.push("\t" + statement(s)));
-      out.push("\t_ = out");
+      out.push("\t\tout := abap.NewConsole()");
+      root.body.forEach(s => out.push(...statement(s).map(l => "\t\t" + l)));
+      out.push("\t\t_ = out");
       break;
   }
+  out.push("\t})");
   out.push("}");
   out.push("");
   return out.join("\n");
 }
 
-function statement(s: IRStatement): string {
+function statement(s: IRStatement): string[] {
   switch (s.kind) {
     case "list_write":
-      return `list.Write(${goString(s.text)}, ${s.newLine})`;
+      return [`list.Write(${goString(s.text)}, ${s.newLine})`];
     case "console_write":
-      return `out.Write(${goString(s.value)}, ${goString(s.name)})`;
+      return [`out.Write(${toString(s.value)}, ${s.name === undefined ? `""` : toString(s.name)})`];
+    case "data": {
+      const init = s.value === undefined
+        ? `abap.Initial(${goTypeValue(s.variable.type)}).(${goType(s.variable.type)})`
+        : convert(s.value, s.variable.type);
+      return [`${goName(s.variable)} := ${init}`, `_ = ${goName(s.variable)}`];
+    }
+    case "move":
+      return [`${goName(s.target)} = ${convert(s.source, s.target.type)}`];
+  }
+}
+
+/** The source converted to type to, by the runtime's conversion rules; a plain copy when the types are the same. */
+function convert(source: IRSource, to: IRType): string {
+  if (sameType(source.type, to)) {
+    return operand(source);
+  }
+  return `abap.MustConvert[${goType(to)}](${goTypeValue(source.type)}, ${operand(source)}, ${goTypeValue(to)})`;
+}
+
+function toString(source: IRSource): string {
+  return convert(source, { kind: "string" });
+}
+
+function sameType(a: IRType, b: IRType): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function operand(source: IRSource): string {
+  if (source.kind === "variable") {
+    return goName(source);
+  }
+  return source.type.kind === "i" ? `int32(${source.value})` : goString(source.value);
+}
+
+/** Variables get a prefix, so no ABAP name collides with a Go keyword or the generated names. */
+function goName(v: IRVariable): string {
+  return "v_" + v.name.replace(/[^a-z0-9_]/g, "_");
+}
+
+function goType(t: IRType): string {
+  switch (t.kind) {
+    case "c": case "n": case "d": case "t": case "string": case "x": case "xstring":
+      return "string";
+    case "i": return "int32";
+    case "int8": return "int64";
+    case "b": return "uint8";
+    case "s": return "int16";
+    case "p": return "abap.Packed";
+    case "f": return "float64";
+    case "decfloat16": case "decfloat34": return "abap.Decfloat";
+    case "utclong": return "abap.Utclong";
+  }
+}
+
+/** The abap.Type value of t. */
+function goTypeValue(t: IRType): string {
+  switch (t.kind) {
+    case "c": return `abap.TypeC(${t.length})`;
+    case "n": return `abap.TypeN(${t.length})`;
+    case "x": return `abap.TypeX(${t.length})`;
+    case "p": return `abap.TypeP(${t.length}, ${t.decimals})`;
+    case "d": return "abap.TypeD";
+    case "t": return "abap.TypeT";
+    case "string": return "abap.TypeString";
+    case "xstring": return "abap.TypeXString";
+    case "i": return "abap.TypeI";
+    case "int8": return "abap.TypeInt8";
+    case "b": return "abap.TypeB";
+    case "s": return "abap.TypeS";
+    case "f": return "abap.TypeF";
+    case "decfloat16": return "abap.TypeDecfloat16";
+    case "decfloat34": return "abap.TypeDecfloat34";
+    case "utclong": return "abap.TypeUtclong";
   }
 }
 

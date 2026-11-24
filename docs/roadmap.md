@@ -43,11 +43,21 @@ Done:
     list layout (`ZCL_GG_HOST_LIST`, ported from the MIT upstream open-abap/open-abap-gui; the oisee fork's LICENSE
     only says "todo"), the console as open-steamgate's `ZCL_OSD_CLASSRUN_OUT`, the build layout of osabap
   - output streams: a list line goes to stdout as soon as it is finished, a console write at once
+- the conversion table (2026-11-24): the value model for all 16 elementary kinds (native values: `int32`, `int64`,
+  strings, `float64`, a 128-bit unscaled integer for `p`, a decimal coefficient and exponent for decfloat) and
+  every cell of the conversion matrix in the runtime (`abap.Convert`), specified in
+  [spec/conversion.md](spec/conversion.md) with 11,702 test cases
+  - compiled: `DATA x TYPE <elementary> [VALUE literal]`, `x = literal | variable`, `out->write( variable )`; an
+    uncaught exception ends the program with a runtime error on stderr and exit code 1
 
 Next:
-- [ ] to agree first: `DATA x TYPE i`, arithmetic, `WRITE x`. Starts the value model (native `int32`) and the
-  first formatting cells: integer output length 11, right-aligned, sign at the end (open-steamgate's
+- [ ] to agree first: arithmetic and `WRITE x`. The value model is in place; next come the first formatting
+  cells: integer output length 11, right-aligned, sign at the end (open-steamgate's
   ANOMALY-2026-10-17-list-integer-width: it prints `6` where SAP is expected to print it in 11 columns)
+- [ ] `b` and `s`: the runtime has their cells, but abaplint does not type them (DDIC INT1/INT2), so declarations
+  are refused; switch the compiler to the abaplint fork that types them, then map them in `irType`
+- [ ] typed fast paths for the common conversion cells (every cell goes through `math/big` now), checked against
+  the same test cases
 - [ ] `WRITE` of a `c` literal ending in blanks and `WRITE ''`: refused, because open-steamgate's converter drops
   the blanks and SAP's result is not measured. Work out the expected output (keyword documentation)
 - [ ] port the rest of the list processor as the compiler needs it: positions and lengths, `NO-GAP`,
@@ -92,13 +102,17 @@ to also fix the JS runtime is a separate decision per issue and is not on the cr
   #2192 / #2188 overflow classes, #2177 / #2178 / #2181 / #2183 decfloat34
 - formatting: #2182 template styles for decfloat, #2197 DECIMALS for int8, #2248 OUTPUT-LENGTH
 
+Done:
+- the conversion table, [spec/conversion.md](spec/conversion.md): the 16 × 16 matrix, a rule per cell with its
+  exceptions and its keyword documentation section, all kinds including c, string, x, xstring, d, t and utclong,
+  and 11,702 test cases (`runtime/go/abap/testdata/conversion*.tsv`), each one a snippet. The conversion cells of
+  the transpiler issues above (#2174 p → c, #2204 x ↔ n, #2209 f → p, #2243 int8 → d/t, …) fall under its rules,
+  but are not yet checked one by one
+
 Next:
-- [ ] write the specification as a file in this repo: one row per cell of each table, with its expected
-  behaviour, its source (keyword documentation section), its snippet, and where it came from (worked out / issue #),
-  so the gaps are visible instead of implied
-- [ ] carry the cells above into it
-- [ ] work out the kinds not covered yet: c, string, x, xstring, d, t, utclong
-- [ ] work out the comparison and formatting tables as tables, not only as single cells
+- [ ] check the conversion cells of the issues above one by one against the spec and note each issue number at
+  its rule; `MOVE-CORRESPONDING` and fragment views (#2229, #2222–#2227) are structure rules, still open
+- [ ] the comparison table, then calculation type and output formatting, in the same form (spec file + test cases)
 
 
 ## Work items
