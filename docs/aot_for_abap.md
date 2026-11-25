@@ -31,6 +31,13 @@ one fails loudly, naming what is missing, and is never a silently different resu
 differently in a native binary. A program that only works because ABAP fails at such a limit, or fails only
 because of one, is outside the principle, as an inconsistent database is.
 
+**Unspecified behaviour is an optimisation point (2026-11-25).** Where the keyword documentation leaves a result
+unspecified, any result it allows counts as behaving as SAP, and the default is the fastest implementation, even
+where ABAP is deterministic and programs depend on its result by accident. This is decided case by case, and never
+for elementary types: conversions, calculations, comparisons and output formatting of elementary values must match
+ABAP exactly, including details the documentation does not spell out. See "Unspecified but deterministic behaviour"
+in Decisions.
+
 The rule has to be read together with the closed world: **the build input is the system, expressed as an abapGit
 package or a set of abapGit packages.** A class or table that is not in those packages does not exist, exactly as it does not exist on an SAP system where it was never
 imported. A dynamic name that resolves to nothing then fails at run time with the exception SAP raises for an
@@ -50,7 +57,7 @@ What the rule demands:
 - **The compiler's own type decisions must be exact.** A miscompilation such as two different structures merged
   into one type (a bug of this kind was found in gogen: [oisee/open-steamgate#1012](https://github.com/oisee/open-steamgate/issues/1012)) is exactly the kind of bug the rule forbids.
 - **Optimisations must be invisible.** Trimming, specialisation and devirtualisation may not change what the
-  program does.
+  program does, except where the documentation leaves the result unspecified (above).
 
 ## Goal and scope
 
@@ -554,8 +561,8 @@ from the program.
      Fix: a display width per character, as `cl_abap_list_utilities` describes it.
   3. *Behaviour the documentation leaves unspecified:* the order of equal keys after `SORT` without `STABLE`,
      which entry `DELETE ADJACENT DUPLICATES` keeps after it, which duplicate `READ TABLE … BINARY SEARCH`
-     finds. ABAP is deterministic there and programs depend on it by accident. Whether the principle covers such
-     behaviour is an open point (below).
+     finds. ABAP is deterministic there and programs depend on it by accident. Decided case by case, speed
+     first (next decision).
   4. *Regular expressions:* gogen's engine is Go's `regexp` with a POSIX emulation; a lookahead fails at run time
      there, and back-references do not exist. A pattern is often run-time data. Fix for the MVP: a pattern
      follows the static-name rule (a literal or a finite set, checked at build time against what the engine
@@ -581,6 +588,25 @@ from the program.
      (internal) session. Every root today runs one session per process, so nothing is wrong yet; in a root that
      serves many sessions, any of them kept as a Go global would leak between users. Decided: all of it is
      session state, passed like the user settings, never a global, before the first service root.
+
+- **Unspecified but deterministic behaviour: case by case, speed first (2026-11-25).** Where the keyword
+  documentation leaves a result unspecified, "behaves exactly as SAP" means any result the documentation allows,
+  not what ABAP happens to produce. Unspecified behaviour is an optimisation point: the default is the fastest
+  implementation, and each case is decided when its statement is compiled.
+  - *Elementary types are not such a case.* Conversions, calculations, comparisons and output formatting of
+    elementary values must match ABAP exactly, including what the documentation does not spell out (the value an
+    integer target holds after an overflow, the decimals of a `p` result in a `string`). The rule tables stay
+    exact.
+  - *`SORT` without `STABLE`:* the order of rows with equal keys is whatever the fastest sort gives. A program that
+    depends on ABAP's order of equal keys depends on unspecified behaviour; `SORT … STABLE` is the way to state
+    the order it needs. What follows from that order (which row `DELETE ADJACENT DUPLICATES` keeps after it)
+    follows the sort.
+  - *Other cases* (which duplicate `READ TABLE … BINARY SEARCH` finds, and any found later) are decided the same
+    way when their statement is compiled: first, what the documentation specifies; then, the fastest
+    implementation.
+  - *Why:* reproducing ABAP's algorithms would cost speed, the goal of AOT, to keep results the language never
+    promised. Elementary values are different: they are everywhere, a difference there is silent and spreads, and
+    the rule tables already pin them down.
 
 ## What the static-name rule costs (measured 2026-11-24)
 
@@ -625,11 +651,8 @@ than configured at run time. Applications are unaffected.
 
 ## Open points
 
-- **Unspecified but deterministic behaviour (opened 2026-11-25).** Where the keyword documentation leaves a result
-  unspecified (the order of equal keys after an unstable `SORT`, and what follows from it), does "behaves exactly
-  as SAP" mean reproducing what ABAP actually does, or is any result the documentation allows correct? The first
-  needs ABAP's algorithms worked out; the second needs a listed exception, since programs depend on the order by
-  accident. To be decided before `SORT` is compiled.
+None at the moment. Unspecified but deterministic behaviour was settled on 2026-11-25 (case by case, speed first,
+elementary types exact).
 
 Deferred items (computed variable names in `ASSIGN`, specialisation) are reopened only when a real case needs
 them. Dynamic exits on unbounded types were settled on 2026-11-25 by the manifest of conversion exits.

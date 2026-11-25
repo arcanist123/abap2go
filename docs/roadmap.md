@@ -215,8 +215,10 @@ first of this kind.
   before they are compiled
 - [ ] list columns by display width: East Asian full-width characters take two columns in the list processor,
   with test cases
-- [ ] decide the open point on unspecified but deterministic behaviour (unstable `SORT`, `DELETE ADJACENT
-  DUPLICATES`, `READ TABLE … BINARY SEARCH` with duplicates) before `SORT` is compiled
+- [x] decide unspecified but deterministic behaviour (2026-11-25): case by case, the fastest implementation
+  first, elementary types always exact. `SORT` without `STABLE` uses the fastest sort, and `DELETE ADJACENT
+  DUPLICATES` follows its order
+- [ ] `READ TABLE … BINARY SEARCH` with duplicates: decided by the same rule when it is compiled
 - [ ] regular expressions: a pattern must be a literal or a finite set, checked at build time against what the
   engine supports; a computed pattern is a build error; the supported subset written down with test cases
 - [ ] Open SQL semantics specified before the translation is ported: text order (binary order of code units),
