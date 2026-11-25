@@ -8,18 +8,12 @@ import (
 	"testing"
 )
 
-// The cells of the calculation type table, from testdata/calculation.tsv (its header explains the format). The
-// cells of calculation_open.tsv, whose rule is not worked out yet, are run and their differences logged.
+// The cells of the calculation type table, from testdata/calculation.tsv (its header explains the format).
 func TestCalculationTable(t *testing.T) {
 	failed, cells := runCalculationFile(t, "testdata/calculation.tsv", t.Errorf)
 	if failed > 0 {
 		t.Errorf("%d of %d cells differ", failed, cells)
 	}
-}
-
-func TestCalculationOpen(t *testing.T) {
-	failed, cells := runCalculationFile(t, "testdata/calculation_open.tsv", t.Logf)
-	t.Logf("open cells: %d of %d differ", failed, cells)
 }
 
 func runCalculationFile(t *testing.T, file string, report func(string, ...any)) (failed, cells int) {

@@ -94,6 +94,43 @@ func decProduct(a, b decimal) decimal {
 	return decimal{neg: a.neg != b.neg, coef: new(big.Int).Mul(a.coef, b.coef), exp: a.exp + b.exp}
 }
 
+// pProduct is the exact a * b of a p calculation with the scale ABAP gives it. The digits of an operand count in
+// pairs (the bytes of a packed number): an operand whose coefficient ends in t zeros has j = ceil(t / 2) pairs of
+// them. The product has one decimal more than the two operands together, less two for each such pair of both
+// operands but one (2.00 * 2.00 is 4.000, 2.5 * 2.5 is 6.250, 7 * 1 is 7.0, 2.000 * 2.000 is 4.0), but not below
+// zero decimals (20.0 * 10 is 200, 20.00 * 1 is 20.0).
+func pProduct(a, b decimal) decimal {
+	p := decProduct(a, b)
+	if p.isZero() {
+		return p
+	}
+	pairs := max(0, (trailingZeros(a.coef)+1)/2+(trailingZeros(b.coef)+1)/2-1)
+	decimals := -p.exp + 1
+	pairs = min(pairs, max(0, decimals/2))
+	shift := 1 - 2*pairs
+	if shift >= 0 {
+		p.coef.Mul(p.coef, pow10(shift))
+	} else {
+		p.coef.Quo(p.coef, pow10(-shift))
+	}
+	p.exp -= shift
+	return p
+}
+
+// trailingZeros is the number of zeros a non-zero coefficient ends in.
+func trailingZeros(c *big.Int) int {
+	n := 0
+	q, r := new(big.Int).Set(c), new(big.Int)
+	for q.Sign() != 0 {
+		q.QuoRem(q, bigTen, r)
+		if r.Sign() != 0 {
+			break
+		}
+		n++
+	}
+	return n
+}
+
 // decCompare compares the values of a and b (-1, 0, +1); zeros are equal whatever their sign.
 func decCompare(a, b decimal) int {
 	x, y, _ := aligned(a, b)

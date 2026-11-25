@@ -494,6 +494,9 @@ func (p ipow) eval(c *calc) num {
 	if n < 0 && c.isZero(base) {
 		raise(errArithmeticOverflow)
 	}
+	if c.ct == CalcP && base.d.isZero() {
+		return base // with its decimals: ipow( 0.00, 2 ) is 0.00
+	}
 	k := n
 	if k < 0 {
 		k = -k
@@ -501,6 +504,19 @@ func (p ipow) eval(c *calc) num {
 	v := base
 	if c.settled(base) {
 		v = c.settledPower(base, k)
+	} else if c.ct == CalcP {
+		// square and multiply from a 1 without decimals, which decides the scale of the power (pProduct):
+		// ipow( 2.00, 1 ) is 1 * 2.00 = 2.000, ipow( 2.00, 3 ) is 2.000 * 4.000 = 8.0
+		v = c.one()
+		for sq := base; ; {
+			if k&1 == 1 {
+				v = c.op(OpMultiply, v, sq)
+			}
+			if k >>= 1; k == 0 {
+				break
+			}
+			sq = c.op(OpMultiply, sq, sq)
+		}
 	} else {
 		for i := int64(1); i < k; i++ {
 			v = c.op(OpMultiply, v, base)
@@ -724,7 +740,7 @@ func (c *calc) pOp(op Op, a, b decimal) decimal {
 	case OpSubtract:
 		return c.pFit(decSum(a, b.negated()))
 	case OpMultiply:
-		return c.pFit(decProduct(a, b))
+		return c.pFit(pProduct(a, b))
 	}
 	if a.isZero() {
 		return decimal{coef: new(big.Int)}
@@ -738,15 +754,25 @@ func (c *calc) pOp(op Op, a, b decimal) decimal {
 		if !exact && c.exact {
 			raise(errRounding)
 		}
-		return c.pFit(q)
+		return c.pFit(integral(q))
 	case OpDiv:
 		q, _ := decEuclid(a, b)
 		return c.pFit(decimalFromBig(q))
 	case OpMod:
 		_, r := decEuclid(a, b)
-		return c.pFit(r.normalized())
+		return c.pFit(integral(r.normalized()))
 	}
 	panic(fmt.Sprintf("abap: operator %d in a p calculation", op))
+}
+
+// integral is d with the zeros before the decimal point in its coefficient: a quotient or remainder of a p
+// calculation drops only the trailing zeros of its decimals (600 / 6 is 100, not 1E2), which a product counts
+// (pProduct).
+func integral(d decimal) decimal {
+	if d.exp <= 0 {
+		return d
+	}
+	return decimal{neg: d.neg, coef: new(big.Int).Mul(d.coef, pow10(d.exp))}
 }
 
 // pResult moves the result of a p calculation into its result field. A result that does not fit raises

@@ -19,9 +19,7 @@ i	a / b * b	p8.2[1]	i[3]	-	1
 
 stands for `DATA a TYPE p LENGTH 8 DECIMALS 2 VALUE '1'. DATA b TYPE i VALUE 3. DATA result TYPE i.
 result = a / b * b.` with `1` as the expected content of `result`. The header of `calculation.tsv` explains the
-format, which reads values as [`conversion.tsv`](../../runtime/go/abap/testdata/conversion.tsv) does. A few cells
-have an expected value but no worked-out rule yet; they are kept apart in
-[`testdata/calculation_open.tsv`](../../runtime/go/abap/testdata/calculation_open.tsv) (see *Open points*).
+format, which reads values as [`conversion.tsv`](../../runtime/go/abap/testdata/conversion.tsv) does.
 Priority and the sign, and overflow in every place an expression is calculated (assignment operators, `ADD` and
 its siblings, string templates, `CONV`, `EXACT`, inline declarations, the result field after an exception), are in
 [`testdata/calculation_contexts.tsv`](../../runtime/go/abap/testdata/calculation_contexts.tsv) (699 cells; specified,
@@ -163,6 +161,32 @@ point are rounded off and never raise an exception.
 in one expression calculate in `p`: `int8 9223372036854775807 + p 0.5` into a `p LENGTH 16 DECIMALS 2` is
 `9223372036854775807.50`; into an `int8` it raises `CX_SY_ARITHMETIC_OVERFLOW`, the rounded result being out of range.
 
+**The scale of an interim result.** Besides its value, an interim result has a number of decimals, which shows
+only when a result goes into a `string` (section 4); a `c` target drops trailing zeros, and the other targets have
+decimals of their own. An operand has the decimals of its type (a `p`) or of its text (`'0.5'` has one), an integer
+none. A sum or difference has the larger number of decimals of its two operands. An exact quotient or remainder
+has no trailing zeros after the decimal point but keeps the zeros before it (`600 / 6` is `100`, `5.20 / 2.00` is
+`2.6`), `DIV` gives an integer, a zero has no decimals, and an inexact result has all the decimals that fit.
+
+The scale of a product follows the bytes of a packed number, as far as we know: digits count in pairs. Let `d` be
+the number of decimals of the two factors together, and let each factor whose digits end in `t` zeros (counted on
+all its digits at its scale: `2.00` is 200, two zeros; `20.00` is 2000, three) have `ceil( t / 2 )` pairs of zeros.
+The product then has `d + 1` decimals, less two for every such pair of both factors but one, and no fewer than zero:
+
+| Product | `d + 1` | Pairs | Result |
+|---|---|---|---|
+| `2.5 * 2.5`, `7 * 3`, `0.7 * 0.03` | 3, 1, 4 | 0 + 0 | `6.250`, `21.0`, `0.0210` |
+| `2.00 * 1`, `1.10 * 1` | 3 | 1 + 0 | `2.000`, `1.100` (one pair, so none taken off) |
+| `2.00 * 2.00`, `1.10 * 1.10` | 5 | 1 + 1 | `4.000`, `1.210` |
+| `2.0 * 2.0` | 3 | 1 + 1 | `4.0` |
+| `2.000 * 2.000`, `1.50 * 2.000` | 7, 6 | 2 + 2, 1 + 2 | `4.0`, `3.00` |
+| `20.00 * 1`, `20.0 * 10` | 3, 2 | 2 + 0, 1 + 1 | `20.0`, `200` (not below zero decimals) |
+
+The length of the factors makes no difference, nor does their type (an `i`, `int8`, text or a literal counts with
+its value and its decimals: `2.00 * '0.5'` is `1.0000`). The product is an interim result with that scale for
+the next operation: `2.00 * 2.00 * 2.00` is `4.000 * 2.00` = `8.00`, `( 2.00 * 2.00 ) * ( 2.00 * 2.00 )` is
+`4.000 * 4.000` = `16.0`, and `5.00 * 1.0 + 2.000` is `5.00 + 2.000` = `7.000`.
+
 ### Calculation type f
 
 Binary floating point arithmetic (IEEE 754 double precision, rounding to nearest even). An interim result beyond
@@ -228,7 +252,12 @@ power is the product of `abs( n )` factors `a`, each an interim result checked f
 `i` raises `CX_SY_ARITHMETIC_OVERFLOW`, into an `int8` it is 2147483648); `n = 0` gives 1 (also for `a = 0`); a
 negative `n` gives `1 / ipow( a, abs( n ) )`, so in `i` `ipow( 2, -1 )` is 1 (0.5 rounded), `ipow( -2, -1 )` is -1,
 `ipow( 2, -2 )` is 0, a zero base raises `CX_SY_ARITHMETIC_OVERFLOW` (in every calculation type) and so does a
-denominator out of range (`ipow( 10, -400 )` in `p`, `ipow( f 2, -1074 )` in `f`).
+denominator out of range (`ipow( 10, -400 )` in `p`, `ipow( f 2, -1074 )` in `f`). In `p` the factors are expected
+to be taken by squaring, which decides the scale of the power (see *Calculation type p*): starting
+from a 1 without decimals, the result is multiplied by `a`, `a * a`, `( a * a ) * ( a * a )`, … for each bit of
+`abs( n )` that is set, from the lowest. So `ipow( 2.00, 1 )` is `1 * 2.00` = `2.000` and `ipow( 2.00, 3 )` is
+`2.000 * 4.000` = `8.0`. A zero base with `n > 0` gives the base itself, with its decimals (`ipow( 0.00, 2 )` is
+`0.00`).
 
 ### Functions
 
@@ -273,9 +302,9 @@ into an `n LENGTH 3`: `000`; `f 1000` into a `c LENGTH 3`: `***`; `decfloat34 10
   - into a **string**: an inexact result has all its decimals (`1 / 3` is `0.33333333333333 `, `1 / 3 * 3` is
     `1.00000000000000 `); an exact sum or difference of two operands has the larger number of decimals of the two
     (`1.10 + 1.00` is `2.10 `, `1.50 - 2.000` is `0.500-`), an exact quotient, `DIV` or `MOD` no trailing zeros
-    (`5.20 / 2.00` is `2.6 `, `7.10 MOD 3.00` is `1.1 `), a zero result no decimals (`1.00 - 1.00` is `0 `). The
-    decimals of an exact product are an open point. As for any `p` moved into a `string`, the sign character
-    follows the number;
+    (`5.20 / 2.00` is `2.6 `, `7.10 MOD 3.00` is `1.1 `), a zero result no decimals (`1.00 - 1.00` is `0 `), an
+    exact product the scale of *Calculation type p* (`2.00 * 2.00` is `4.000 `, `2.0 * 2.0` is `4.0 `). As for any
+    `p` moved into a `string`, the sign character follows the number;
   - an `n` target takes the rounded integer as the conversion of a `p` does (`2 / 3` into an `n LENGTH 3` is
     `001`).
 
@@ -338,15 +367,8 @@ anywhere in the expression or as the type is a syntax error.
   [`testdata/calculation_contexts.tsv`](../../runtime/go/abap/testdata/calculation_contexts.tsv) for `b` and `s`, the
   others are examples, and a grid over all sources is still to be done.
 
-- **The decimals of an exact `p` product moved into a `string`.** `2.00 * 2.00` gives `4.000`, `2.5 * 2.5` gives
-  `6.250`, `2.0 * 2.0` gives `4.0`, `7 * 1` gives `7.0`, `ipow( 2.00, 3 )` gives `8.0` and `ipow( 1.10, 3 )` gives
-  `1.33100`; even `ipow( 2.00, 1 )`, with no multiplication at all, gives `2.000`: the number of decimals depends on
-  the operands' decimals and on the value in a way not worked out yet. The runtime gives an exact product the sum of
-  the operands' decimals and `ipow( a, 1 )` the decimals of `a`.
-  The rounded value itself follows the rules above; the cells are in `calculation_open.tsv`. A `c` target is not affected (trailing
-  zeros are dropped there).
-- Sums of interim results into a `string` (`a / b + c`): which number of decimals an interim result counts with is
-  not worked out; the test cases have sums of two variables only.
+- Sums with an inexact interim result into a `string` (`a / b + c`): the scale of *Calculation type p* is expected
+  to apply, but the test cases have sums and products of exact interim results only.
 - Not covered yet: `COLLECT` (sums of numeric components), arithmetic expressions in relational expressions (their
   calculation type is also the comparison type and belongs with the comparison table), actual parameters of methods
   and function modules, and the built-in functions other than `abs`, `sqrt` and `ipow`.

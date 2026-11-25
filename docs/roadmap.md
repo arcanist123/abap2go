@@ -159,9 +159,9 @@ Done:
   expression calculates in (operands and result field, `**`, functions, generic operands, inline declarations),
   the rules of `+ - * / DIV MOD **` and `ipow( )` in `i`, `int8`, `p` (31, then 63 significant digits), `f` and
   `decfloat34` (scale, signed zeros), division by zero, the overflow classes, the result moved into its target
-  (a `p` result into `c` and `string`), assignment operators and `EXACT`; 2,269 test cases
-  (`runtime/go/abap/testdata/calculation.tsv`). Open: the decimals of an exact `p` product moved into a `string`
-  (64 cells in `calculation_open.tsv`), `COLLECT`, method and function module parameters
+  (a `p` result into `c` and `string`, with the scale of an exact `p` product and of `ipow( )`), assignment
+  operators and `EXACT`; 3,648 test cases (`runtime/go/abap/testdata/calculation.tsv`). Open: `COLLECT`, method and
+  function module parameters
 - the comparison table, [spec/comparison.md](spec/comparison.md) (2026-11-24): the comparison type of every pair of
   elementary kinds, the rules per comparison type (text rounded to an integer and compared without a range, text in
   `p` rounded to its decimals, `f` through its 17-digit form against `decfloat34`, padding and prefixes, the length
@@ -199,9 +199,8 @@ Next:
 - [ ] the rest of the output formatting table: string templates (`|{ x }|`, with their own rules, including the
   styles for decfloat), `DESCRIBE … OUTPUT-LENGTH`, then the `WRITE` additions (`DECIMALS`, `NO-GROUPING`, date
   masks, `CURRENCY`, …) and `WRITE … TO`
-- [ ] the rest of the calculation type table: the decimals of an exact `p` product moved into a `string`
-  (`calculation_open.tsv`), `COLLECT`, arithmetic expressions as actual parameters, the other built-in numeric
-  functions
+- [ ] the rest of the calculation type table: `COLLECT`, arithmetic expressions as actual parameters, the other
+  built-in numeric functions
 
 
 ## Data-dependent differences
