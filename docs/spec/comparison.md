@@ -215,7 +215,8 @@ program, while the same error in an arithmetic expression is a catchable excepti
   and internal tables, reference variables, and the places that compare without an `IF`: `READ TABLE … WITH KEY`,
   table keys, `SORT` (with `AS TEXT`), `DELETE ADJACENT DUPLICATES`, `COLLECT`.
 - **Characters beyond the Basic Multilingual Plane**: the order of characters is that of their UTF-16 code units in
-  ABAP; the runtime compares UTF-8, which orders such characters differently from UTF-16. Same gap as in
-  conversion.md.
+  ABAP; the runtime still compares UTF-8, which orders such characters differently. This is a bug, not a gap: it
+  is fixed by storing text as UTF-16 (decision "Storage" in [aot_for_abap.md](../aot_for_abap.md), work item in
+  [roadmap.md](../roadmap.md)).
 - **Values the grid has no cells for**: `c` with lengths beyond 40, `p` with more than 3 decimals against text, and
   `d`/`t` against `n` lengths other than 4, 6, 8 and 10 follow the rules above by construction, without cells.

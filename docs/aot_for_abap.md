@@ -3,7 +3,7 @@
 Design notes for compiling ABAP ahead of time into a standalone native executable. Worked out in a discussion on
 2026-11-24. Several points rest on measurements of open-steamgate's ABAP-to-Go backend (gogen), in
 [open-steamgate-notes.md](open-steamgate-notes.md). The work items are in [roadmap.md](roadmap.md).
-Decisions and the (now empty) open points are at the end.
+Decisions and the open points are at the end.
 
 ## Guiding principle
 
@@ -16,6 +16,20 @@ two things:
 There is no third outcome. In particular, an executable never meets something it cannot do at run time: no
 "not compiled" stub, no gap in a conversion rule that shows up as a dump, no silently different result. Every
 decision below is judged against this rule.
+
+**Exceptions, each by decision.** Where a run-time error stands in for a build error, it is listed here. Each
+one fails loudly, naming what is missing, and is never a silently different result:
+1. *Conversion exits on dynamically typed operands (2026-11-25):* an exit the build could not bound and the root
+   did not list in its manifest ends the program with a run-time error naming that exit (see "Conversion exits:
+   static, plus a manifest per root" in Decisions).
+2. *User settings the runtime does not support yet (2026-11-25):* a user whose date format is `7`–`C` or whose
+   time format is a 12-hour one ends the program before it runs (exit code 2, see [spec/write.md](spec/write.md)).
+   The settings are run-time data, so this cannot be a build error; it stays an exception until the formats are
+   implemented.
+
+**Assumption on resources.** Memory, the size of strings and tables, and the depth of calls are limited
+differently in a native binary. A program that only works because ABAP fails at such a limit, or fails only
+because of one, is outside the principle, as an inconsistent database is.
 
 The rule has to be read together with the closed world: **the build input is the system, expressed as an abapGit
 package or a set of abapGit packages.** A class or table that is not in those packages does not exist, exactly as it does not exist on an SAP system where it was never
@@ -47,7 +61,9 @@ What the rule demands:
 - **What gets better is execution, not the language.** The gain comes from compiling less (only what can be
   reached) and from typed native code. No language improvements, and no checks, policies or security layers that
   classic ABAP does not have. Whatever classic ABAP does at run time, the executable does too.
-- Open SQL translation to real SQL is out of scope. It is I/O-bound and existing shims can be ported.
+- Writing the Open SQL translation to real SQL is out of scope: it is I/O-bound and existing shims can be ported.
+  Its semantics are not: whatever ABAP gives for a statement (order of text, trailing blanks, initial values,
+  aggregates), the ported translation must give too (see "Data-dependent differences" in Decisions).
 - **Shared memory is out of scope for the compiler** (shared objects, `cl_shm_*`, anything shared in memory
   between sessions or roots). It is an environment problem: whatever a deployment needs there is provided by the
   environment, not by the compiler or its runtime.
@@ -157,10 +173,11 @@ compatibility work in abaplint (abaplint#4689 functional results, abaplint#4642 
 (typed `ASSIGN (name)`)
 doubles as the specification for the dynamic runtime.
 
-**CASTING is the one real limit.** If values are stored as native values (a `c` as a native string, say), there is
-no byte layout to reinterpret. CASTING between character-like or byte-like flat types can be emulated; general
-CASTING cannot without changing how values are stored. Decided: native values, and every other CASTING is a
-build error (see Decisions).
+**CASTING is the one real limit.** If values are stored as native values, there is no byte layout to
+reinterpret. CASTING is only the most visible place where ABAP shows its memory layout: offset/length on
+structures, moves and comparisons between flat structures with different fragment views,
+`cl_abap_container_utilities` and binary `TRANSFER` of structures show it too. Decided for now: native values,
+and every operation that depends on the layout is a build error (see Decisions).
 
 ## Dynamic SQL
 
@@ -238,26 +255,34 @@ from the program.
 - *Why the split:* a data type needs no code, so being open costs only metadata; a class needs compiled code, so
   it has to be closed.
 - *Where they touch:* code that data triggers (conversion exits). Data types are open; the code a type can
-  trigger is closed and bounded by what the root can reach (decision below).
+  trigger is compiled statically: what the root reaches plus what its manifest lists (decision below).
 
-- **Code triggered by data is bounded by what the root reaches.** A conversion exit is code named by a domain,
-  and the kernel calls it implicitly (`WRITE`, `WRITE TO`).
+- **Conversion exits: static, plus a manifest per root (revised 2026-11-25).** A conversion exit is code named by
+  a domain, and the kernel calls it implicitly (`WRITE`, `WRITE TO`). Every exit a binary can run is compiled
+  into it at build time; none is loaded or generated at run time.
   1. *Static operand:* the domain is known at build time, so exactly its exit is compiled.
   2. *Finite set:* the operand's type comes from a finite set of DDIC names (`CREATE DATA … TYPE (n)` with `n`
      assigned from literals), so exactly their exits are compiled.
-  3. *Unbounded:* a statement that would implicitly call an exit on an operand whose type came from an unbounded
-     DDIC name is a **build error** in that root.
+  3. *Manifest:* a root may declare a manifest, a list of conversion exits compiled into its binary in addition
+     to those of rules 1 and 2, with what they reach. An entry naming an exit that is not in the world is a build
+     error.
+  4. *Unbounded, at run time:* a statement on an operand whose type came from an unbounded DDIC name compiles.
+     When it needs an exit at run time, the exit runs if it was compiled under rules 1–3; otherwise the program
+     ends with a **run-time error** naming the exit, so the fix (adding it to the manifest) is obvious.
 
-  *Why:* "every exit referenced by a domain in the packages" would put the conversion logic of a whole ERP (20 GB
-  of code) into a 1 MB service, each exit with its own closure. The service would no longer be small, and that is
-  the case AOT exists for. A fast service serializes to JSON or XML, which call no exits; formatting dynamically
-  typed data with `WRITE` is report territory. The OData gateway applies exits generically, but with the
-  framework generated per service its entity types are static, so rule 1 applies.
+  *Why the revision:* rule 4 was a build error until 2026-11-25. That was too limiting: a root that formats
+  dynamically typed data could not compile at all, even when the exits it actually meets are a handful its
+  author knows. The manifest lets the author state them, and they are still compiled statically, with the same
+  closure and the same LUW as the rest of the root. What is given up is the guarantee for an exit nobody listed;
+  that is the one exception to the guiding principle, and it fails loudly, never with a different result.
+  *Why not all exits:* "every exit referenced by a domain in the packages" would put the conversion logic of a
+  whole ERP (20 GB of code) into a 1 MB service, each exit with its own closure. The service would no longer be
+  small, and that is the case AOT exists for. A fast service serializes to JSON or XML, which call no exits;
+  formatting dynamically typed data with `WRITE` is report territory. The OData gateway applies exits
+  generically, but with the framework generated per service its entity types are static, so rule 1 applies.
   *Rejected:* all exits compiled once into a shared binary that services call. The exit would run in another
   session with its own database connection and would not see the caller's uncommitted LUW, which is a behaviour
   difference.
-  *Later:* whether roots that really need dynamic exits on unbounded types must be supported is investigated
-  when a real case hits rule 3.
 
 - **Vehicle: an own project, a new compiler on abaplint, output in Go, the environment borrowed from
   open-steamgate.**
@@ -312,9 +337,13 @@ from the program.
 - **Reuse open-steamgate as far as the guiding principle allows (2026-11-25).** Before building something, look
   at how open-steamgate (MIT) does it, and take its code, its rules and its test cases where they fit. What is
   taken is an attributed snapshot pinned to a commit, owned from then on and not tracked upstream.
-  - *Taken as it is:* the environment (database, LUW, Open SQL, locks, sessions, the HTTP host), the build-time
-    tools (abapGit import, DDIC to schema, seed data) and runtime pieces that do not depend on the value model
-    (regular expressions, code pages, compression, checksums, JSON parsing, HTTP utilities).
+  - *Taken as it is:* the build-time tools (abapGit import, DDIC to schema, seed data) and runtime pieces with no
+    ABAP-visible semantics of their own (compression, checksums, transport).
+  - *Taken, then specified (revised 2026-11-25):* pieces whose results depend on the data they are given: the
+    environment (database, LUW, Open SQL, locks, sessions, the HTTP host), regular expressions, code pages, JSON
+    parsing and HTTP utilities. Each gets its rules written down and tested like the rule tables; where it cannot
+    match ABAP for some input, that input must be static so the build can refuse it. Taking them "as they are"
+    would have exempted exactly the code where data decides the behaviour (see "Data-dependent differences").
   - *Ported:* the lowering of statements and the rules behind it, re-expressed on abap2go's IR and value model,
     one construct or one file at a time. Its comments record the rule each case follows; they come along,
     reworded to this project's style.
@@ -329,14 +358,35 @@ from the program.
     type, and [#989](https://github.com/oisee/open-steamgate/issues/989), a leading minus applied to the whole
     expression).
   - *Attribution:* every port names its source file and the pinned commit in a header comment and in `NOTICE`.
-- **Storage: native values, partial CASTING.** Values are native types (`int32`, strings, fixed-point integers for
-  `p`) for the fastest typed code. `ASSIGN … CASTING` works only between character-like or byte-like flat types;
-  every other CASTING is a **build error**. This is a known gap against SAP, accepted for speed; under the guiding
-  principle it is a refusal, never a different result.
+- **Storage: native values, text as UTF-16, no layout (revised 2026-11-25).** Values are native types (`int32`,
+  `int64`, `float64`, fixed-point integers for `p`) for the fastest typed code.
+  - *Text is UTF-16:* `c`, `n`, `d`, `t` and `string` hold UTF-16 code units, big-endian, in a Go `string`. ABAP
+    counts lengths and offsets in UTF-16 code units and orders text by them, so any other encoding gives
+    different results for characters outside the Basic Multilingual Plane. That difference depends on the data
+    and cannot be refused at build time, so under the guiding principle it is a bug, not a gap. Big-endian makes
+    byte comparison equal ABAP's order and keeps the value usable as a Go map key. Text is converted to and from
+    UTF-8 only where it enters or leaves the program (console, list, database, HTTP, files).
+  - *Its cost, measured as a Go microbenchmark (2026-11-25) against UTF-8 strings:* length and offset access
+    become O(1) (0.3–0.6 ns at any length, against 10–370 ns for rune counting over 15–224 characters), ordering
+    in ABAP's order costs about the same as plain byte comparison (counting UTF-16 over UTF-8 instead costs 10–15×
+    more), equality and hashed key lookup cost 1.1–1.3×, concatenation 1.2–1.7× (twice the bytes for ASCII). The
+    conversion at the edges costs about 3 ns per character in a first version; a JSON writer can fold it into its
+    escaping pass. As far as we know, the kernel keeps text in UTF-16 too: ABAP strings are slow because of
+    interpretation, not because of the encoding, and compilation removes that under either representation.
+  - *No layout-dependent operations, for now:* every `CASTING` (`ASSIGN`, `LOOP … ASSIGNING`, `READ TABLE`,
+    `TYPE HANDLE`), offset/length on structures, and moves or comparisons between flat structures with different
+    fragment views are **build errors**, the character-like cases included. This narrows the earlier decision
+    (CASTING between character-like or byte-like flat types) to reach an MVP sooner; gogen refuses every CASTING
+    too. A refusal is never a different result, and lifting it later changes no program that compiles today.
+  - *Later:* when a real root needs layout, the candidate is ABAP's byte layout as the native layout of flat data
+    (most native types already match it: `int32`, `int64`, `float64`, `x`, and text as UTF-16; `p` and decfloat
+    would need their packed forms). Decided then on two measurements: ABAP's structure alignment rules, and the
+    cost of packed `p` arithmetic against the fixed-point integers.
 - **One root per compilation.** The compiler is invoked for one root (an entry point: an ICF handler, an RFC
   module, a report, …), not for a whole package set, and compiles what that root reaches: one binary per root.
-  There is no manifest: with only static names and finite sets for code (decision below), nothing unbounded is
-  left for a manifest to supply, so everything a root needs follows from its source.
+  Everything a root needs follows from its source, with one addition: the manifest of conversion exits (decision
+  above), the only code a root names outside its source. Code named by statements needs no manifest: with only
+  static names and finite sets (decision below), nothing unbounded is left for one to supply.
   - *Why the costs do not matter:* builds happen on import, automated from the SAP system, so compiling shared code
     once per root is invisible. Disk space is no concern. Memory is not either: SAP also generates a load per
     program and keeps it in memory, and an optimised native binary is a better form of it than unoptimised
@@ -461,7 +511,9 @@ from the program.
   - *Reports* run their basic list through open-abap-gui's classic list processor (`ZCL_GG_HOST_LIST`, MIT),
     ported to the Go runtime: one blank between outputs, `WRITE /` starts a line, no wrap at the list width
     (default 132), lengths count characters, trailing blanks removed per line, the standard page header not
-    written. Only `START-OF-SELECTION` (explicit or implicit) is supported; every other event is a build error.
+    written. *Reopened 2026-11-25:* as far as we know, list positions count display columns, in which East Asian
+    full-width characters take two, so "lengths count characters" is a data-dependent difference (see
+    "Data-dependent differences"). Only `START-OF-SELECTION` (explicit or implicit) is supported; every other event is a build error.
   - *Output streams.* Where open-steamgate hands the list over when the program ends, abap2go writes each list
     line to stdout as soon as it is finished: layout only looks at the current line, so a finished line never
     changes. Statements that read or change earlier lines (`READ LINE`, `MODIFY LINE`) are build errors for now.
@@ -487,6 +539,48 @@ from the program.
     parameter and never reads a global.
   - *Two files:* the user setup (the records above) and the database connection setup (one per deployment).
     Both start as simple as possible; their format is not a design question for now.
+
+- **Data-dependent differences (review 2026-11-25).** The decisions were reviewed for the kind of bug found in
+  text storage: behaviour that depends on data or on the run-time environment, so it cannot be refused at build
+  time and would be a silently different result. Each finding below is a bug under the guiding principle until it
+  is fixed, refused through a static input, or listed as an exception. Work items are in
+  [roadmap.md](roadmap.md).
+  1. *`**` and floating point functions:* `f` results come from Go's `math.Pow` (`calc.go`), which is not
+     correctly rounded, and neither is every C library, so the last bit can differ from ABAP's for some inputs.
+     That shows in `WRITE` of `f` and, rarely, in a result rounded into `p`. The same holds for `exp`, `log` and
+     the trigonometric functions once added. Fix: an input sweep against expected values; if they differ, a
+     correctly rounded implementation or one that matches ABAP's.
+  2. *List columns:* list positions count display columns, not characters (reopened in the hosting decision).
+     Fix: a display width per character, as `cl_abap_list_utilities` describes it.
+  3. *Behaviour the documentation leaves unspecified:* the order of equal keys after `SORT` without `STABLE`,
+     which entry `DELETE ADJACENT DUPLICATES` keeps after it, which duplicate `READ TABLE … BINARY SEARCH`
+     finds. ABAP is deterministic there and programs depend on it by accident. Whether the principle covers such
+     behaviour is an open point (below).
+  4. *Regular expressions:* gogen's engine is Go's `regexp` with a POSIX emulation; a lookahead fails at run time
+     there, and back-references do not exist. A pattern is often run-time data. Fix for the MVP: a pattern
+     follows the static-name rule (a literal or a finite set, checked at build time against what the engine
+     supports); a computed pattern is a build error.
+  5. *Open SQL semantics:* on PostgreSQL or SQLite, the order of text in `ORDER BY`, `<`, `MIN`/`MAX` and
+     `GROUP BY` (ABAP expects binary order of code units; PostgreSQL defaults to a locale collation), trailing
+     blanks in comparisons, null values against initial values, `LIKE`, and the types and rounding of SQL
+     arithmetic and aggregates. Fix: a specification of Open SQL semantics, tested like the rule tables, before
+     the translation is ported.
+  6. *LUW semantics:* implicit database commits (end of a dialog step, a synchronous RFC, `WAIT`, the HTTP
+     response), the order of `PERFORM ON COMMIT`, the update task (V1, V2), `ROLLBACK WORK`. Fix: specified and
+     tested before the LUW code is ported.
+  7. *Time zones:* ABAP's time zone rules are customizing in the dictionary (the `TTZ*` tables), and user
+     settings name its zones (`CET`), not IANA ones. Go's time zone database would differ wherever the two sets of
+     rules disagree. Fix: the rules are read from those tables (with a database) or from the user setup (without
+     one); Go's time zone database is never used for ABAP time.
+  8. *Character properties:* case mapping (`TRANSLATE … TO UPPER CASE`, `to_upper`, case-insensitive `FIND`),
+     regex character classes and `SORT … AS TEXT` follow ABAP's Unicode tables and text environment; Go has its
+     own Unicode version and no locale collation. Fix: an input sweep over non-ASCII characters; `AS TEXT` and
+     `SET LOCALE` stay build errors until specified.
+  9. *Per-session state in service roots:* static attributes, class constructors, `LOAD-OF-PROGRAM`, ABAP memory
+     (`EXPORT … TO MEMORY`), SAP memory (`SET`/`GET PARAMETER`), `sy` fields and `SET COUNTRY` belong to the
+     (internal) session. Every root today runs one session per process, so nothing is wrong yet; in a root that
+     serves many sessions, any of them kept as a Go global would leak between users. Decided: all of it is
+     session state, passed like the user settings, never a global, before the first service root.
 
 ## What the static-name rule costs (measured 2026-11-24)
 
@@ -531,5 +625,11 @@ than configured at run time. Applications are unaffected.
 
 ## Open points
 
-None as of 2026-11-24: the scope is considered complete. Deferred items (dynamic exits on unbounded types,
-computed variable names in `ASSIGN`, specialisation) are reopened only when a real case needs them.
+- **Unspecified but deterministic behaviour (opened 2026-11-25).** Where the keyword documentation leaves a result
+  unspecified (the order of equal keys after an unstable `SORT`, and what follows from it), does "behaves exactly
+  as SAP" mean reproducing what ABAP actually does, or is any result the documentation allows correct? The first
+  needs ABAP's algorithms worked out; the second needs a listed exception, since programs depend on the order by
+  accident. To be decided before `SORT` is compiled.
+
+Deferred items (computed variable names in `ASSIGN`, specialisation) are reopened only when a real case needs
+them. Dynamic exits on unbounded types were settled on 2026-11-25 by the manifest of conversion exits.

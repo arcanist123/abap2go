@@ -211,9 +211,10 @@ exponent 6111), else it is an overflow; a smaller exponent rounds the value to t
 
 ## Known gaps
 
-- **Characters outside the Basic Multilingual Plane** count as one character in the runtime's c, n, d and t values
-  (Go runes), while ABAP counts UTF-16 code units, so lengths differ for such characters. Not yet decided how to
-  close this (UTF-16 storage or a counting rule).
+- **Characters outside the Basic Multilingual Plane** still count as one character in the runtime's c, n, d and t
+  values (Go runes), while ABAP counts UTF-16 code units, so lengths differ for such characters. This is a bug, not
+  a gap: it is fixed by storing text as UTF-16 (decision "Storage" in [aot_for_abap.md](../aot_for_abap.md), work
+  item in [roadmap.md](../roadmap.md)).
 - **b and s** are implemented, but the compiler cannot declare them yet: abaplint does not type them, so a
   declaration with a DDIC type such as INT1 or INT2 is a build error for now.
 - The compiler uses the cells for `=` between variables and literals, `VALUE` and `out->write( )`. Other places
