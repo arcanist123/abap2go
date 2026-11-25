@@ -4,7 +4,6 @@
 * again for ABAP, and some differ from the source test. Format: test/transpiler.test.ts.
 
 *** Arithmetics, precedence 1
-* waits: arithmetic expressions as operands of comparisons
 ASSERT 4 - 0 + 1 = 5.
 
 *** Arithmetics, precedence 2
@@ -13,15 +12,12 @@ int = 2 * 2 + 3 * 3.
 ASSERT int = 13.
 
 *** Arithmetics, precedence 3
-* waits: arithmetic expressions as operands of comparisons
 ASSERT 100 * 10 + 2 = ( 100 * 10 ) + 2.
 
 *** Arithmetics, precedence 4
-* waits: arithmetic expressions as operands of comparisons
 ASSERT 4 + 1 - 2 = 3.
 
 *** Arithmetics, precedence 5
-* waits: arithmetic expressions as operands of comparisons
 ASSERT 4 + ( 1 - 2 ) = 3.
 
 *** Arithmetics, precedence 6
@@ -30,11 +26,9 @@ int = 4 - 1 - 2.
 ASSERT int = 1.
 
 *** Arithmetics, precedence 7
-* waits: arithmetic expressions as operands of comparisons
 ASSERT 2 * 2 * 2 = 8.
 
 *** Arithmetics, precedence 8
-* waits: arithmetic expressions as operands of comparisons
 ASSERT 16 / 2 / 2 = 4.
 
 *** Arithmetics, precedence 9

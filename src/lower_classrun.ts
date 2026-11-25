@@ -1,8 +1,8 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
 import { IRClassrun, IRStatement } from "./ir";
-import { isNoop, lowerData, lowerMove, lowerSource, position, Variables, Where } from "./lower_common";
-import { lowerAssert } from "./lower_cond";
+import { lowerSource, Variables, Where } from "./lower_common";
+import { BlockLowerer } from "./lower_block";
 
 const { Statements, Expressions, Structures } = abaplint;
 
@@ -45,24 +45,13 @@ export function lowerClassrun(registry: abaplint.IRegistry, obj: abaplint.Object
   }
 
   const variables = new Variables(registry, obj, file, new Set(definition.methods.map(m => m.name.toLowerCase())));
-  const statements = method.findAllStatementNodes();
-  const body: IRStatement[] = [];
-  for (const statement of statements.slice(1, -1)) { // without METHOD and ENDMETHOD
-    const where = position(file, statement);
-    if (isNoop(statement)) {
-      continue;
-    } else if (statement.get() instanceof Statements.Data) {
-      body.push(lowerData(statement, variables, where));
-    } else if (statement.get() instanceof Statements.Move) {
-      body.push(lowerMove(statement, variables, where));
-    } else if (statement.get() instanceof Statements.Assert) {
-      body.push(lowerAssert(statement, variables, where));
-    } else if (statement.get() instanceof Statements.Call) {
-      body.push(lowerOutWrite(statement, variables, where));
-    } else {
-      throw new BuildError(`statement ${statement.get().constructor.name} is not supported yet`, where);
+  const lowerer = new BlockLowerer(file, variables, (statement, where) => {
+    if (statement.get() instanceof Statements.Call) {
+      return lowerOutWrite(statement, variables, where);
     }
-  }
+    throw new BuildError(`statement ${statement.get().constructor.name} is not supported yet`, where);
+  });
+  const body = lowerer.lower(method.getChildren().slice(1, -1)); // without METHOD and ENDMETHOD
   return { kind: "classrun", name, body };
 }
 

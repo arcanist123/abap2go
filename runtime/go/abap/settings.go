@@ -48,6 +48,14 @@ func (s Settings) separators() (decimal, thousands byte) {
 // Session is what a run of a root belongs to: one user and their settings.
 type Session struct {
 	Settings Settings
+	Sy       Sy
+}
+
+// Sy holds the system fields of a session that compiled code sets and reads.
+type Sy struct {
+	// Index is sy-index: in DO and WHILE the number of the current pass, set before a WHILE condition is
+	// evaluated; after the loop it is set back to the value it had before the loop. 0 at the start.
+	Index int32
 }
 
 // userRecord is one user in the user setup file. Fields left out take the value of DefaultSettings.

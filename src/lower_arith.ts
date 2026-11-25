@@ -21,6 +21,11 @@ export function isArithmetic(source: abaplint.Nodes.ExpressionNode): boolean {
   return functionName(source) !== undefined;
 }
 
+/** A Source that is one call of a built-in function (abs, sqrt, ipow, strlen) and nothing else. */
+export function isFunctionCall(source: abaplint.Nodes.ExpressionNode): boolean {
+  return source.getChildren().length === 1 && functionName(source) !== undefined;
+}
+
 /** target = expression. or target op= expression. (op one of + - * /) as a calculation. */
 export function lowerCalculate(target: IRTarget, assignOp: "+" | "-" | "*" | "/" | undefined,
     source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRCalculate {
@@ -30,6 +35,13 @@ export function lowerCalculate(target: IRTarget, assignOp: "+" | "-" | "*" | "/"
   }
   checkOperands(expression, where);
   return { kind: "calculate", target, expression };
+}
+
+/** An arithmetic expression (or a single numeric operand) as an IRExpr, with its operands checked. */
+export function lowerArithmetic(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRExpr {
+  const expression = lowerExpression(source, variables, where);
+  checkOperands(expression, where);
+  return expression;
 }
 
 /** An operand of utclong is a syntax error in ABAP; abaplint is not relied upon to report it. */

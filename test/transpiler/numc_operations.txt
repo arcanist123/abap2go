@@ -187,7 +187,7 @@ ENDTRY.
 ASSERT lv_caught = abap_true.
 
 *** compare with i, p, f, a string of the same digits, BETWEEN and CO
-* waits: BETWEEN in conditions
+* waits: CO in conditions
 DATA lv_n TYPE n LENGTH 5 VALUE '00010'.
 DATA lv_p TYPE p LENGTH 10 DECIMALS 2 VALUE '10.5'.
 DATA lv_f TYPE f VALUE '9.5'.
@@ -210,7 +210,6 @@ ASSERT lv_n = ' 10'.
 ASSERT lv_n3 = lv_n.
 
 *** compare with a text that is no number: CONVT_NO_NUMBER
-* waits: IF
 * fails: CONVT_NO_NUMBER
 DATA lv_n TYPE n LENGTH 5 VALUE '00010'.
 IF lv_n = 'x10'.

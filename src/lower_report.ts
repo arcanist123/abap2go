@@ -1,8 +1,8 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
 import { IRReport, IRStatement } from "./ir";
-import { lowerAssert } from "./lower_cond";
-import { isNoop, lowerData, lowerMove, lowerSource, position, Variables, Where } from "./lower_common";
+import { BlockLowerer } from "./lower_block";
+import { lowerSource, Variables, Where } from "./lower_common";
 
 const { Statements, Expressions } = abaplint;
 
@@ -20,26 +20,23 @@ export function lowerReport(registry: abaplint.IRegistry, obj: abaplint.Objects.
   const variables = new Variables(registry, obj, file);
 
   let lineSize: number | undefined;
-  const body: IRStatement[] = [];
-  for (const statement of file.getStatements()) {
-    const where = position(file, statement);
+  const structure = file.getStructure();
+  if (structure === undefined) {
+    throw new BuildError(`root ${obj.getName()}: the program does not parse`);
+  }
+  const lowerer = new BlockLowerer(file, variables, (statement, where) => {
     const kind = statement.get();
-    if (isNoop(statement) || kind instanceof Statements.StartOfSelection) {
-      continue;
+    if (kind instanceof Statements.StartOfSelection) {
+      return undefined;
     } else if (kind instanceof Statements.Report) {
       lineSize = lowerReportStatement(statement, where);
-    } else if (kind instanceof Statements.Data) {
-      body.push(lowerData(statement, variables, where));
-    } else if (kind instanceof Statements.Move) {
-      body.push(lowerMove(statement, variables, where));
-    } else if (kind instanceof Statements.Assert) {
-      body.push(lowerAssert(statement, variables, where));
+      return undefined;
     } else if (kind instanceof Statements.Write) {
-      body.push(lowerWrite(statement, variables, where));
-    } else {
-      throw new BuildError(`statement ${kind.constructor.name} is not supported yet`, where);
+      return lowerWrite(statement, variables, where);
     }
-  }
+    throw new BuildError(`statement ${kind.constructor.name} is not supported yet`, where);
+  });
+  const body = lowerer.lower([structure]);
   return { kind: "report", name: obj.getName(), lineSize, body };
 }
 
@@ -83,6 +80,10 @@ function lowerWrite(statement: abaplint.Nodes.StatementNode, variables: Variable
     throw new BuildError("only WRITE [/] <literal or variable>. is supported yet, no additions", where);
   }
   const value = lowerSource(source, variables, where, "WRITE of");
+  if (value.kind === "system_field") {
+    // typed with its data element, which has its own output length
+    throw new BuildError(`WRITE of sy-${value.name} is not supported yet`, where);
+  }
   if (value.kind === "variable") {
     variables.checkWriteFormat(value, where);
   }

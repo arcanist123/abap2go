@@ -34,11 +34,9 @@ foo = 5 ** 2.
 ASSERT foo = 25.
 
 *** rationals
-* waits: arithmetic expressions as operands of comparisons
 ASSERT 1 / 5 = + '0.2'.
 
 *** rationals 2
-* waits: arithmetic expressions as operands of comparisons
 DATA f TYPE f.
 f = 1 / 5.
 ASSERT f = + '0.2'.

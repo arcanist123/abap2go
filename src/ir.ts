@@ -29,8 +29,15 @@ export type IRType =
   | { kind: "p"; length: number; decimals: number }
   | { kind: "d" | "t" | "string" | "xstring" | "i" | "int8" | "b" | "s" | "f" | "decfloat16" | "decfloat34" | "utclong" };
 
-/** An operand: a literal, a variable or a subfield of a variable. */
-export type IRSource = IRLiteral | IRVariable | IRSubstring;
+/** An operand: a literal, a variable, a subfield of a variable or a system field. */
+export type IRSource = IRLiteral | IRVariable | IRSubstring | IRSystemField;
+
+/** A system field that compiled code reads: sy-index (type i), set by DO and WHILE. */
+export interface IRSystemField {
+  kind: "system_field";
+  name: "index";
+  type: IRType;
+}
 
 /** What a value is written to: a variable or a subfield of a flat variable. */
 export type IRTarget = IRVariable | IRSubstring;
@@ -67,7 +74,52 @@ export interface IRSubstring {
   type: IRType;
 }
 
-export type IRStatement = IRListWrite | IRConsoleWrite | IRData | IRMove | IRCalculate | IRAssert;
+export type IRStatement = IRListWrite | IRConsoleWrite | IRData | IRMove | IRCalculate | IRAssert
+  | IRIf | IRDo | IRWhile | IRExit | IRContinue | IRCheck;
+
+/**
+ * IF / ELSEIF / ELSE: the body of the first branch whose condition holds, else the ELSE body. CASE is lowered to
+ * this as well: each WHEN is the comparison operand = value for each of its values, joined by OR.
+ */
+export interface IRIf {
+  kind: "if";
+  branches: { condition: IRCondition; body: IRStatement[] }[];
+  /** ELSE or WHEN OTHERS; undefined without one. */
+  otherwise: IRStatement[] | undefined;
+}
+
+/**
+ * DO [n TIMES]: n is converted to i once, before the first pass; no passes when it is 0 or less. sy-index is the
+ * number of the pass in the body and is set back to its value before the loop when the loop ends.
+ */
+export interface IRDo {
+  kind: "do";
+  times: IRSource | undefined;
+  body: IRStatement[];
+}
+
+/** WHILE condition: sy-index is set to the number of the pass before the condition is evaluated. */
+export interface IRWhile {
+  kind: "while";
+  condition: IRCondition;
+  body: IRStatement[];
+}
+
+/** EXIT in a loop: leaves the innermost loop. */
+export interface IRExit {
+  kind: "exit";
+}
+
+/** CONTINUE in a loop: goes on with the next pass of the innermost loop. */
+export interface IRContinue {
+  kind: "continue";
+}
+
+/** CHECK condition in a loop: when the condition does not hold, goes on with the next pass. */
+export interface IRCheck {
+  kind: "check";
+  condition: IRCondition;
+}
 
 /** ASSERT condition: when the condition does not hold, the program ends with the runtime error ASSERTION_FAILED. */
 export interface IRAssert {
@@ -79,10 +131,22 @@ export interface IRAssert {
 export type IRCompareOp = "=" | "<>" | "<" | ">" | "<=" | ">=";
 
 /**
- * A logical expression. So far one comparison of two operands by the comparison rules of docs/spec/comparison.md
- * (abap.Compare); a conversion error in it is a runtime error, not an exception.
+ * A logical expression (docs/spec/comparison.md). A comparison of two data objects follows the comparison rules
+ * (abap.Compare), and a conversion error in it is a runtime error. With an arithmetic expression on either side, the
+ * calculation type of all operands of the comparison is also its comparison type, and an error is the catchable
+ * exception of the calculation. AND and OR evaluate from left to right and stop once the value is known; both sides
+ * of EQUIV are evaluated.
  */
-export type IRCondition = { kind: "compare"; op: IRCompareOp; left: IRSource; right: IRSource };
+export type IRCondition =
+  | { kind: "compare"; op: IRCompareOp; left: IRSource; right: IRSource }
+  | { kind: "compare_calc"; op: IRCompareOp; left: IRExpr; right: IRExpr }
+  /**
+   * BETWEEN with an arithmetic expression: operand >= low AND operand <= high in one calculation type for all
+   * three operands. BETWEEN of data objects is lowered to the two comparisons joined by AND.
+   */
+  | { kind: "between_calc"; operand: IRExpr; low: IRExpr; high: IRExpr }
+  | { kind: "not"; operand: IRCondition }
+  | { kind: "and" | "or" | "equiv"; left: IRCondition; right: IRCondition };
 
 /** WRITE [/] of a literal or variable onto the basic list, formatted with the session's user settings. */
 export interface IRListWrite {
