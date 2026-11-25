@@ -71,28 +71,39 @@ export function lowerCondition(cond: abaplint.Nodes.ExpressionNode, variables: V
   return items[0];
 }
 
-/** [NOT] ( Cond ). */
+/** The number of NOT in front of a relational expression or a parenthesized condition: NOT NOT a = 1 gives 2. */
+function leadingNots(node: abaplint.Nodes.ExpressionNode): number {
+  const children = node.getChildren();
+  let count = 0;
+  while (count < children.length && children[count] instanceof abaplint.Nodes.TokenNode
+      && children[count].concatTokens().toUpperCase() === "NOT") {
+    count++;
+  }
+  return count;
+}
+
+/** NOT around a condition an odd number of times; an even number of NOT cancels out. */
+function negate(condition: IRCondition, nots: number): IRCondition {
+  return nots % 2 === 1 ? { kind: "not", operand: condition } : condition;
+}
+
+/** {NOT} ( Cond ). */
 function lowerCondSub(sub: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRCondition {
   const inner = sub.findDirectExpression(Expressions.Cond);
   if (inner === undefined) {
     throw new BuildError(`${sub.concatTokens()}: malformed parenthesized condition`, where);
   }
-  const condition = lowerCondition(inner, variables, where);
-  return sub.getFirstToken().getStr().toUpperCase() === "NOT" ? { kind: "not", operand: condition } : condition;
+  return negate(lowerCondition(inner, variables, where), leadingNots(sub));
 }
 
 /**
- * A relational expression, perhaps with NOT before it: a comparison with = <> < > <= >= or [NOT] BETWEEN. The other
- * predicates (IS, IN, CO, CS, ...) are build errors so far.
+ * A relational expression, perhaps with any number of NOT before it: a comparison with = <> < > <= >= or [NOT]
+ * BETWEEN. The other predicates (IS, IN, CO, CS, ...) are build errors so far.
  */
 function lowerCompare(compare: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRCondition {
   const text = compare.concatTokens();
-  let children = compare.getChildren();
-  let negated = false;
-  if (children[0]?.concatTokens().toUpperCase() === "NOT" && !(children[0] instanceof abaplint.Nodes.ExpressionNode)) {
-    negated = true;
-    children = children.slice(1);
-  }
+  const nots = leadingNots(compare);
+  const children = compare.getChildren().slice(nots);
   const words = children.map(c => c instanceof abaplint.Nodes.ExpressionNode ? undefined : c.concatTokens().toUpperCase());
   const sources = children.filter((c): c is abaplint.Nodes.ExpressionNode =>
     c instanceof abaplint.Nodes.ExpressionNode && c.get() instanceof Expressions.Source);
@@ -114,7 +125,7 @@ function lowerCompare(compare: abaplint.Nodes.ExpressionNode, variables: Variabl
   } else {
     throw new BuildError(`${text}: only comparisons with = <> < > <= >= and BETWEEN are supported yet, not IS, IN or other predicates`, where);
   }
-  return negated ? { kind: "not", operand: condition } : condition;
+  return negate(condition, nots);
 }
 
 /** left op right: two data objects, or with an arithmetic expression on either side, a calculation. */

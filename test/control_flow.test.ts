@@ -220,6 +220,26 @@ ENDIF.`);
   assert.match(result.failed ?? "", /CX_SY_ZERODIVIDE/);
 });
 
+test("conditions: NOT can be repeated, an even number of NOT cancels out, NOT binds more strongly than OR", () => {
+  const source = classrun(`DATA x TYPE i VALUE 1.
+IF NOT NOT x = 1.
+  out->write( 'not not' ).
+ENDIF.
+IF NOT NOT NOT x = 1.
+  out->write( 'never' ).
+ENDIF.
+IF NOT NOT x = 2 OR x = 1.
+  out->write( 'not not, or' ).
+ENDIF.
+IF NOT NOT ( x = 1 AND x <> 2 ).
+  out->write( 'not not, parentheses' ).
+ENDIF.
+IF NOT NOT NOT ( x = 2 ).
+  out->write( 'not not not, parentheses' ).
+ENDIF.`);
+  assert.deepEqual(run("clas", source), { stdout: lines("not not", "not not, or", "not not, parentheses", "not not not, parentheses") });
+});
+
 test("conditions: an exception in an arithmetic operand of a WHILE condition ends the program", () => {
   const result = run("clas", classrun(`DATA z TYPE i VALUE 2.
 WHILE 4 / z > 1.
