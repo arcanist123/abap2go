@@ -298,10 +298,37 @@ from the program.
   - *Its gaps become build errors:* Open SQL forms the borrowed lowering does not cover (`FOR ALL ENTRIES`, `JOIN`,
     `GROUP BY`, dynamic clauses, `IS NULL`, run-time `NotCompiled` stubs in gogen) are refused at build time under
     the guiding principle, so the environment's coverage decides which programs compile.
-  - *Borrowed knowledge too:* open-steamgate's `ANORMALIES.md` (SAP-vs-open-abap differences, mostly measured on a
-    real system) and the 304 test classes in `tools/gogen/testdata*` with answers measured on A4H seed the
-    rule-table specification. The compiler itself (frontend, IR, emitter, value model) is not taken over: this design changes its
-    value model, its refusal model (build time instead of run time) and its closure model (one root).
+  - *Borrowed knowledge too:* open-steamgate's `ANORMALIES.md` (SAP-vs-open-abap differences) and the 304 test
+    classes in `tools/gogen/testdata*` with their expected answers seed the rule-table specification. The compiler
+    itself (frontend, IR, emitter, value model) is not taken over as a whole: this design changes its value model,
+    its refusal model (build time instead of run time) and its closure model (one root). Its parts are ported one
+    by one under the next decision.
+  - *Why not a fork (2026-11-25):* building abap2go on gogen as a base was weighed again. There is no route to send
+    changes upstream, so a base would be a hard fork: one snapshot of a frontend of about 46,000 lines, owned from
+    then on and drifting from an upstream that changes daily. The parts where this design differs (the generic
+    rules, build-time refusal, the value model) are the core of that frontend and runtime, and every part taken over
+    has to meet the guiding principle anyway. Porting part by part gets most of the same work without that.
+
+- **Reuse open-steamgate as far as the guiding principle allows (2026-11-25).** Before building something, look
+  at how open-steamgate (MIT) does it, and take its code, its rules and its test cases where they fit. What is
+  taken is an attributed snapshot pinned to a commit, owned from then on and not tracked upstream.
+  - *Taken as it is:* the environment (database, LUW, Open SQL, locks, sessions, the HTTP host), the build-time
+    tools (abapGit import, DDIC to schema, seed data) and runtime pieces that do not depend on the value model
+    (regular expressions, code pages, compression, checksums, JSON parsing, HTTP utilities).
+  - *Ported:* the lowering of statements and the rules behind it, re-expressed on abap2go's IR and value model,
+    one construct or one file at a time. Its comments record the rule each case follows; they come along,
+    reworded to this project's style.
+  - *Kept as abap2go's own:* the rule tables and the runtime that implements them (conversion, comparison,
+    calculation type, output formatting), the value model, build-time refusal and one root per compilation.
+    Where open-steamgate differs from these, the code taken is changed, not the rule.
+  - *Its test cases become abap2go's:* a ported construct brings its test classes along. Where an expected answer
+    contradicts a cell of the rule tables, the cell is reopened and settled, not adopted silently.
+  - *Done means passing the tables:* a ported part is finished when it passes the rule-table cells it touches.
+    That is also where its bugs are caught: two of the kind the guiding principle forbids are known in gogen
+    ([oisee/open-steamgate#1012](https://github.com/oisee/open-steamgate/issues/1012), structures merged into one
+    type, and [#989](https://github.com/oisee/open-steamgate/issues/989), a leading minus applied to the whole
+    expression).
+  - *Attribution:* every port names its source file and the pinned commit in a header comment and in `NOTICE`.
 - **Storage: native values, partial CASTING.** Values are native types (`int32`, strings, fixed-point integers for
   `p`) for the fastest typed code. `ASSIGN … CASTING` works only between character-like or byte-like flat types;
   every other CASTING is a **build error**. This is a known gap against SAP, accepted for speed; under the guiding
@@ -427,9 +454,10 @@ from the program.
   - *When:* level 1 once the generic path is measured as a bottleneck; level 2 when a real hot path needs it.
     Measure first what a generic operation costs against typed code.
 
-- **Hosting follows open-steamgate; its AOT compiler does not.** Whatever open-steamgate provides as host
-  (list processing, the console, the build layout, later the database, LUW, locks and HTTP) is reused; its
-  compiler (frontend, IR, emitter, value model) is not. Decided 2026-11-24 with the first hello world:
+- **Hosting follows open-steamgate; its AOT compiler is ported in parts, not taken as a whole.** Whatever
+  open-steamgate provides as host (list processing, the console, the build layout, later the database, LUW, locks
+  and HTTP) is reused; its compiler (frontend, IR, emitter, value model) is ported construct by construct under the
+  reuse decision above. Decided 2026-11-24 with the first hello world:
   - *Reports* run their basic list through open-abap-gui's classic list processor (`ZCL_GG_HOST_LIST`, MIT),
     ported to the Go runtime: one blank between outputs, `WRITE /` starts a line, no wrap at the list width
     (default 132), lengths count characters, trailing blanks removed per line, the standard page header not
