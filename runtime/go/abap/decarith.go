@@ -117,8 +117,20 @@ func pProduct(a, b decimal) decimal {
 	return p
 }
 
-// trailingZeros is the number of zeros a non-zero coefficient ends in.
+// trailingZeros is the number of zeros a non-zero coefficient ends in. It runs twice for every p product, so an odd
+// coefficient and one that fits a uint64 are counted without big.Int arithmetic.
 func trailingZeros(c *big.Int) int {
+	if c.Bit(0) == 1 {
+		return 0
+	}
+	if c.IsUint64() {
+		n, u := 0, c.Uint64()
+		for u != 0 && u%10 == 0 {
+			u /= 10
+			n++
+		}
+		return n
+	}
 	n := 0
 	q, r := new(big.Int).Set(c), new(big.Int)
 	for q.Sign() != 0 {
