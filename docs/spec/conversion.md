@@ -259,6 +259,7 @@ calculation itself, and every exception under `EXACT`, keeps the result field (s
 - The compiler cannot catch exceptions yet (`TRY` is not compiled), so a value left in a target cannot be seen
   by a program: an uncaught exception ends it. `abap.Convert` and `abap.Calculate` return the value with the
   exception, for the generated code to write once `TRY` is compiled.
-- Speed: every cell goes through exact decimal arithmetic (`math/big`) for now. Typed fast paths for the common
-  cells (i to p, p to p with the same decimals, c to string) come once moves show up in measurements, and must pass
-  the same test cases.
+- Speed: the cell is chosen at run time, also for static operands, and every numeric cell goes through exact
+  decimal arithmetic (`math/big`) for now. Static operands get their cell chosen at build time once `ASSERT` and
+  control flow are compiled ([aot_for_abap.md](../aot_for_abap.md), "Static operands: the cell is chosen at build
+  time, after control flow is compiled"); both paths must pass the same test cases.

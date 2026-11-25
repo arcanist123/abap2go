@@ -628,6 +628,30 @@ from the program.
     promised. Elementary values are different: they are everywhere, a difference there is silent and spreads, and
     the rule tables already pin them down.
 
+- **Static operands: the cell is chosen at build time, after control flow is compiled (2026-11-25).** This makes
+  "one implementation per cell, used twice" (decision *Generic run-time rules*) concrete.
+  - *Where it stands:* the compiler resolves every rule at run time. A move between different types calls
+    `abap.Convert` with both types as values, which picks the cell by source and target kind on every call and
+    calculates most numeric cells in exact `math/big` arithmetic; an arithmetic expression becomes an `abap.Expr`
+    tree that `abap.Calculate` scans for its calculation type, converts and evaluates each time it runs; a comparison
+    goes through `abap.Compare` the same way. Only the values are native, and a move between equal types is a
+    plain copy. That is the generic path, used for static operands too.
+  - *The decision:* for static operands the compiler resolves the rule tables at build time, from the types
+    abaplint gives:
+    1. each cell of the conversion table is its own Go function on native values (`convIToB(int32) (uint8,
+       error)`), and `abap.Convert` dispatches to the same functions, so the rules are written once;
+    2. the compiler emits a direct call of the cell for a static move, and `abap.Convert` only for a generic operand;
+    3. the calculation type of an expression is fixed at build time (operands and result field); `i`, `int8` and
+       `f` compile to native Go operations with overflow checks, `p` and `decfloat34` to direct calls of their
+       arithmetic, and the result goes into its field through the conversion cell;
+    4. comparisons choose their comparison type at build time in the same way.
+  - *Same results on both paths:* every test case of the rule tables (the TSV files) is run against `abap.Convert`,
+    `abap.Calculate` and `abap.Compare`, and end to end against compiled code with static operands; the two must
+    agree, including the exception and the value a target is left with after it.
+  - *Order:* this comes after `ASSERT` and control flow (`IF`, `ELSEIF`, `ELSE`, `CASE`, `WHILE`, `DO`) are
+    compiled. Those decide what programs can be written, and so what can be measured; specialising first would
+    optimise a compiler that runs only straight-line code. Until then the run-time path is correct, only slower.
+
 ## What the static-name rule costs (measured 2026-11-24)
 
 Every statement naming code dynamically, found with abaplint's parser (unit tests excluded) in six code bases:

@@ -110,20 +110,20 @@ Next:
     with `DATA`, moves, arithmetic, `WRITE` and `ASSERT` (about 120) run end to end, the others (`TRY`, `LOOP`,
     `COLLECT`, templates, …) stay as fixtures waiting for their statements
   - a difference is a bug in the runtime or a gap in a rule table, fixed through the spec and its cells
+- [ ] control flow: `IF`, `ELSEIF`, `ELSE`, `CASE`, and the loops `WHILE` and `DO` (with `EXIT`, `CONTINUE`,
+  `sy-index`), with relational expressions on `abap.Compare`, arithmetic operands (one calculation type for both
+  sides), `NOT`/`AND`/`OR`/`EQUIV` with short-circuit evaluation; checked against `comparison_expr.tsv`
+- [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
+  operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
+  above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
+  calculation type fixed at build time, `i`, `int8` and `f` as native Go operations with overflow checks, `p` and
+  `decfloat34` as direct calls; comparison types chosen at build time; every TSV cell run on both paths
 - [ ] the rest of `calculation_contexts.tsv` as its statements are compiled: inline declarations, templates, `CONV`,
   `EXACT`, `ADD` and the others, the result field after an exception (with `TRY`). The expression parser of
   `calculation_test.go` still attaches a leading `-` to its operand; fix it if it is to run these cells too
-- [ ] `IF`, `ELSEIF`, `ELSE`, `CASE` and `WHILE` with relational expressions on `abap.Compare`, arithmetic operands
-  (one calculation type for both sides), `NOT`/`AND`/`OR`/`EQUIV` with short-circuit evaluation; checked against
-  `comparison_expr.tsv`
-- [ ] typed fast paths for arithmetic: static operands of calculation type i, int8 and f as native Go operations
-  with overflow checks instead of the expression tree (`abap.Calculate` scans and converts at run time), checked
-  against `calculation.tsv`
 - [ ] arithmetic beyond `result = expression`: inline declarations (`DATA(r) = …`, the declared type of
   [spec/calculation.md](spec/calculation.md)), `EXACT` and `CONV`, expressions as operands of `WRITE` and
   `out->write( )`
-- [ ] typed fast paths for the common conversion cells (every cell goes through `math/big` now), checked against
-  the same test cases
 - [ ] `WRITE` of dictionary types with their own output length (`sy-datum` in 10 characters with separators),
   conversion exits, table fields
 - [ ] the manifest of conversion exits per root (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md),
