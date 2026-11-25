@@ -43,7 +43,11 @@ const writes: [string, string, string, object?][] = [
     "        1,234.50- 02292024\n", US],
   ["user setup: utclong", "DATA u TYPE utclong.\nDATA s TYPE string VALUE `2024-02-29T12:34:56`.\nu = s.\nWRITE u. WRITE 'end'.",
     "02/29/2024 12:34:56.0000000    end\n", US],
-  ["user setup: i", "DATA i TYPE i VALUE -1234567.\nWRITE i.", " 1,234,567-\n", US],
+  ["a character outside the Basic Multilingual Plane takes two code units", "DATA c4 TYPE c LENGTH 4 VALUE '\u{1F600}a'.\nWRITE c4. WRITE 'x'.",
+    "\u{1F600}a  x\n"],
+  ["a c field cut between the two code units of a character", "DATA s TYPE string VALUE `\u{1F600}`.\nDATA c1 TYPE c LENGTH 1.\nc1 = s.\nWRITE c1. WRITE 'z'. WRITE / s. WRITE 'y'.",
+    "� z\n\u{1F600} y\n"],
+  ["user setup: i","DATA i TYPE i VALUE -1234567.\nWRITE i.", " 1,234,567-\n", US],
 ];
 for (const [name, body, stdout, userSetup] of writes) {
   test(`report WRITE: ${name}`, () => {

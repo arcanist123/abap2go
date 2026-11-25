@@ -75,20 +75,19 @@ Done:
   - signs and priorities (2026-11-25): `**`, then the sign (`-`, `+`, repeated), then `* / DIV MOD`, then `+ -`;
     `- 7` is a sign, `-7` one operand; a lone `+ a` is an arithmetic expression. The cells of
     `calculation_contexts.tsv` the compiler supports run end to end (`test/contexts.test.ts`)
+- text as UTF-16 (2026-11-25, decision "Storage" in [aot_for_abap.md](aot_for_abap.md)): `c`, `n`, `d`, `t` and
+  `string` hold UTF-16 code units, big-endian, in a Go `string` (`runtime/go/abap/text.go`); moves between text
+  kinds, text comparisons and the list work on code units, the rules for numbers, dates and times read and write
+  UTF-8 at the entry points (with an ASCII fast path), and UTF-8 is used where text leaves the program (console,
+  list). Literals are emitted as code units; test cases outside the Basic Multilingual Plane: lengths, a `c` field
+  cut between the two code units of a character, order against U+E000 and U+FFFD, list columns
 - the input is checked with abaplint's rules that stand in for ABAP syntax errors (`src/validation.ts`,
   `errorNamespace: "."`): an unknown type is an error (`unknown_types`), not a void type, and so are a method not
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
 
 Next:
-- [ ] **bug first: text as UTF-16** (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Storage"): `c`,
-  `n`, `d`, `t` and `string` hold UTF-16 code units, big-endian, in a Go `string`, so lengths, offsets,
-  truncation and ordering follow ABAP's UTF-16 code units for characters outside the Basic Multilingual Plane
-  - conversion, comparison, calculation and formatting in the runtime work on code units; UTF-8 only at the
-    edges (console, list, later database, HTTP and files), with an ASCII fast path
-  - test cases with characters outside the Basic Multilingual Plane: `strlen`, a `c` field cut in the middle of a
-    surrogate pair, ordering against U+E000–U+FFFF, `WRITE` output length
-  - the known-gap notes in [spec/conversion.md](spec/conversion.md), [spec/comparison.md](spec/comparison.md)
-    and `runtime/go/abap/types.go` go once it is fixed
+- [ ] `strlen( )` and offset/length access, with test cases outside the Basic Multilingual Plane (both count
+  UTF-16 code units, which the storage of text now gives directly)
 - [ ] take over the arithmetic tests of abaplint/transpiler as end-to-end fixtures: 157 ABAP snippets from
   `test/operators/arithmetics*.ts`, `mod.ts` and `test/types/*_operations.ts`, `integer8_calculation_type.ts`,
   `conversion_no_number.ts` (MIT), one file each with its source test named

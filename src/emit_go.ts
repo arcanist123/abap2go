@@ -78,7 +78,7 @@ function convert(source: IRSource, to: IRType): string {
 /** The text WRITE outputs: a text literal as it is, anything else formatted with the user settings. */
 function listText(source: IRSource): string {
   if (source.kind === "literal" && (source.type.kind === "c" || source.type.kind === "string")) {
-    return goString(source.value);
+    return goText(source.value);
   }
   return `abap.Format(session.Settings, ${goTypeValue(source.type)}, ${operand(source)})`;
 }
@@ -99,9 +99,9 @@ function operand(source: IRSource): string {
     case "i":
       return `int32(${source.value})`;
     case "p":
-      return `abap.MustConvert[abap.Packed](abap.TypeString, ${goString(source.value)}, ${goTypeValue(source.type)})`;
+      return `abap.MustConvert[abap.Packed](abap.TypeString, ${goText(source.value)}, ${goTypeValue(source.type)})`;
   }
-  return goString(source.value);
+  return goText(source.value);
 }
 
 /** Variables get a prefix, so no ABAP name collides with a Go keyword or the generated names. */
@@ -146,7 +146,20 @@ function goTypeValue(t: IRType): string {
   }
 }
 
-/** A Go string literal; JSON escapes are valid Go escapes. */
-function goString(text: string): string {
-  return JSON.stringify(text);
+/**
+ * A Go string literal of ABAP text: the UTF-16 code units of text, big-endian, as the runtime holds text. JavaScript
+ * strings are UTF-16 already, so each char code is one code unit.
+ */
+function goText(text: string): string {
+  let out = "";
+  const hex = (b: number) => "\\x" + b.toString(16).padStart(2, "0");
+  for (let i = 0; i < text.length; i++) {
+    const u = text.charCodeAt(i);
+    if (u >= 0x20 && u < 0x7f && u !== 0x22 && u !== 0x5c) {
+      out += "\\x00" + String.fromCharCode(u);
+    } else {
+      out += hex(u >> 8) + hex(u & 0xff);
+    }
+  }
+  return `"${out}"`;
 }

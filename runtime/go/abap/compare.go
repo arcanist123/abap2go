@@ -8,7 +8,6 @@ package abap
 import (
 	"fmt"
 	"strings"
-	"unicode/utf8"
 )
 
 // Compare compares a (type ta) with b (type tb): -1 if a < b, 0 if they are equal, +1 if a > b. The error is a
@@ -18,6 +17,24 @@ func Compare(ta Type, a any, tb Type, b any) (int, error) {
 	if !ok {
 		return 0, &RuntimeError{Name: "COMPARE_NOT_SUPPORTED",
 			Text: fmt.Sprintf(`Comparison of type "%s" and type "%s" not supported.`, kindTag(ta), kindTag(tb))}
+	}
+	if isText(ct.Kind) {
+		// text against text, on code units
+		if (ta.Kind == KindD || ta.Kind == KindT) && ta.Kind != tb.Kind {
+			return compareDateTimeText(ta.Kind, a.(string), tb, b.(string)), nil
+		}
+		if (tb.Kind == KindD || tb.Kind == KindT) && ta.Kind != tb.Kind {
+			return -compareDateTimeText(tb.Kind, b.(string), ta, a.(string)), nil
+		}
+		x, y := comparisonText(ta, a, ct), comparisonText(tb, b, ct)
+		return compareText(x, y, ct.Kind), nil
+	}
+	// the other comparison types read text as numbers, dates and times, in UTF-8 (see text.go)
+	if isText(ta.Kind) {
+		a = ToUTF8(a.(string))
+	}
+	if isText(tb.Kind) {
+		b = ToUTF8(b.(string))
 	}
 	switch ct.Kind {
 	case KindI, KindInt8, KindP, KindDecfloat34:
@@ -40,15 +57,6 @@ func Compare(ta Type, a any, tb Type, b any) (int, error) {
 			return 0, err
 		}
 		return cmpFloat(x, y), nil
-	case KindC, KindString, KindN, KindD, KindT:
-		if (ta.Kind == KindD || ta.Kind == KindT) && ta.Kind != tb.Kind {
-			return compareDateTimeText(ta.Kind, a.(string), tb, b.(string)), nil
-		}
-		if (tb.Kind == KindD || tb.Kind == KindT) && ta.Kind != tb.Kind {
-			return -compareDateTimeText(tb.Kind, b.(string), ta, a.(string)), nil
-		}
-		x, y := comparisonText(ta, a, ct), comparisonText(tb, b, ct)
-		return compareText(x, y, ct.Kind), nil
 	case KindX, KindXString:
 		x, y := a.(string), b.(string)
 		if ct.Kind == KindX {
@@ -200,7 +208,7 @@ func conversionError(err error, text string) error {
 func comparisonDecimal(t Type, v any, ct Type) (decimal, error) {
 	if d, ok := numericDecimal(t, v); ok {
 		if t.Kind == KindF && ct.Kind == KindDecfloat34 {
-			r, err := Convert(t, v, TypeDecfloat34) // through the 17-digit form
+			r, err := convert8(t, v, TypeDecfloat34) // through the 17-digit form
 			if err != nil {
 				return decimal{}, err
 			}
@@ -224,13 +232,13 @@ func comparisonDecimal(t Type, v any, ct Type) (decimal, error) {
 			if t.Kind == KindN {
 				dec = 0
 			}
-			r, err := Convert(t, v, TypeP(16, dec))
+			r, err := convert8(t, v, TypeP(16, dec))
 			if err != nil {
 				return decimal{}, conversionError(err, strings.TrimRight(s, " "))
 			}
 			return r.(Packed).decimal(dec), nil
 		case KindDecfloat34:
-			r, err := Convert(t, v, TypeDecfloat34)
+			r, err := convert8(t, v, TypeDecfloat34)
 			if err != nil {
 				return decimal{}, conversionError(err, strings.TrimRight(s, " "))
 			}
@@ -241,7 +249,7 @@ func comparisonDecimal(t Type, v any, ct Type) (decimal, error) {
 		if ct.Kind == KindInt8 {
 			target = TypeInt8
 		}
-		r, err := Convert(t, v, target)
+		r, err := convert8(t, v, target)
 		if err != nil {
 			return decimal{}, err
 		}
@@ -264,7 +272,7 @@ func numericDecimalMust(t Type, v any) decimal {
 
 // comparisonFloat is the value of an operand in the comparison type f.
 func comparisonFloat(t Type, v any) (float64, error) {
-	r, err := Convert(t, v, TypeF)
+	r, err := convert8(t, v, TypeF)
 	if err != nil {
 		s, _ := v.(string)
 		return 0, conversionError(err, strings.TrimRight(s, " "))
@@ -278,13 +286,13 @@ func comparisonText(t Type, v any, ct Type) string {
 	case KindC, KindN, KindD, KindT:
 		s := v.(string)
 		if ct.Kind == KindString && t.Kind == KindC {
-			return trimBlanksRight(s)
+			return textTrimRight(s, " ")
 		}
 		return s
 	case KindString:
 		return v.(string)
 	case KindX, KindXString:
-		return strings.ToUpper(fmt.Sprintf("%x", v.(string)))
+		return FromUTF8(strings.ToUpper(fmt.Sprintf("%x", v.(string))))
 	}
 	panic(fmt.Sprintf("abap: %v in comparison type %v", t, ct))
 }
@@ -294,11 +302,11 @@ func comparisonText(t Type, v any, ct Type) string {
 func compareText(x, y string, k Kind) int {
 	switch k {
 	case KindC:
-		n := max(utf8.RuneCountInString(x), utf8.RuneCountInString(y))
-		x, y = fitLeft(x, n, " "), fitLeft(y, n, " ")
+		n := max(textLen(x), textLen(y))
+		x, y = textLeft(x, n, ' '), textLeft(y, n, ' ')
 	case KindN:
-		n := max(utf8.RuneCountInString(x), utf8.RuneCountInString(y))
-		x, y = fitRight(x, n, "0"), fitRight(y, n, "0")
+		n := max(textLen(x), textLen(y))
+		x, y = textRight(x, n, '0'), textRight(y, n, '0')
 	}
 	return strings.Compare(x, y)
 }
@@ -310,33 +318,33 @@ func compareText(x, y string, k Kind) int {
 // else the shorter one is padded with blanks; then the characters are compared.
 func compareDateTimeText(k Kind, dt string, other Type, s string) int {
 	if other.Kind == KindString {
-		if k == KindT && len([]rune(s)) < 6 {
-			s = fitLeft(s, 6, "0")
+		if k == KindT && textLen(s) < 6 {
+			s = textLeft(s, 6, '0')
 		}
 		return strings.Compare(dt, s)
 	}
 	cuttable := func(rest string) bool {
 		if k == KindT {
-			return strings.Trim(rest, " 0") == ""
+			return textTrimRight(rest, " 0") == ""
 		}
-		return strings.Trim(rest, " ") == ""
+		return textTrimRight(rest, " ") == ""
 	}
-	x, y := []rune(dt), []rune(s)
+	x, y := dt, s
 	switch {
-	case len(x) > len(y) && cuttable(string(x[len(y):])):
+	case len(x) > len(y) && cuttable(x[len(y):]):
 		x = x[:len(y)]
-	case len(y) > len(x) && cuttable(string(y[len(x):])):
+	case len(y) > len(x) && cuttable(y[len(x):]):
 		y = y[:len(x)]
 	}
-	n := max(len(x), len(y))
-	return strings.Compare(fitLeft(string(x), n, " "), fitLeft(string(y), n, " "))
+	n := max(textLen(x), textLen(y))
+	return strings.Compare(textLeft(x, n, ' '), textLeft(y, n, ' '))
 }
 
 func comparisonUtclong(t Type, v any) (Utclong, error) {
 	if t.Kind == KindUtclong {
 		return v.(Utclong), nil
 	}
-	r, err := Convert(t, v, TypeUtclong)
+	r, err := convert8(t, v, TypeUtclong)
 	if err != nil {
 		if e, ok := err.(*Exception); ok && e.Class == CxConversionNoDateTime {
 			return 0, &RuntimeError{Name: "CONVT_NO_DATETIME", Text: "Incorrect format or invalid value for a date with time."}

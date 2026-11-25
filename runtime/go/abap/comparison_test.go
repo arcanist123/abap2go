@@ -53,7 +53,7 @@ func runComparisonFile(t *testing.T, file string) {
 func comparisonCellValue(t *testing.T, typ Type, col string) any {
 	value := strings.TrimSuffix(strings.TrimPrefix(col, "["), "]")
 	if typ.Kind == KindUtclong {
-		v, err := Convert(TypeString, value, typ)
+		v, err := Convert(TypeString, FromUTF8(value), typ)
 		if err != nil {
 			t.Fatalf("utclong %q: %v", value, err)
 		}

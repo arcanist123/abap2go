@@ -51,6 +51,11 @@ yet: a user setup that names them is rejected when the program starts.
 Every kind has an output length, and `WRITE` always outputs exactly that many characters, trailing blanks
 included: they count for the position of the next output (`WRITE 'a '. WRITE 'b'.` gives `a  b`).
 
+Lengths and list positions count UTF-16 code units, as all lengths of text in ABAP do: a character outside the
+Basic Multilingual Plane takes two (`WRITE` of a `c LENGTH 4` holding `😀a` is expected to put the next output
+after `😀a` and two blanks). A `c` field cut between the two code units of such a character holds a lone surrogate,
+which is expected to show as U+FFFD.
+
 | Kind | Output length |
 |---|---|
 | c, n | the length |

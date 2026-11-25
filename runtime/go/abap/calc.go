@@ -77,11 +77,19 @@ type Expr interface {
 }
 
 // Operand is a data object or literal of type t holding v (in its Go representation).
-func Operand(t Type, v any) Expr { return operand{t: t, v: v} }
+func Operand(t Type, v any) Expr { return operand{t: t, v: textOperand(t, v)} }
 
 // GenericOperand is a field symbol or parameter of a generic type, holding v of type t at run time. It counts like
 // Operand, except that an inline declaration then declares decfloat34.
-func GenericOperand(t Type, v any) Expr { return operand{t: t, v: v, generic: true} }
+func GenericOperand(t Type, v any) Expr { return operand{t: t, v: textOperand(t, v), generic: true} }
+
+// textOperand is a text operand as UTF-8: the calculation reads it as a number (see text.go).
+func textOperand(t Type, v any) any {
+	if isText(t.Kind) {
+		return ToUTF8(v.(string))
+	}
+	return v
+}
 
 // Binary is l op r.
 func Binary(op Op, l, r Expr) Expr {
@@ -105,10 +113,20 @@ func Sqrt(x Expr) Expr { return unary{fn: fnSqrt, x: x} }
 func Ipow(base, exp Expr) Expr { return ipow{base: base, exp: exp} }
 
 // Calculate is result = e. for a result field of type dst: the value to store in it.
-func Calculate(e Expr, dst Type) (any, error) { return calculate(e, dst, false) }
+func Calculate(e Expr, dst Type) (any, error) { return textResult(dst)(calculate(e, dst, false)) }
 
 // CalculateExact is EXACT dst( e ): as Calculate, but any rounding raises CX_SY_CONVERSION_ROUNDING.
-func CalculateExact(e Expr, dst Type) (any, error) { return calculate(e, dst, true) }
+func CalculateExact(e Expr, dst Type) (any, error) { return textResult(dst)(calculate(e, dst, true)) }
+
+// textResult turns a result for a text field into ABAP text; the calculation writes UTF-8 (see text.go).
+func textResult(dst Type) func(r any, err error) (any, error) {
+	return func(r any, err error) (any, error) {
+		if err == nil && isText(dst.Kind) {
+			return FromUTF8(r.(string)), nil
+		}
+		return r, err
+	}
+}
 
 // MustCalculate is Calculate for generated code: an error panics.
 func MustCalculate[T any](e Expr, dst Type) T {
@@ -346,7 +364,7 @@ func (o operand) eval(c *calc) num {
 }
 
 func mustConvert(src Type, v any, dst Type) any {
-	r, err := Convert(src, v, dst)
+	r, err := convert8(src, v, dst)
 	if err != nil {
 		raise(err)
 	}

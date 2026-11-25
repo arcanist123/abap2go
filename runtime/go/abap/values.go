@@ -1,6 +1,8 @@
 package abap
 
-// The Go representations of p, decfloat16/34 and utclong, and helpers on fixed-length text.
+// The Go representations of p, decfloat16/34 and utclong, and helpers on fixed-length text in UTF-8: the text that
+// the rules for numbers, dates and times read and write (see text.go; values of text kinds use textLeft and the
+// other helpers there).
 
 import (
 	"math/big"

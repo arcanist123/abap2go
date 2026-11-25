@@ -210,7 +210,7 @@ export function lowerConstant(constant: abaplint.Nodes.ExpressionNode, where: Wh
   if (text !== undefined && text.getChildren().length === 1) {
     const literal = textLiteral(text);
     return literal.type === "c"
-      ? { kind: "literal", type: { kind: "c", length: [...literal.value].length }, value: literal.value }
+      ? { kind: "literal", type: { kind: "c", length: literal.value.length }, value: literal.value } // UTF-16 code units
       : { kind: "literal", type: { kind: "string" }, value: literal.value };
   }
   const integer = constant.findDirectExpression(Expressions.Integer);
