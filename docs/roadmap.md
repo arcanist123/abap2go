@@ -77,6 +77,15 @@ Done:
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
 
 Next:
+- [ ] **bug first: text as UTF-16** (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Storage"): `c`,
+  `n`, `d`, `t` and `string` hold UTF-16 code units, big-endian, in a Go `string`, so lengths, offsets,
+  truncation and ordering follow ABAP's UTF-16 code units for characters outside the Basic Multilingual Plane
+  - conversion, comparison, calculation and formatting in the runtime work on code units; UTF-8 only at the
+    edges (console, list, later database, HTTP and files), with an ASCII fast path
+  - test cases with characters outside the Basic Multilingual Plane: `strlen`, a `c` field cut in the middle of a
+    surrogate pair, ordering against U+E000–U+FFFF, `WRITE` output length
+  - the known-gap notes in [spec/conversion.md](spec/conversion.md), [spec/comparison.md](spec/comparison.md)
+    and `runtime/go/abap/types.go` go once it is fixed
 - [ ] take over the arithmetic tests of abaplint/transpiler as end-to-end fixtures: 157 ABAP snippets from
   `test/operators/arithmetics*.ts`, `mod.ts` and `test/types/*_operations.ts`, `integer8_calculation_type.ts`,
   `conversion_no_number.ts` (MIT), one file each with its source test named
@@ -102,6 +111,10 @@ Next:
   the same test cases
 - [ ] `WRITE` of dictionary types with their own output length (`sy-datum` in 10 characters with separators),
   conversion exits, table fields
+- [ ] the manifest of conversion exits per root (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md),
+  "Conversion exits: static, plus a manifest per root"): its format and where the root declares it, the listed
+  exits compiled with their closure, an entry outside the world refused at build time, and the run-time error for
+  an exit on an unbounded operand that was neither reached nor listed
 - [ ] port the rest of the list processor as the compiler needs it: positions and lengths, `NO-GAP`,
   justification, `ULINE`, `SKIP`, `NEW-LINE`, then `TOP-OF-PAGE`; open-steamgate's `tools/gogen/testdata-list`
   and its ANORMALIES list entries are the test cases
@@ -179,8 +192,9 @@ Next:
 - [ ] reopened in the conversion table: `int8` beyond the range of `i` into `d` (and `t`). `conversion.md` gives
   `00000000` outside 1 to 3652060; using the lower four bytes as an `i` (2^32 + 738000 → `20210728`) is another
   candidate, and the test cases do not tell the two apart
-- [ ] structure rules of the conversion table: `MOVE-CORRESPONDING`, `CORRESPONDING`, flat structures with
-  non-matching fragment views
+- [ ] structure rules of the conversion table: `MOVE-CORRESPONDING`, `CORRESPONDING`; flat structures with
+  non-matching fragment views are refused at build time for now (decision "Storage", 2026-11-25), like every
+  operation that depends on ABAP's memory layout
 - [ ] the rest of the output formatting table: string templates (`|{ x }|`, with their own rules, including the
   styles for decfloat), `DESCRIBE … OUTPUT-LENGTH`, then the `WRITE` additions (`DECIMALS`, `NO-GROUPING`, date
   masks, `CURRENCY`, …) and `WRITE … TO`
@@ -189,6 +203,33 @@ Next:
   functions
 
 
+## Data-dependent differences
+
+Found in the review of 2026-11-25 ([aot_for_abap.md](aot_for_abap.md), "Data-dependent differences"): behaviour
+that depends on data or the run-time environment, so the build cannot refuse it. Each is a bug under the guiding
+principle until fixed, made a static input or listed as an exception. Text as UTF-16 (under "Next" above) was the
+first of this kind.
+
+- [ ] `**` on `f`: work out expected values over a sweep of inputs and compare `math.Pow`; on a difference,
+  a correctly rounded `pow` or one that matches ABAP's. The same for `exp`, `log` and the trigonometric functions
+  before they are compiled
+- [ ] list columns by display width: East Asian full-width characters take two columns in the list processor,
+  with test cases
+- [ ] decide the open point on unspecified but deterministic behaviour (unstable `SORT`, `DELETE ADJACENT
+  DUPLICATES`, `READ TABLE … BINARY SEARCH` with duplicates) before `SORT` is compiled
+- [ ] regular expressions: a pattern must be a literal or a finite set, checked at build time against what the
+  engine supports; a computed pattern is a build error; the supported subset written down with test cases
+- [ ] Open SQL semantics specified before the translation is ported: text order (binary order of code units),
+  trailing blanks, null values against initial values, `LIKE`, types and rounding of SQL arithmetic and aggregates
+- [ ] LUW semantics specified before the LUW code is ported: implicit database commits, `PERFORM ON COMMIT`, the
+  update task, `ROLLBACK WORK`
+- [ ] time zones from ABAP's own rules (the `TTZ*` tables, or the user setup without a database); Go's time zone
+  database never used for ABAP time
+- [ ] character properties: case mapping over a sweep of non-ASCII characters against expected values; `AS TEXT`
+  and `SET LOCALE` stay build errors until specified
+- [ ] per-session state decided in code before the first service root: statics, class constructors,
+  `LOAD-OF-PROGRAM`, ABAP and SAP memory, `sy` fields, `SET COUNTRY`; no Go globals for any of them
+
 ## Reuse from open-steamgate
 
 Decided 2026-11-25 ([aot_for_abap.md](aot_for_abap.md), "Reuse open-steamgate as far as the guiding principle
@@ -196,12 +237,13 @@ allows"): before building a part, look at how open-steamgate does it and take wh
 critical path: the rule tables stay abap2go's own, and every part taken has to pass them. Snapshot: `main`
 `918a099` (2026-11-25).
 
-- [ ] inventory: list open-steamgate's parts in the three groups of the decision (taken as it is, ported, kept as
-  abap2go's own), with the source files, their size and what each depends on, so the order below is set from it
+- [ ] inventory: list open-steamgate's parts in the groups of the decision (taken as it is, taken then specified,
+  ported, kept as abap2go's own), with the source files, their size and what each depends on, so the order below is set from it
 - [ ] the seam between compiled code and the environment (database, LUW, locks, jobs, HTTP), defined before the
   first environment part is taken (see the "A seam first" point of the decision)
-- [ ] runtime pieces that do not depend on the value model, as the compiler needs them: regular expressions,
-  code pages, compression, checksums, JSON parsing, HTTP utilities
+- [ ] runtime pieces that do not depend on the value model, as the compiler needs them: compression and
+  checksums as they are; regular expressions, code pages, JSON parsing and HTTP utilities with their rules
+  written down and tested first (revised 2026-11-25)
 - [ ] the lowering of statements, construct by construct as the compiler grows, each with its test classes from
   `tools/gogen/testdata*`; expected answers that contradict a rule-table cell reopen that cell
 - [ ] `ANORMALIES.md`: each entry checked against the rule tables; an entry outside them becomes a cell or a work
