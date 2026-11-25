@@ -1,0 +1,94 @@
+import { test } from "node:test";
+import * as assert from "node:assert/strict";
+import { classrun, run } from "./harness";
+
+// strlen( ) and offset/length access. Both count characters as UTF-16 code units (bytes for x and xstring), so a
+// character outside the Basic Multilingual Plane counts two. As far as we know from the ABAP keyword documentation
+// and experience: strlen( ) ignores the trailing blanks of a flat field but not of a string; the subfield of c is a
+// c, of n, d and t an n, of x an x, of string and xstring the same type; a subfield of a flat field must lie within
+// it and be at least one character long, a subfield of a string lies within its current length and may be empty.
+
+const DECLARATIONS = `DATA c5 TYPE c LENGTH 5 VALUE 'ab'.
+DATA s TYPE string VALUE \`abc  d\`.
+DATA n4 TYPE n LENGTH 4 VALUE '12'.
+DATA d TYPE d VALUE '20240229'.
+DATA t TYPE t VALUE '123456'.
+DATA x4 TYPE x LENGTH 4 VALUE '01020304'.
+DATA xs TYPE xstring VALUE '0A0B0C'.
+DATA emoji TYPE string VALUE \`\u{1F600}a\`.
+DATA rc TYPE c LENGTH 10 VALUE 'abcdefghij'.
+DATA r TYPE string.
+DATA i TYPE i.
+DATA off TYPE i.
+DATA len TYPE i.
+`;
+
+const cases: [string, string, string][] = [
+  ["strlen( ) of c ignores trailing blanks, of string not",
+    "i = strlen( c5 ). out->write( i ).\nr = `ab  `. i = strlen( r ). out->write( i ).\nc5 = ' a'. i = strlen( c5 ). out->write( i ).",
+    "2 \n4 \n2 \n"],
+  ["strlen( ) of n, d and t", "i = strlen( n4 ). out->write( i ).\ni = strlen( d ). out->write( i ).\ni = strlen( t ). out->write( i ).",
+    "4 \n8 \n6 \n"],
+  ["strlen( ) of literals", "i = strlen( '' ). out->write( i ).\ni = strlen( `` ). out->write( i ).\ni = strlen( 'ab  ' ). out->write( i ).\ni = strlen( ` ab ` ) + 1. out->write( i ).",
+    "0 \n0 \n2 \n5 \n"],
+  ["strlen( ) counts a character outside the Basic Multilingual Plane twice", "i = strlen( emoji ). out->write( i ).", "3 \n"],
+  ["a subfield of a string is a string and keeps its blanks", "r = s+2(3). out->write( r ). i = strlen( r ). out->write( i ).", "c  \n3 \n"],
+  ["a subfield of c is a c", "r = c5+1(3). out->write( r ). i = strlen( c5+1(3) ). out->write( i ).", "b\n1 \n"],
+  ["the rest and the start", "r = s+2. out->write( r ).\nr = s(2). out->write( r ).\nr = c5+1. out->write( r ).", "c  d\nab\nb\n"],
+  ["subfields of d, n, x and xstring", "i = d+4(2). out->write( i ).\ni = n4+2(2) + 1. out->write( i ).\nr = x4+1(2). out->write( r ).\nr = xs+1(1). out->write( r ).",
+    "2 \n13 \n0203\n0B\n"],
+  ["strlen( ) of a subfield of a string", "i = strlen( s+1(4) ). out->write( i ).", "4 \n"],
+  ["writing a subfield cuts what does not fit", "r = `XYZW`. rc+2(3) = r. out->write( rc ).\nr = `QRS`. rc+8 = r. out->write( rc ).", "abXYZfghij\nabXYZfghQR\n"],
+  ["writing a subfield converts to its type", "rc(2) = 7. out->write( rc ).\nx4+1(2) = 'FFEE'. out->write( x4 ).\nd+4(2) = '12'. out->write( d ).",
+    "7 cdefghij\n01FFEE04\n20241229\n"],
+  ["a calculation into a subfield", "rc+1(3) = 6 * 7. out->write( rc ).\nrc+1(3) += 1. out->write( rc ).", "a42 efghij\na43 efghij\n"],
+  ["dynamic offsets and lengths", "off = 2. len = 3. r = s+off(len). out->write( r ).\nlen = 2. r = s(len). out->write( r ).\noff = 3. len = 2. rc+off(len) = '__'. out->write( rc ).\noff = 4. r = c5+off. out->write( r ).",
+    "c  \nab\nabc__fghij\n\n"],
+  ["an empty subfield at the end of a string", "off = 6. len = 0. r = s+off(len). i = strlen( r ). out->write( i ).\nr = s+off. i = strlen( r ). out->write( i ).", "0 \n0 \n"],
+  ["subfields between the two code units of a character", "r = emoji+1(1). i = strlen( r ). out->write( i ).\nr = emoji+2(1). out->write( r ).", "1 \na\n"],
+];
+for (const [name, body, stdout] of cases) {
+  test(`substring: ${name}`, () => {
+    assert.deepEqual(run("clas", classrun(DECLARATIONS + body)), { stdout });
+  });
+}
+
+const outOfBounds: [string, string][] = [
+  ["a length of 0 in a flat field", "off = 4. len = 0. r = c5+off(len)."],
+  ["the rest of a flat field from its end", "off = 5. r = c5+off."],
+  ["beyond the end of a flat field", "off = 2. len = 4. r = c5+off(len)."],
+  ["a negative offset", "off = -1. len = 1. r = s+off(len)."],
+  ["a negative length", "len = -1. r = s(len)."],
+  ["beyond the end of a string", "off = 7. r = s+off."],
+  ["a target beyond the end", "off = 4. len = 2. c5+off(len) = 'zz'."],
+];
+for (const [name, body] of outOfBounds) {
+  test(`substring out of bounds: ${name}`, () => {
+    const result = run("clas", classrun(DECLARATIONS + "out->write( 'before' ).\n" + body + "\nout->write( 'after' )."));
+    assert.equal(result.stdout, "before\n");
+    assert.match(result.failed ?? "", /CX_SY_RANGE_OUT_OF_BOUNDS/);
+  });
+}
+
+test("substring: WRITE of subfields has their length", () => {
+  const source = "REPORT zprobe.\n" + DECLARATIONS + "WRITE s+1(3). WRITE 'x'.\nWRITE / c5+1(3). WRITE 'x'.\nWRITE / d+4(4). WRITE d(4).";
+  assert.deepEqual(run("prog", source), { stdout: "bc  x\nb   x\n0229 2024\n" });
+});
+
+// What ABAP rejects as a syntax error is refused at build time, whether abaplint reports it or the compiler does.
+const refusals: [string, string, RegExp][] = [
+  ["a static offset at the end of a flat field", "r = c5+5.", /offset 5 is not within|syntax check/],
+  ["static bounds beyond a flat field", "r = c5+4(2).", /exceed the length 5|syntax check/],
+  ["a static length of 0", "r = c5+1(0).", /greater than 0|syntax check/],
+  ["a subfield of an i", "r = i+1(2).", /does not permit subfields|syntax check/],
+  ["writing a subfield of a string", "s+1(1) = r.", /cannot be written to|syntax check/],
+  ["strlen( ) of an i", "i = strlen( i ).", /must be character-like|syntax check/],
+  ["strlen( ) of an x", "i = strlen( x4 ).", /must be character-like|syntax check/],
+];
+for (const [name, body, refused] of refusals) {
+  test(`substring refused: ${name}`, () => {
+    const result = run("clas", classrun(DECLARATIONS + body));
+    assert.ok(result.refused !== undefined, `built, stdout ${JSON.stringify(result.stdout)}`);
+    assert.match(result.refused, refused);
+  });
+}

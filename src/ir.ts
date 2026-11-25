@@ -29,8 +29,11 @@ export type IRType =
   | { kind: "p"; length: number; decimals: number }
   | { kind: "d" | "t" | "string" | "xstring" | "i" | "int8" | "b" | "s" | "f" | "decfloat16" | "decfloat34" | "utclong" };
 
-/** An operand: a literal or a variable. */
-export type IRSource = IRLiteral | IRVariable;
+/** An operand: a literal, a variable or a subfield of a variable. */
+export type IRSource = IRLiteral | IRVariable | IRSubstring;
+
+/** What a value is written to: a variable or a subfield of a flat variable. */
+export type IRTarget = IRVariable | IRSubstring;
 
 /** A literal with its ABAP type: a text field literal (c of its length), a string literal or an integer (i). */
 export interface IRLiteral {
@@ -44,6 +47,23 @@ export interface IRLiteral {
 export interface IRVariable {
   kind: "variable";
   name: string;
+  type: IRType;
+}
+
+/**
+ * Offset/length access base+offset(length), base+offset or base(length) on a variable of type c, n, d, t, string, x
+ * or xstring. Offsets and lengths count characters (UTF-16 code units) or bytes. The subfield of c is a c, of n, d
+ * and t an n, of x an x, of string and xstring the same; its length, and so its type, is only known at run time
+ * when the offset or length is a variable, so the runtime gives it (abap.Substring), which also checks the bounds.
+ */
+export interface IRSubstring {
+  kind: "substring";
+  base: IRVariable;
+  /** An i literal or a variable; undefined for base(length). */
+  offset: IRLiteral | IRVariable | undefined;
+  /** An i literal or a variable; undefined for the rest of base. */
+  length: IRLiteral | IRVariable | undefined;
+  /** The type of the subfield, with the length known at build time: the length of base when it is not. */
   type: IRType;
 }
 
@@ -76,7 +96,7 @@ export interface IRData {
 /** target = source: the conversion rules of the runtime (abap.Convert) apply. */
 export interface IRMove {
   kind: "move";
-  target: IRVariable;
+  target: IRTarget;
   source: IRSource;
 }
 
@@ -86,14 +106,18 @@ export interface IRMove {
  */
 export interface IRCalculate {
   kind: "calculate";
-  target: IRVariable;
+  target: IRTarget;
   expression: IRExpr;
 }
 
 export type IRArithOp = "+" | "-" | "*" | "/" | "DIV" | "MOD" | "**";
 
-/** An arithmetic expression. A number literal beyond the range of i is an operand of type p. */
+/**
+ * An arithmetic expression. A number literal beyond the range of i is an operand of type p. strlen( ) is an operand
+ * of type i: the characters of a character-like operand, without the trailing blanks of a flat one.
+ */
 export type IRExpr =
+  | { kind: "strlen"; arg: IRSource }
   | { kind: "operand"; source: IRSource }
   | { kind: "binary"; op: IRArithOp; left: IRExpr; right: IRExpr }
   | { kind: "unary"; fn: "-" | "abs" | "sqrt"; operand: IRExpr }
