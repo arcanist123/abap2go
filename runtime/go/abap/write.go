@@ -12,15 +12,23 @@ import (
 	"strings"
 )
 
-// Format is the text WRITE outputs for v of type t, with the user settings of the session.
+// Format is the text WRITE outputs for v of type t, with the user settings of the session, as ABAP text (UTF-16
+// code units, see text.go).
 func Format(settings Settings, t Type, v any) string {
 	switch t.Kind {
 	case KindC, KindN, KindT, KindString:
 		return v.(string)
-	case KindX, KindXString:
-		return strings.ToUpper(hex.EncodeToString([]byte(v.(string))))
 	case KindD:
 		return formatDate(settings, v.(string))
+	}
+	return FromUTF8(format8(settings, t, v))
+}
+
+// format8 is Format for the kinds that are not text, as UTF-8.
+func format8(settings Settings, t Type, v any) string {
+	switch t.Kind {
+	case KindX, KindXString:
+		return strings.ToUpper(hex.EncodeToString([]byte(v.(string))))
 	case KindI:
 		return formatInteger(settings, int64(v.(int32)), 11)
 	case KindInt8:
@@ -78,13 +86,13 @@ func OutputLength(t Type) int {
 }
 
 // formatDate reorders the eight characters YYYYMMDD to the order of the user's date format, without separators.
-// Any characters are reordered, valid date or not.
+// Any characters are reordered, valid date or not. d is ABAP text: eight code units.
 func formatDate(settings Settings, d string) string {
 	switch settings.DateFormat {
 	case '1':
-		return d[6:8] + d[4:6] + d[0:4]
+		return d[12:16] + d[8:12] + d[0:8]
 	case '2', '3':
-		return d[4:6] + d[6:8] + d[0:4]
+		return d[8:12] + d[12:16] + d[0:8]
 	}
 	return d
 }

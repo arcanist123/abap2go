@@ -143,8 +143,8 @@ gives 0.
 | c | **sign**: the digits followed by the sign character, `-` or a blank, right-aligned (`7` → c3 ` 7 `). A positive number drops its blank if that makes it fit (`255` → c3 `255`). If it does not fit, the first character is `*` and the rest is the end of the number (`32768` → c3 `*68`, `-129` → `*9-`) |
 | string | **sign**: the digits and the sign character, so a positive number ends in a blank (`7 `, `7-`) |
 | n | **abs**: the absolute value, right-aligned, zeros in front, cut on the left without an error |
-| d | **date**: the date of that day number for 1 to 3652060 (9999-12-31), else `00000000` |
-| t | **time**: the time of day of that number of seconds, modulo 86400 (`-1` → `235959`) |
+| d | **date**: the date of that day number for 1 to 3652060 (9999-12-31), else `00000000`. An int8 counts with its lower four bytes as an i: 2^32 + 738000 is expected to give `20210728`, 2^63 - 1 (lower bytes -1) `00000000` |
+| t | **time**: the time of day of that number of seconds, modulo 86400 (`-1` → `235959`); an int8 with its whole value (2^32 → `062816`) |
 | x | **two's**: the two's complement, 4 bytes (int8: 8 bytes; b and s count as i), big-endian, right-aligned: cut on the left, or padded with **00** bytes in front without sign extension (i `-7` → x10 `000000000000FFFFFFF9`) |
 | xstring | **two's**: 4 bytes (int8: 8) without leading 00 bytes, at least one byte (`255` → `FF`, `0` → `00`, `-7` → `FFFFFFF9`) |
 | i, int8, b, s | **range**: an overflow outside the target's range (b: 0 to 255, s: -32768 to 32767) |
@@ -211,10 +211,6 @@ exponent 6111), else it is an overflow; a smaller exponent rounds the value to t
 
 ## Known gaps
 
-- **Characters outside the Basic Multilingual Plane** still count as one character in the runtime's c, n, d and t
-  values (Go runes), while ABAP counts UTF-16 code units, so lengths differ for such characters. This is a bug, not
-  a gap: it is fixed by storing text as UTF-16 (decision "Storage" in [aot_for_abap.md](../aot_for_abap.md), work
-  item in [roadmap.md](../roadmap.md)).
 - **b and s** are implemented, but the compiler cannot declare them yet: abaplint does not type them, so a
   declaration with a DDIC type such as INT1 or INT2 is a build error for now.
 - The compiler uses the cells for `=` between variables and literals, `VALUE` and `out->write( )`. Other places

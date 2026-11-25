@@ -23,13 +23,13 @@ func NewConsole() *Console {
 	return &Console{out: os.Stdout}
 }
 
-// Write is IF_OO_ADT_CLASSRUN_OUT~WRITE for a value already converted to a string. name is "" when NAME is not
-// supplied or initial.
+// Write is IF_OO_ADT_CLASSRUN_OUT~WRITE for a value already converted to a string (ABAP text, see text.go). name is
+// "" when NAME is not supplied or initial.
 func (c *Console) Write(value string, name string) *Console {
 	if name != "" {
-		writeLine(c.out, name+" = "+value)
+		writeLine(c.out, ToUTF8(name)+" = "+ToUTF8(value))
 	} else {
-		writeLine(c.out, value)
+		writeLine(c.out, ToUTF8(value))
 	}
 	return c
 }

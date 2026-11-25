@@ -5,7 +5,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"unicode/utf8"
 )
 
 // The cells of the WRITE formatting table, from testdata/write.tsv (its header explains the format).
@@ -60,18 +59,18 @@ func formatCell(t *testing.T, settings Settings, typeName, value string) string 
 	var v any
 	switch typ.Kind {
 	case KindC, KindN, KindD, KindT:
-		v = fitLeft(value, typ.textLength(), " ")
+		v = textLeft(FromUTF8(value), typ.textLength(), ' ')
 	default:
 		var err error
-		if v, err = Convert(TypeString, value, typ); err != nil {
+		if v, err = Convert(TypeString, FromUTF8(value), typ); err != nil {
 			t.Fatalf("%s %q: %v", typeName, value, err)
 		}
 	}
 	s := Format(settings, typ, v)
-	if n := OutputLength(typ); n > 0 && utf8.RuneCountInString(s) != n {
-		t.Errorf("%s %q: %q is not %d characters", typeName, value, s, n)
+	if n := OutputLength(typ); n > 0 && textLen(s) != n {
+		t.Errorf("%s %q: %q is not %d code units", typeName, value, ToUTF8(s), n)
 	}
-	return s
+	return ToUTF8(s)
 }
 
 // Settings the table cannot show (decimal notation Y, date formats 3 and 6), from the format descriptions of the

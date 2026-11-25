@@ -1,89 +1,6 @@
 import { test } from "node:test";
 import * as assert from "node:assert/strict";
-import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
-import { execFileSync } from "node:child_process";
-import { build } from "../src/build";
-import { BuildError } from "../src/errors";
-
-const MANIFEST = fs.readFileSync(path.join(__dirname, "..", "..", "examples", "hello", ".abapgit.xml"), "utf-8");
-const PROG_XML = (name: string) => `<?xml version="1.0" encoding="utf-8"?>
-<abapGit version="v1.0.0" serializer="LCL_OBJECT_PROG" serializer_version="v1.0.0">
- <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
-  <asx:values>
-   <PROGDIR><NAME>${name}</NAME><SUBC>1</SUBC><FIXPT>X</FIXPT><UCCHECK>X</UCCHECK></PROGDIR>
-  </asx:values>
- </asx:abap>
-</abapGit>
-`;
-const CLAS_XML = (name: string) => `<?xml version="1.0" encoding="utf-8"?>
-<abapGit version="v1.0.0" serializer="LCL_OBJECT_CLAS" serializer_version="v1.0.0">
- <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
-  <asx:values>
-   <VSEOCLASS><CLSNAME>${name}</CLSNAME><LANGU>E</LANGU><STATE>1</STATE><FIXPT>X</FIXPT><UNICODE>X</UNICODE></VSEOCLASS>
-  </asx:values>
- </asx:abap>
-</abapGit>
-`;
-
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "abap2go-test-"));
-let counter = 0;
-
-/**
- * Builds the root from one source file and returns its stdout, or the refusal message, or the runtime error.
- * With a user setup, the executable runs with --user-setup pointing at it; a run it rejects (exit code 2) gives
- * rejected with its message. files are more files of the package, by file name (data elements, domains).
- */
-function run(kind: "prog" | "clas", source: string, userSetup?: object, files: Record<string, string> = {}): { stdout?: string; refused?: string; failed?: string; rejected?: string } {
-  const dir = path.join(tmp, String(counter++));
-  const name = kind === "prog" ? "ZPROBE" : "ZCL_PROBE";
-  fs.mkdirSync(path.join(dir, "src"), { recursive: true });
-  fs.writeFileSync(path.join(dir, ".abapgit.xml"), MANIFEST);
-  for (const [file, content] of Object.entries(files)) {
-    fs.writeFileSync(path.join(dir, "src", file), content);
-  }
-  fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.abap`), source);
-  fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.xml`), kind === "prog" ? PROG_XML(name) : CLAS_XML(name));
-  let exe: string;
-  try {
-    exe = build({ inputs: [dir], root: name, out: path.join(dir, "out") });
-  } catch (e) {
-    if (e instanceof BuildError) {
-      return { refused: e.message };
-    }
-    throw e;
-  }
-  const args: string[] = [];
-  if (userSetup !== undefined) {
-    const file = path.join(dir, "users.json");
-    fs.writeFileSync(file, JSON.stringify(userSetup));
-    args.push("--user-setup", file);
-  }
-  try {
-    return { stdout: execFileSync(exe, args, { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"] }) };
-  } catch (e) {
-    const err = e as { status?: number; stdout?: string; stderr?: string };
-    if (err.status === 1) {
-      return { stdout: err.stdout, failed: err.stderr };
-    }
-    if (err.status === 2) {
-      return { stdout: err.stdout, rejected: err.stderr };
-    }
-    throw e;
-  }
-}
-
-const classrun = (body: string) => `CLASS zcl_probe DEFINITION PUBLIC FINAL CREATE PUBLIC.
-  PUBLIC SECTION.
-    INTERFACES if_oo_adt_classrun.
-ENDCLASS.
-CLASS zcl_probe IMPLEMENTATION.
-  METHOD if_oo_adt_classrun~main.
-${body}
-  ENDMETHOD.
-ENDCLASS.
-`;
+import { abapgit, classrun, doma, dtel, run } from "./harness";
 
 // Reports: output as open-abap-gui's list processor lays it out (open-steamgate is the reference for WRITE).
 const reports: [string, string, string][] = [
@@ -126,7 +43,11 @@ const writes: [string, string, string, object?][] = [
     "        1,234.50- 02292024\n", US],
   ["user setup: utclong", "DATA u TYPE utclong.\nDATA s TYPE string VALUE `2024-02-29T12:34:56`.\nu = s.\nWRITE u. WRITE 'end'.",
     "02/29/2024 12:34:56.0000000    end\n", US],
-  ["user setup: i", "DATA i TYPE i VALUE -1234567.\nWRITE i.", " 1,234,567-\n", US],
+  ["a character outside the Basic Multilingual Plane takes two code units", "DATA c4 TYPE c LENGTH 4 VALUE '\u{1F600}a'.\nWRITE c4. WRITE 'x'.",
+    "\u{1F600}a  x\n"],
+  ["a c field cut between the two code units of a character", "DATA s TYPE string VALUE `\u{1F600}`.\nDATA c1 TYPE c LENGTH 1.\nc1 = s.\nWRITE c1. WRITE 'z'. WRITE / s. WRITE 'y'.",
+    "� z\n\u{1F600} y\n"],
+  ["user setup: i","DATA i TYPE i VALUE -1234567.\nWRITE i.", " 1,234,567-\n", US],
 ];
 for (const [name, body, stdout, userSetup] of writes) {
   test(`report WRITE: ${name}`, () => {
@@ -143,21 +64,6 @@ test("a user setup the runtime cannot use ends the program before it runs", () =
 // b and s come from DDIC INT1 and INT2. A data element, typed directly or through a domain, formats as its built-in
 // type when it has the same output length (3 for INT1, 6 for INT2) and no conversion exit; a domain's sign flag
 // does not change the output.
-const abapgit = (serializer: string, values: string) => `<?xml version="1.0" encoding="utf-8"?>
-<abapGit version="v1.0.0" serializer="${serializer}" serializer_version="v1.0.0">
- <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
-  <asx:values>
-${values}
-  </asx:values>
- </asx:abap>
-</abapGit>
-`;
-const dtel = (name: string, fields: string) => ({
-  [`${name.toLowerCase()}.dtel.xml`]: abapgit("LCL_OBJECT_DTEL", `   <DD04V><ROLLNAME>${name}</ROLLNAME><DDLANGUAGE>E</DDLANGUAGE>${fields}<DDTEXT>t</DDTEXT></DD04V>`),
-});
-const doma = (name: string, fields: string) => ({
-  [`${name.toLowerCase()}.doma.xml`]: abapgit("LCL_OBJECT_DOMA", `   <DD01V><DOMNAME>${name}</DOMNAME><DDLANGUAGE>E</DDLANGUAGE>${fields}<DDTEXT>t</DDTEXT></DD01V>`),
-});
 const DDIC = {
   ...dtel("ZBYTE", "<DATATYPE>INT1</DATATYPE><LENG>000003</LENG><OUTPUTLEN>000003</OUTPUTLEN>"),
   ...dtel("ZSHORT", "<DATATYPE>INT2</DATATYPE><LENG>000005</LENG><OUTPUTLEN>000006</OUTPUTLEN>"),
@@ -237,6 +143,8 @@ const calculations: [string, string, string][] = [
   ["assignment operators", "DATA r TYPE i VALUE 7.\nr += 3. r *= 2. r -= 1. r /= 4. out->write( r ).", "5 \n"],
   ["abs, ipow, sqrt", "DATA a TYPE i VALUE -3.\nDATA r TYPE i.\nDATA f TYPE f.\nr = ipow( base = 2 exp = 10 ) + abs( a ). out->write( r ).\nf = sqrt( 16 ). out->write( f ).", "1027 \n4.0000000000000000E+00\n"],
   ["a number literal beyond i is a p", "DATA r TYPE int8.\nr = 3000000000 + 1. out->write( r ).", "3000000001 \n"],
+  ["a lone + makes an arithmetic expression", "DATA t TYPE c LENGTH 6 VALUE '1.25'.\nDATA n TYPE n LENGTH 4.\nn = t. out->write( n ).\nn = + t. out->write( n ).", "0125\n0001\n"],
+  ["a sign applies to the power, a negative literal is one operand", "DATA r TYPE i.\nr = - 7 ** 2. out->write( r ).\nr = -7 ** 2. out->write( r ).\nr = 2 * - 7 ** 2. out->write( r ).", "49-\n49 \n98-\n"],
   ["MOD and DIV are Euclidean", "DATA a TYPE i VALUE -7.\nDATA r TYPE i.\nr = a MOD 3. out->write( r ).\nr = a DIV 3. out->write( r ).", "2 \n3-\n"],
 ];
 for (const [name, body, stdout] of calculations) {
@@ -280,7 +188,8 @@ const conversions: [string, string, string][] = [
   ["i to string has the sign at the end", "DATA i TYPE i VALUE -7. out->write( i ).", "7-\n"],
   ["a positive i to string ends in a blank", "DATA i TYPE i VALUE 42. out->write( i ).", "42 \n"],
   ["p to a short c", "DATA p TYPE p LENGTH 8 DECIMALS 2 VALUE '1.5'. DATA c TYPE c LENGTH 3. c = p. out->write( c ).", "*50\n"],
-  ["text to i, sign at the end", "DATA s TYPE string VALUE ` 12- `. DATA i TYPE i. i = s. out->write( i ).", "12-\n"],
+  ["int8 to d with its lower four bytes, to t with its whole value", "DATA i8 TYPE int8. DATA d TYPE d. DATA t TYPE t.\ni8 = 4294967296 + 738000. d = i8. t = i8. out->write( d ). out->write( t ).", "20210728\n192816\n"],
+  ["text to i, sign at the end","DATA s TYPE string VALUE ` 12- `. DATA i TYPE i. i = s. out->write( i ).", "12-\n"],
   ["d to i counts days on the Julian calendar before 1582", "DATA d TYPE d VALUE '19000101'. DATA i TYPE i. i = d. out->write( i ).", "693597 \n"],
   ["i to d", "DATA i TYPE i VALUE 577737. DATA d TYPE d. d = i. out->write( d ).", "15821015\n"],
   ["f to string", "DATA f TYPE f VALUE '0.1'. out->write( f ).", "1.0000000000000001E-01\n"],

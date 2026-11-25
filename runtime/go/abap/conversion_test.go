@@ -87,10 +87,10 @@ func convertCell(t *testing.T, srcName, value, dstName string) string {
 	var v any
 	switch src.Kind {
 	case KindC, KindN, KindD, KindT:
-		v = fitLeft(value, src.textLength(), " ")
+		v = textLeft(FromUTF8(value), src.textLength(), ' ')
 	default:
 		var err error
-		if v, err = Convert(TypeString, value, src); err != nil {
+		if v, err = Convert(TypeString, FromUTF8(value), src); err != nil {
 			return "SET:" + describe(err)
 		}
 	}
@@ -116,7 +116,7 @@ func describe(err error) string {
 func readout(t Type, v any) string {
 	switch t.Kind {
 	case KindC, KindN, KindD, KindT, KindString:
-		return "[" + v.(string) + "]"
+		return "[" + ToUTF8(v.(string)) + "]"
 	case KindX, KindXString:
 		return strings.ToUpper(fmt.Sprintf("%x", v.(string)))
 	case KindI:

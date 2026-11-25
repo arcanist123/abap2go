@@ -8,10 +8,10 @@ import (
 func TestListGap(t *testing.T) {
 	var b strings.Builder
 	l := newList(&b, 0)
-	l.Write("it's", false)
-	l.Write("str", false)
-	l.Write("x", true)
-	l.Write("y", false)
+	l.Write(FromUTF8("it's"), false)
+	l.Write(FromUTF8("str"), false)
+	l.Write(FromUTF8("x"), true)
+	l.Write(FromUTF8("y"), false)
 	l.End()
 	if got, want := b.String(), "it's str\nx y\n"; got != want {
 		t.Fatalf("got %q, want %q", got, want)
@@ -22,11 +22,11 @@ func TestListGap(t *testing.T) {
 func TestListStreamsFinishedLines(t *testing.T) {
 	var b strings.Builder
 	l := newList(&b, 0)
-	l.Write("a", false)
+	l.Write(FromUTF8("a"), false)
 	if b.String() != "" {
 		t.Fatalf("an unfinished line was written: %q", b.String())
 	}
-	l.Write("b", true)
+	l.Write(FromUTF8("b"), true)
 	if got, want := b.String(), "a\n"; got != want {
 		t.Fatalf("got %q, want %q before End", got, want)
 	}
@@ -40,7 +40,7 @@ func TestListStreamsFinishedLines(t *testing.T) {
 func TestListNewLineOnEmptyLine(t *testing.T) {
 	var b strings.Builder
 	l := newList(&b, 0)
-	l.Write("a", true)
+	l.Write(FromUTF8("a"), true)
 	l.End()
 	l.End()
 	if got, want := b.String(), "a\n"; got != want {
@@ -52,8 +52,8 @@ func TestListNewLineOnEmptyLine(t *testing.T) {
 func TestListNoWrap(t *testing.T) {
 	var b strings.Builder
 	l := newList(&b, 10)
-	l.Write("Hello", false)
-	l.Write("World", false)
+	l.Write(FromUTF8("Hello"), false)
+	l.Write(FromUTF8("World"), false)
 	l.End()
 	if got, want := b.String(), "Hello World\n"; got != want {
 		t.Fatalf("got %q, want %q", got, want)
@@ -64,12 +64,12 @@ func TestListNoWrap(t *testing.T) {
 func TestListEmptyAndBlankOutputs(t *testing.T) {
 	var b strings.Builder
 	l := newList(&b, 0)
-	l.Write("", false)
-	l.Write("b", false)
-	l.Write(" ", true)
-	l.Write("x", true)
-	l.Write("a ", false)
-	l.Write("b", false)
+	l.Write(FromUTF8(""), false)
+	l.Write(FromUTF8("b"), false)
+	l.Write(FromUTF8(" "), true)
+	l.Write(FromUTF8("x"), true)
+	l.Write(FromUTF8("a "), false)
+	l.Write(FromUTF8("b"), false)
 	l.End()
 	if got, want := b.String(), " b\nx a  b\n"; got != want {
 		t.Fatalf("got %q, want %q", got, want)

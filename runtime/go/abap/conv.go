@@ -23,8 +23,8 @@ import (
 	"strings"
 )
 
-// Convert converts v of type src into type dst. The error is an *Exception (catchable) or a *RuntimeError.
-func Convert(src Type, v any, dst Type) (any, error) {
+// convert8 is Convert with text as UTF-8 (see text.go): the rules that read and write numbers, dates and times.
+func convert8(src Type, v any, dst Type) (any, error) {
 	switch src.Kind {
 	case KindC, KindString:
 		return fromText(src, v.(string), dst)
@@ -210,7 +210,8 @@ func fromInteger(v int64, wide bool, dst Type) (any, error) {
 	case KindN:
 		return fitRight(d.digits(), dst.Length, "0"), nil
 	case KindD:
-		return dFromDayNumber(v), nil
+		// an int8 counts with its lower four bytes as an i; t takes the whole value
+		return dFromDayNumber(int64(int32(v))), nil
 	case KindT:
 		return tFromSeconds(v), nil
 	case KindX:

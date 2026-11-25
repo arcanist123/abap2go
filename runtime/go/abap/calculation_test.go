@@ -83,11 +83,11 @@ func parseCellOperand(t *testing.T, col string) *calcCellOperand {
 func cellValue(typ Type, value string) (any, error) {
 	switch typ.Kind {
 	case KindC, KindN, KindD, KindT:
-		return fitLeft(value, typ.textLength(), " "), nil
+		return textLeft(FromUTF8(value), typ.textLength(), ' '), nil
 	case KindUtclong:
 		return Utclong(0), nil
 	}
-	return Convert(TypeString, value, typ)
+	return Convert(TypeString, FromUTF8(value), typ)
 }
 
 func calculationCell(t *testing.T, cols []string) string {
@@ -296,16 +296,16 @@ func (p *exprParser) primary() Expr {
 	}
 	switch {
 	case strings.HasPrefix(tok, "'"):
-		s := strings.Trim(tok, "'")
-		return Operand(TypeC(len(s)), s)
+		s := FromUTF8(strings.Trim(tok, "'"))
+		return Operand(TypeC(textLen(s)), s)
 	case strings.HasPrefix(tok, "`"):
-		return Operand(TypeString, strings.Trim(tok, "`"))
+		return Operand(TypeString, FromUTF8(strings.Trim(tok, "`")))
 	case tok != "" && tok[0] >= '0' && tok[0] <= '9':
-		v, err := Convert(TypeString, tok, TypeI)
+		v, err := Convert(TypeString, FromUTF8(tok), TypeI)
 		if err == nil {
 			return Operand(TypeI, v)
 		}
-		pv, err := Convert(TypeString, tok, TypeP(16, 0))
+		pv, err := Convert(TypeString, FromUTF8(tok), TypeP(16, 0))
 		if err != nil {
 			p.t.Fatalf("literal %s: %v", tok, err)
 		}

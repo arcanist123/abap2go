@@ -27,7 +27,7 @@ const DefaultLineSize = 132
 type List struct {
 	out      io.Writer
 	lineSize int
-	current  []rune
+	current  []byte // ABAP text, UTF-16 code units: positions count code units
 	column   int  // 1-based, where the next output goes before the gap rule
 	written  bool // the current line has had an output, maybe of no characters
 }
@@ -49,7 +49,8 @@ func (l *List) LineSize() int {
 	return l.lineSize
 }
 
-// Write outputs text: on a new line if newLine (WRITE /), else one blank after the previous output of the line.
+// Write outputs text (ABAP text, see text.go): on a new line if newLine (WRITE /), else one blank after the previous
+// output of the line. Columns count UTF-16 code units, so a character outside the Basic Multilingual Plane takes two.
 // The text has the output length of what is written, trailing blanks included; an empty string still counts as
 // an output, so the next one gets its blank.
 func (l *List) Write(text string, newLine bool) {
@@ -69,11 +70,11 @@ func (l *List) End() {
 }
 
 func (l *List) place(text string) {
-	for len(l.current) < l.column-1 {
-		l.current = append(l.current, ' ')
+	for len(l.current)/2 < l.column-1 {
+		l.current = append(l.current, 0, ' ')
 	}
-	l.current = append(l.current, []rune(text)...)
-	l.column = len(l.current) + 1
+	l.current = append(l.current, text...)
+	l.column = len(l.current)/2 + 1
 }
 
 func (l *List) endLine() {
@@ -85,12 +86,9 @@ func (l *List) endLine() {
 
 // flush finishes the current line. A line of blanks only is not output.
 func (l *List) flush() {
-	n := len(l.current)
-	for n > 0 && l.current[n-1] == ' ' {
-		n--
-	}
-	if n > 0 {
-		writeLine(l.out, string(l.current[:n]))
+	line := textTrimRight(string(l.current), " ")
+	if line != "" {
+		writeLine(l.out, ToUTF8(line))
 	}
 	l.current = l.current[:0]
 	l.column = 1

@@ -3,8 +3,8 @@ package abap
 // The elementary types and how their values are held. Values are native Go values, never byte layouts (see the
 // storage decision in docs/aot_for_abap.md):
 //
-//	c, n, d, t   string of exactly Length characters (d: 8, t: 6)
-//	string       string
+//	c, n, d, t   string of exactly Length UTF-16 code units, big-endian (d: 8, t: 6), see text.go
+//	string       string of UTF-16 code units, big-endian
 //	x            string of exactly Length bytes
 //	xstring      string of bytes
 //	i            int32
@@ -16,9 +16,6 @@ package abap
 //	decfloat16   Decfloat
 //	decfloat34   Decfloat
 //	utclong      Utclong
-//
-// Lengths of c, n, d and t count characters (runes). ABAP counts UTF-16 code units, so a character outside the
-// Basic Multilingual Plane counts once here and twice in ABAP: a known gap, listed in docs/spec/conversion.md.
 
 import "fmt"
 
@@ -107,9 +104,9 @@ func TypeP(length, decimals int) Type { return Type{Kind: KindP, Length: length,
 func Initial(t Type) any {
 	switch t.Kind {
 	case KindC, KindD:
-		return blanks(t.textLength())
+		return repeatText(' ', t.textLength())
 	case KindN, KindT:
-		return zeros(t.textLength())
+		return repeatText('0', t.textLength())
 	case KindString:
 		return ""
 	case KindX:
