@@ -560,9 +560,9 @@ from the program.
   2. *List columns:* list positions count display columns, not characters (reopened in the hosting decision).
      Fix: a display width per character, as `cl_abap_list_utilities` describes it.
   3. *Behaviour the documentation leaves unspecified:* the order of equal keys after `SORT` without `STABLE`,
-     which entry `DELETE ADJACENT DUPLICATES` keeps after it, which duplicate `READ TABLE … BINARY SEARCH`
-     finds. ABAP is deterministic there and programs depend on it by accident. Decided case by case, speed
-     first (next decision).
+     and so which entry `DELETE ADJACENT DUPLICATES` keeps after it; the row `READ TABLE … BINARY SEARCH` finds
+     in a table that is not sorted by the search key. ABAP is expected to be deterministic there, and programs
+     can depend on it by accident. Decided case by case, speed first (next decision).
   4. *Regular expressions:* gogen's engine is Go's `regexp` with a POSIX emulation; a lookahead fails at run time
      there, and back-references do not exist. A pattern is often run-time data. Fix for the MVP: a pattern
      follows the static-name rule (a literal or a finite set, checked at build time against what the engine
@@ -597,13 +597,33 @@ from the program.
     elementary values must match ABAP exactly, including what the documentation does not spell out (the value an
     integer target holds after an overflow, the decimals of a `p` result in a `string`). The rule tables stay
     exact.
-  - *`SORT` without `STABLE`:* the order of rows with equal keys is whatever the fastest sort gives. A program that
-    depends on ABAP's order of equal keys depends on unspecified behaviour; `SORT … STABLE` is the way to state
-    the order it needs. What follows from that order (which row `DELETE ADJACENT DUPLICATES` keeps after it)
-    follows the sort.
-  - *Other cases* (which duplicate `READ TABLE … BINARY SEARCH` finds, and any found later) are decided the same
-    way when their statement is compiled: first, what the documentation specifies; then, the fastest
-    implementation.
+  - *`SORT` without `STABLE`:* the order of rows with equal keys is whatever the fastest sort gives. The keyword
+    documentation says the sort is unstable by default and that the order "can be different depending on the
+    platform or when sorted multiple times", so no order is promised, not even the same order twice. A program
+    that depends on ABAP's order of equal keys depends on unspecified behaviour; `SORT … STABLE` is the way to
+    state the order it needs. What follows from that order (which row `DELETE ADJACENT DUPLICATES` keeps after it)
+    follows the sort. The implementation sorts row positions with pdqsort and moves the rows once; a stable sort
+    would cost roughly 10 to 25 % more sort time, paid only to keep programs that rely on an order ABAP does not
+    promise. After the MVP: a test-build flag that shuffles the order of equal keys, so a program that depends on it
+    fails its tests (as Go does with map order), and a build warning for the typical pattern (`SORT … BY a` followed
+    by `DELETE ADJACENT DUPLICATES … COMPARING a`, then reading fields other than `a`).
+  - *Specified, so exact (not such a case):*
+    - `READ TABLE … BINARY SEARCH` with several hits (a partial search key or duplicate rows) returns the first
+      hit in the primary index, the row with the lowest line number, per the keyword documentation; the same holds
+      for a sorted secondary key and its secondary index. A lower-bound search, not any matching row. When no row
+      is found, `sy-tabix` is the line the row would be inserted in front of.
+    - `DELETE ADJACENT DUPLICATES` keeps the first row of each group of neighbouring duplicates, in the order of
+      a `LOOP` over the key used.
+    - `INSERT` of a single row into a sorted table with a non-unique primary key puts it in front of the existing
+      duplicates.
+  - *Open:* for `INSERT LINES OF` into a sorted table with a non-unique key, and for assigning a standard table to
+    one, the keyword documentation says the block keeps its order and goes in front of the first duplicate. As far
+    as we know, the kernel first appends the leading part of the source that is already in order, then puts the
+    rest in front of the duplicates, so for a source that is not sorted the result can differ from that reading.
+    Which of the two abap2go follows is decided before the statement is compiled.
+  - *Other cases* (the row `READ TABLE … BINARY SEARCH` finds in a table not sorted by the search key, and any
+    found later) are decided the same way when their statement is compiled: first, what the documentation
+    specifies; then, the fastest implementation.
   - *Why:* reproducing ABAP's algorithms would cost speed, the goal of AOT, to keep results the language never
     promised. Elementary values are different: they are everywhere, a difference there is silent and spreads, and
     the rule tables already pin them down.
@@ -651,8 +671,11 @@ than configured at run time. Applications are unaffected.
 
 ## Open points
 
-None at the moment. Unspecified but deterministic behaviour was settled on 2026-11-25 (case by case, speed first,
-elementary types exact).
+- The order of duplicates after `INSERT LINES OF` into, or assignment to, a sorted table with a non-unique key: the
+  documented order or the kernel's (see "Unspecified but deterministic behaviour").
+
+Unspecified but deterministic behaviour was settled on 2026-11-25 (case by case, speed first, elementary types
+exact).
 
 Deferred items (computed variable names in `ASSIGN`, specialisation) are reopened only when a real case needs
 them. Dynamic exits on unbounded types were settled on 2026-11-25 by the manifest of conversion exits.
