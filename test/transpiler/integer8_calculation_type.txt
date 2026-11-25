@@ -1,0 +1,158 @@
+* The ABAP snippets of test/types/integer8_calculation_type.ts in abaplint/transpiler (https://github.com/abaplint/transpiler),
+* MIT License, Copyright (c) 2020 Lars Hvam Petersen; see LICENSES/abaplint-transpiler.txt.
+* Rewritten to ASSERT form: what the source test wrote is asserted instead. The expected values are worked out
+* again for ABAP, and some differ from the source test. Format: test/transpiler.test.ts.
+
+*** i * i above 2^53
+DATA lv_a TYPE i.
+DATA lv_b TYPE i.
+DATA lv_8 TYPE int8.
+lv_a = 94906267.
+lv_b = 94906267.
+lv_8 = lv_a * lv_b.
+ASSERT lv_8 = 9007199515875289.
+
+*** UNMEASURED: max * max
+DATA lv_a TYPE i.
+DATA lv_8 TYPE int8.
+lv_a = 2147483647.
+lv_8 = lv_a * lv_a.
+ASSERT lv_8 = 4611686014132420609.
+
+*** UNMEASURED: i * constant
+DATA lv_a TYPE i.
+DATA lv_8 TYPE int8.
+lv_a = 94906267.
+lv_8 = lv_a * 94906267.
+ASSERT lv_8 = 9007199515875289.
+
+*** UNMEASURED: negated product
+DATA lv_a TYPE i.
+DATA lv_8 TYPE int8.
+lv_a = 94906267.
+lv_8 = - lv_a * lv_a.
+ASSERT lv_8 = -9007199515875289.
+
+*** UNMEASURED: product minus product
+DATA lv_a TYPE i.
+DATA lv_b TYPE i.
+DATA lv_c TYPE i.
+DATA lv_8 TYPE int8.
+lv_a = 94906267.
+lv_b = 3.
+lv_c = 5.
+lv_8 = lv_a * lv_a - lv_b * lv_c.
+ASSERT lv_8 = 9007199515875274.
+
+*** UNMEASURED: parentheses
+DATA lv_a TYPE i.
+DATA lv_8 TYPE int8.
+lv_a = 94906267.
+lv_8 = ( lv_a + lv_a ) * lv_a.
+ASSERT lv_8 = 18014399031750578.
+
+*** UNMEASURED: product DIV and MOD
+DATA lv_a TYPE i.
+DATA lv_8 TYPE int8.
+lv_a = 94906267.
+lv_8 = lv_a * lv_a DIV 3.
+ASSERT lv_8 = 3002399838625096.
+lv_8 = lv_a * lv_a MOD 1000.
+ASSERT lv_8 = 289.
+
+*** UNMEASURED: += with a product
+DATA lv_a TYPE i.
+DATA lv_8 TYPE int8.
+lv_a = 94906267.
+lv_8 = 0.
+lv_8 += lv_a * lv_a.
+ASSERT lv_8 = 9007199515875289.
+
+*** UNMEASURED: field symbol operand
+* waits: field symbols
+DATA lv_a TYPE i.
+DATA lv_8 TYPE int8.
+FIELD-SYMBOLS <lv_a> TYPE i.
+lv_a = 94906267.
+ASSIGN lv_a TO <lv_a>.
+lv_8 = <lv_a> * <lv_a>.
+ASSERT lv_8 = 9007199515875289.
+
+*** int8 / int8 into int8 rounds half away from zero
+DATA lv_x TYPE int8.
+DATA lv_y TYPE int8.
+DATA lv_8 TYPE int8.
+lv_x = 7.
+lv_y = 2.
+lv_8 = lv_x / lv_y.
+ASSERT lv_8 = 4.
+lv_x = -7.
+lv_8 = lv_x / lv_y.
+ASSERT lv_8 = -4.
+
+*** i / i into int8 rounds half away from zero
+DATA lv_a TYPE i.
+DATA lv_b TYPE i.
+DATA lv_8 TYPE int8.
+lv_b = 2.
+lv_a = 7.
+lv_8 = lv_a / lv_b.
+ASSERT lv_8 = 4.
+lv_a = -7.
+lv_8 = lv_a / lv_b.
+ASSERT lv_8 = -4.
+lv_a = 5.
+lv_8 = lv_a / lv_b.
+ASSERT lv_8 = 3.
+
+*** UNMEASURED: int8 / int8 into i rounds half away from zero
+DATA lv_x TYPE int8.
+DATA lv_y TYPE int8.
+DATA lv_i TYPE i.
+lv_x = 7.
+lv_y = 2.
+lv_i = lv_x / lv_y.
+ASSERT lv_i = 4.
+
+*** UNMEASURED: int8 / int8 into f, today's value 3
+DATA lv_x TYPE int8.
+DATA lv_y TYPE int8.
+DATA lv_f TYPE f.
+lv_x = 7.
+lv_y = 2.
+lv_f = lv_x / lv_y.
+ASSERT lv_f = '3.5'.
+
+*** UNMEASURED: int8 / int8 into p, today's value 3
+DATA lv_x TYPE int8.
+DATA lv_y TYPE int8.
+DATA lv_p TYPE p LENGTH 8 DECIMALS 1.
+lv_x = 7.
+lv_y = 2.
+lv_p = lv_x / lv_y.
+ASSERT lv_p = '3.5'.
+
+*** UNMEASURED: intermediate rounding, a / b * b into int8
+DATA lv_a TYPE i.
+DATA lv_b TYPE i.
+DATA lv_8 TYPE int8.
+lv_a = 7.
+lv_b = 2.
+lv_8 = lv_a / lv_b * lv_b.
+ASSERT lv_8 = 8.
+
+*** UNMEASURED: an f operand keeps calculation type f
+DATA lv_f TYPE f.
+DATA lv_a TYPE i.
+DATA lv_8 TYPE int8.
+lv_f = '2.5'.
+lv_a = 3.
+lv_8 = lv_f * lv_a.
+ASSERT lv_8 = 8.
+
+*** UNMEASURED: an i target is unchanged
+DATA lv_a TYPE i.
+DATA lv_i TYPE i.
+lv_a = 46340.
+lv_i = lv_a * lv_a.
+ASSERT lv_i = 2147395600.

@@ -312,7 +312,19 @@ function flatLength(t: IRType): number | undefined {
   return undefined;
 }
 
-/** A Constant: a text field literal, a string literal (no & chains) or an integer within the range of i. */
+/** A number literal: type i within its range, beyond it type p (length 16, no decimals) of up to 31 digits. */
+export function integerLiteral(digits: string, where: Where): IRLiteral {
+  const value = BigInt(digits);
+  if (value >= -(2n ** 31n) && value < 2n ** 31n) {
+    return { kind: "literal", type: { kind: "i" }, value: value.toString() };
+  }
+  if (digits.replace(/^[-+]/, "").replace(/^0+/, "").length > 31) {
+    throw new BuildError(`${digits}: more than 31 digits`, where);
+  }
+  return { kind: "literal", type: { kind: "p", length: 16, decimals: 0 }, value: value.toString() };
+}
+
+/** A Constant: a text field literal, a string literal (no & chains) or a number literal (i, or p beyond i). */
 export function lowerConstant(constant: abaplint.Nodes.ExpressionNode, where: Where): IRLiteral {
   const text = constant.findDirectExpression(Expressions.ConstantString);
   if (text !== undefined && text.getChildren().length === 1) {
@@ -323,12 +335,7 @@ export function lowerConstant(constant: abaplint.Nodes.ExpressionNode, where: Wh
   }
   const integer = constant.findDirectExpression(Expressions.Integer);
   if (integer !== undefined) {
-    const digits = integer.concatTokens().replace(/\s+/g, "");
-    const value = BigInt(digits);
-    if (value >= -(2n ** 31n) && value < 2n ** 31n) {
-      return { kind: "literal", type: { kind: "i" }, value: value.toString() };
-    }
-    throw new BuildError(`${digits}: numeric literals beyond the range of i are not supported yet`, where);
+    return integerLiteral(integer.concatTokens().replace(/\s+/g, ""), where);
   }
   throw new BuildError(`${constant.concatTokens()}: this literal is not supported yet`, where);
 }

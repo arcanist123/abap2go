@@ -78,6 +78,23 @@ func Compare(ta Type, a any, tb Type, b any) (int, error) {
 	panic(fmt.Sprintf("abap: no comparison in %v", ct))
 }
 
+// MustCompare is Compare for generated code: a runtime error panics, and ends the program.
+func MustCompare(ta Type, a any, tb Type, b any) int {
+	r, err := Compare(ta, a, tb, b)
+	if err != nil {
+		panic(err)
+	}
+	return r
+}
+
+// Assert is the statement ASSERT: when the condition does not hold, the program ends with the runtime error
+// ASSERTION_FAILED.
+func Assert(holds bool) {
+	if !holds {
+		panic(&RuntimeError{Name: "ASSERTION_FAILED", Text: "the condition of ASSERT does not hold"})
+	}
+}
+
 // kindTag is the type name in the text of COMPARE_NOT_SUPPORTED.
 func kindTag(t Type) string { return strings.ToUpper(t.Kind.String()) }
 

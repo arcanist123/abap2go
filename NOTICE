@@ -5,6 +5,9 @@ are in LICENSES/.
   the classic list layout in runtime/go/abap/list.go is ported from framework/host/zcl_gg_host_list.clas.abap.
 - open-abap-core (https://github.com/open-abap/open-abap-core), Copyright (c) 2020 open-abap:
   lib/src/if_oo_adt_classrun*.intf.abap.
+- abaplint/transpiler (https://github.com/abaplint/transpiler), Copyright (c) 2020 Lars Hvam Petersen:
+  the ABAP snippets in test/transpiler/*.txt are taken from its tests (test/operators/arithmetics*.ts, mod.ts and
+  test/types/*_operations.ts, integer8_calculation_type.ts, conversion_no_number.ts), rewritten to ASSERT form.
 - open-steamgate (https://github.com/oisee/open-steamgate), Copyright (c) 2026 Alice Vinogradova and contributors:
   the formatting of IF_OO_ADT_CLASSRUN_OUT~WRITE in runtime/go/abap/console.go follows
   src/classrun/zcl_osd_classrun_out.clas.abap; the report build layout follows tools/gogen/osabap.mjs.
