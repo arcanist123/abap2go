@@ -15,6 +15,10 @@ package abap
 //
 // d, t, x and xstring targets take an integer: a decimal source is rounded into the range of i first, so a
 // number beyond it is an overflow there even where int8 would hold it.
+//
+// The target after an exception: a conversion that raises an exception returns it with a nil value when the
+// target keeps its value, and with the value the target is left with otherwise (docs/spec/conversion.md, "The
+// target after an exception"). The caller writes that value before the exception propagates.
 
 import (
 	"fmt"
@@ -95,9 +99,13 @@ func fromText(src Type, s string, dst Type) (any, error) {
 	case KindXString:
 		return hexPrefix(s), nil
 	case KindF:
-		return parseFloat(s)
+		return parseFloat(s) // also the value left after an exception
 	case KindUtclong:
-		return parseUtclong(s)
+		u, err := parseUtclong(s)
+		if err != nil {
+			return nil, err
+		}
+		return u, nil
 	case KindDecfloat16, KindDecfloat34:
 		d, ok := parseNumber(s, true)
 		if !ok {
@@ -105,11 +113,37 @@ func fromText(src Type, s string, dst Type) (any, error) {
 		}
 		return toNumeric(d, dst, false)
 	}
+	// i, int8, b, s, p: a text that is not a number leaves the initial value, one that does not fit leaves its
+	// sign (1 or -1; p: 0)
 	d, ok := parseNumber(s, false)
 	if !ok {
-		return nil, errNoNumber
+		return Initial(dst), errNoNumber
 	}
-	return toNumeric(d, dst, false)
+	r, err := toNumeric(d, dst, false)
+	if err != nil {
+		return textOverflowValue(dst, d.neg), err
+	}
+	return r, nil
+}
+
+// textOverflowValue is what an integer or p target holds after a number from text did not fit: the sign as 1 or
+// -1 (b: 255), p the initial value.
+func textOverflowValue(dst Type, neg bool) any {
+	one := int64(1)
+	if neg {
+		one = -1
+	}
+	switch dst.Kind {
+	case KindI:
+		return int32(one)
+	case KindInt8:
+		return one
+	case KindB:
+		return uint8(one)
+	case KindS:
+		return int16(one)
+	}
+	return Initial(dst)
 }
 
 // digitsToN keeps the digits of s, right-aligned in n LENGTH n: zeros in front, cut on the left.
@@ -148,8 +182,26 @@ func fromN(s string, dst Type) (any, error) {
 		return fromInteger(int64(i), false, dst)
 	case KindUtclong:
 		return nil, errNotSupported
+	case KindI, KindInt8, KindB, KindS, KindP:
+		// unlike a text, n keeps the target when it is not a number or does not fit; b and s take it as an i
+		d, ok := parseNumber(s, false)
+		if !ok {
+			return nil, errNoNumber
+		}
+		if dst.Kind == KindB || dst.Kind == KindS {
+			i, ok := d.int32()
+			if !ok {
+				return nil, errOverflow
+			}
+			return fromInteger(int64(i), false, dst)
+		}
+		r, err := toNumeric(d, dst, false)
+		if err != nil {
+			return nil, err
+		}
+		return r, nil
 	}
-	return fromText(TypeString, s, dst)
+	return fromText(TypeString, s, dst) // f, decfloat
 }
 
 // fromDateTime: d and t are copied to text targets (n gets zeros behind); numeric targets take the day number or
@@ -228,6 +280,21 @@ func fromInteger(v int64, wide bool, dst Type) (any, error) {
 		return toNumeric(d, dst, false)
 	case KindUtclong:
 		return nil, errNotSupported
+	case KindI:
+		if v != int64(int32(v)) {
+			return int32(v), errOverflow // the lower four bytes are left
+		}
+		return int32(v), nil
+	case KindB:
+		if v < 0 || v > 255 {
+			return uint8(v), errOverflow // the lower byte is left
+		}
+		return uint8(v), nil
+	case KindS:
+		if v != int64(int16(v)) {
+			return int16(v), errOverflow // the lower two bytes are left
+		}
+		return int16(v), nil
 	}
 	return toNumeric(d, dst, false)
 }
@@ -275,7 +342,10 @@ func toNumeric(d decimal, dst Type, nOverflow bool) (any, error) {
 		}
 	case KindF:
 		f, err := strconv.ParseFloat(d.plainOrScientific(), 64)
-		if math.IsInf(f, 0) || err != nil && !strings.Contains(err.Error(), "range") {
+		if math.IsInf(f, 0) {
+			return f, errOverflow // +Inf or -Inf is left
+		}
+		if err != nil && !strings.Contains(err.Error(), "range") {
 			return nil, errOverflow
 		}
 		return f, nil
@@ -314,6 +384,13 @@ func fromPacked(d decimal, dst Type) (any, error) {
 		return numberToC(d, dst.Length), nil
 	case KindString:
 		return numberToString(d), nil
+	case KindB, KindS:
+		// rounded to an i, whose lower bytes are left; beyond i the target is kept
+		i, ok := d.int32()
+		if !ok {
+			return nil, errOverflow
+		}
+		return fromInteger(int64(i), false, dst)
 	}
 	return toNumeric(d, dst, false)
 }
@@ -343,11 +420,19 @@ func fromFloat(v float64, dst Type) (any, error) {
 		}
 		return toNumeric(d, dst, false)
 	}
-	if dst.Kind == KindInt8 {
+	switch dst.Kind {
+	case KindInt8:
 		// the range is checked on the value itself: 2^63 is an overflow although its 17-digit form fits
 		if _, ok := exactFloat(v).int64(); !ok {
 			return nil, errOverflow
 		}
+	case KindB, KindS:
+		// rounded to an i, whose lower bytes are left; a value beyond i becomes -2^31, which leaves 0
+		i, ok := floatDecimal(v, 17).int32()
+		if !ok {
+			i = math.MinInt32
+		}
+		return fromInteger(int64(i), false, dst)
 	}
 	return toNumeric(floatDecimal(v, 17), dst, false)
 }
@@ -357,7 +442,11 @@ func fromFloat(v float64, dst Type) (any, error) {
 func fromDecfloat(d decimal, dst Type) (any, error) {
 	switch dst.Kind {
 	case KindC:
-		return decfloatToC(d, dst.Length)
+		c, err := decfloatToC(d, dst.Length)
+		if err != nil {
+			return nil, err // the target is kept
+		}
+		return c, nil
 	case KindString:
 		return decfloatString(d), nil
 	case KindF:
@@ -367,6 +456,18 @@ func fromDecfloat(d decimal, dst Type) (any, error) {
 			}
 			return float64(0), nil
 		}
+	case KindN:
+		r, err := toNumeric(d, dst, true)
+		if err != nil {
+			// the absolute value as for a c target is left, if it fits
+			abs := d
+			abs.neg = false
+			if s, err := decfloatToC(abs, dst.Length); err == nil {
+				return s, errOverflow
+			}
+			return nil, errOverflow
+		}
+		return r, nil
 	}
 	return toNumeric(d, dst, true)
 }

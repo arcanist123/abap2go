@@ -337,7 +337,7 @@ formatting table.
 `CX_SY_ZERODIVIDE`, `CX_SY_CONVERSION_NO_NUMBER`), the result field keeps its value: `r = i_max + 1` leaves `r` as it
 was, and so do `r += 1`, `ADD 1 TO r` and `DIVIDE r BY 0`. When the result is calculated but does not fit the result
 field (`CX_SY_CONVERSION_OVERFLOW`, and `CX_SY_ARITHMETIC_OVERFLOW` of a `p` calculation), an integer result field
-can be left with a value: see *Open points*.
+can be left with a value: see [conversion.md](conversion.md), "The target after an exception".
 
 **EXACT.** `EXACT type( arithmetic expression )` calculates as above and raises `CX_SY_CONVERSION_ROUNDING` instead of
 rounding, in an interim result or when the result is moved into `type`: `EXACT p8_2( p 1 / 4 )` is 0.25,
@@ -356,16 +356,6 @@ anywhere in the expression or as the type is a syntax error.
 | `CX_SY_CONVERSION_ROUNDING` | `EXACT` when a value would be rounded |
 
 ## Open points
-
-- **What an integer target holds after `CX_SY_CONVERSION_OVERFLOW`.** A value that does not fit a `b`, `s` or `i`
-  target is often written in a truncated form before the exception is raised: `b = i_300` leaves 44 (300 modulo 256),
-  `b = i_-1` leaves 255, `s = i_40000` leaves -25536, `i = int8_3000000000` leaves -1294967296, `b = i_300 + p_0`
-  (a `p` calculation, `CX_SY_ARITHMETIC_OVERFLOW`) leaves 44, `b += i_300` from 5 leaves 49. From a text the value is
-  not the truncated number (`b = c_'256'` and `b = c_'300'` leave 1, `b = c_'-1'` leaves 255). An `f` source into an `i`,
-  a `p` target and `EXACT` leave the target unchanged. This is a rule of the conversion table (the move of a
-  value that does not fit); the cells written down so far are in
-  [`testdata/calculation_contexts.tsv`](../../runtime/go/abap/testdata/calculation_contexts.tsv) for `b` and `s`, the
-  others are examples, and a grid over all sources is still to be done.
 
 - Sums with an inexact interim result into a `string` (`a / b + c`): the scale of *Calculation type p* is expected
   to apply, but the test cases have sums and products of exact interim results only.

@@ -121,8 +121,8 @@ func CalculateExact(e Expr, dst Type) (any, error) { return textResult(dst)(calc
 // textResult turns a result for a text field into ABAP text; the calculation writes UTF-8 (see text.go).
 func textResult(dst Type) func(r any, err error) (any, error) {
 	return func(r any, err error) (any, error) {
-		if err == nil && isText(dst.Kind) {
-			return FromUTF8(r.(string)), nil
+		if r != nil && isText(dst.Kind) {
+			return FromUTF8(r.(string)), err
 		}
 		return r, err
 	}
@@ -177,6 +177,9 @@ func calculate(e Expr, dst Type, exact bool) (any, error) {
 		return nil, err
 	}
 	r, err := moveResult(ct, n, dst)
+	if err != nil && exact {
+		return nil, err // EXACT keeps the result field
+	}
 	if err == nil && exact {
 		if want, ok := resultDecimal(ct, n); ok {
 			if got, ok := numericDecimal(dst, r); ok && decCompare(got, want) != 0 {

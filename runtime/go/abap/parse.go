@@ -96,6 +96,9 @@ func isSignedDigits(s string) bool {
 //     (7 - is 7);
 //   - a number is an optional sign, digits with an optional point, and an optional exponent; INF, INFINITY and
 //     NAN (any case) are not finite, which is an overflow, as is any value beyond the range of f.
+//
+// On an error the value is what the target is left with: for CX_SY_CONVERSION_NO_NUMBER the number that was read
+// (0 if none), for CX_SY_CONVERSION_OVERFLOW +Inf or -Inf (NaN for NAN). The overflow wins over the error.
 func parseFloat(text string) (float64, error) {
 	s := strings.TrimRight(text, " ")
 	if s == "" {
@@ -110,40 +113,52 @@ func parseFloat(text string) (float64, error) {
 		}
 		return 0, errNoNumber
 	}
+	v, err := strconv.ParseFloat(numText, 64)
+	if err != nil && !math.IsInf(v, 0) && !math.IsNaN(v) {
+		return 0, errNoNumber
+	}
+	if v == 0 {
+		v = 0 // no negative zero from text
+	}
+	if math.IsNaN(v) {
+		v = floatNaN
+	}
 	rest := s[start+n:]
-	negate := false
 	if leadingBlank {
 		if rest != "" && rest[0] != ' ' {
-			return 0, errNoNumber
+			return leftFloat(v)
 		}
 	} else if rest != "" {
 		switch rest[0] {
 		case '+', '-':
 			if len(rest) > 1 && rest[1] != ' ' || numText[0] == '+' || numText[0] == '-' {
-				return 0, errNoNumber // -1- has two signs
+				return leftFloat(v) // -1- has two signs
 			}
-			negate = rest[0] == '-'
+			if rest[0] == '-' && v != 0 {
+				v = -v
+			}
 		case ' ':
 			// anything after a blank is ignored, a sign too
 		default:
-			return 0, errNoNumber
+			return leftFloat(v)
 		}
 	}
-	v, err := strconv.ParseFloat(numText, 64)
-	if err != nil && !math.IsInf(v, 0) {
-		return 0, errNoNumber
-	}
-	if math.IsInf(v, 0) {
-		return 0, errOverflow
-	}
-	if negate {
-		v = -v
-	}
-	if v == 0 {
-		v = 0 // no negative zero from text
+	if math.IsInf(v, 0) || math.IsNaN(v) {
+		return v, errOverflow
 	}
 	return v, nil
 }
+
+// leftFloat is the error for a text whose number prefix v is followed by something else.
+func leftFloat(v float64) (float64, error) {
+	if math.IsInf(v, 0) || math.IsNaN(v) {
+		return v, errOverflow
+	}
+	return v, errNoNumber
+}
+
+// floatNaN is the NaN ABAP leaves in an f after NAN: the quiet NaN with an empty payload.
+var floatNaN = math.Float64frombits(0x7FF8000000000000)
 
 // floatPrefix is the length of the longest number at the start of s, as strtod reads it (no hexadecimal), and
 // the number in a form strconv.ParseFloat accepts.
@@ -155,6 +170,9 @@ func floatPrefix(s string) (int, string) {
 	lower := strings.ToLower(s[i:])
 	for _, inf := range []string{"infinity", "inf", "nan"} {
 		if strings.HasPrefix(lower, inf) {
+			if inf == "nan" {
+				return i + len(inf), "NaN" // not finite: an overflow
+			}
 			return i + len(inf), s[:i] + "Inf" // not finite: an overflow
 		}
 	}
