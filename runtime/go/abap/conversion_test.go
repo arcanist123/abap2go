@@ -43,7 +43,12 @@ func testConversionFile(t *testing.T, file string) {
 			t.Fatalf("line %d: %d columns", line, len(cols))
 		}
 		cells++
-		got := convertCell(t, cols[0], unbracket(cols[1]), cols[2])
+		var got string
+		if dst, start, ok := strings.Cut(strings.TrimSuffix(cols[2], "]"), "["); ok {
+			got = convertTargetCell(t, cols[0], unbracket(cols[1]), dst, start)
+		} else {
+			got = convertCell(t, cols[0], unbracket(cols[1]), cols[2])
+		}
 		if got != cols[3] {
 			failed++
 			if failed <= 60 {
@@ -99,6 +104,33 @@ func convertCell(t *testing.T, srcName, value, dstName string) string {
 		return describe(err)
 	}
 	return readout(dst, r)
+}
+
+// convertTargetCell is a cell of conversion_target.tsv: the target holds start before the conversion; after an
+// exception, the result is the exception and the value the target holds (Convert's value, or start if nil).
+func convertTargetCell(t *testing.T, srcName, value, dstName, start string) string {
+	src, dst := parseTypeName(t, srcName), parseTypeName(t, dstName)
+	before, err := Convert(TypeString, FromUTF8(start), dst)
+	if err != nil {
+		t.Fatalf("start value %q of %s: %v", start, dstName, err)
+	}
+	var v any
+	switch src.Kind {
+	case KindC, KindN, KindD, KindT:
+		v = textLeft(FromUTF8(value), src.textLength(), ' ')
+	default:
+		if v, err = Convert(TypeString, FromUTF8(value), src); err != nil {
+			return "SET:" + describe(err)
+		}
+	}
+	r, err := Convert(src, v, dst)
+	if err == nil {
+		return readout(dst, r)
+	}
+	if r == nil {
+		r = before
+	}
+	return describe(err) + "," + readout(dst, r)
 }
 
 func describe(err error) string {

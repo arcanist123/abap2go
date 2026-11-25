@@ -11,8 +11,12 @@ and Time Fields*, *Time Stamp Fields*); the details below go further than the do
 [`runtime/go/abap/conv.go`](../../runtime/go/abap/conv.go), one implementation per cell for static and generic
 operands (`abap.Convert`). The test cases are
 [`testdata/conversion.tsv`](../../runtime/go/abap/testdata/conversion.tsv) (7,427 cells, chosen at the edges of
-each rule) and [`testdata/conversion_random.tsv`](../../runtime/go/abap/testdata/conversion_random.tsv) (4,275
-cells from random values); `go test ./abap/` runs both. A test case is a snippet: the line
+each rule), [`testdata/conversion_random.tsv`](../../runtime/go/abap/testdata/conversion_random.tsv) (4,275
+cells from random values), [`testdata/conversion_edges.tsv`](../../runtime/go/abap/testdata/conversion_edges.tsv)
+(2,102 cells at and beyond the ranges of the integer, p and n targets) and
+[`testdata/conversion_target.tsv`](../../runtime/go/abap/testdata/conversion_target.tsv) (2,217 cells: what the
+target holds after an exception, see the section of that name); `go test ./abap/` runs them all. A test case is a
+snippet: the line
 
 ```
 p8.2	[1.5]	c3	[*50]
@@ -209,6 +213,38 @@ exponent 6111), else it is an overflow; a smaller exponent rounds the value to t
 | utclong | copied |
 | all others | **NS** |
 
+## The target after an exception
+
+A conversion that raises `CX_SY_CONVERSION_OVERFLOW` or `CX_SY_CONVERSION_NO_NUMBER` does not always leave its
+target as it was: ABAP is expected to write a value into some targets before the exception is raised, and a
+`CATCH` (or a `CLEANUP`) sees that value. The keyword documentation does not say what the target holds; the rules
+below are worked out cell by cell, for static and generic operands alike (the cells are in
+[`testdata/conversion_target.tsv`](../../runtime/go/abap/testdata/conversion_target.tsv)). Every case not listed
+keeps the target, as do the other exceptions (`CX_SY_CONVERSION_NOT_SUPPORTED`, `CX_SY_CONVERSION_NO_DATE_TIME`,
+`CX_SY_CONVERSION_ROUNDING`).
+
+| Source | Target | Left in the target |
+|---|---|---|
+| i, int8, b, s, d, t, x, xstring | b, s | the **lower byte** (b) or **lower two bytes** (s) of the integer, two's complement: i `300` → b `44`, i `-1` → b `255`, i `40000` → s `-25536`; d and t count with their day or second number, x and xstring with the i of their last four bytes |
+| int8 | i | the **lower four bytes**: `3000000000` → `-1294967296`, `4294967297` → `1` |
+| p, n | b, s | the value rounded to an i, then its lower bytes as above (p `300.5` → b `45`, n `0000040000` → s `-25536`); a value beyond i keeps the target |
+| f | b, s | the 17-digit form rounded to an i, then its lower bytes; a value beyond i becomes -2^31, so the target is left with `0` (f `123456.789` → s `-7615`, `1E10` → b `0`) |
+| c, string | i, int8, b, s | **not a number**: `0`. **Too large**: the sign of the number, `1` or `-1` (b: `255`): c `300` → b `1`, c `-40000` → s `-1` |
+| c, string | p | `0`, whether not a number or too large |
+| c, string, n | f | **not a number**: the longest number at the start of the text as the *float* rule reads it (after leading blanks, with its sign, `.5` and `5.` included, an exponent only if it has digits), `0` if there is none: `12abc34` → `12`, `1.5E2.5` → `150`, `1E+x` → `1`, `1,5` → `1`, `- 12x` → `0`; a number below the range of f gives `0`. **Overflow**: `+Inf` or `-Inf` (`1E400`, `-INF`, `Infinity`, and a number prefix out of range such as `1E999x`, which is an overflow rather than not a number), the quiet NaN `7FF8000000000000` for `NAN` |
+| decfloat16, decfloat34 | f | `+Inf` or `-Inf` |
+| decfloat16, decfloat34 | n | the **absolute value as a c field of the same length would show it** (the *fit* rule), if it fits: `12345.678` → n4 `1E+4`, `-1E100` → n10 `    1E+100`, `1234567890123456` → n10 `1.2346E+15`; otherwise the target is kept (`1E+100` in n4) |
+| decfloat34 | decfloat16 | `+Infinity` or `-Infinity` (see *Known gaps*) |
+
+Kept, by contrast: p targets from every source but text; i and int8 targets from p, f, n and decfloat; b and s
+targets from decfloat; d, t, x and xstring targets (the *via i* overflow); c targets of decfloat; decfloat targets
+from text. An `n` source keeps an integer or p target when it is not a number, unlike c and string.
+
+In arithmetic the same rules apply when the result is moved into the result field: `b += 300` from 5 leaves `49`,
+a p calculation `b = i_300 + p_0` raises `CX_SY_ARITHMETIC_OVERFLOW` and leaves `44`. An exception in the
+calculation itself, and every exception under `EXACT`, keeps the result field (see
+[calculation.md](calculation.md)).
+
 ## Known gaps
 
 - **b and s** are implemented, but the compiler cannot declare them yet: abaplint does not type them, so a
@@ -216,6 +252,13 @@ exponent 6111), else it is an overflow; a smaller exponent rounds the value to t
 - The compiler uses the cells for `=` between variables and literals, `VALUE` and `out->write( )`. Other places
   that convert (parameter passing, `MOVE-CORRESPONDING`, table keys, string templates) follow as those statements
   are compiled; they call the same `abap.Convert`.
+- **Special values after an exception.** An f target can be left holding `+Inf`, `-Inf` or NaN and a decfloat16
+  target `+Infinity` or `-Infinity` (see *The target after an exception*). The runtime holds the f values, but what
+  `WRITE`, the conversions, comparisons and arithmetic do with them is not specified yet; it keeps a decfloat16
+  target instead of storing an infinity, which has no representation in its decfloat value yet.
+- The compiler cannot catch exceptions yet (`TRY` is not compiled), so a value left in a target cannot be seen
+  by a program: an uncaught exception ends it. `abap.Convert` and `abap.Calculate` return the value with the
+  exception, for the generated code to write once `TRY` is compiled.
 - Speed: every cell goes through exact decimal arithmetic (`math/big`) for now. Typed fast paths for the common
   cells (i to p, p to p with the same decimals, c to string) come once moves show up in measurements, and must pass
   the same test cases.

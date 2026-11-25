@@ -135,6 +135,10 @@ Next:
   and its ANORMALIES list entries are the test cases
 - [ ] `out->write( )` of structures and tables (open-steamgate's format: a structure as one
   `field: value, field: value` line, a table as a header row and tab-separated rows)
+- [ ] `TRY … CATCH`: the generated code writes the value `abap.Convert` and `abap.Calculate` return with an
+  exception into the target before raising it (see "The target after an exception" in
+  [spec/conversion.md](spec/conversion.md)); the cells of `conversion_target.tsv` and the result fields of
+  `calculation_contexts.tsv` run end to end once a `CATCH` can show them
 - [ ] CI (Node and Go, `npm test`)
 
 ## Critical path: the specification of ABAP's rule tables
@@ -187,6 +191,12 @@ Done:
   operators, `ADD`/`SUBTRACT`/`MULTIPLY`/`DIVIDE`, `CONV`/`EXACT` (whose type takes part in the calculation type),
   embedded expressions of string templates (operands only) and comparisons, and an arithmetic exception leaves the
   result field unchanged; 699 cells (`calculation_contexts.tsv`), 380 of them checked against a precedence model
+- the target after an exception (2026-11-25), [spec/conversion.md](spec/conversion.md), "The target after an
+  exception": `CX_SY_CONVERSION_OVERFLOW` and `CX_SY_CONVERSION_NO_NUMBER` leave a value in some targets (the lower
+  bytes of an integer in b, s and, from int8, i; the sign or 0 from text; the number prefix, `±Inf` or NaN in f;
+  the fitted text of a decfloat in n), every other cell keeps its target. 2,217 cells over all sources and targets
+  (`conversion_target.tsv`) and 2,102 more cells at the edges of the integer, p and n targets
+  (`conversion_edges.tsv`); `abap.Convert` and `abap.Calculate` return the value with the exception
 
 What the tables have to settle, by example: the issues raised in abaplint/transpiler from #2019 on are one-off
 findings of exactly these rules. Of 73, 57 fall inside the four tables or the structure rules (conversion 17,
@@ -196,10 +206,9 @@ value and context), not one issue at a time; the snippets of those issues and PR
 whose expected behaviour contradicts a spec is reopened there.
 
 Next:
-- [ ] the target after `CX_SY_CONVERSION_OVERFLOW` (conversion table): an integer target is often left with a
-  truncated value (`b = i_300` leaves 44, `s = i_40000` -25536, `i = int8_3000000000` -1294967296, `b = c_'256'` 1),
-  while others keep their value; examples in the open points of `calculation.md`, a grid over all sources and
-  targets to do
+- [ ] special values left after an exception: what `WRITE`, the conversions, comparisons and arithmetic do with
+  an f holding `+Inf`, `-Inf` or NaN and a decfloat16 holding an infinity; the runtime keeps a decfloat16 target
+  instead of storing an infinity until its decfloat value can hold one
 - [ ] the rest of the comparison table: the string and byte operators (`CO`, `CN`, `CA`, `NA`, `CS`, `NS`, `CP`,
   `NP`, `BYTE-…`, `O`, `Z`, `M`), predicate expressions (`IS INITIAL`, `IS ASSIGNED`, `IN` ranges), structures,
   internal tables and references, and the comparisons inside statements (`READ TABLE … WITH KEY`, table keys,

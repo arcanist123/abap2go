@@ -127,8 +127,8 @@ func Convert(src Type, v any, dst Type) (any, error) {
 		v = ToUTF8(s)
 	}
 	r, err := convert8(src, v, dst)
-	if err == nil && isText(dst.Kind) {
-		r = FromUTF8(r.(string))
+	if r != nil && isText(dst.Kind) {
+		r = FromUTF8(r.(string)) // a value left after an exception, too
 	}
 	return r, err
 }
