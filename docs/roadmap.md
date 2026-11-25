@@ -99,25 +99,42 @@ Done:
 - the input is checked with abaplint's rules that stand in for ABAP syntax errors (`src/validation.ts`,
   `errorNamespace: "."`): an unknown type is an error (`unknown_types`), not a void type, and so are a method not
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
+- `ASSERT` (2026-11-25, `src/lower_cond.ts`): one comparison `a op b` with `= <> < > <= >=` (and `EQ NE LT GT LE
+  GE`, `>< =< =>`) of literals, variables and subfields on `abap.Compare`; when it does not hold, the program ends
+  with the runtime error `ASSERTION_FAILED`. `NOT`, `AND`, `OR`, the other predicates and arithmetic operands are
+  refused for now. A number literal beyond the range of `i` is a `p` everywhere now, also in moves and `VALUE`
+- the arithmetic tests of abaplint/transpiler as end-to-end fixtures (2026-11-25, `test/transpiler/*.txt`, run by
+  `test/transpiler.test.ts`, MIT, see `NOTICE`): the 157 ABAP snippets of `test/operators/arithmetics*.ts`,
+  `mod.ts`, `test/types/*_operations.ts`, `integer8_calculation_type.ts` and `conversion_no_number.ts`, one
+  fixture file per source file, each snippet under the name of its source test
+  - rewritten to `ASSERT` form: what a snippet wrote is asserted instead, with the expected value worked out again
+    for ABAP. Some differ from the source tests: `int8 / int8` into `f` and into `p LENGTH 8 DECIMALS 1` is 3.5,
+    not 3, since the calculation type is that of the result field
+  - six snippets move a literal ABAP is expected to reject as a syntax error, since it does not fit the type: `-1`
+    into `x LENGTH 1`, `'abc'`, `'1E3'` and `'2.5'` into `i`, `int8` and `f`, `'x10'` as a key of an `n` component.
+    Their fixtures move the literal through a text variable, so the conversion at run time is still tested; the
+    snippet as written is kept as a case that must be refused
+  - a snippet runs to its end (every `ASSERT` holds), or ends with the runtime error or exception its status line
+    names (`int` overflow, `100 MOD 0`). 79 of 163 cases run end to end; the other 84 are marked as waiting for
+    what the compiler refuses first: string templates 22, `TRY … CATCH` 14, structures and internal tables 11,
+    arithmetic expressions as comparison operands 8, `BETWEEN` 6, `ADD`/`SUBTRACT`/`MULTIPLY`/`DIVIDE` 6, `sign( )`
+    and `exp( )` 6, `CONSTANTS` 3, field symbols and `IF` 2, the build-time check of literals 6. A waiting case
+    runs as a todo, so it shows once it passes
+  - no compiled snippet gave a value other than the expected one
 
 Next:
-- [ ] take over the arithmetic tests of abaplint/transpiler as end-to-end fixtures: 157 ABAP snippets from
-  `test/operators/arithmetics*.ts`, `mod.ts` and `test/types/*_operations.ts`, `integer8_calculation_type.ts`,
-  `conversion_no_number.ts` (MIT), one file each with its source test named
-  - keep the snippets, not their expected values: the expected output of every snippet (list output, and whether
-    each `ASSERT` holds) is worked out again for ABAP, since older tests record the transpiler's own console output
-  - compile `ASSERT` with a relational expression on `abap.Compare`, the minimal form of `IF` below; the snippets
-    with `DATA`, moves, arithmetic, `WRITE` and `ASSERT` (about 120) run end to end, the others (`TRY`, `LOOP`,
-    `COLLECT`, templates, …) stay as fixtures waiting for their statements
-  - a difference is a bug in the runtime or a gap in a rule table, fixed through the spec and its cells
 - [ ] control flow: `IF`, `ELSEIF`, `ELSE`, `CASE`, and the loops `WHILE` and `DO` (with `EXIT`, `CONTINUE`,
   `sy-index`), with relational expressions on `abap.Compare`, arithmetic operands (one calculation type for both
-  sides), `NOT`/`AND`/`OR`/`EQUIV` with short-circuit evaluation; checked against `comparison_expr.tsv`
+  sides), `NOT`/`AND`/`OR`/`EQUIV` with short-circuit evaluation, `BETWEEN`; checked against
+  `comparison_expr.tsv`. `ASSERT` takes the same conditions, and the waiting transpiler fixtures show which
+  snippets each step lets run
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
   calculation type fixed at build time, `i`, `int8` and `f` as native Go operations with overflow checks, `p` and
   `decfloat34` as direct calls; comparison types chosen at build time; every TSV cell run on both paths
+  - a literal that does not convert to its static target is a syntax error, refused
+    at build time; the six "as written" transpiler fixtures are its test cases
 - [ ] the rest of `calculation_contexts.tsv` as its statements are compiled: inline declarations, templates, `CONV`,
   `EXACT`, `ADD` and the others, the result field after an exception (with `TRY`). The expression parser of
   `calculation_test.go` still attaches a leading `-` to its operand; fix it if it is to run these cells too

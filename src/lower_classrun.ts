@@ -2,6 +2,7 @@ import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
 import { IRClassrun, IRStatement } from "./ir";
 import { isNoop, lowerData, lowerMove, lowerSource, position, Variables, Where } from "./lower_common";
+import { lowerAssert } from "./lower_cond";
 
 const { Statements, Expressions, Structures } = abaplint;
 
@@ -54,6 +55,8 @@ export function lowerClassrun(registry: abaplint.IRegistry, obj: abaplint.Object
       body.push(lowerData(statement, variables, where));
     } else if (statement.get() instanceof Statements.Move) {
       body.push(lowerMove(statement, variables, where));
+    } else if (statement.get() instanceof Statements.Assert) {
+      body.push(lowerAssert(statement, variables, where));
     } else if (statement.get() instanceof Statements.Call) {
       body.push(lowerOutWrite(statement, variables, where));
     } else {

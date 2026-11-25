@@ -1,0 +1,39 @@
+* The ABAP snippets of test/operators/mod.ts in abaplint/transpiler (https://github.com/abaplint/transpiler),
+* MIT License, Copyright (c) 2020 Lars Hvam Petersen; see LICENSES/abaplint-transpiler.txt.
+* Rewritten to ASSERT form: what the source test wrote is asserted instead. The expected values are worked out
+* again for ABAP, and some differ from the source test. Format: test/transpiler.test.ts.
+
+*** integer MOD
+DATA foo TYPE i.
+foo = 5 MOD 2.
+ASSERT foo = 1.
+
+*** integer MOD, lower case
+DATA foo TYPE i.
+foo = 5 mod 2.
+ASSERT foo = 1.
+
+*** mod, negative value
+DATA n TYPE i.
+n = -4 MOD 3.
+ASSERT n = 2.
+
+*** MOD, both negative
+DATA int TYPE i.
+int = -5 MOD -2.
+ASSERT int = 1.
+
+*** MOD, negative
+DATA int TYPE i.
+int = 5 MOD -2.
+ASSERT int = 1.
+
+*** MOD, zero and zero
+DATA bar TYPE i.
+bar = 0 MOD 0.
+ASSERT bar = 0.
+
+*** MOD, zero and zero, 2
+* fails: CX_SY_ZERODIVIDE
+DATA bar TYPE i.
+bar = 100 MOD 0.

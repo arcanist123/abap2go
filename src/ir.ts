@@ -67,7 +67,22 @@ export interface IRSubstring {
   type: IRType;
 }
 
-export type IRStatement = IRListWrite | IRConsoleWrite | IRData | IRMove | IRCalculate;
+export type IRStatement = IRListWrite | IRConsoleWrite | IRData | IRMove | IRCalculate | IRAssert;
+
+/** ASSERT condition: when the condition does not hold, the program ends with the runtime error ASSERTION_FAILED. */
+export interface IRAssert {
+  kind: "assert";
+  condition: IRCondition;
+}
+
+/** A relational operator, in its symbolic form (EQ is =, NE and >< are <>, =< is <=, => is >=). */
+export type IRCompareOp = "=" | "<>" | "<" | ">" | "<=" | ">=";
+
+/**
+ * A logical expression. So far one comparison of two operands by the comparison rules of docs/spec/comparison.md
+ * (abap.Compare); a conversion error in it is a runtime error, not an exception.
+ */
+export type IRCondition = { kind: "compare"; op: IRCompareOp; left: IRSource; right: IRSource };
 
 /** WRITE [/] of a literal or variable onto the basic list, formatted with the session's user settings. */
 export interface IRListWrite {

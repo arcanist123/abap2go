@@ -1,7 +1,7 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
 import { IRArithOp, IRCalculate, IRExpr, IRLiteral, IRTarget } from "./ir";
-import { lowerConstant, lowerFieldChain, lowerSource, Variables, Where } from "./lower_common";
+import { integerLiteral, lowerConstant, lowerFieldChain, lowerSource, Variables, Where } from "./lower_common";
 
 const { Expressions } = abaplint;
 
@@ -206,24 +206,9 @@ function lowerOperand(node: abaplint.Nodes.ExpressionNode, variables: Variables,
   throw new BuildError(`${node.concatTokens()}: not supported as an operand yet`, where);
 }
 
-/**
- * An integer literal beyond the range of i has type p; any other constant as lowerConstant. text overrides the
- * integer's written form (its digits without the sign).
- */
+/** A constant as lowerConstant; text overrides an integer's written form (its digits without the sign). */
 function numberOrConstant(constant: abaplint.Nodes.ExpressionNode, where: Where, text?: string): IRLiteral {
-  const integer = constant.findDirectExpression(Expressions.Integer);
-  if (integer !== undefined) {
-    const digits = text ?? integer.concatTokens().replace(/\s+/g, "");
-    const value = BigInt(digits);
-    if (value < -(2n ** 31n) || value >= 2n ** 31n) {
-      if (digits.replace(/^-/, "").length > 31) {
-        throw new BuildError(`${digits}: more than 31 digits`, where);
-      }
-      return { kind: "literal", type: { kind: "p", length: 16, decimals: 0 }, value: value.toString() };
-    }
-    return { kind: "literal", type: { kind: "i" }, value: value.toString() };
-  }
-  return lowerConstant(constant, where);
+  return text !== undefined ? integerLiteral(text, where) : lowerConstant(constant, where);
 }
 
 function lowerFunction(node: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRExpr {

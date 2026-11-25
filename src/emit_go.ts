@@ -1,4 +1,4 @@
-import { IRArithOp, IRExpr, IRRoot, IRSource, IRStatement, IRSubstring, IRTarget, IRType, IRVariable } from "./ir";
+import { IRArithOp, IRCondition, IRExpr, IRRoot, IRSource, IRStatement, IRSubstring, IRTarget, IRType, IRVariable } from "./ir";
 
 /** Emits package main for one root. The runtime is imported from the runtime module as `abap2go/abap`. */
 export function emitGo(root: IRRoot): string {
@@ -65,6 +65,7 @@ function statement(s: IRStatement): string[] {
     case "console_write": hoist(s.value); hoist(s.name); break;
     case "move": hoist(s.target); hoist(s.source); break;
     case "calculate": hoist(s.target); hoistExpr(s.expression); break;
+    case "assert": hoist(s.condition.left); hoist(s.condition.right); break;
   }
   return [...lines, ...statementOnly(s)];
 }
@@ -94,7 +95,16 @@ function statementOnly(s: IRStatement): string[] {
       return [assign(s.target, convert(s.source, s.target.type, s.target.kind === "substring" ? typeValue(s.target) : undefined))];
     case "calculate":
       return [assign(s.target, `abap.MustCalculate[${goType(s.target.type)}](${expr(s.expression)}, ${typeValue(s.target)})`)];
+    case "assert":
+      return [`abap.Assert(${condition(s.condition)})`];
   }
+}
+
+/** A Go bool expression of a condition. */
+function condition(c: IRCondition): string {
+  const { left, right } = c;
+  const op = c.op === "=" ? "==" : c.op === "<>" ? "!=" : c.op;
+  return `abap.MustCompare(${typeValue(left)}, ${operand(left)}, ${typeValue(right)}, ${operand(right)}) ${op} 0`;
 }
 
 const GO_OPS: Record<IRArithOp, string> = {

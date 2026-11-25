@@ -1,0 +1,78 @@
+* The ABAP snippets of test/types/conversion_no_number.ts in abaplint/transpiler (https://github.com/abaplint/transpiler),
+* MIT License, Copyright (c) 2020 Lars Hvam Petersen; see LICENSES/abaplint-transpiler.txt.
+* Rewritten to ASSERT form: what the source test wrote is asserted instead. The expected values are worked out
+* again for ABAP, and some differ from the source test. Format: test/transpiler.test.ts.
+
+*** TYPE i, from a string
+* waits: TRY ... CATCH
+DATA target TYPE i.
+DATA text TYPE string VALUE 'seven'.
+DATA caught TYPE c LENGTH 1.
+target = 5.
+TRY.
+    target = text.
+  CATCH cx_sy_conversion_no_number.
+    caught = 'X'.
+ENDTRY.
+ASSERT caught = 'X'.
+ASSERT target IS INITIAL.
+
+*** TYPE int8, from a string
+* waits: TRY ... CATCH
+DATA target TYPE int8.
+DATA text TYPE string VALUE 'seven'.
+DATA caught TYPE c LENGTH 1.
+target = 5.
+TRY.
+    target = text.
+  CATCH cx_sy_conversion_no_number.
+    caught = 'X'.
+ENDTRY.
+ASSERT caught = 'X'.
+ASSERT target IS INITIAL.
+
+*** TYPE p LENGTH 8 DECIMALS 2, from a string
+* waits: TRY ... CATCH
+DATA target TYPE p LENGTH 8 DECIMALS 2.
+DATA text TYPE string VALUE 'seven'.
+DATA caught TYPE c LENGTH 1.
+target = 5.
+TRY.
+    target = text.
+  CATCH cx_sy_conversion_no_number.
+    caught = 'X'.
+ENDTRY.
+ASSERT caught = 'X'.
+ASSERT target IS INITIAL.
+
+*** TYPE f, from a string
+* waits: TRY ... CATCH
+DATA target TYPE f.
+DATA text TYPE string VALUE 'seven'.
+DATA caught TYPE c LENGTH 1.
+target = 5.
+TRY.
+    target = text.
+  CATCH cx_sy_conversion_no_number.
+    caught = 'X'.
+ENDTRY.
+ASSERT caught = 'X'.
+ASSERT target IS INITIAL.
+
+*** TYPE i, from a character field
+* waits: TRY ... CATCH
+DATA target TYPE i.
+DATA text TYPE c LENGTH 5 VALUE 'abc'.
+target = 5.
+TRY.
+    target = text.
+  CATCH cx_sy_conversion_no_number.
+ENDTRY.
+ASSERT target = 0.
+
+*** a conversion that succeeds still sets the value
+DATA target TYPE i.
+DATA text TYPE string VALUE '12'.
+target = 5.
+target = text.
+ASSERT target = 12.

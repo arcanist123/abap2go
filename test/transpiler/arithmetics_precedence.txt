@@ -1,0 +1,124 @@
+* The ABAP snippets of test/operators/arithmetics_precedence.ts in abaplint/transpiler (https://github.com/abaplint/transpiler),
+* MIT License, Copyright (c) 2020 Lars Hvam Petersen; see LICENSES/abaplint-transpiler.txt.
+* Rewritten to ASSERT form: what the source test wrote is asserted instead. The expected values are worked out
+* again for ABAP, and some differ from the source test. Format: test/transpiler.test.ts.
+
+*** Arithmetics, precedence 1
+* waits: arithmetic expressions as operands of comparisons
+ASSERT 4 - 0 + 1 = 5.
+
+*** Arithmetics, precedence 2
+DATA int TYPE i.
+int = 2 * 2 + 3 * 3.
+ASSERT int = 13.
+
+*** Arithmetics, precedence 3
+* waits: arithmetic expressions as operands of comparisons
+ASSERT 100 * 10 + 2 = ( 100 * 10 ) + 2.
+
+*** Arithmetics, precedence 4
+* waits: arithmetic expressions as operands of comparisons
+ASSERT 4 + 1 - 2 = 3.
+
+*** Arithmetics, precedence 5
+* waits: arithmetic expressions as operands of comparisons
+ASSERT 4 + ( 1 - 2 ) = 3.
+
+*** Arithmetics, precedence 6
+DATA int TYPE i.
+int = 4 - 1 - 2.
+ASSERT int = 1.
+
+*** Arithmetics, precedence 7
+* waits: arithmetic expressions as operands of comparisons
+ASSERT 2 * 2 * 2 = 8.
+
+*** Arithmetics, precedence 8
+* waits: arithmetic expressions as operands of comparisons
+ASSERT 16 / 2 / 2 = 4.
+
+*** Arithmetics, precedence 9
+DATA int TYPE i.
+int = 2 + 2 * 3 + 3.
+ASSERT int = 11.
+
+*** power and plus
+data n type i.
+n = 3 ** 2 + 2 ** 2.
+ASSERT n = 13.
+
+*** moar power
+DATA i TYPE i.
+i = 3 * 10 ** 3.
+ASSERT i = 3000.
+
+*** leading sign belongs to the first operand
+DATA a TYPE i VALUE 3.
+DATA b TYPE i VALUE 2.
+DATA c TYPE i VALUE 7.
+DATA r TYPE i.
+r = - c + b.
+ASSERT r = -5.
+r = - c MOD b.
+ASSERT r = 1.
+r = - c DIV b.
+ASSERT r = -4.
+r = - a - 1.
+ASSERT r = -4.
+r = - - c + b.
+ASSERT r = 9.
+r = - 7 + 2.
+ASSERT r = -5.
+r = - c * b + 1.
+ASSERT r = -13.
+r = - ( c + b ).
+ASSERT r = -9.
+r = c MOD - b.
+ASSERT r = 1.
+r = a * - b.
+ASSERT r = -6.
+
+*** leading sign binds weaker than **
+DATA a TYPE i VALUE 3.
+DATA b TYPE i VALUE 2.
+DATA f TYPE f.
+f = - a ** 2.
+ASSERT f = -9.
+f = - 3 ** 2.
+ASSERT f = -9.
+f = - a ** 2 + 1.
+ASSERT f = -8.
+f = - a * b ** 2.
+ASSERT f = -12.
+f = 1 - a ** 2.
+ASSERT f = -8.
+
+*** leading sign in calculation type int8
+DATA a TYPE int8 VALUE 7.
+DATA b TYPE int8 VALUE 2.
+DATA r TYPE int8.
+r = - a + b.
+ASSERT r = -5.
+r = - a MOD b.
+ASSERT r = 1.
+r = - a DIV b.
+ASSERT r = -4.
+
+*** power is right-associative
+DATA f TYPE f.
+DATA two TYPE i VALUE 2.
+DATA three TYPE i VALUE 3.
+f = 2 ** 3 ** 2.
+ASSERT f = 512.
+f = two ** three ** two.
+ASSERT f = 512.
+f = 2 ** 2 ** 3 * 2.
+ASSERT f = 512.
+f = 1 + 2 ** 3 ** 2.
+ASSERT f = 513.
+f = ( 2 ** 3 ) ** 2.
+ASSERT f = 64.
+f = 2 ** 1 ** 2 ** 3.
+ASSERT f = 2.
+f = - two ** three ** two.
+ASSERT f = -512.

@@ -1,0 +1,359 @@
+* The ABAP snippets of test/operators/arithmetics.ts in abaplint/transpiler (https://github.com/abaplint/transpiler),
+* MIT License, Copyright (c) 2020 Lars Hvam Petersen; see LICENSES/abaplint-transpiler.txt.
+* Rewritten to ASSERT form: what the source test wrote is asserted instead. The expected values are worked out
+* again for ABAP, and some differ from the source test. Format: test/transpiler.test.ts.
+
+*** integers DIV 1
+DATA lv_int TYPE i.
+lv_int = 5 / 2.
+ASSERT lv_int = 3.
+
+*** integers DIV 2
+DATA lv_int TYPE i.
+lv_int = 100 / 99.
+ASSERT lv_int = 1.
+
+*** integers DIV 3
+DATA lv_int TYPE i.
+lv_int = 5 / 3.
+ASSERT lv_int = 2.
+
+*** integers DIV 4
+DATA lv_int TYPE i.
+lv_int = 5 / 4.
+ASSERT lv_int = 1.
+
+*** integer DIV
+DATA foo TYPE i.
+foo = 5 DIV 2.
+ASSERT foo = 2.
+
+*** power
+DATA foo TYPE i.
+foo = 5 ** 2.
+ASSERT foo = 25.
+
+*** rationals
+* waits: arithmetic expressions as operands of comparisons
+ASSERT 1 / 5 = + '0.2'.
+
+*** rationals 2
+* waits: arithmetic expressions as operands of comparisons
+DATA f TYPE f.
+f = 1 / 5.
+ASSERT f = + '0.2'.
+
+*** rationals 3
+DATA f TYPE f.
+f = 1 / 5.
+f = f * 5.
+ASSERT f = 1.
+
+*** power, fractions
+DATA f TYPE f.
+f = 1 / 5.
+f = f ** 2.
+ASSERT f = '0.04000000000000001'.
+
+*** degrees to radians
+* waits: CONSTANTS
+CONSTANTS pi TYPE f VALUE '3.14159265359'.
+DATA degrees TYPE f.
+DATA radians TYPE f.
+degrees = 90.
+radians = ( degrees * pi ) / 180.
+ASSERT radians = '1.5707963267950003'.
+
+*** more cos, 1
+* waits: CONSTANTS
+CONSTANTS pi TYPE f VALUE '3.14159265359'.
+DATA new_x TYPE f.
+new_x = cos( pi ).
+ASSERT new_x = -1.
+
+*** more cos, 2
+* waits: CONSTANTS
+CONSTANTS pi TYPE f VALUE '3.14159265'.
+DATA new_x TYPE f.
+new_x = cos( pi ).
+ASSERT new_x = -1.
+
+*** strlen plussed in string template
+* waits: string templates
+DATA result TYPE string.
+DATA duplicates TYPE string.
+duplicates = |sdf|.
+result = |bar{ strlen( duplicates ) + 1 }foo|.
+ASSERT result = `bar4foo`.
+
+*** string plus integer into string
+DATA lv_trow1 TYPE string.
+DATA lv_trow2 TYPE string.
+DATA iv_shift_rows TYPE i.
+lv_trow1 = '1'.
+iv_shift_rows = 2.
+lv_trow2 = lv_trow1 + iv_shift_rows.
+ASSERT lv_trow2 = `3 `.
+
+*** char plus integer into char
+DATA lv_trow1 TYPE string.
+DATA lv_trow2 TYPE string.
+DATA iv_shift_rows TYPE i.
+lv_trow1 = '1'.
+iv_shift_rows = 2.
+lv_trow2 = lv_trow1 + iv_shift_rows.
+ASSERT lv_trow2 = `3 `.
+
+*** DIV, negative value
+DATA int TYPE i.
+int = -1.
+int = int DIV 256.
+ASSERT int = -1.
+
+*** DIV and MOD, negative divisor
+DATA d TYPE i.
+DATA m TYPE i.
+d = 7 DIV 2.
+m = 7 MOD 2.
+ASSERT d = 3.
+ASSERT m = 1.
+d = -7 DIV 2.
+m = -7 MOD 2.
+ASSERT d = -4.
+ASSERT m = 1.
+d = 7 DIV -2.
+m = 7 MOD -2.
+ASSERT d = -3.
+ASSERT m = 1.
+d = -7 DIV -2.
+m = -7 MOD -2.
+ASSERT d = 4.
+ASSERT m = 1.
+d = 6 DIV -2.
+m = 6 MOD -2.
+ASSERT d = -3.
+ASSERT m = 0.
+d = 7 DIV 3.
+m = 7 MOD 3.
+ASSERT d = 2.
+ASSERT m = 1.
+d = 7 DIV -3.
+m = 7 MOD -3.
+ASSERT d = -2.
+ASSERT m = 1.
+d = -7 DIV 3.
+m = -7 MOD 3.
+ASSERT d = -3.
+ASSERT m = 2.
+d = -7 DIV -3.
+m = -7 MOD -3.
+ASSERT d = 3.
+ASSERT m = 2.
+d = 11 DIV -4.
+m = 11 MOD -4.
+ASSERT d = -2.
+ASSERT m = 3.
+d = -11 DIV -4.
+m = -11 MOD -4.
+ASSERT d = 3.
+ASSERT m = 1.
+
+*** DIV and MOD, negative divisor, float
+DATA a TYPE f.
+DATA b TYPE f.
+DATA d TYPE f.
+DATA m TYPE f.
+a = '7.5'.
+b = '2'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = '3'.
+ASSERT m = '1.5'.
+a = '7.5'.
+b = '-2'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = '-3'.
+ASSERT m = '1.5'.
+a = '-7.5'.
+b = '2'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = '-4'.
+ASSERT m = '0.5'.
+a = '-7.5'.
+b = '-2'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = '4'.
+ASSERT m = '0.5'.
+a = '7'.
+b = '2.5'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = '2'.
+ASSERT m = '2'.
+a = '7'.
+b = '-2.5'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = '-2'.
+ASSERT m = '2'.
+a = '-7'.
+b = '2.5'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = '-3'.
+ASSERT m = '0.5'.
+a = '-7'.
+b = '-2.5'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = '3'.
+ASSERT m = '0.5'.
+a = '-7.5'.
+b = '2.5'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = '-3'.
+ASSERT m = '0'.
+a = '7.5'.
+b = '-2.5'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = '-3'.
+ASSERT m = '0'.
+a = '0.5'.
+b = '0.1'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = 5.
+ASSERT m = 0.
+b = '-0.1'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = -5.
+ASSERT m = 0.
+a = '-0.5'.
+b = '0.1'.
+d = a DIV b.
+m = a MOD b.
+ASSERT d = -5.
+ASSERT m = 0.
+
+*** DIV, short hex, 1
+DATA hex TYPE x LENGTH 1.
+DATA integer TYPE i.
+hex = 'FF'.
+integer = hex DIV 10.
+ASSERT integer = 25.
+
+*** DIV, short hex, 2
+DATA hex TYPE x LENGTH 2.
+DATA integer TYPE i.
+hex = 'FFFF'.
+integer = hex DIV 10.
+ASSERT integer = 6553.
+
+*** DIV, short hex, length 1
+DATA crc TYPE x LENGTH 1.
+DATA lv_minus TYPE i VALUE -1.
+crc = lv_minus.
+crc = crc DIV 2.
+ASSERT crc = '7F'.
+
+*** DIV, short hex, length 1, with the literal as written
+* syntax error
+* waits: literals checked against the target type at build time
+DATA crc TYPE x LENGTH 1.
+crc = -1.
+crc = crc DIV 2.
+ASSERT crc = '7F'.
+
+*** character field plus 1
+DATA foo TYPE c LENGTH 10.
+foo = '1000'.
+foo = foo + 1.
+ASSERT foo = '     1001'.
+
+*** character field minus 1
+DATA foo TYPE c LENGTH 10.
+foo = '1000'.
+foo = foo - 1.
+ASSERT foo = '      999'.
+
+*** integers, int8 div
+DATA val TYPE int8.
+val = 198620152477517.
+val = val DIV 8.
+
+*** integers, int8 add
+DATA val TYPE int8.
+val = 198620152477517.
+val = val + val.
+
+*** integers, power
+DATA lv_maxint TYPE i.
+lv_maxint = 2 ** 31 - 1.
+
+*** integers, max
+DATA lv_maxint TYPE i.
+DATA lv_f      TYPE f.
+DATA lv_a      TYPE f.
+lv_f = 1000.
+lv_maxint = 2 ** 31 - 1.
+lv_a = lv_f + lv_maxint + 1.
+
+*** integers, max, 2
+DATA lv_maxint TYPE i.
+DATA lv_b      TYPE f.
+DATA lv_a      TYPE f.
+lv_maxint = 2 ** 31 - 1.
+lv_b = 2 * ( lv_maxint + 1 ).
+
+*** zero DIV zero
+DATA lv_length     TYPE i.
+DATA lv_iterations TYPE i.
+DATA ev_size       TYPE i.
+lv_iterations = ev_size DIV lv_length.
+ASSERT lv_iterations = 0.
+
+*** zero / zero
+DATA lv_length     TYPE i.
+DATA lv_iterations TYPE i.
+DATA ev_size       TYPE i.
+lv_iterations = ev_size / lv_length.
+ASSERT lv_iterations = 0.
+
+*** hitting int max value
+* fails: CX_SY_ARITHMETIC_OVERFLOW
+DATA lv_int1 TYPE i.
+DATA lv_int2 TYPE i.
+lv_int1 = 2000000.
+lv_int2 = 2000000.
+lv_int1 = lv_int1 * lv_int2.
+
+*** hitting int MIN value
+* fails: CX_SY_ARITHMETIC_OVERFLOW
+DATA lv_int1 TYPE i.
+DATA lv_int2 TYPE i.
+lv_int1 = -2000000.
+lv_int2 = -2000000.
+lv_int1 = lv_int1 * lv_int2.
+
+*** ok, not int max value, its a float field
+DATA lv_f TYPE f.
+DATA lv_int1 TYPE i.
+DATA lv_int2 TYPE i.
+lv_int1 = 2000000.
+lv_int2 = 2000000.
+lv_f = lv_int1 * lv_int2.
+
+*** multiply two short hex values
+* waits: structures and internal tables
+DATA byte_a TYPE x LENGTH 1 VALUE '02'.
+DATA byte_b TYPE x LENGTH 1 VALUE '03'.
+DATA lt_acc TYPE STANDARD TABLE OF i WITH EMPTY KEY.
+APPEND 0 TO lt_acc.
+lt_acc[ 1 ] = lt_acc[ 1 ] + byte_a * byte_b.
+ASSERT lt_acc[ 1 ] = 6.
