@@ -113,9 +113,10 @@ Done:
   - conditions: comparisons with `= <> < > <= >=` (all forms) of literals, variables, subfields and `sy-index` on
     `abap.Compare`; arithmetic expressions as operands, with one calculation type for all operands of the comparison
     (`abap.CompareCalculated`); `[NOT] BETWEEN`; `NOT`, `AND`, `OR`, `EQUIV` and parentheses with their priorities
-    and short-circuit evaluation (a subfield is computed only when its comparison is evaluated). 330 of the 404 cells
+    and short-circuit evaluation (a subfield is computed only when its comparison is evaluated). 338 of the 404 cells
     of `comparison_expr.tsv` run end to end (`test/comparison_expr.test.ts`); the others wait for `IS INITIAL`,
-    `CONV`, built-in functions as single operands, and `NOT NOT` (not parsed by abaplint)
+    `CONV` and built-in functions as single operands
+  - `NOT` repeated any number of times (2026-11-25, abaplint #4714 on the vendored fork): an even number cancels out
   - `DATA` is not executable: every variable of a processing block exists from its start with its start value, also
     one declared in a loop or a branch
   - refused: `EXIT`, `CONTINUE` and `CHECK` outside a loop (they leave the processing block), `DO … VARYING`,
@@ -333,12 +334,6 @@ All 380 open issues were read; the parser / check_syntax ones run through abapli
   design question for the abaplint maintainer, not raised. Valid code gets the wrong statement
 - [ ] side finding, no issue: `NEW lcl( )->attr = 1.` gives "Not an object reference, target" for any attribute.
   Check first that ABAP accepts it; if so, valid code is rejected
-- [ ] **#4714** (2026-11-25, found by the compiler, next after the control flow PR): `NOT NOT a = 1` does not parse
-  ("Statement does not exist"); the grammar of `Compare` takes one optional `NOT`, `CondSub` one before a
-  parenthesis. ABAP is expected to accept any number of `NOT` (keyword documentation, *log_exp - NOT*), and
-  `comparison_expr.tsv` has 8 cells with it. Valid code fails to parse. Plan: fix on the fork's `abap2go` branch
-  (repeated `NOT` in both, tests for one, two and three `NOT` and with `AND`/`OR`), PR upstream, vendor the
-  rebuilt tarball, then drop the `NOT NOT` exclusion in `test/comparison_expr.test.ts`
 - [ ] dataset statements: #4644 (ENDIAN, TRUNCATE AT POSITION, SET DATASET ATTRIBUTES not parsed) and #4645
   (inline declarations not handled): valid code fails to parse or is mistyped
 
@@ -346,8 +341,10 @@ All 380 open issues were read; the parser / check_syntax ones run through abapli
   in PR abaplint#4684
 - in flight: #4700 (`WRITE` of a utclong gives "Source not character like", valid code rejected) is in PR
   abaplint#4701; already on the fork's `abap2go` branch
+- in flight: #4714 (`NOT NOT a = 1` does not parse, valid code rejected; also in `LOOP`, `DELETE` and `MODIFY …
+  WHERE`) is in PR abaplint#4716; on the fork's `abap2go` branch and vendored as `2.120.117-abap2go.3`
 
-Suggested order: #1809, then `NOT NOT` (small, and its cells wait for it), then the dataset pair; `INSERT itab.` after asking the abaplint
+Suggested order: #1809, then the dataset pair; `INSERT itab.` after asking the abaplint
 maintainer.
 
 ### 2. open-abap-core: what an AOT service calls (TODO review on main `fbc211e`, 2026-11-23)

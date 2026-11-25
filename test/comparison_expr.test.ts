@@ -7,12 +7,11 @@ import { classrun, run } from "./harness";
 // The cells of runtime/go/abap/testdata/comparison_expr.tsv (logical expressions, arithmetic operands, BETWEEN,
 // literals and syntax errors, see docs/spec/comparison.md) that the compiler supports, compiled as IF and run end to
 // end. Not compiled yet, so left out: predicates (IS INITIAL), constructor expressions (CONV), built-in functions as
-// single operands (abs( ), strlen( ), boolc( ), xsdbool( ), utclong_current( )) and abap_true. NOT NOT is left out because
-// abaplint does not parse it yet.
+// single operands (abs( ), strlen( ), boolc( ), xsdbool( ), utclong_current( )) and abap_true.
 
 const FILE = path.join(__dirname, "..", "..", "runtime", "go", "abap", "testdata", "comparison_expr.tsv");
 
-const NOT_COMPILED = /\bNOT NOT\b|\bIS\b|\bCONV\b|^(abs|strlen|boolc|xsdbool|utclong_current)\(|\babap_true\b/;
+const NOT_COMPILED = /\bIS\b|\bCONV\b|^(abs|strlen|boolc|xsdbool|utclong_current)\(|\babap_true\b/;
 
 interface Cell {
   line: number;
