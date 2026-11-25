@@ -9,9 +9,6 @@ const OPERATORS: Record<string, IRArithOp> = {
   "+": "+", "-": "-", "*": "*", "/": "/", "DIV": "DIV", "MOD": "MOD", "**": "**",
 };
 
-/** Priority of the binary operators: ** binds strongest and groups from the right. */
-const PRIORITY: Record<IRArithOp, number> = { "+": 1, "-": 1, "*": 2, "/": 2, "DIV": 2, "MOD": 2, "**": 3 };
-
 const FUNCTIONS = new Set(["abs", "sqrt", "ipow"]);
 
 /** A Source that is an arithmetic expression: it has an operator, a sign, parentheses or a numeric function. */
@@ -19,7 +16,7 @@ export function isArithmetic(source: abaplint.Nodes.ExpressionNode): boolean {
   const children = source.getChildren();
   if (children.length > 1) {
     return source.findDirectExpression(Expressions.ArithOperator) !== undefined
-      || children[0].concatTokens() === "-" || children[0].concatTokens() === "(";
+      || isSign(children[0]) || children[0].concatTokens() === "(";
   }
   return functionName(source) !== undefined;
 }
@@ -57,11 +54,19 @@ function checkOperands(e: IRExpr, where: Where): void {
   }
 }
 
-type Item = { kind: "operand"; expr: IRExpr } | { kind: "operator"; op: IRArithOp };
+/** A sign token: - or + before an operand. abaplint gives it its own token, outside the operand. */
+function isSign(node: abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode): boolean {
+  return !(node instanceof abaplint.Nodes.ExpressionNode) && (node.concatTokens() === "-" || node.concatTokens() === "+");
+}
+
+type Item =
+  | { kind: "operand"; expr: IRExpr }
+  | { kind: "operator"; op: IRArithOp }
+  | { kind: "sign"; negate: boolean };
 
 /**
- * abaplint parses an arithmetic Source right-recursively: [-] operand [operator Source], where an operand may be
- * ( Source ). The chain is flattened into operands and operators and grouped again by ABAP's priorities.
+ * abaplint parses an arithmetic Source right-recursively: sign* operand [operator Source], where an operand may be
+ * ( Source ). The chain is flattened into signs, operands and operators and grouped again by ABAP's priorities.
  */
 function lowerExpression(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRExpr {
   const items: Item[] = [];
@@ -72,27 +77,24 @@ function lowerExpression(source: abaplint.Nodes.ExpressionNode, variables: Varia
 function flatten(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where, items: Item[]): void {
   const children = source.getChildren();
   let i = 0;
-  let negate = false;
-  if (children[i]?.concatTokens() === "-" && !(children[i] instanceof abaplint.Nodes.ExpressionNode)) {
-    negate = true;
+  while (children[i] !== undefined && isSign(children[i])) {
+    items.push({ kind: "sign", negate: children[i].concatTokens() === "-" });
     i++;
   }
-  let operand: IRExpr;
   const first = children[i];
   if (first?.concatTokens() === "(" && !(first instanceof abaplint.Nodes.ExpressionNode)) {
     const inner = children[i + 1];
     if (!(inner instanceof abaplint.Nodes.ExpressionNode) || children[i + 2]?.concatTokens() !== ")") {
       throw new BuildError(`${source.concatTokens()}: unexpected parentheses`, where);
     }
-    operand = lowerExpression(inner, variables, where);
+    items.push({ kind: "operand", expr: lowerExpression(inner, variables, where) });
     i += 3;
   } else if (first instanceof abaplint.Nodes.ExpressionNode) {
-    operand = lowerOperand(first, variables, where);
+    items.push(...lowerOperand(first, variables, where));
     i++;
   } else {
     throw new BuildError(`${source.concatTokens()}: not supported in an arithmetic expression yet`, where);
   }
-  items.push({ kind: "operand", expr: negate ? { kind: "unary", fn: "-", operand } : operand });
 
   const op = children[i];
   if (op === undefined) {
@@ -109,32 +111,49 @@ function flatten(source: abaplint.Nodes.ExpressionNode, variables: Variables, wh
   flatten(rest, variables, where, items);
 }
 
-/** Precedence climbing over operand (operator operand)*. */
+/**
+ * Recursive descent over the priorities of docs/spec/calculation.md, from the strongest binding: ** (from the
+ * right), the sign, * / DIV MOD, + -. So a sign applies to a power, not to its base, also right of **:
+ * - a ** b is -( a ** b ) and b ** - c ** b is b ** -( c ** b ).
+ */
 function group(items: Item[], where: Where): IRExpr {
   let pos = 0;
-  const operandAt = (): IRExpr => {
+  const malformed = () => new BuildError("malformed arithmetic expression", where);
+  const operatorAt = (ops: IRArithOp[]): IRArithOp | undefined => {
+    const item = items[pos];
+    return item?.kind === "operator" && ops.includes(item.op) ? item.op : undefined;
+  };
+  const power = (): IRExpr => {
     const item = items[pos++];
     if (item?.kind !== "operand") {
-      throw new BuildError("malformed arithmetic expression", where);
+      throw malformed();
     }
-    return item.expr;
+    if (operatorAt(["**"]) === undefined) {
+      return item.expr;
+    }
+    pos++;
+    return { kind: "binary", op: "**", left: item.expr, right: signed() };
   };
-  const climb = (minPriority: number): IRExpr => {
-    let left = operandAt();
-    for (;;) {
-      const item = items[pos];
-      if (item?.kind !== "operator" || PRIORITY[item.op] < minPriority) {
-        return left;
-      }
+  const signed = (): IRExpr => {
+    const item = items[pos];
+    if (item?.kind !== "sign") {
+      return power();
+    }
+    pos++;
+    const operand = signed();
+    return item.negate ? { kind: "unary", fn: "-", operand } : operand;
+  };
+  const level = (ops: IRArithOp[], next: () => IRExpr) => (): IRExpr => {
+    let left = next();
+    for (let op = operatorAt(ops); op !== undefined; op = operatorAt(ops)) {
       pos++;
-      const rightAssoc = item.op === "**";
-      const right = climb(rightAssoc ? PRIORITY[item.op] : PRIORITY[item.op] + 1);
-      left = { kind: "binary", op: item.op, left, right };
+      left = { kind: "binary", op, left, right: next() };
     }
+    return left;
   };
-  const e = climb(1);
+  const e = level(["+", "-"], level(["*", "/", "DIV", "MOD"], signed))();
   if (pos !== items.length) {
-    throw new BuildError("malformed arithmetic expression", where);
+    throw malformed();
   }
   return e;
 }
@@ -153,29 +172,45 @@ function functionName(node: abaplint.Nodes.ExpressionNode): string | undefined {
   return name !== undefined && FUNCTIONS.has(name) ? name : undefined;
 }
 
-/** A variable, a literal (a number beyond the range of i is a p) or abs( ), sqrt( ), ipow( ). */
-function lowerOperand(node: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRExpr {
+/**
+ * A variable, a literal (a number beyond the range of i is a p) or abs( ), sqrt( ), ipow( ). A number literal is
+ * negative when its minus touches the digits (-7); a minus separated by a blank (- 7) is a sign before 7.
+ */
+function lowerOperand(node: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): Item[] {
+  const operand = (expr: IRExpr): Item => ({ kind: "operand", expr });
   if (node.get() instanceof Expressions.Constant) {
-    return { kind: "operand", source: numberOrConstant(node, where) };
+    const literal = numberOrConstant(node, where);
+    const integer = node.findDirectExpression(Expressions.Integer);
+    const first = integer?.getFirstToken();
+    const digits = integer?.getLastToken();
+    if (first !== undefined && digits !== undefined && first !== digits && first.getStr() === "-"
+        && !first.getEnd().equals(digits.getStart())) {
+      const positive = numberOrConstant(node, where, digits.getStr());
+      return [{ kind: "sign", negate: true }, operand({ kind: "operand", source: positive })];
+    }
+    return [operand({ kind: "operand", source: literal })];
   }
   if (node.get() instanceof Expressions.FieldChain) {
     const text = node.concatTokens();
     if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(text)) {
       throw new BuildError(`${text}: only variables are supported as operands yet`, where);
     }
-    return { kind: "operand", source: variables.find(text, node, where) };
+    return [operand({ kind: "operand", source: variables.find(text, node, where) })];
   }
   if (node.get() instanceof Expressions.MethodCallChain) {
-    return lowerFunction(node, variables, where);
+    return [operand(lowerFunction(node, variables, where))];
   }
   throw new BuildError(`${node.concatTokens()}: not supported as an operand yet`, where);
 }
 
-/** An integer literal beyond the range of i has type p; any other constant as lowerConstant. */
-function numberOrConstant(constant: abaplint.Nodes.ExpressionNode, where: Where): IRLiteral {
+/**
+ * An integer literal beyond the range of i has type p; any other constant as lowerConstant. text overrides the
+ * integer's written form (its digits without the sign).
+ */
+function numberOrConstant(constant: abaplint.Nodes.ExpressionNode, where: Where, text?: string): IRLiteral {
   const integer = constant.findDirectExpression(Expressions.Integer);
   if (integer !== undefined) {
-    const digits = integer.concatTokens().replace(/\s+/g, "");
+    const digits = text ?? integer.concatTokens().replace(/\s+/g, "");
     const value = BigInt(digits);
     if (value < -(2n ** 31n) || value >= 2n ** 31n) {
       if (digits.replace(/^-/, "").length > 31) {
@@ -183,6 +218,7 @@ function numberOrConstant(constant: abaplint.Nodes.ExpressionNode, where: Where)
       }
       return { kind: "literal", type: { kind: "p", length: 16, decimals: 0 }, value: value.toString() };
     }
+    return { kind: "literal", type: { kind: "i" }, value: value.toString() };
   }
   return lowerConstant(constant, where);
 }

@@ -121,6 +121,10 @@ is -256. Left to right means `7 - 2 - 3` is 2, `7 / 2 * 3` is 10.5 in `p` and 12
 `7 DIV 2 * 3` is 9, `7 MOD 2 * 3` is 3 and `7 * 2 DIV 3` is 4. The function operands (`abs( - a ) ** b`) and
 parentheses (`( - a ) ** b`) bind as usual.
 
+A sign makes the source an arithmetic expression, also a lone `+`, so the calculation type applies where a move
+would convert: with `t` a text field holding `1.25`, `n = t` gives `0125` in an `n LENGTH 4` but `n = + t` calculates in
+`p` and is expected to give `0001`. ABAP is expected to refuse `+a` written without a blank as a syntax error.
+
 `DIV` and `MOD` for the four sign combinations: `7 DIV 3` is 2 and `7 MOD 3` is 1; `-7 DIV 3` is -3, `-7 MOD 3` is
 2; `7 DIV -3` is -2, `7 MOD -3` is 1; `-7 DIV -3` is 3, `-7 MOD -3` is 2. The same holds with decimals:
 `5.2 DIV 1.1` is 4 and `5.2 MOD 1.1` is 0.8, `-5.2 DIV 1.1` is -5 and `-5.2 MOD 1.1` is 0.3.

@@ -1,89 +1,6 @@
 import { test } from "node:test";
 import * as assert from "node:assert/strict";
-import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
-import { execFileSync } from "node:child_process";
-import { build } from "../src/build";
-import { BuildError } from "../src/errors";
-
-const MANIFEST = fs.readFileSync(path.join(__dirname, "..", "..", "examples", "hello", ".abapgit.xml"), "utf-8");
-const PROG_XML = (name: string) => `<?xml version="1.0" encoding="utf-8"?>
-<abapGit version="v1.0.0" serializer="LCL_OBJECT_PROG" serializer_version="v1.0.0">
- <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
-  <asx:values>
-   <PROGDIR><NAME>${name}</NAME><SUBC>1</SUBC><FIXPT>X</FIXPT><UCCHECK>X</UCCHECK></PROGDIR>
-  </asx:values>
- </asx:abap>
-</abapGit>
-`;
-const CLAS_XML = (name: string) => `<?xml version="1.0" encoding="utf-8"?>
-<abapGit version="v1.0.0" serializer="LCL_OBJECT_CLAS" serializer_version="v1.0.0">
- <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
-  <asx:values>
-   <VSEOCLASS><CLSNAME>${name}</CLSNAME><LANGU>E</LANGU><STATE>1</STATE><FIXPT>X</FIXPT><UNICODE>X</UNICODE></VSEOCLASS>
-  </asx:values>
- </asx:abap>
-</abapGit>
-`;
-
-const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "abap2go-test-"));
-let counter = 0;
-
-/**
- * Builds the root from one source file and returns its stdout, or the refusal message, or the runtime error.
- * With a user setup, the executable runs with --user-setup pointing at it; a run it rejects (exit code 2) gives
- * rejected with its message. files are more files of the package, by file name (data elements, domains).
- */
-function run(kind: "prog" | "clas", source: string, userSetup?: object, files: Record<string, string> = {}): { stdout?: string; refused?: string; failed?: string; rejected?: string } {
-  const dir = path.join(tmp, String(counter++));
-  const name = kind === "prog" ? "ZPROBE" : "ZCL_PROBE";
-  fs.mkdirSync(path.join(dir, "src"), { recursive: true });
-  fs.writeFileSync(path.join(dir, ".abapgit.xml"), MANIFEST);
-  for (const [file, content] of Object.entries(files)) {
-    fs.writeFileSync(path.join(dir, "src", file), content);
-  }
-  fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.abap`), source);
-  fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.xml`), kind === "prog" ? PROG_XML(name) : CLAS_XML(name));
-  let exe: string;
-  try {
-    exe = build({ inputs: [dir], root: name, out: path.join(dir, "out") });
-  } catch (e) {
-    if (e instanceof BuildError) {
-      return { refused: e.message };
-    }
-    throw e;
-  }
-  const args: string[] = [];
-  if (userSetup !== undefined) {
-    const file = path.join(dir, "users.json");
-    fs.writeFileSync(file, JSON.stringify(userSetup));
-    args.push("--user-setup", file);
-  }
-  try {
-    return { stdout: execFileSync(exe, args, { encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"] }) };
-  } catch (e) {
-    const err = e as { status?: number; stdout?: string; stderr?: string };
-    if (err.status === 1) {
-      return { stdout: err.stdout, failed: err.stderr };
-    }
-    if (err.status === 2) {
-      return { stdout: err.stdout, rejected: err.stderr };
-    }
-    throw e;
-  }
-}
-
-const classrun = (body: string) => `CLASS zcl_probe DEFINITION PUBLIC FINAL CREATE PUBLIC.
-  PUBLIC SECTION.
-    INTERFACES if_oo_adt_classrun.
-ENDCLASS.
-CLASS zcl_probe IMPLEMENTATION.
-  METHOD if_oo_adt_classrun~main.
-${body}
-  ENDMETHOD.
-ENDCLASS.
-`;
+import { abapgit, classrun, doma, dtel, run } from "./harness";
 
 // Reports: output as open-abap-gui's list processor lays it out (open-steamgate is the reference for WRITE).
 const reports: [string, string, string][] = [
@@ -143,21 +60,6 @@ test("a user setup the runtime cannot use ends the program before it runs", () =
 // b and s come from DDIC INT1 and INT2. A data element, typed directly or through a domain, formats as its built-in
 // type when it has the same output length (3 for INT1, 6 for INT2) and no conversion exit; a domain's sign flag
 // does not change the output.
-const abapgit = (serializer: string, values: string) => `<?xml version="1.0" encoding="utf-8"?>
-<abapGit version="v1.0.0" serializer="${serializer}" serializer_version="v1.0.0">
- <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
-  <asx:values>
-${values}
-  </asx:values>
- </asx:abap>
-</abapGit>
-`;
-const dtel = (name: string, fields: string) => ({
-  [`${name.toLowerCase()}.dtel.xml`]: abapgit("LCL_OBJECT_DTEL", `   <DD04V><ROLLNAME>${name}</ROLLNAME><DDLANGUAGE>E</DDLANGUAGE>${fields}<DDTEXT>t</DDTEXT></DD04V>`),
-});
-const doma = (name: string, fields: string) => ({
-  [`${name.toLowerCase()}.doma.xml`]: abapgit("LCL_OBJECT_DOMA", `   <DD01V><DOMNAME>${name}</DOMNAME><DDLANGUAGE>E</DDLANGUAGE>${fields}<DDTEXT>t</DDTEXT></DD01V>`),
-});
 const DDIC = {
   ...dtel("ZBYTE", "<DATATYPE>INT1</DATATYPE><LENG>000003</LENG><OUTPUTLEN>000003</OUTPUTLEN>"),
   ...dtel("ZSHORT", "<DATATYPE>INT2</DATATYPE><LENG>000005</LENG><OUTPUTLEN>000006</OUTPUTLEN>"),
@@ -237,6 +139,8 @@ const calculations: [string, string, string][] = [
   ["assignment operators", "DATA r TYPE i VALUE 7.\nr += 3. r *= 2. r -= 1. r /= 4. out->write( r ).", "5 \n"],
   ["abs, ipow, sqrt", "DATA a TYPE i VALUE -3.\nDATA r TYPE i.\nDATA f TYPE f.\nr = ipow( base = 2 exp = 10 ) + abs( a ). out->write( r ).\nf = sqrt( 16 ). out->write( f ).", "1027 \n4.0000000000000000E+00\n"],
   ["a number literal beyond i is a p", "DATA r TYPE int8.\nr = 3000000000 + 1. out->write( r ).", "3000000001 \n"],
+  ["a lone + makes an arithmetic expression", "DATA t TYPE c LENGTH 6 VALUE '1.25'.\nDATA n TYPE n LENGTH 4.\nn = t. out->write( n ).\nn = + t. out->write( n ).", "0125\n0001\n"],
+  ["a sign applies to the power, a negative literal is one operand", "DATA r TYPE i.\nr = - 7 ** 2. out->write( r ).\nr = -7 ** 2. out->write( r ).\nr = 2 * - 7 ** 2. out->write( r ).", "49-\n49 \n98-\n"],
   ["MOD and DIV are Euclidean", "DATA a TYPE i VALUE -7.\nDATA r TYPE i.\nr = a MOD 3. out->write( r ).\nr = a DIV 3. out->write( r ).", "2 \n3-\n"],
 ];
 for (const [name, body, stdout] of calculations) {

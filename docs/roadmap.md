@@ -72,6 +72,9 @@ Done:
   `calculation.tsv` passes
   - compiled: `result = expression.` and `+= -= *= /=` with variables, literals (a number beyond `i` is a `p`),
     parentheses and the three functions, as an `abap.Expr` tree
+  - signs and priorities (2026-11-25): `**`, then the sign (`-`, `+`, repeated), then `* / DIV MOD`, then `+ -`;
+    `- 7` is a sign, `-7` one operand; a lone `+ a` is an arithmetic expression. The cells of
+    `calculation_contexts.tsv` the compiler supports run end to end (`test/contexts.test.ts`)
 - the input is checked with abaplint's rules that stand in for ABAP syntax errors (`src/validation.ts`,
   `errorNamespace: "."`): an unknown type is an error (`unknown_types`), not a void type, and so are a method not
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
@@ -95,9 +98,9 @@ Next:
     with `DATA`, moves, arithmetic, `WRITE` and `ASSERT` (about 120) run end to end, the others (`TRY`, `LOOP`,
     `COLLECT`, templates, …) stay as fixtures waiting for their statements
   - a difference is a bug in the runtime or a gap in a rule table, fixed through the spec and its cells
-- [ ] the sign binds after `**`: `src/lower_arith.ts` attaches a leading `-` to its operand, so `- a ** b` compiles
-  as `( - a ) ** b`; the same in the expression parser of `calculation_test.go`. Run `calculation_contexts.tsv` in the
-  tests (negative literals, `+` as a sign, templates, `CONV`, `ADD`, the result field after an exception)
+- [ ] the rest of `calculation_contexts.tsv` as its statements are compiled: inline declarations, templates, `CONV`,
+  `EXACT`, `ADD` and the others, the result field after an exception (with `TRY`). The expression parser of
+  `calculation_test.go` still attaches a leading `-` to its operand; fix it if it is to run these cells too
 - [ ] `IF`, `ELSEIF`, `ELSE`, `CASE` and `WHILE` with relational expressions on `abap.Compare`, arithmetic operands
   (one calculation type for both sides), `NOT`/`AND`/`OR`/`EQUIV` with short-circuit evaluation; checked against
   `comparison_expr.tsv`
