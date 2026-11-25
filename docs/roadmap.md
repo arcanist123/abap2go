@@ -189,6 +189,25 @@ Next:
   functions
 
 
+## Reuse from open-steamgate
+
+Decided 2026-11-25 ([aot_for_abap.md](aot_for_abap.md), "Reuse open-steamgate as far as the guiding principle
+allows"): before building a part, look at how open-steamgate does it and take what fits. This runs alongside the
+critical path: the rule tables stay abap2go's own, and every part taken has to pass them. Snapshot: `main`
+`918a099` (2026-11-25).
+
+- [ ] inventory: list open-steamgate's parts in the three groups of the decision (taken as it is, ported, kept as
+  abap2go's own), with the source files, their size and what each depends on, so the order below is set from it
+- [ ] the seam between compiled code and the environment (database, LUW, locks, jobs, HTTP), defined before the
+  first environment part is taken (see the "A seam first" point of the decision)
+- [ ] runtime pieces that do not depend on the value model, as the compiler needs them: regular expressions,
+  code pages, compression, checksums, JSON parsing, HTTP utilities
+- [ ] the lowering of statements, construct by construct as the compiler grows, each with its test classes from
+  `tools/gogen/testdata*`; expected answers that contradict a rule-table cell reopen that cell
+- [ ] `ANORMALIES.md`: each entry checked against the rule tables; an entry outside them becomes a cell or a work
+  item
+- [ ] attribution kept current: `NOTICE` names every file taken or ported, with the pinned commit
+
 ## Work items
 
 Reranked 2026-11-24 under the Purpose: the AOT compiler first. The critical path (the rule-table specification)
