@@ -44,7 +44,7 @@ Done:
 - the conversion table (2026-11-24): the value model for all 16 elementary kinds (native values: `int32`, `int64`,
   strings, `float64`, a 128-bit unscaled integer for `p`, a decimal coefficient and exponent for decfloat) and
   every cell of the conversion matrix in the runtime (`abap.Convert`), specified in
-  [spec/conversion.md](spec/conversion.md) with 11,702 test cases
+  [spec/conversion.md](spec/conversion.md) with 11,716 test cases
   - compiled: `DATA x TYPE <elementary> [VALUE literal]`, `x = literal | variable`, `out->write( variable )`; an
     uncaught exception ends the program with a runtime error on stderr and exit code 1
 - `WRITE x` for all 16 elementary kinds (2026-11-24): a variable or number literal is formatted by the rules of
@@ -81,6 +81,8 @@ Done:
   UTF-8 at the entry points (with an ASCII fast path), and UTF-8 is used where text leaves the program (console,
   list). Literals are emitted as code units; test cases outside the Basic Multilingual Plane: lengths, a `c` field
   cut between the two code units of a character, order against U+E000 and U+FFFD, list columns
+- `int8` beyond the range of `i` into `d` and `t` (2026-11-25, reopened cell settled): `d` takes the lower four
+  bytes as an `i`, `t` the whole value modulo 86400; 14 more cells in `conversion.tsv`
 - the input is checked with abaplint's rules that stand in for ABAP syntax errors (`src/validation.ts`,
   `errorNamespace: "."`): an unknown type is an error (`unknown_types`), not a void type, and so are a method not
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
@@ -152,7 +154,7 @@ Done:
   (`runtime/go/abap/testdata/write.tsv`)
 - the conversion table, [spec/conversion.md](spec/conversion.md): the 16 × 16 matrix, a rule per cell with its
   exceptions and its keyword documentation section, all kinds including c, string, x, xstring, d, t and utclong,
-  and 11,702 test cases (`runtime/go/abap/testdata/conversion*.tsv`), each one a snippet
+  and 11,716 test cases (`runtime/go/abap/testdata/conversion*.tsv`), each one a snippet
 - the calculation type table, [spec/calculation.md](spec/calculation.md) (2026-11-24): which type an arithmetic
   expression calculates in (operands and result field, `**`, functions, generic operands, inline declarations),
   the rules of `+ - * / DIV MOD **` and `ipow( )` in `i`, `int8`, `p` (31, then 63 significant digits), `f` and
@@ -191,9 +193,6 @@ Next:
   `NP`, `BYTE-…`, `O`, `Z`, `M`), predicate expressions (`IS INITIAL`, `IS ASSIGNED`, `IN` ranges), structures,
   internal tables and references, and the comparisons inside statements (`READ TABLE … WITH KEY`, table keys,
   `SORT … AS TEXT`, `DELETE ADJACENT DUPLICATES`)
-- [ ] reopened in the conversion table: `int8` beyond the range of `i` into `d` (and `t`). `conversion.md` gives
-  `00000000` outside 1 to 3652060; using the lower four bytes as an `i` (2^32 + 738000 → `20210728`) is another
-  candidate, and the test cases do not tell the two apart
 - [ ] structure rules of the conversion table: `MOVE-CORRESPONDING`, `CORRESPONDING`; flat structures with
   non-matching fragment views are refused at build time for now (decision "Storage", 2026-11-25), like every
   operation that depends on ABAP's memory layout

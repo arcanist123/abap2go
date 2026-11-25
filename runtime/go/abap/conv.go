@@ -210,7 +210,8 @@ func fromInteger(v int64, wide bool, dst Type) (any, error) {
 	case KindN:
 		return fitRight(d.digits(), dst.Length, "0"), nil
 	case KindD:
-		return dFromDayNumber(v), nil
+		// an int8 counts with its lower four bytes as an i; t takes the whole value
+		return dFromDayNumber(int64(int32(v))), nil
 	case KindT:
 		return tFromSeconds(v), nil
 	case KindX:
