@@ -114,7 +114,7 @@ const reportRefusals: [string, string, RegExp][] = [
   ["inline declaration of a calculation", "REPORT zprobe.\nDATA x TYPE i.\nDATA(y) = x + 1.", /:3:1: .*only variable = literal, variable or arithmetic expression/],
   ["utclong operand", "REPORT zprobe.\nDATA u TYPE utclong.\nDATA x TYPE i.\nx = u + 1.", /utclong/],
   ["a method call in an expression", "REPORT zprobe.\nDATA x TYPE i.\nx = cl_abap_random=>create( )->int( ) + 1.", /not supported|syntax check/],
-  ["WRITE of an expression", "REPORT zprobe.\nDATA x TYPE i.\nWRITE x + 1.", /WRITE of x \+ 1: only a literal or a variable/],
+  ["WRITE of an expression", "REPORT zprobe.\nDATA x TYPE i.\nWRITE x + 1.", /WRITE of x \+ 1: only a literal, a variable or a subfield/],
   ["WRITE addition", "REPORT zprobe.\nWRITE 'a' COLOR 1.", /no additions/],
   ["WRITE of a constant", "REPORT zprobe.\nCONSTANTS c TYPE string VALUE `a`.\nWRITE c.", /statement Constant is not supported yet/],
   ["other events", "REPORT zprobe.\nINITIALIZATION.\nSTART-OF-SELECTION.\nWRITE 'a'.", /statement Initialization is not supported yet/],
@@ -218,7 +218,7 @@ test("report: DATA and moves run before WRITE", () => {
 const classrunRefusals: [string, string, RegExp][] = [
   ["chained write", "out->write( 'a' )->write( 'b' ).", /only out->write/],
   ["other statement", "DATA x TYPE i. CLEAR x.", /statement Clear is not supported yet/],
-  ["non-literal data", "out->write( sy-uname ).", /only a literal/],
+  ["non-literal data", "out->write( sy-uname ).", /only a literal, a variable or a subfield/],
 ];
 for (const [name, body, refused] of classrunRefusals) {
   test(`classrun refused: ${name}`, () => {

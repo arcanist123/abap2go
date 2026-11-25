@@ -1,6 +1,6 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
-import { IRCalculate, IRData, IRLiteral, IRMove, IRSource, IRType, IRVariable } from "./ir";
+import { IRCalculate, IRData, IRLiteral, IRMove, IRSource, IRSubstring, IRTarget, IRType, IRVariable } from "./ir";
 import { isArithmetic, lowerCalculate } from "./lower_arith";
 
 const { Expressions, BasicTypes } = abaplint;
@@ -191,7 +191,7 @@ export function irType(type: abaplint.AbstractType, name: string, where: Where):
 
 const SIMPLE_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
-/** A Source that is a literal or a variable, or a build error. */
+/** A Source that is a literal, a variable or a subfield of a variable, or a build error. */
 export function lowerSource(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where, what: string): IRSource {
   const constant = source.getChildren().length === 1 ? source.findDirectExpression(Expressions.Constant) : undefined;
   if (constant !== undefined) {
@@ -201,7 +201,115 @@ export function lowerSource(source: abaplint.Nodes.ExpressionNode, variables: Va
   if (SIMPLE_NAME.test(text)) {
     return variables.find(text, source, where);
   }
-  throw new BuildError(`${what} ${text}: only a literal or a variable is supported yet`, where);
+  const chain = source.getChildren().length === 1 ? source.findDirectExpression(Expressions.FieldChain) : undefined;
+  if (chain !== undefined) {
+    const field = lowerFieldChain(chain, variables, where);
+    if (field !== undefined) {
+      return field;
+    }
+  }
+  throw new BuildError(`${what} ${text}: only a literal, a variable or a subfield is supported yet`, where);
+}
+
+/**
+ * A FieldChain that is a variable, with or without offset/length: the variable or its subfield. undefined for any
+ * other chain (components, references, ...).
+ */
+export function lowerFieldChain(chain: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRVariable | IRSubstring | undefined {
+  const [field, ...rest] = chain.getChildren();
+  if (!(field instanceof abaplint.Nodes.ExpressionNode) || !(field.get() instanceof Expressions.SourceField)
+      || !SIMPLE_NAME.test(field.concatTokens()) || !rest.every(isOffsetOrLength)) {
+    return undefined;
+  }
+  const base = variables.find(field.concatTokens(), field, where);
+  return rest.length === 0 ? base : lowerSubstring(base, rest, variables, where, false);
+}
+
+function isOffsetOrLength(node: abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode): boolean {
+  return node instanceof abaplint.Nodes.ExpressionNode
+    && (node.get() instanceof Expressions.FieldOffset || node.get() instanceof Expressions.FieldLength);
+}
+
+/** A Target that is a variable or a subfield of a flat variable, or a build error. */
+export function lowerTarget(target: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRTarget {
+  const [field, ...rest] = target.getChildren();
+  if (!(field instanceof abaplint.Nodes.ExpressionNode) || !(field.get() instanceof Expressions.TargetField)
+      || !SIMPLE_NAME.test(field.concatTokens()) || !rest.every(isOffsetOrLength)) {
+    throw new BuildError(`${target.concatTokens()}: only a variable or a subfield is supported as target yet`, where);
+  }
+  const base = variables.find(field.concatTokens(), field, where);
+  return rest.length === 0 ? base : lowerSubstring(base, rest, variables, where, true);
+}
+
+const SUBFIELD_KINDS = new Set(["c", "n", "d", "t", "string", "x", "xstring"]);
+
+/**
+ * The subfield of base given by its FieldOffset and FieldLength nodes. What ABAP rejects as a syntax error is a build
+ * error: a type without subfields, a subfield of a string as a target, static bounds outside a flat field.
+ */
+function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode)[],
+    variables: Variables, where: Where, isTarget: boolean): IRSubstring {
+  const offsetNode = nodes.find(n => n instanceof abaplint.Nodes.ExpressionNode && n.get() instanceof Expressions.FieldOffset);
+  const lengthNode = nodes.find(n => n instanceof abaplint.Nodes.ExpressionNode && n.get() instanceof Expressions.FieldLength);
+  const text = `${base.name}${nodes.map(n => n.concatTokens()).join("")}`;
+  if (!SUBFIELD_KINDS.has(base.type.kind)) {
+    throw new BuildError(`${text}: type ${base.type.kind} does not permit subfields`, where);
+  }
+  const flat = base.type.kind !== "string" && base.type.kind !== "xstring";
+  if (isTarget && !flat) {
+    throw new BuildError(`${text}: a subfield of a ${base.type.kind} cannot be written to`, where);
+  }
+
+  // the offset or length: an integer or a variable
+  const position = (node: abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode | undefined): IRLiteral | IRVariable | undefined => {
+    if (node === undefined) {
+      return undefined;
+    }
+    const value = (node as abaplint.Nodes.ExpressionNode).getChildren().filter(c => !["+", "(", ")"].includes(c.concatTokens()));
+    const valueText = value.map(c => c.concatTokens()).join("");
+    if (/^\d+$/.test(valueText)) {
+      return { kind: "literal", type: { kind: "i" }, value: String(parseInt(valueText, 10)) };
+    }
+    if (value.length === 1 && value[0] instanceof abaplint.Nodes.ExpressionNode && SIMPLE_NAME.test(valueText)) {
+      return variables.find(valueText, value[0], where);
+    }
+    throw new BuildError(`${text}: only an integer or a variable is supported as offset or length yet`, where);
+  };
+  const offset = position(offsetNode);
+  const length = position(lengthNode);
+
+  const staticOffset = offset === undefined ? 0 : offset.kind === "literal" ? parseInt(offset.value, 10) : undefined;
+  const staticLength = length?.kind === "literal" ? parseInt(length.value, 10) : undefined;
+  if (staticLength === 0 && flat) {
+    throw new BuildError(`${text}: the length of a subfield must be greater than 0`, where);
+  }
+  const size = flat ? flatLength(base.type) : undefined;
+  if (size !== undefined && staticOffset !== undefined && staticOffset >= size) {
+    throw new BuildError(`${text}: the offset ${staticOffset} is not within the length ${size}`, where);
+  }
+  if (size !== undefined && staticOffset !== undefined && staticLength !== undefined && staticOffset + staticLength > size) {
+    throw new BuildError(`${text}: the offset ${staticOffset} and length ${staticLength} exceed the length ${size}`, where);
+  }
+
+  const subLength = staticLength ?? (size !== undefined && staticOffset !== undefined ? size - staticOffset : size);
+  let type: IRType;
+  switch (base.type.kind) {
+    case "c": type = { kind: "c", length: subLength ?? 0 }; break;
+    case "n": case "d": case "t": type = { kind: "n", length: subLength ?? 0 }; break;
+    case "x": type = { kind: "x", length: subLength ?? 0 }; break;
+    default: type = base.type;
+  }
+  return { kind: "substring", base, offset, length, type };
+}
+
+/** The length in characters or bytes of a flat type with subfields. */
+function flatLength(t: IRType): number | undefined {
+  switch (t.kind) {
+    case "c": case "n": case "x": return t.length;
+    case "d": return 8;
+    case "t": return 6;
+  }
+  return undefined;
 }
 
 /** A Constant: a text field literal, a string literal (no & chains) or an integer within the range of i. */
@@ -252,14 +360,13 @@ export function lowerData(statement: abaplint.Nodes.StatementNode, variables: Va
 export function lowerMove(statement: abaplint.Nodes.StatementNode, variables: Variables, where: Where): IRMove | IRCalculate {
   const targets = statement.findDirectExpressions(Expressions.Target);
   const sources = statement.findDirectExpressions(Expressions.Source);
-  const target = targets[0]?.concatTokens() ?? "";
   const children = statement.getChildren();
   const operator = children.slice(1, -2).map(c => c.concatTokens()).join("");
-  if (targets.length !== 1 || sources.length !== 1 || !SIMPLE_NAME.test(target)
+  if (targets.length !== 1 || sources.length !== 1 || targets[0].findDirectExpression(Expressions.InlineData) !== undefined
       || !["=", "+=", "-=", "*=", "/="].includes(operator)) {
     throw new BuildError(`${statement.concatTokens()}: only variable = literal, variable or arithmetic expression is supported yet`, where);
   }
-  const variable = variables.find(target, statement, where);
+  const variable = lowerTarget(targets[0], variables, where);
   if (operator !== "=") {
     return lowerCalculate(variable, operator[0] as "+" | "-" | "*" | "/", sources[0], variables, where);
   }

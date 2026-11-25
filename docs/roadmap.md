@@ -27,7 +27,7 @@ Priority, when choosing what to pick up next:
 
 This file is the source of status for abap2go and the work it needs in other repositories.
 
-## The compiler (status 2026-11-24)
+## The compiler (status 2026-11-25)
 
 TypeScript on `@abaplint/core`, emitting Go (`src/`, runtime in `runtime/go`); `npm test` builds and runs small
 programs end to end and runs the Go runtime's tests. No CI yet.
@@ -83,13 +83,24 @@ Done:
   cut between the two code units of a character, order against U+E000 and U+FFFD, list columns
 - `int8` beyond the range of `i` into `d` and `t` (2026-11-25, reopened cell settled): `d` takes the lower four
   bytes as an `i`, `t` the whole value modulo 86400; 14 more cells in `conversion.tsv`
+- `strlen( )` and offset/length access (2026-11-25, `runtime/go/abap/substring.go`, `test/substring.test.ts`):
+  both count UTF-16 code units (bytes for x and xstring), so a character outside the Basic Multilingual Plane
+  counts two and a subfield can cut between its two code units
+  - `strlen( )` of c, n, d and t without trailing blanks, of string with them, as an operand of an arithmetic
+    expression; any other argument type is a syntax error
+  - `dobj+off(len)`, `dobj+off`, `dobj(len)` with integers or variables, on c, n, d, t, string, x and xstring, as a
+    source (moves, arithmetic, `WRITE`, `out->write( )`) and on the flat types as a target (moves, calculations,
+    `+= …`). The subfield of c is a c, of n, d and t an n, of x an x, of string and xstring the same type; its
+    type is given at run time (`abap.Substring`), since a variable offset or length decides its length
+  - a subfield of a flat field lies within it and is at least one character long, a subfield of a string or
+    xstring lies within its current length and may be empty; otherwise `CX_SY_RANGE_OUT_OF_BOUNDS`. Static bounds
+    outside a flat field, subfields of other types and subfields of strings as targets are syntax errors and are
+    refused at build time
 - the input is checked with abaplint's rules that stand in for ABAP syntax errors (`src/validation.ts`,
   `errorNamespace: "."`): an unknown type is an error (`unknown_types`), not a void type, and so are a method not
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
 
 Next:
-- [ ] `strlen( )` and offset/length access, with test cases outside the Basic Multilingual Plane (both count
-  UTF-16 code units, which the storage of text now gives directly)
 - [ ] take over the arithmetic tests of abaplint/transpiler as end-to-end fixtures: 157 ABAP snippets from
   `test/operators/arithmetics*.ts`, `mod.ts` and `test/types/*_operations.ts`, `integer8_calculation_type.ts`,
   `conversion_no_number.ts` (MIT), one file each with its source test named

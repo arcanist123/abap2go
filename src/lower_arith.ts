@@ -1,7 +1,7 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
-import { IRArithOp, IRCalculate, IRExpr, IRLiteral, IRVariable } from "./ir";
-import { lowerConstant, Variables, Where } from "./lower_common";
+import { IRArithOp, IRCalculate, IRExpr, IRLiteral, IRTarget } from "./ir";
+import { lowerConstant, lowerFieldChain, lowerSource, Variables, Where } from "./lower_common";
 
 const { Expressions } = abaplint;
 
@@ -9,9 +9,9 @@ const OPERATORS: Record<string, IRArithOp> = {
   "+": "+", "-": "-", "*": "*", "/": "/", "DIV": "DIV", "MOD": "MOD", "**": "**",
 };
 
-const FUNCTIONS = new Set(["abs", "sqrt", "ipow"]);
+const FUNCTIONS = new Set(["abs", "sqrt", "ipow", "strlen"]);
 
-/** A Source that is an arithmetic expression: it has an operator, a sign, parentheses or a numeric function. */
+/** A Source that is an arithmetic expression: it has an operator, a sign, parentheses or a built-in function. */
 export function isArithmetic(source: abaplint.Nodes.ExpressionNode): boolean {
   const children = source.getChildren();
   if (children.length > 1) {
@@ -22,7 +22,7 @@ export function isArithmetic(source: abaplint.Nodes.ExpressionNode): boolean {
 }
 
 /** target = expression. or target op= expression. (op one of + - * /) as a calculation. */
-export function lowerCalculate(target: IRVariable, assignOp: "+" | "-" | "*" | "/" | undefined,
+export function lowerCalculate(target: IRTarget, assignOp: "+" | "-" | "*" | "/" | undefined,
     source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRCalculate {
   let expression = lowerExpression(source, variables, where);
   if (assignOp !== undefined) {
@@ -50,6 +50,8 @@ function checkOperands(e: IRExpr, where: Where): void {
     case "ipow":
       checkOperands(e.base, where);
       checkOperands(e.exp, where);
+      return;
+    case "strlen":
       return;
   }
 }
@@ -158,7 +160,7 @@ function group(items: Item[], where: Where): IRExpr {
   return e;
 }
 
-/** The built-in function a Source consists of (abs, sqrt, ipow), undefined if it is something else. */
+/** The built-in function a Source consists of (abs, sqrt, ipow, strlen), undefined if it is something else. */
 function functionName(node: abaplint.Nodes.ExpressionNode): string | undefined {
   const chain = node.get() instanceof Expressions.MethodCallChain ? node : node.findDirectExpression(Expressions.MethodCallChain);
   if (chain === undefined || (node !== chain && node.getChildren().length !== 1)) {
@@ -173,7 +175,8 @@ function functionName(node: abaplint.Nodes.ExpressionNode): string | undefined {
 }
 
 /**
- * A variable, a literal (a number beyond the range of i is a p) or abs( ), sqrt( ), ipow( ). A number literal is
+ * A variable or its subfield, a literal (a number beyond the range of i is a p) or abs( ), sqrt( ), ipow( ),
+ * strlen( ). A number literal is
  * negative when its minus touches the digits (-7); a minus separated by a blank (- 7) is a sign before 7.
  */
 function lowerOperand(node: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): Item[] {
@@ -191,11 +194,11 @@ function lowerOperand(node: abaplint.Nodes.ExpressionNode, variables: Variables,
     return [operand({ kind: "operand", source: literal })];
   }
   if (node.get() instanceof Expressions.FieldChain) {
-    const text = node.concatTokens();
-    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(text)) {
-      throw new BuildError(`${text}: only variables are supported as operands yet`, where);
+    const field = lowerFieldChain(node, variables, where);
+    if (field === undefined) {
+      throw new BuildError(`${node.concatTokens()}: only variables and their subfields are supported as operands yet`, where);
     }
-    return [operand({ kind: "operand", source: variables.find(text, node, where) })];
+    return [operand({ kind: "operand", source: field })];
   }
   if (node.get() instanceof Expressions.MethodCallChain) {
     return [operand(lowerFunction(node, variables, where))];
@@ -251,6 +254,18 @@ function lowerFunction(node: abaplint.Nodes.ExpressionNode, variables: Variables
     }
     return lowerExpression(s, variables, where);
   };
+  if (name === "strlen") {
+    // a character-like expression position: the argument is not calculated
+    const source = args.get("val");
+    if (source === undefined || args.size !== 1) {
+      throw new BuildError(`${node.concatTokens()}: strlen( ) takes one argument`, where);
+    }
+    const arg = lowerSource(source, variables, where, "strlen( ) of");
+    if (!["c", "n", "d", "t", "string"].includes(arg.type.kind)) {
+      throw new BuildError(`${node.concatTokens()}: the argument of strlen( ) must be character-like (c, n, d, t or string)`, where);
+    }
+    return { kind: "strlen", arg };
+  }
   if (name === "ipow") {
     if (args.size !== 2) {
       throw new BuildError(`${node.concatTokens()}: ipow( base = ... exp = ... ) expected`, where);
