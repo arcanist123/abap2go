@@ -160,7 +160,6 @@ lv_a = lv_p.
 ASSERT lv_a = '-3.25'.
 
 *** comparisons with f, i, p, decfloat34, c and string
-* waits: BETWEEN in conditions
 DATA lv_a TYPE f.
 DATA lv_b TYPE f.
 DATA lv_i TYPE i VALUE 2.

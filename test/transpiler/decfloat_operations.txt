@@ -184,7 +184,6 @@ lv_a = lv_p.
 ASSERT |{ lv_a }| = `-3.1`.
 
 *** decfloat16: comparisons with decfloat, i, p, f, c and string, the scale does not count
-* waits: BETWEEN in conditions
 DATA lv_a TYPE decfloat16.
 DATA lv_b TYPE decfloat16.
 DATA lv_i TYPE i VALUE 2.
@@ -212,7 +211,6 @@ lv_a = '-0.01'.
 ASSERT lv_a < 0.
 
 *** decfloat34: comparisons with decfloat, i, p, f, c and string, the scale does not count
-* waits: BETWEEN in conditions
 DATA lv_a TYPE decfloat34.
 DATA lv_b TYPE decfloat34.
 DATA lv_i TYPE i VALUE 2.

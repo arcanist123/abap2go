@@ -56,7 +56,6 @@ lv_r = lv_r3.
 ASSERT lv_r = -1.
 
 *** comparisons with p, i, f, c and string
-* waits: BETWEEN in conditions
 DATA lv_a TYPE p LENGTH 8 DECIMALS 2.
 DATA lv_b TYPE p LENGTH 8 DECIMALS 1.
 DATA lv_i TYPE i VALUE 2.

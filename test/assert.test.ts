@@ -62,13 +62,20 @@ test("ASSERT in a classrun", () => {
   assert.match(result.failed ?? "", /ASSERTION_FAILED/);
 });
 
+test("ASSERT takes the conditions IF takes: NOT, AND, OR, BETWEEN and arithmetic operands", () => {
+  const source = `DATA a TYPE i VALUE 7.
+ASSERT NOT a = 1.
+ASSERT a = 7 AND a < 8.
+ASSERT a = 1 OR a = 7.
+ASSERT a BETWEEN 7 AND 8.
+ASSERT a / 2 = 4.
+WRITE 'done'.`;
+  assert.deepEqual(run("prog", source), { stdout: "done\n" });
+});
+
 const refusals: [string, string, RegExp][] = [
-  ["NOT", "DATA a TYPE i.\nASSERT NOT a = 1.", /no NOT, AND, OR|not NOT or other predicates/],
-  ["AND", "DATA a TYPE i.\nASSERT a = 0 AND a < 1.", /only one comparison/],
-  ["BETWEEN", "DATA a TYPE i.\nASSERT a BETWEEN 0 AND 1.", /only a comparison with/],
-  ["IS INITIAL", "DATA a TYPE i.\nASSERT a IS INITIAL.", /only a comparison with/],
-  ["an arithmetic operand", "ASSERT 4 - 0 + 1 = 5.", /arithmetic expressions and functions as operands of a comparison/],
-  ["a function operand", "DATA s TYPE string.\nASSERT strlen( s ) = 0.", /arithmetic expressions and functions as operands of a comparison/],
+  ["IS INITIAL", "DATA a TYPE i.\nASSERT a IS INITIAL.", /not IS, IN or other predicates/],
+  ["a function operand", "DATA s TYPE string.\nASSERT strlen( s ) = 0.", /a built-in function as an operand of a comparison/],
   ["FIELDS", "DATA a TYPE i.\nASSERT FIELDS a CONDITION a = 0.", /no additions/],
 ];
 for (const [name, source, refused] of refusals) {

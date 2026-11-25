@@ -16,8 +16,10 @@ elementary kinds (26,244 cells), and
 [`testdata/comparison_random.tsv`](../../runtime/go/abap/testdata/comparison_random.tsv), 3,000 random pairs held
 out while the rules were worked out, which the runtime passed without a change. Logical expressions, arithmetic
 operands, literals and syntax errors are in
-[`testdata/comparison_expr.tsv`](../../runtime/go/abap/testdata/comparison_expr.tsv) (404 cells); they wait for the
-compiler, which does not compile `IF` yet. A line of `comparison.tsv`
+[`testdata/comparison_expr.tsv`](../../runtime/go/abap/testdata/comparison_expr.tsv) (404 cells). Since 2026-11-25
+the compiler compiles them as `IF` (`test/comparison_expr.test.ts`): 330 cells run end to end and pass, arithmetic
+operands on `abap.CompareCalculated` (`compare_calc.go`); the others wait for predicates, `CONV`, built-in functions
+as single operands, and `NOT NOT`, which abaplint does not parse yet. A line of `comparison.tsv`
 
 ```
 c10	[1-]	i	[-1]	=
@@ -137,8 +139,12 @@ comparison type. Each relational expression of a logical expression has its own.
 - `i_1 / 3 * 3 = CONV p8_2( 1 )` is true (31 digits rounded back in `p`), with `CONV decfloat34( 1 )` it is false
   (0.99…9 with 34 digits), with `CONV f( 1 )` true; `2 ** '0.5' * 2 ** '0.5' = 2` and `sqrt( 2 ) * sqrt( 2 ) = 2` are
   false in `f`.
-- `BETWEEN` and `NOT BETWEEN` are two comparisons, each with the same calculation type: `i_7 / 2 BETWEEN 4 AND 4` is
-  true.
+- A result in `p` is compared as a number of at most 31 digits and at most 14 decimals, rounded half away from zero
+  as for a text target ([calculation.md](calculation.md), section 4); more than 31 digits before the decimal point
+  raise `CX_SY_ARITHMETIC_OVERFLOW`, although the interim results may have 63 (`p_max + 1 > 0`).
+- `BETWEEN` and `NOT BETWEEN` are two comparisons, each with the same calculation type, taken from all three
+  operands: `i_7 / 2 BETWEEN 4 AND 4` is true, `i_7 / 2 BETWEEN + '3.5' AND + '3.5'` is true (calculation type `p`).
+  As with data objects, the upper bound is not evaluated when the operand is below the lower bound.
 
 **A non-numeric single operand** compared with an arithmetic expression is a syntax error, whatever its kind: a
 `c`, `string`, `n`, `d`, `t`, `x`, `xstring` or `utclong` variable and a text or string literal
@@ -175,7 +181,8 @@ evaluation stops as soon as the value of that level is known: with `x = 1`, `x =
 evaluating `1 / z` (so `z = 0` raises nothing), and with `x = 0`, `x = 1 AND 1 / z = 1` is false without it. The
 operand that decides must be on the left: `1 / z = 1 OR x = 1` raises `CX_SY_ZERODIVIDE`. Both sides of `EQUIV`
 are always evaluated. The skipped part is not evaluated at all: no functional method is called, no conversion or
-arithmetic exception is raised.
+arithmetic exception is raised. `a BETWEEN b AND c` is `a >= b AND a <= c` in this respect: with `a` below `b`, `c`
+is not evaluated (`5 BETWEEN 6 AND c_'abc'` is false, without `CONVT_NO_NUMBER`).
 
 ## Literals and constructor expressions
 

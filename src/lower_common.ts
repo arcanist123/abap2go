@@ -1,6 +1,6 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
-import { IRCalculate, IRData, IRLiteral, IRMove, IRSource, IRSubstring, IRTarget, IRType, IRVariable } from "./ir";
+import { IRCalculate, IRData, IRLiteral, IRMove, IRSource, IRSubstring, IRSystemField, IRTarget, IRType, IRVariable } from "./ir";
 import { isArithmetic, lowerCalculate } from "./lower_arith";
 
 const { Expressions, BasicTypes } = abaplint;
@@ -212,10 +212,13 @@ export function lowerSource(source: abaplint.Nodes.ExpressionNode, variables: Va
 }
 
 /**
- * A FieldChain that is a variable, with or without offset/length: the variable or its subfield. undefined for any
- * other chain (components, references, ...).
+ * A FieldChain that is a variable, with or without offset/length: the variable or its subfield; sy-index. undefined
+ * for any other chain (components, other system fields, references, ...).
  */
-export function lowerFieldChain(chain: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRVariable | IRSubstring | undefined {
+export function lowerFieldChain(chain: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRVariable | IRSubstring | IRSystemField | undefined {
+  if (/^sy-index$/i.test(chain.concatTokens())) {
+    return { kind: "system_field", name: "index", type: { kind: "i" } };
+  }
   const [field, ...rest] = chain.getChildren();
   if (!(field instanceof abaplint.Nodes.ExpressionNode) || !(field.get() instanceof Expressions.SourceField)
       || !SIMPLE_NAME.test(field.concatTokens()) || !rest.every(isOffsetOrLength)) {

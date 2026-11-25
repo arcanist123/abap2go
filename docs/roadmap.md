@@ -24,6 +24,9 @@ Priority, when choosing what to pick up next:
   or a PR
 - nothing that would stop ABAP from compiling ahead of time: nothing that needs a JS host or a compiler at run time
 - lint rules are out of scope: only the parser and check_syntax count
+- a gap in abaplint or open-abap-core that the compiler runs into, within the scope it compiles, is fixed right
+  away: on the fork's `abap2go` branch (vendored), and offered upstream as a PR. It goes before the other work items
+  of that repository
 
 This file is the source of status for abap2go and the work it needs in other repositories.
 
@@ -99,10 +102,27 @@ Done:
 - the input is checked with abaplint's rules that stand in for ABAP syntax errors (`src/validation.ts`,
   `errorNamespace: "."`): an unknown type is an error (`unknown_types`), not a void type, and so are a method not
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
-- `ASSERT` (2026-11-25, `src/lower_cond.ts`): one comparison `a op b` with `= <> < > <= >=` (and `EQ NE LT GT LE
-  GE`, `>< =< =>`) of literals, variables and subfields on `abap.Compare`; when it does not hold, the program ends
-  with the runtime error `ASSERTION_FAILED`. `NOT`, `AND`, `OR`, the other predicates and arithmetic operands are
-  refused for now. A number literal beyond the range of `i` is a `p` everywhere now, also in moves and `VALUE`
+- `ASSERT` (2026-11-25, `src/lower_cond.ts`): a condition as for `IF` (below); when it does not hold, the program
+  ends with the runtime error `ASSERTION_FAILED`. A number literal beyond the range of `i` is a `p` everywhere now,
+  also in moves and `VALUE`
+- control flow (2026-11-25, `src/lower_block.ts`, `test/control_flow.test.ts`): `IF`/`ELSEIF`/`ELSE`, `CASE`/`WHEN
+  … OR …`/`WHEN OTHERS` (each `WHEN` the comparison `operand = value`), `DO`, `DO n TIMES` (n converted to `i` once,
+  before the first pass), `WHILE`, and in loops `EXIT`, `CONTINUE` and `CHECK`; `sy-index` as an operand
+  (`session.Sy.Index`): the number of the pass, set before a `WHILE` condition is evaluated, and set back to its
+  value before the loop when the loop ends
+  - conditions: comparisons with `= <> < > <= >=` (all forms) of literals, variables, subfields and `sy-index` on
+    `abap.Compare`; arithmetic expressions as operands, with one calculation type for all operands of the comparison
+    (`abap.CompareCalculated`); `[NOT] BETWEEN`; `NOT`, `AND`, `OR`, `EQUIV` and parentheses with their priorities
+    and short-circuit evaluation (a subfield is computed only when its comparison is evaluated). 330 of the 404 cells
+    of `comparison_expr.tsv` run end to end (`test/comparison_expr.test.ts`); the others wait for `IS INITIAL`,
+    `CONV`, built-in functions as single operands, and `NOT NOT` (not parsed by abaplint)
+  - `DATA` is not executable: every variable of a processing block exists from its start with its start value, also
+    one declared in a loop or a branch
+  - refused: `EXIT`, `CONTINUE` and `CHECK` outside a loop (they leave the processing block), `DO … VARYING`,
+    `WHILE … VARY`, an arithmetic expression as the operand of `CASE`, `WHEN` or `DO … TIMES`, `CASE` without
+    `WHEN`, a lone built-in function as a comparison operand, comparisons of kinds without a comparison type (`d` with
+    `t`, `utclong` with anything but `c`, `string` and `utclong`), a non-numeric single operand against an arithmetic
+    expression, the other predicates (`IS`, `IN`, `CO`, …), `WRITE sy-index` (the output length of its data element)
 - the arithmetic tests of abaplint/transpiler as end-to-end fixtures (2026-11-25, `test/transpiler/*.txt`, run by
   `test/transpiler.test.ts`, MIT, see `NOTICE`): the 157 ABAP snippets of `test/operators/arithmetics*.ts`,
   `mod.ts`, `test/types/*_operations.ts`, `integer8_calculation_type.ts` and `conversion_no_number.ts`, one
@@ -115,19 +135,17 @@ Done:
     Their fixtures move the literal through a text variable, so the conversion at run time is still tested; the
     snippet as written is kept as a case that must be refused
   - a snippet runs to its end (every `ASSERT` holds), or ends with the runtime error or exception its status line
-    names (`int` overflow, `100 MOD 0`). 79 of 163 cases run end to end; the other 84 are marked as waiting for
-    what the compiler refuses first: string templates 22, `TRY … CATCH` 14, structures and internal tables 11,
-    arithmetic expressions as comparison operands 8, `BETWEEN` 6, `ADD`/`SUBTRACT`/`MULTIPLY`/`DIVIDE` 6, `sign( )`
-    and `exp( )` 6, `CONSTANTS` 3, field symbols and `IF` 2, the build-time check of literals 6. A waiting case
-    runs as a todo, so it shows once it passes
+    names (`int` overflow, `100 MOD 0`). 93 of 163 cases run end to end (79 before control flow); the other 70 are
+    marked as waiting for what the compiler refuses first: string templates 22, `TRY … CATCH` 14, structures and
+    internal tables 11, `ADD`/`SUBTRACT`/`MULTIPLY`/`DIVIDE` 6, `sign( )` and `exp( )` 6, `CONSTANTS` 3, field
+    symbols 1, `CO` 1, the build-time check of literals 6. A waiting case runs as a todo, so it shows once it passes
   - no compiled snippet gave a value other than the expected one
 
 Next:
-- [ ] control flow: `IF`, `ELSEIF`, `ELSE`, `CASE`, and the loops `WHILE` and `DO` (with `EXIT`, `CONTINUE`,
-  `sy-index`), with relational expressions on `abap.Compare`, arithmetic operands (one calculation type for both
-  sides), `NOT`/`AND`/`OR`/`EQUIV` with short-circuit evaluation, `BETWEEN`; checked against
-  `comparison_expr.tsv`. `ASSERT` takes the same conditions, and the waiting transpiler fixtures show which
-  snippets each step lets run
+- [ ] control flow, the rest: `EXIT`, `CHECK` and `RETURN` outside loops (leaving the processing block), `IS
+  INITIAL` and the other predicates once the comparison table has them, built-in functions and `CONV` as single
+  comparison operands (operands with the type of their result), `CASE` and `DO … TIMES` with expressions,
+  `WRITE sy-index` with the output length of its data element
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
@@ -315,6 +333,12 @@ All 380 open issues were read; the parser / check_syntax ones run through abapli
   design question for the abaplint maintainer, not raised. Valid code gets the wrong statement
 - [ ] side finding, no issue: `NEW lcl( )->attr = 1.` gives "Not an object reference, target" for any attribute.
   Check first that ABAP accepts it; if so, valid code is rejected
+- [ ] **#4714** (2026-11-25, found by the compiler, next after the control flow PR): `NOT NOT a = 1` does not parse
+  ("Statement does not exist"); the grammar of `Compare` takes one optional `NOT`, `CondSub` one before a
+  parenthesis. ABAP is expected to accept any number of `NOT` (keyword documentation, *log_exp - NOT*), and
+  `comparison_expr.tsv` has 8 cells with it. Valid code fails to parse. Plan: fix on the fork's `abap2go` branch
+  (repeated `NOT` in both, tests for one, two and three `NOT` and with `AND`/`OR`), PR upstream, vendor the
+  rebuilt tarball, then drop the `NOT NOT` exclusion in `test/comparison_expr.test.ts`
 - [ ] dataset statements: #4644 (ENDIAN, TRUNCATE AT POSITION, SET DATASET ATTRIBUTES not parsed) and #4645
   (inline declarations not handled): valid code fails to parse or is mistyped
 
@@ -323,7 +347,7 @@ All 380 open issues were read; the parser / check_syntax ones run through abapli
 - in flight: #4700 (`WRITE` of a utclong gives "Source not character like", valid code rejected) is in PR
   abaplint#4701; already on the fork's `abap2go` branch
 
-Suggested order: #1809, then the dataset pair; `INSERT itab.` after asking the abaplint
+Suggested order: #1809, then `NOT NOT` (small, and its cells wait for it), then the dataset pair; `INSERT itab.` after asking the abaplint
 maintainer.
 
 ### 2. open-abap-core: what an AOT service calls (TODO review on main `fbc211e`, 2026-11-23)

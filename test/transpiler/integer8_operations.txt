@@ -40,7 +40,6 @@ lv_r = nmin( val1 = lv_a val2 = lv_b ).
 ASSERT |{ lv_r }| = `-9007199254740993`.
 
 *** comparisons above 2^53 with int8, i and c
-* waits: BETWEEN in conditions
 DATA lv_a TYPE int8.
 DATA lv_b TYPE int8.
 DATA lv_i TYPE i VALUE 5.
