@@ -26,6 +26,22 @@ export function isFunctionCall(source: abaplint.Nodes.ExpressionNode): boolean {
   return source.getChildren().length === 1 && functionName(source) !== undefined;
 }
 
+/**
+ * A Source that is one call of abs( ), sqrt( ) or strlen( ) on a single data object. As an operand of a comparison it
+ * is a value of the type of its result, not an arithmetic expression; ipow( ) and a function of an arithmetic
+ * expression or of another function are arithmetic expressions there as well.
+ */
+export function isDataObjectFunction(source: abaplint.Nodes.ExpressionNode): boolean {
+  if (!isFunctionCall(source) || functionName(source) === "ipow") {
+    return false;
+  }
+  const param = source.findFirstExpression(Expressions.MethodCallParam);
+  const arg = param?.findDirectExpression(Expressions.Source)
+    ?? param?.findDirectExpression(Expressions.ParameterListS)?.findDirectExpression(Expressions.ParameterS)
+      ?.findDirectExpression(Expressions.Source);
+  return arg !== undefined && !isArithmetic(arg);
+}
+
 /** target = expression. or target op= expression. (op one of + - * /) as a calculation. */
 export function lowerCalculate(target: IRTarget, assignOp: "+" | "-" | "*" | "/" | undefined,
     source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRCalculate {

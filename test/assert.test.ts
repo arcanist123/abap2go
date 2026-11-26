@@ -62,20 +62,21 @@ test("ASSERT in a classrun", () => {
   assert.match(result.failed ?? "", /ASSERTION_FAILED/);
 });
 
-test("ASSERT takes the conditions IF takes: NOT, AND, OR, BETWEEN and arithmetic operands", () => {
+test("ASSERT takes the conditions IF takes: NOT, AND, OR, BETWEEN, arithmetic and function operands", () => {
   const source = `DATA a TYPE i VALUE 7.
 ASSERT NOT a = 1.
 ASSERT a = 7 AND a < 8.
 ASSERT a = 1 OR a = 7.
 ASSERT a BETWEEN 7 AND 8.
 ASSERT a / 2 = 4.
+ASSERT abs( a ) = '7'.
 WRITE 'done'.`;
   assert.deepEqual(run("prog", source), { stdout: "done\n" });
 });
 
 const refusals: [string, string, RegExp][] = [
   ["IS INITIAL", "DATA a TYPE i.\nASSERT a IS INITIAL.", /not IS, IN or other predicates/],
-  ["a function operand", "DATA s TYPE string.\nASSERT strlen( s ) = 0.", /a built-in function as an operand of a comparison/],
+  ["a function that is not compiled", "ASSERT boolc( 1 = 1 ) = 'X'.", /only a literal, a variable or a subfield/],
   ["FIELDS", "DATA a TYPE i.\nASSERT FIELDS a CONDITION a = 0.", /no additions/],
 ];
 for (const [name, source, refused] of refusals) {

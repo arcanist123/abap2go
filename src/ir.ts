@@ -42,6 +42,22 @@ export interface IRSystemField {
   type: IRType;
 }
 
+/** An operand of a comparison of data objects: a source, or a built-in function of one. */
+export type IRComparand = IRSource | IRFunction;
+
+/**
+ * abs( ), sqrt( ) or strlen( ) of a single data object as an operand of a comparison of data objects: it is not an
+ * arithmetic expression but a value of the type of its result, calculated on its own (abap.ValueOf) when its
+ * relational expression is evaluated.
+ */
+export interface IRFunction {
+  kind: "function";
+  /** The call: strlen, or abs or sqrt of an operand. */
+  call: IRExpr;
+  /** The type of the result. The p of abs( ) of a text gets its decimals at run time: they are 0 here. */
+  type: IRType;
+}
+
 /** What a value is written to: a variable or a subfield of a flat variable. */
 export type IRTarget = IRVariable | IRSubstring;
 
@@ -171,14 +187,14 @@ export interface IRAssert {
 export type IRCompareOp = "=" | "<>" | "<" | ">" | "<=" | ">=";
 
 /**
- * A logical expression (docs/spec/comparison.md). A comparison of two data objects follows the comparison rules
- * (abap.Compare), and a conversion error in it is a runtime error. With an arithmetic expression on either side, the
- * calculation type of all operands of the comparison is also its comparison type, and an error is the catchable
- * exception of the calculation. AND and OR evaluate from left to right and stop once the value is known; both sides
+ * A logical expression (docs/spec/comparison.md). A comparison of two data objects, functions of data objects among
+ * them, follows the comparison rules (abap.Compare), and a conversion error in the comparison is a runtime error. With
+ * an arithmetic expression on either side, the calculation type of all operands of the comparison is also its
+ * comparison type, and an error is the catchable exception of the calculation. AND and OR evaluate from left to right and stop once the value is known; both sides
  * of EQUIV are evaluated.
  */
 export type IRCondition =
-  | { kind: "compare"; op: IRCompareOp; left: IRSource; right: IRSource }
+  | { kind: "compare"; op: IRCompareOp; left: IRComparand; right: IRComparand }
   | { kind: "compare_calc"; op: IRCompareOp; left: IRExpr; right: IRExpr }
   /**
    * BETWEEN with an arithmetic expression: operand >= low AND operand <= high in one calculation type for all
