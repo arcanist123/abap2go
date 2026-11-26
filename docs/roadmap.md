@@ -174,7 +174,8 @@ Next:
   and its ANORMALIES list entries are the test cases
 - [ ] `out->write( )` of structures and tables (open-steamgate's format: a structure as one
   `field: value, field: value` line, a table as a header row and tab-separated rows)
-- [ ] `TRY … CATCH`: the generated code writes the value `abap.Convert` and `abap.Calculate` return with an
+- [ ] `TRY … CATCH` (blocked by the special values left after an exception, under "Next" below): the generated
+  code writes the value `abap.Convert` and `abap.Calculate` return with an
   exception into the target before raising it (see "The target after an exception" in
   [spec/conversion.md](spec/conversion.md)); the cells of `conversion_target.tsv` and the result fields of
   `calculation_contexts.tsv` run end to end once a `CATCH` can show them
@@ -247,7 +248,10 @@ whose expected behaviour contradicts a spec is reopened there.
 Next:
 - [ ] special values left after an exception: what `WRITE`, the conversions, comparisons and arithmetic do with
   an f holding `+Inf`, `-Inf` or NaN and a decfloat16 holding an infinity; the runtime keeps a decfloat16 target
-  instead of storing an infinity until its decfloat value can hold one
+  instead of storing an infinity until its decfloat value can hold one. This blocks `TRY … CATCH`: until `TRY` is
+  compiled no program can see a target after an exception, so the stand-in is not observable; once a `CATCH` can
+  see it, a kept target would be a silently different result. If `TRY` has to come first, the stand-in becomes a
+  run-time error naming the gap, listed as an exception in [aot_for_abap.md](aot_for_abap.md)
 - [ ] the rest of the comparison table: the string and byte operators (`CO`, `CN`, `CA`, `NA`, `CS`, `NS`, `CP`,
   `NP`, `BYTE-…`, `O`, `Z`, `M`), predicate expressions (`IS INITIAL`, `IS ASSIGNED`, `IN` ranges), structures,
   internal tables and references, and the comparisons inside statements (`READ TABLE … WITH KEY`, table keys,
