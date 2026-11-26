@@ -60,7 +60,7 @@ describes.
 Valid code rejected: nothing open in abaplint. The last case, a static offset or length beyond a `c` or `x` field
 while the other one is a variable (`c+5(off)`, `c+off(6)` with `c TYPE c LENGTH 5`,
 [#4742](https://github.com/abaplint/abaplint/issues/4742)), is fixed by
-[PR #4759](https://github.com/abaplint/abaplint/pull/4759), open and in the patch: ABAP is expected to accept it and
+[PR #4759](https://github.com/abaplint/abaplint/pull/4759), merged and in the patch: ABAP is expected to accept it and
 to decide at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static.
 - [ ] follow-up in the compiler: its own check (`lowerSubstring` in `src/lower_common.ts`) still refuses `c+5(off)`
 
@@ -80,7 +80,14 @@ Found 2026-11-26, with 2.120.120 and the patch.
 
 - [ ] [#4747](https://github.com/abaplint/abaplint/issues/4747) an arithmetic expression after `WHEN` (`WHEN a + 1`,
   `WHEN ipow( base = a exp = 2 )`, `WHEN abs( a + 0 )`) is accepted, while ABAP is expected to allow only a data
-  object or a built-in function of one there. The build still refuses them, as operands it does not compile
+  object or a built-in function of one there. The build still refuses them, as operands it does not compile. Fix in
+  [PR #4761](https://github.com/abaplint/abaplint/pull/4761), open, stacked on
+  [PR #4741](https://github.com/abaplint/abaplint/pull/4741); the patch file does not contain it yet. It also rejects
+  `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 and #4750 stays
+- [ ] after `WHEN`, `&&`, string templates, string functions (`condense( )`, `to_upper( )`, `substring( )`),
+  `boolc( )`, `xsdbool( )`, bit expressions and table expressions (`tab[ 1 ]`) are accepted, while ABAP is expected
+  to reject them; PR #4761 does not cover them (not raised). Same code (`when.ts`): while PR #4761 is open, stack on
+  its branch `case-when-arithmetic-4747`, as for the `WHEN ( b ).` part of #4748
 - [ ] [#4748](https://github.com/abaplint/abaplint/issues/4748) `CASE ( a ).` and `WHEN ( b ).`, parentheses around
   a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), are accepted, while ABAP is expected to reject
   them; the compiler compiles `CASE ( a ).` as without them. `CASE ( a + 1 ).` is valid
@@ -112,9 +119,9 @@ Removed that day, since abaplint reports them:
 Removed that day, since it was no syntax error: a `TRY` without `CATCH` or `CLEANUP` is expected to give only a
 warning. [#4724](https://github.com/abaplint/abaplint/issues/4724), which asked abaplint to report it, is closed.
 
-abaplint accepts these, so the fix goes into abaplint. #4730, #4745 and #4746 change the same code as
-[PR #4759](https://github.com/abaplint/abaplint/pull/4759) (`_substring.ts`): while it is open, stack them on its
-branch `substring-variable-part-4742`.
+abaplint accepts these, so the fix goes into abaplint. #4730, #4745 and #4746 change the same code
+(`_substring.ts`) as the merged [PR #4759](https://github.com/abaplint/abaplint/pull/4759): branch from a `main` that
+has it.
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
   with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-26). Review
   it rather than write our own; not ours, so not in the patch, and the compiler's check stays until a release has it
@@ -180,7 +187,7 @@ HTML tag in ABAP Doc is expected to give warnings only ([#4655](https://github.c
 
 ## In the patch
 
-PRs the pinned release does not contain, as of 2026-11-26:
+PRs the pinned release does not contain, as of 2026-11-26. The patch file was last generated before PR #4761.
 
 | PR | What | State |
 |---|---|---|
@@ -194,8 +201,9 @@ PRs the pinned release does not contain, as of 2026-11-26:
 | [#4739](https://github.com/abaplint/abaplint/pull/4739) | `RETRY` outside a `CATCH` block is an error ([#4723](https://github.com/abaplint/abaplint/issues/4723)) | open |
 | [#4740](https://github.com/abaplint/abaplint/pull/4740) | `CATCH` of an interface or of a class not derived from `CX_ROOT` is an error ([#4725](https://github.com/abaplint/abaplint/issues/4725)) | merged, not released |
 | [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
-| [#4758](https://github.com/abaplint/abaplint/pull/4758) | `SPLIT ... IN BYTE MODE` takes byte-like operands, and its inline targets are `xstring` ([#4757](https://github.com/abaplint/abaplint/issues/4757)) | open |
-| [#4759](https://github.com/abaplint/abaplint/pull/4759) | a static offset or length beyond a `c` or `x` field is rejected although the other one is a variable ([#4742](https://github.com/abaplint/abaplint/issues/4742)) | open |
+| [#4758](https://github.com/abaplint/abaplint/pull/4758) | `SPLIT ... IN BYTE MODE` takes byte-like operands, and its inline targets are `xstring` ([#4757](https://github.com/abaplint/abaplint/issues/4757)) | merged, not released |
+| [#4759](https://github.com/abaplint/abaplint/pull/4759) | a static offset or length beyond a `c` or `x` field is rejected although the other one is a variable ([#4742](https://github.com/abaplint/abaplint/issues/4742)) | merged, not released |
+| [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | open, listed, not yet in the patch file |
 
 Released and out of the patch: `WRITE` of a utclong ([#4700](https://github.com/abaplint/abaplint/issues/4700),
 [PR #4701](https://github.com/abaplint/abaplint/pull/4701), in 2.120.119), which the compiler now compiles.
@@ -210,9 +218,9 @@ abaplint (main `af7440a`, default config, `v757`).
 - [ ] **[#1809](https://github.com/abaplint/abaplint/issues/1809)** a macro of the same name in two methods: the
   second call expands the first definition, `"foo" not found`; macros need scoping by position (keyword
   documentation: a macro is valid from its DEFINE onward). Valid code is expanded wrongly
-- [ ] [#4757](https://github.com/abaplint/abaplint/issues/4757) `SPLIT ... IN BYTE MODE`: byte-like targets are
+- [x] [#4757](https://github.com/abaplint/abaplint/issues/4757) `SPLIT ... IN BYTE MODE`: byte-like targets are
   rejected and inline targets are typed `string` instead of `xstring` (character targets are accepted, though an error
-  is expected). Fixed by [PR #4758](https://github.com/abaplint/abaplint/pull/4758), open, in the patch
+  is expected). Fixed by [PR #4758](https://github.com/abaplint/abaplint/pull/4758), merged, in the patch
 - [ ] [#4755](https://github.com/abaplint/abaplint/issues/4755) `INSERT itab.` parses as InsertDatabase
   (context-free parser); putting it in the InsertInternal grammar is a design question for the abaplint maintainer.
   Valid code gets the wrong statement

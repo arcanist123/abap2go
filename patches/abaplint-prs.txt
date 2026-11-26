@@ -10,3 +10,4 @@ abaplint#4740
 abaplint#4741
 abaplint#4758
 abaplint#4759
+abaplint#4761
