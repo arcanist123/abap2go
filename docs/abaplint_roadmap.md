@@ -134,11 +134,11 @@ argument otherwise).
 Reviewed 2026-11-26 against abaplint `main` `fc504b57`: every open issue in this file still behaves on `main` as it
 describes.
 
-Valid code rejected: nothing open in abaplint. The last case, a static offset or length beyond a `c` or `x` field
-while the other one is a variable (`c+5(off)`, `c+off(6)` with `c TYPE c LENGTH 5`,
-[#4742](https://github.com/abaplint/abaplint/issues/4742)), is fixed by
-[PR #4759](https://github.com/abaplint/abaplint/pull/4759), in 2.120.121: ABAP is expected to accept it and
-to decide at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static.
+Valid code rejected: nothing open that abap2go has run into ([#4769](https://github.com/abaplint/abaplint/issues/4769)
+is in "Backlog"). The last case, a static offset or length beyond a `c` or `x` field while the other one is a variable
+(`c+5(off)`, `c+off(6)` with `c TYPE c LENGTH 5`, [#4742](https://github.com/abaplint/abaplint/issues/4742)), is fixed
+by [PR #4759](https://github.com/abaplint/abaplint/pull/4759), in 2.120.121: ABAP is expected to accept it and to decide
+at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static.
 - [ ] follow-up in the compiler: its own check (`lowerSubstring` in `src/lower_common.ts`) still refuses `c+5(off)`
 
 [#4726](https://github.com/abaplint/abaplint/issues/4726) is fixed by
@@ -160,21 +160,30 @@ Found 2026-11-26, with 2.120.120 and the patch.
   object or a built-in function of one there. The build still refuses them, as operands it does not compile. Fix in
   [PR #4761](https://github.com/abaplint/abaplint/pull/4761), set to draft by the maintainer since it was stacked on
   [PR #4741](https://github.com/abaplint/abaplint/pull/4741) (see "Waiting PRs on the fork"); in the patch. It also
-  rejects `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 stays
-- [ ] [#4748](https://github.com/abaplint/abaplint/issues/4748) `CASE ( a ).` and `WHEN ( b ).`, parentheses around
-  a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), are accepted, while ABAP is expected to reject
+  rejects `abs( ( b ) )` and `abs( val = b )` after `WHEN`
+- [ ] [#4748](https://github.com/abaplint/abaplint/issues/4748) `CASE ( a ).` and `WHEN ( b ).`, parentheses around a
+  single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), are accepted, while ABAP is expected to reject
   them; the compiler compiles `CASE ( a ).` as without them. `CASE ( a + 1 ).` is valid. Fixed in waiting PR
-  [arcanist123/abaplint#1](https://github.com/arcanist123/abaplint/pull/1), in the patch: after `CASE` parentheses only around a calculation (an arithmetic or bit
-  expression, or a numeric built-in function of a calculated argument, `( abs( a + 1 ) )`), after `WHEN` none.
-  Not covered: parentheses inside a string expression after `CASE`, `( c ) && s`
+  [arcanist123/abaplint#1](https://github.com/arcanist123/abaplint/pull/1), in the patch: after `CASE` parentheses only
+  around a calculation (an arithmetic or bit expression, or a numeric built-in function of a calculated argument,
+  `( abs( a + 1 ) )`), after `WHEN` none. Not covered: parentheses inside a string expression after `CASE`,
+  `( c ) && s`, part of [#4771](https://github.com/abaplint/abaplint/issues/4771)
 - [ ] [#4749](https://github.com/abaplint/abaplint/issues/4749) parentheses around a single operand as the argument
   of `strlen( )`, or of `abs( )` in a comparison, are accepted, while ABAP is expected to reject them
-  (`i = abs( ( i ) ).` is valid)
-- [ ] [#4750](https://github.com/abaplint/abaplint/issues/4750) a parameter name for the argument of `abs( )`,
-  `abs( val = i )`, is accepted. Fix in [PR #4767](https://github.com/abaplint/abaplint/pull/4767),
-  in the patch: the same for every built-in function with one unnamed argument (`strlen( )`, `lines( )`, `sqrt( )` and
-  the others), except `boolc( )`, whose argument is a logical expression. After `WHEN`, `abs( val = b )` is reported
-  twice, also by #4761
+  (`i = abs( ( i ) ).` is valid). Fixed in two parts, both in the patch:
+  - [PR #4768](https://github.com/abaplint/abaplint/pull/4768), merged, not released: no parentheses in a
+    character-like, byte-like, table or `utclong` argument of a built-in function, also inside `&&`. Not covered: `bit`
+    of `boolx( )` ([#4770](https://github.com/abaplint/abaplint/issues/4770)) and `sep` of `from_mixed( )`
+    ([#4769](https://github.com/abaplint/abaplint/issues/4769)). After `WHEN`, `strlen( ( s ) )` is reported twice, also
+    by #4761
+  - waiting PR [arcanist123/abaplint#3](https://github.com/arcanist123/abaplint/pull/3): in a comparison, a `WHERE`
+    condition and after `CASE`, no parentheses around a data object as the argument of a numeric function, unless an
+    operand of the comparison is calculated (`IF abs( ( i ) ) = j + 1.` is valid)
+- [x] [#4750](https://github.com/abaplint/abaplint/issues/4750) a parameter name for the argument of `abs( )`,
+  `abs( val = i )`, was accepted. Fixed by [PR #4767](https://github.com/abaplint/abaplint/pull/4767), merged, not
+  released, in the patch: the same for every built-in function with one unnamed argument (`strlen( )`, `lines( )`,
+  `sqrt( )` and the others), except `boolc( )`, whose argument is a logical expression. After `WHEN`, `abs( val = b )`
+  is reported twice, also by #4761
 - [ ] [#4762](https://github.com/abaplint/abaplint/issues/4762) after `WHEN`, `&&`, string templates, built-in
   functions with a character-like result (`condense( )`, `to_upper( )`, `substring( )`, `boolc( )`, `xsdbool( )`),
   bit expressions and table expressions (`tab[ 1 ]`) are accepted, while ABAP is expected to reject them. The same
@@ -185,6 +194,12 @@ Found 2026-11-26, with 2.120.120 and the patch.
   With [PR #4766](https://github.com/abaplint/abaplint/pull/4766) they parse as their own forms in `Source`, not as
   method calls, so the check after `WHEN` does not see them and accepts them
   - [ ] follow-up once #2 is upstream (#4766 is merged): reject `bit-set( )` and `boolx( )` after `WHEN`
+- [ ] [#4771](https://github.com/abaplint/abaplint/issues/4771) parentheses around a single operand as an operand of
+  `&&` (also after `CASE`), as the embedded expression of a string template, in a constructor expression (`CONV`, a
+  `VALUE` row, `THEN`, `ELSE`, `NEXT`) and as the source of `APPEND` and `INSERT` are accepted, while ABAP is expected
+  to reject them. `s = ( s ).`, `|{ ( i + 1 ) }|` and `APPEND ( i + 1 ) TO itab.` are valid. The compiler reads
+  parentheses around a single data object as nothing (`unparenthesized` in `src/lower_arith.ts`), so it relies on
+  abaplint here
 
 ### Waiting PRs on the fork
 
@@ -199,10 +214,12 @@ Chain on `when.ts`, which starts going up once [PR #4741](https://github.com/aba
 | 1 | [abaplint#4761](https://github.com/abaplint/abaplint/pull/4761) (upstream, draft) | `case-when-arithmetic-4747` | upstream `main`, still with the #4741 commits | [#4747](https://github.com/abaplint/abaplint/issues/4747) |
 | 2 | [arcanist123/abaplint#1](https://github.com/arcanist123/abaplint/pull/1) | `case-parentheses-4748` | `case-when-arithmetic-4747` | [#4748](https://github.com/abaplint/abaplint/issues/4748) |
 | 3 | [arcanist123/abaplint#2](https://github.com/arcanist123/abaplint/pull/2) | `when-string-bit-table-4762` | `case-parentheses-4748` | [#4762](https://github.com/abaplint/abaplint/issues/4762) |
+| 4 | [arcanist123/abaplint#3](https://github.com/arcanist123/abaplint/pull/3) | `comparison-argument-parentheses-4749` | `when-string-bit-table-4762` | [#4749](https://github.com/abaplint/abaplint/issues/4749), the rest after #4768 |
 
 #4761 was opened stacked before this rule, so it stays the upstream draft rather than move to the fork: once #4741 is
 merged, rebase it onto `main` (which drops the #4741 commit) and mark it ready. Once #4761 is merged, #1 goes up as in
-"When a waiting PR goes up", and #2 once #1 is merged.
+"When a waiting PR goes up", #2 once #1 is merged, and #3 once #2 is merged. #4768 only says "part of #4749", so the
+upstream PR from #3 says `closes #4749`.
 
 ### Syntax checks to move out of the compiler
 
@@ -295,7 +312,7 @@ HTML tag in ABAP Doc is expected to give warnings only ([#4655](https://github.c
 ## In the patch
 
 PRs that the pinned release, 2.120.121, does not contain, as of 2026-11-26. The patch also holds waiting PRs
-arcanist123/abaplint#1 and #2, which are not in this table (see "Waiting PRs on the fork").
+arcanist123/abaplint#1 to #3, which are not in this table (see "Waiting PRs on the fork").
 
 | PR | What | State |
 |---|---|---|
@@ -307,7 +324,8 @@ arcanist123/abaplint#1 and #2, which are not in this table (see "Waiting PRs on 
 | [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
 | [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | draft, waits for #4741 |
 | [#4766](https://github.com/abaplint/abaplint/pull/4766) | `bit-set( )` and `boolx( bool = <logical expression> )` parse, typed `xstring` ([#4764](https://github.com/abaplint/abaplint/issues/4764)) | merged, not released |
-| [#4767](https://github.com/abaplint/abaplint/pull/4767) | a parameter name for the argument of a built-in function with one unnamed argument, `abs( val = i )`, is an error ([#4750](https://github.com/abaplint/abaplint/issues/4750)) | open |
+| [#4767](https://github.com/abaplint/abaplint/pull/4767) | a parameter name for the argument of a built-in function with one unnamed argument, `abs( val = i )`, is an error ([#4750](https://github.com/abaplint/abaplint/issues/4750)) | merged, not released |
+| [#4768](https://github.com/abaplint/abaplint/pull/4768) | parentheses in a character-like, byte-like, table or `utclong` argument of a built-in function are an error (part of [#4749](https://github.com/abaplint/abaplint/issues/4749)) | merged, not released |
 
 Released and out of the patch:
 - in 2.120.121: [PR #4716](https://github.com/abaplint/abaplint/pull/4716) (`NOT NOT`,
@@ -335,6 +353,9 @@ abaplint (main `af7440a`, default config, `v757`).
 - [x] [#4757](https://github.com/abaplint/abaplint/issues/4757) `SPLIT ... IN BYTE MODE`: byte-like targets are
   rejected and inline targets are typed `string` instead of `xstring` (character targets are accepted, though an error
   is expected). Fixed by [PR #4758](https://github.com/abaplint/abaplint/pull/4758), in 2.120.121
+- [ ] [#4769](https://github.com/abaplint/abaplint/issues/4769) `from_mixed( val = s sep = c )` with a variable of type
+  `c` is reported as not compatible, `sep` being typed as an integer, while `sep = 1` and `sep = i`, where an error is
+  expected, are accepted. Found 2026-11-26 while fixing #4749
 - [ ] [#4755](https://github.com/abaplint/abaplint/issues/4755) `INSERT itab.` parses as InsertDatabase
   (context-free parser); putting it in the InsertInternal grammar is a design question for the abaplint maintainer.
   Valid code gets the wrong statement
@@ -346,8 +367,9 @@ abaplint (main `af7440a`, default config, `v757`).
   Fixed by [PR #4766](https://github.com/abaplint/abaplint/pull/4766), in the patch: both are their own forms in
   `Source`, typed `xstring`. `boolx( bool = abap_true )`, no logical expression, still parses as a method call
 
-Suggested order: [#1809](https://github.com/abaplint/abaplint/issues/1809) first;
-[#4755](https://github.com/abaplint/abaplint/issues/4755) after the maintainer's view on the shape.
+Suggested order: [#4769](https://github.com/abaplint/abaplint/issues/4769) (small), then
+[#1809](https://github.com/abaplint/abaplint/issues/1809); [#4755](https://github.com/abaplint/abaplint/issues/4755)
+after the maintainer's view on the shape.
 
 ### Invalid ABAP accepted
 
@@ -357,6 +379,13 @@ No error from check_syntax where ABAP is expected to give one:
   are not. Overlaps [#2097](https://github.com/abaplint/abaplint/issues/2097) /
   [PR #4635](https://github.com/abaplint/abaplint/pull/4635) (write positions); do it together with
   [PR #4635](https://github.com/abaplint/abaplint/pull/4635)
+- [ ] [#4770](https://github.com/abaplint/abaplint/issues/4770) `bit` of `boolx( )` takes a calculation, parentheses, a
+  built-in function, a constructor or a table expression, while ABAP is expected to allow only a data object. Found
+  2026-11-26 while fixing #4749
+- [ ] [#4772](https://github.com/abaplint/abaplint/issues/4772) parentheses around an actual parameter of a method are
+  accepted when the formal parameter is character-like, a date, a table or of type `data`, while ABAP is expected to
+  reject them; with a numeric parameter they are valid. Found 2026-11-26 while fixing #4749; for the compiler step with
+  method calls with parameters
 - [ ] [#4752](https://github.com/abaplint/abaplint/issues/4752) APPEND (and other index operations) to a generic
   `ANY TABLE` is expected to be an error, abaplint only checks hashed; the test "ok, APPEND TO generic tables" still
   expects no error for `ct_any`
