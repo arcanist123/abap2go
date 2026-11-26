@@ -232,6 +232,37 @@ without an overflow. The same holds for any function when the other side, or ano
 arithmetic expression: its argument takes part in the calculation type (`abs( i_min ) > int8_0 + 0` is true,
 `sqrt( i_2 ) = decfloat34_root_2 + 0` calculates the root in `decfloat34`).
 
+## CASE
+
+`CASE operand. WHEN value1 OR value2. …` compares by `operand = value1 OR operand = value2 …`, with the rules of two
+data objects (sections 1 to 4). The test cases are
+[`test/case_do.test.ts`](../../test/case_do.test.ts).
+
+**Evaluation.** The operand is evaluated first, once, also when no `WHEN` compares it: `CASE 1 / z.` with `WHEN
+OTHERS` alone raises `CX_SY_ZERODIVIDE` for `z = 0`, and so does a subfield out of its bounds raise its exception.
+The values are then evaluated from top to bottom and from left to right, up to the first that equals the operand.
+
+**The operand** is a general expression position:
+
+- a data object, or a built-in function of a single data object, which is a value as in *Built-in functions as
+  operands* (`CASE abs( c_'-1.250' )` has three decimals);
+- an arithmetic expression, calculated in the calculation type of **its own operands**: the values after `WHEN` take
+  no part, unlike the other side of a comparison. With `a = 1` and `b = 3`, `CASE a / b * b.` is 0 in `i`, also
+  against a `decfloat34` value, while `IF a / b * b = decfloat34_1` calculates in `decfloat34`. The result is a data
+  object of the calculation type, so a text value is converted by the rules of that comparison type, and a text that
+  is no number ends the program with `CONVT_NO_NUMBER`.
+
+ABAP is expected to reject parentheses around a single operand (`CASE ( a ).`) as a syntax error, but not around a
+calculation (`CASE ( - a ).`).
+
+**A `p` result** is expected to have the decimals it would have in a `string` ([calculation.md](calculation.md),
+section 4): at most 14, and at most 31 digits in all, with the scale of the operations that made it. They decide how
+a text value is rounded: `p_3 * p_2` has one decimal, so it equals `'6.04'`, while `p_3 + p_3` has none and equals
+`'6.4'`. More than 31 digits before the point raise `CX_SY_ARITHMETIC_OVERFLOW`.
+
+**The values** after `WHEN` are extended functional operand positions: a data object, or `abs( )`, `sqrt( )` or
+`strlen( )` of a single data object. An arithmetic expression there, `ipow( )` among them, is a syntax error.
+
 ## Syntax errors
 
 Besides the arithmetic cases above, a comparison of two operands whose kinds have no comparison type (the `-` cells

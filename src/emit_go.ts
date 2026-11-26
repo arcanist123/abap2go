@@ -1,6 +1,6 @@
 import {
   IRArithOp, IRComparand, IRCompareOp, IRCondition, IRData, IRExpr, IRFunction, IRRoot, IRSource, IRStatement,
-  IRSubstring, IRTarget, IRType, IRVariable,
+  IRResult, IRSubstring, IRTarget, IRType, IRVariable,
 } from "./ir";
 
 /** Emits package main for one root. The runtime is imported from the runtime module as `abap2go/abap`. */
@@ -80,7 +80,7 @@ function declarations(body: IRStatement[]): IRData[] {
   return body.flatMap((s): IRData[] => {
     switch (s.kind) {
       case "data": return [s];
-      case "if": return [...s.branches.flatMap(b => declarations(b.body)), ...declarations(s.otherwise ?? [])];
+      case "if": case "case": return [...s.branches.flatMap(b => declarations(b.body)), ...declarations(s.otherwise ?? [])];
       case "do": case "while": return declarations(s.body);
       case "try": return [...declarations(s.body), ...s.catches.flatMap(c => declarations(c.body)), ...declarations(s.cleanup ?? [])];
       default: return [];
@@ -94,20 +94,25 @@ function block(body: IRStatement[]): string[] {
 }
 
 /**
- * The Go temporaries of the subfields and functions of the statement being emitted: type and value, computed by
- * abap.Substring or abap.ValueOf before they are used, since the type can depend on what is known only at run time
- * (the offsets of a subfield, the decimals of abs( ) of a text).
+ * The Go temporaries of the subfields, functions and CASE results of the statement being emitted: type and value,
+ * computed by abap.Substring, abap.ValueOf or abap.CaseValue before they are used, since the type can depend on what
+ * is known only at run time (the offsets of a subfield, the decimals of abs( ) of a text or of a p result).
  */
-const temporaries = new Map<IRSubstring | IRFunction, string>();
+const temporaries = new Map<IRSubstring | IRFunction | IRResult, string>();
 let temporaryCount = 0;
 
-/** Adds the lines that compute source's subfield or function, if it is one, to lines. */
+/** Adds the lines that compute source's subfield, function or result, if it is one, to lines. */
 function hoist(lines: string[], source: IRComparand | undefined): void {
   if (source?.kind === "function" && !temporaries.has(source)) {
     hoistExpr(lines, source.call); // the subfield its argument may be
     const name = `fn${++temporaryCount}`;
     temporaries.set(source, name);
     lines.push(`${name}T, ${name} := abap.MustValueOf(${expr(source.call)})`, `_, _ = ${name}T, ${name}`);
+  } else if (source?.kind === "result" && !temporaries.has(source)) {
+    hoistExpr(lines, source.expression);
+    const name = `res${++temporaryCount}`;
+    temporaries.set(source, name);
+    lines.push(`${name}T, ${name} := abap.MustCaseValue(${expr(source.expression)})`, `_, _ = ${name}T, ${name}`);
   } else if (source?.kind === "substring" && !temporaries.has(source)) {
     const name = `sub${++temporaryCount}`;
     temporaries.set(source, name);
@@ -136,7 +141,14 @@ function statement(s: IRStatement): string[] {
     case "console_write": hoist(lines, s.value); hoist(lines, s.name); break;
     case "move": hoist(lines, s.target); hoist(lines, s.source); break;
     case "calculate": hoist(lines, s.target); hoistExpr(lines, s.expression); break;
-    case "do": hoist(lines, s.times); break;
+    case "case": hoist(lines, s.operand); break;
+    case "do":
+      if (s.times?.kind === "into_i") {
+        hoistExpr(lines, s.times.expression);
+      } else {
+        hoist(lines, s.times);
+      }
+      break;
   }
   return [...lines, ...statementOnly(s)];
 }
@@ -291,21 +303,22 @@ function statementOnly(s: IRStatement): string[] {
       return [store(s.target, "Compute", expr(s.expression))];
     case "assert":
       return [`abap.Assert(${condition(s.condition)})`];
-    case "if": {
-      const lines: string[] = [];
-      s.branches.forEach((b, k) => {
-        lines.push(`${k === 0 ? "if" : "} else if"} ${condition(b.condition)} {`, ...indent(block(b.body)));
-      });
-      if (s.otherwise !== undefined) {
-        lines.push("} else {", ...indent(block(s.otherwise)));
+    case "if":
+      return branches(s.branches.map(b => ({ condition: () => condition(b.condition), body: b.body })), s.otherwise);
+    case "case":
+      return branches(s.branches.map(b => ({
+        condition: () => b.values.map(v => condition({ kind: "compare", op: "=", left: s.operand, right: v })).join(" || "),
+        body: b.body,
+      })), s.otherwise);
+    case "do": {
+      if (s.times === undefined) {
+        return loop("pass := int32(1); ; pass++", [], [], s.body);
       }
-      lines.push("}");
-      return lines;
+      const times = s.times.kind === "into_i"
+        ? `abap.MustCalculate[int32](${expr(s.times.expression)}, abap.TypeI)`
+        : convert(s.times, { kind: "i" });
+      return loop("pass := int32(1); pass <= times; pass++", [`times := ${times}`], [], s.body);
     }
-    case "do":
-      return s.times === undefined
-        ? loop("pass := int32(1); ; pass++", [], [], s.body)
-        : loop("pass := int32(1); pass <= times; pass++", [`times := ${convert(s.times, { kind: "i" })}`], [], s.body);
     case "while":
       return loop("pass := int32(1); ; pass++", [], [`if !${condition(s.condition)} {`, "\tbreak", "}"], s.body);
     case "exit":
@@ -322,6 +335,25 @@ function statementOnly(s: IRStatement): string[] {
       // RETRY is only allowed directly in a CATCH block (loops aside), so it returns from the CATCH literal
       return ["return abap.Retry"];
   }
+}
+
+/**
+ * An if chain over the branches of IF or CASE, with the lines of otherwise as its else; without a branch (a CASE with
+ * WHEN OTHERS only) just those lines.
+ */
+function branches(list: { condition: () => string; body: IRStatement[] }[], otherwise: IRStatement[] | undefined): string[] {
+  if (list.length === 0) {
+    return block(otherwise ?? []);
+  }
+  const lines: string[] = [];
+  list.forEach((b, k) => {
+    lines.push(`${k === 0 ? "if" : "} else if"} ${b.condition()} {`, ...indent(block(b.body)));
+  });
+  if (otherwise !== undefined) {
+    lines.push("} else {", ...indent(block(otherwise)));
+  }
+  lines.push("}");
+  return lines;
 }
 
 /**
@@ -404,12 +436,13 @@ function convert(source: IRSource, to: IRType): string {
   return `abap.MustConvert[${goType(to)}](${typeValue(source)}, ${operand(source)}, ${goTypeValue(to)})`;
 }
 
-/** The abap.Type of a source or target: that of a subfield or function comes from its temporary. */
+/** The abap.Type of a source or target: that of a subfield, function or result comes from its temporary. */
 function typeValue(source: IRComparand): string {
-  return source.kind === "substring" || source.kind === "function" ? `${temporary(source)}T` : goTypeValue(source.type);
+  return source.kind === "substring" || source.kind === "function" || source.kind === "result"
+    ? `${temporary(source)}T` : goTypeValue(source.type);
 }
 
-function temporary(source: IRSubstring | IRFunction): string {
+function temporary(source: IRSubstring | IRFunction | IRResult): string {
   const name = temporaries.get(source);
   if (name === undefined) {
     throw new Error("internal error: subfield or function not computed before its use");
@@ -437,7 +470,7 @@ function operand(source: IRComparand): string {
   if (source.kind === "variable") {
     return goName(source);
   }
-  if (source.kind === "substring" || source.kind === "function") {
+  if (source.kind === "substring" || source.kind === "function" || source.kind === "result") {
     return temporary(source);
   }
   if (source.kind === "system_field") {

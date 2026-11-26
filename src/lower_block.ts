@@ -1,9 +1,9 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
-import { IRCondition, IRSource, IRStatement } from "./ir";
-import { isArithmetic } from "./lower_arith";
+import { IRCase, IRCondition, IRDo, IRStatement } from "./ir";
+import { isArithmetic, lowerArithmetic } from "./lower_arith";
 import { isNoop, lowerData, lowerMove, lowerSource, position, Variables, Where } from "./lower_common";
-import { lowerAssert, lowerComparison, lowerCondition } from "./lower_cond";
+import { caseOperand, caseValue, lowerAssert, lowerCondition } from "./lower_cond";
 
 const { Statements, Structures, Expressions } = abaplint;
 
@@ -47,7 +47,7 @@ export class BlockLowerer {
     } else if (kind instanceof Structures.If) {
       return [this.lowerIf(node)];
     } else if (kind instanceof Structures.Case) {
-      return this.lowerCase(node);
+      return [this.lowerCase(node)];
     } else if (kind instanceof Structures.Do) {
       return [this.lowerDo(node)];
     } else if (kind instanceof Structures.While) {
@@ -124,21 +124,15 @@ export class BlockLowerer {
     return { kind: "if", branches, otherwise: otherwise === undefined ? undefined : this.body(otherwise) };
   }
 
-  /**
-   * CASE operand. WHEN a [OR b ...]. ... [WHEN OTHERS. ...] ENDCASE. as IF operand = a OR operand = b ... ELSEIF ...
-   * ELSE: the first WHEN with a value equal to the operand by the comparison rules.
-   */
-  private lowerCase(node: abaplint.Nodes.StructureNode): IRStatement[] {
+  /** CASE operand. WHEN a [OR b ...]. ... [WHEN OTHERS. ...] ENDCASE. */
+  private lowerCase(node: abaplint.Nodes.StructureNode): IRCase {
     const caseStatement = node.findDirectStatement(Statements.Case)!;
     const where = this.where(caseStatement);
-    const operand = caseStatement.findDirectExpression(Expressions.Source)!;
-    if (isArithmetic(operand)) {
-      throw new BuildError(`CASE ${operand.concatTokens()}: only a literal, a variable or a subfield is supported as operand yet`, where);
-    }
+    const operand = caseOperand(caseStatement.findDirectExpression(Expressions.Source)!, this.variables, where);
     if (node.findDirectStructures(Structures.Normal).some(n => n.findAllStatementNodes().some(s => !isNoop(s)))) {
       throw new BuildError("statements between CASE and the first WHEN are not supported", where);
     }
-    const branches: { condition: IRCondition; body: IRStatement[] }[] = [];
+    const branches: IRCase["branches"] = [];
     let otherwise: IRStatement[] | undefined;
     for (const child of node.getChildren()) {
       if (child instanceof abaplint.Nodes.StatementNode && !isNoop(child) && !(child.get() instanceof Statements.Case)
@@ -156,23 +150,15 @@ export class BlockLowerer {
       const whereWhen = this.where(whenStatement);
       const values = [whenStatement.findDirectExpression(Expressions.Source)!,
         ...whenStatement.findDirectExpressions(Expressions.Or).map(o => o.findDirectExpression(Expressions.Source)!)];
-      let condition: IRCondition | undefined;
-      for (const value of values) {
-        if (isArithmetic(value)) {
-          throw new BuildError(`WHEN ${value.concatTokens()}: only a literal, a variable or a subfield is supported yet`, whereWhen);
-        }
-        const compare = lowerComparison("=", operand, value, this.variables, whereWhen);
-        condition = condition === undefined ? compare : { kind: "or", left: condition, right: compare };
-      }
-      branches.push({ condition: condition!, body: this.body(child) });
+      branches.push({
+        values: values.map(v => caseValue(operand, v, this.variables, whereWhen)),
+        body: this.body(child),
+      });
     }
     if (otherwise === undefined && branches.length === 0) {
       throw new BuildError("CASE without WHEN: WHEN must be the first statement after CASE", where);
     }
-    if (branches.length === 0) {
-      return otherwise ?? []; // only WHEN OTHERS
-    }
-    return [{ kind: "if", branches, otherwise }];
+    return { kind: "case", operand, branches, otherwise };
   }
 
   /** DO [n TIMES]. ... ENDDO. */
@@ -180,13 +166,12 @@ export class BlockLowerer {
     const statement = node.findDirectStatement(Statements.Do)!;
     const where = this.where(statement);
     const children = statement.getChildren();
-    let times: IRSource | undefined;
+    let times: IRDo["times"];
     if (children.length === 4 && children[2].concatTokens().toUpperCase() === "TIMES"
         && children[1] instanceof abaplint.Nodes.ExpressionNode && children[1].get() instanceof Expressions.Source) {
-      if (isArithmetic(children[1])) {
-        throw new BuildError(`DO ${children[1].concatTokens()} TIMES: only a literal, a variable or a subfield is supported yet`, where);
-      }
-      times = lowerSource(children[1], this.variables, where, "DO");
+      times = isArithmetic(children[1])
+        ? { kind: "into_i", expression: lowerArithmetic(children[1], this.variables, where) }
+        : lowerSource(children[1], this.variables, where, "DO");
     } else if (children.length !== 2) {
       throw new BuildError(`${statement.concatTokens()}: only DO and DO n TIMES are supported yet, not VARYING`, where);
     }

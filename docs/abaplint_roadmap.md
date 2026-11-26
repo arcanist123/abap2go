@@ -49,6 +49,17 @@ Valid code mistyped:
   `src/lower_common.ts`), but it goes before the syntax checks below, together with the 31-digit limit. No issue
   raised yet; work out the length of the `p` first
 
+### Invalid syntax to fix, not raised yet
+
+Found 2026-11-26 while compiling `CASE`, with 2.120.120 and the patch; the compiler has no check of its own for
+these.
+
+- [ ] an arithmetic expression after `WHEN` (`WHEN a + 1`, `WHEN ipow( base = a exp = 2 )`, `WHEN abs( a + 0 )`) is
+  accepted, while ABAP is expected to allow only a data object or a built-in function of one there. The build still
+  refuses them, as operands it does not compile
+- [ ] `CASE ( a ).`, parentheses around a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), is
+  accepted and compiled as without them, while ABAP is expected to reject it. `CASE ( a + 1 ).` is valid
+
 ### Syntax checks to move out of the compiler
 
 The compiler still has syntax checks of its own, from before the decision that it does not reimplement the syntax

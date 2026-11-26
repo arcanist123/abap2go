@@ -288,6 +288,8 @@ into an `n LENGTH 3`: `000`; `f 1000` into a `c LENGTH 3`: `***`; `decfloat34 10
   as fit (14, fewer beyond 17 integer digits: `1E27 / 3` is `333333333333333333333333333.3333`). More than 31 integer
   digits raise `CX_SY_ARITHMETIC_OVERFLOW` (`9999999999999999999999999999999 + 1` into a `string`, although it fits a
   63-digit interim result). A value that becomes 0 by this rounding loses its sign (`-1E-17` gives zero, without `-`).
+  A rounding that carries into one more digit costs a decimal (`p 99999999999999999 + c '0.999999999999999'` into a
+  `string` is `100000000000000000.0000000000000 `, with 13).
   - into a **c** field of length *L*: a result with more decimals than the 14 (or fewer) above is rounded only to
     the decimals the field can show at all, *L* - 2 if that is fewer, and loses its sign if that gives zero
     (`-1 / 3` in a `c LENGTH 2` is `0 ` and in a `c LENGTH 1` is `0`, while `-1 / 8`, exact, gives `0-` and `-`).
@@ -326,6 +328,8 @@ calculation type taken from the operands and from what the result goes into:
 | `CONV type( expression )`, `EXACT type( expression )` | `type` |
 | an embedded expression of a string template, `|{ expression }|` | none: `|{ i_7 / 2 }|` is `4`, `|{ c_7 / 2 }|` is `3.5` |
 | an operand of a relational expression | the operands of the whole comparison, see [comparison.md](comparison.md) |
+| the operand of `CASE` | none: the values after `WHEN` take no part, see [comparison.md](comparison.md), "CASE" |
+| `DO expression TIMES` | `i`, as for a result field (`DO p_5 / p_2 TIMES` runs 3 passes, `DO i_7 / i_2 TIMES` 4) |
 
 So an overflow raises the same exception in all of them: `|{ i_max + 1 }|` and `CONV i( i_max + 1 )` raise
 `CX_SY_ARITHMETIC_OVERFLOW` as `r = i_max + 1` into an `i` does, and `ADD 1 TO r` with `r` at the largest `int8`
