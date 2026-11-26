@@ -29,44 +29,102 @@ file records their priority and what they mean for abap2go, not a copy of their 
 
 ## How a fix gets in
 
+### Principle
+
+abap2go's own development comes first; upstream PRs are a bonus. A fix goes into abap2go the day it is written,
+whether upstream has taken it or not, since there is little upstream activity on the syntax check to wait for.
+Upstream gets the same fixes as a queue of small PRs, one issue (or a few close ones) each, at the maintainer's pace.
+Upstream's own improvements reach abap2go with a newer release, when the pin moves.
+
+### The patch
+
 `@abaplint/core` is pinned to an upstream release, and `patch-package` applies `patches/@abaplint+core+<version>.patch`
-on `npm install`. The patch holds the abap2go PRs to abaplint that the release does not contain yet, open or merged
-but unreleased (listed in `patches/abaplint-prs.txt`). Each PR drops out once a release has it.
+on `npm install`. `scripts/abaplint-patch.sh <abaplint checkout>` builds that patch: it checks out the release tag in
+a scratch worktree and merges into it
+
+1. every upstream PR by the author that the release does not contain: open (draft or not), or merged but not
+   released, in PR number order, fetched from `abaplint/abaplint`, then
+2. every open PR on the author's fork `arcanist123/abaplint`, the waiting PRs, in PR number order, fetched from the
+   fork.
+
+It runs abaplint's tests on the result and writes the patch from the files that differ, and the list of what went in
+to `patches/abaplint-prs.txt`: `abaplint#N` for upstream PRs, `arcanist123/abaplint#N` for waiting PRs. It stops when
+a PR does not merge cleanly or the tests fail. A PR closed without a merge, upstream or on the fork, is left out. Each
+PR drops out of the patch by itself once a release contains it.
+
+### Two kinds of PRs
+
+**Upstream PRs** (`abaplint/abaplint`) are what the maintainer reviews and merges. Each one is branched from upstream
+`main` and contains only its own commits. No stacked PRs: the maintainer does not take a PR whose branch builds on
+another open one, and sets it to draft (#4761). An upstream PR is never moved to the fork, whatever its state.
+
+**Waiting PRs** (`arcanist123/abaplint`) hold fixes that cannot go upstream yet because they need the code of an open
+upstream PR: the same file, its helpers, or its tests. A waiting PR
+
+- has a branch of its own as head, and as base the branch it builds on (the upstream PR's branch, or the head of
+  another waiting PR), so its diff shows only its own change. A base of `main` would show the whole stack
+- is **never merged on the fork**: the fork's `main` mirrors upstream. The PR only keeps the change, its diff, its
+  review and its turn; it is closed when its upstream PR is opened
+- says in its body that it is a waiting PR, what it builds on and which issues it fixes, worded as for upstream
+- is listed in "Waiting PRs on the fork" below, in the order it goes up
+
+Waiting PRs merge cleanly into the patch after the upstream PRs, as each one contains the branch it builds on.
+
+### Steps for a fix
 
 1. Work out the expected behaviour, and raise an issue.
-2. Branch from upstream `main`, write the fix and its tests, run abaplint's tests.
-3. Open the PR upstream; it says `closes #N` for the issues it fixes.
-4. Regenerate the patch with `scripts/abaplint-patch.sh` and run `npm test` here.
+2. Is the code it needs on upstream `main` already, with no open PR changing the same code?
+   - yes: branch from upstream `main`
+   - no: branch from the branch of the open PR it builds on (the last one in the queue for that code)
+3. Write the fix and its tests, run abaplint's tests (see "Testing in abaplint"), push the branch to the fork.
+4. Open the PR:
+   - branched from `main`: upstream, saying `closes #N` for the issues it fixes
+   - branched from another PR's branch: a waiting PR on the fork with that branch as base; add it to "Waiting PRs on
+     the fork"
+5. Regenerate the patch with `scripts/abaplint-patch.sh`, run `npm test` here, and commit the patch,
+   `abaplint-prs.txt` and the roadmap together.
 
-abap2go's own development comes first, upstream PRs are a bonus: a fix goes into the patch the day it is written,
-whether upstream has taken it or not. Upstream gets it as a queue of small PRs, at its own pace.
+### When a waiting PR goes up
 
-No stacked PRs: the maintainer does not take a PR whose branch builds on another open one, and sets it to draft. Each
-PR is branched from upstream `main` and stays small, one issue or a few close ones. A fix that needs the code of an
-open PR (the same file, or its helpers) is still written right away, on a branch of its own on top of that PR's
-branch, and pushed to the fork without a PR. It goes into `patches/abaplint-branches.txt`, which the script merges
-after the PRs (a branch on top of another merges cleanly, as it contains it), and into "Waiting branches" below. Once
-the PR under it is merged, it is rebased onto `main`, its tests run again, its PR is opened and it leaves
-`abaplint-branches.txt`, since the script now takes it from the PR list. One waiting branch at a time goes up, in the
-order listed. Stacking stays a local habit that upstream never sees.
+Once the PR it builds on is merged upstream:
 
-When upstream changes or rejects a PR:
-- changed in review: the patch is regenerated, which takes the PR's new head
-- rejected (closed without a merge, which the script skips): its branch goes back into `abaplint-branches.txt` and
-  stays part of abap2go's abaplint
-- fixed upstream another way: the conflict shows when abap2go moves to a newer release, and our version is dropped
+1. Rebase its branch onto upstream `main` so that only its own commits are left
+   (`git rebase --onto upstream/main <old base> <branch>`), run abaplint's tests again, force-push to the fork.
+2. Open the upstream PR from that branch, saying `closes #N`.
+3. Close the waiting PR with a link to the upstream one.
+4. The waiting PRs on top of it keep the same base branch name, so GitHub shows them against the rebased branch;
+   rebase each one too when its diff shows more than its own change.
+5. Update "Waiting PRs on the fork" and the issue entries, and regenerate the patch.
+
+One waiting PR goes up at a time per chain, in the order listed; independent chains go up independently.
+
+### When upstream changes or rejects a PR
+
+- **changes asked in review**: they go onto the PR's branch, and regenerating the patch takes its new head. Waiting
+  PRs on top of it are rebased onto the new head, and fixed if the change touches them
+- **rejected** (closed without a merge): the patch would lose it, so it is opened again as a waiting PR on the fork
+  with base `main`, and stays part of abap2go's abaplint. The waiting PRs on top of it keep their base
+- **fixed upstream another way**: the conflict shows when abap2go moves to a newer release, and our version is closed
   then
 
-Upstream's own improvements arrive with a newer release: abap2go pins one, so moving the pin is where they come in.
+### Moving to a newer release
 
-Working with upstream: the maintainer (larshp) reviews and merges. Do not merge `main` into an open PR or press
+Set the new exact version in `package.json`, run `npm install`, then the script. PRs and waiting PRs that the release
+contains drop out by themselves; one that conflicts with the release is rebased, or closed when the release fixes the
+same case. Then `npm test` here.
+
+### Working with upstream
+
+The maintainer (larshp) reviews and merges. Do not merge `main` into an open PR or press
 "Update branch" unless GitHub shows a conflict or the maintainer asks: an out-of-date branch is fine, and an update
 restarts CI and races with his merges. A PR may close other people's issues through `closes #N`, but other people's
 issues are never closed by hand: for one that is already fixed, comment with the evidence (PR, test) and let the
 reporter or the maintainer close it. Our own issues we close ourselves, also when one turns out to be raised in
 error.
 
-Testing in abaplint: `npm test`/`--parallel` gives 25-37 "statement type" failures, all 250ms timeouts under load,
+### Testing in abaplint
+
+`npm test`/`--parallel` gives 25-37 "statement type" failures, all 250ms timeouts under load,
 and a timeout skips the rest of that file. Serial:
 `npx mocha --no-config --no-package --recursive build/test/abap/syntax` (the package.json `spec` overrides a folder
 argument otherwise).
@@ -101,11 +159,12 @@ Found 2026-11-26, with 2.120.120 and the patch.
   `WHEN ipow( base = a exp = 2 )`, `WHEN abs( a + 0 )`) is accepted, while ABAP is expected to allow only a data
   object or a built-in function of one there. The build still refuses them, as operands it does not compile. Fix in
   [PR #4761](https://github.com/abaplint/abaplint/pull/4761), set to draft by the maintainer since it was stacked on
-  [PR #4741](https://github.com/abaplint/abaplint/pull/4741) (see "Waiting branches"); in the patch. It also rejects `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 and #4750 stays
+  [PR #4741](https://github.com/abaplint/abaplint/pull/4741) (see "Waiting PRs on the fork"); in the patch. It also
+  rejects `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 and #4750 stays
 - [ ] [#4748](https://github.com/abaplint/abaplint/issues/4748) `CASE ( a ).` and `WHEN ( b ).`, parentheses around
   a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), are accepted, while ABAP is expected to reject
-  them; the compiler compiles `CASE ( a ).` as without them. `CASE ( a + 1 ).` is valid. Fixed on the waiting branch
-  `case-parentheses-4748`, in the patch: after `CASE` parentheses only around a calculation (an arithmetic or bit
+  them; the compiler compiles `CASE ( a ).` as without them. `CASE ( a + 1 ).` is valid. Fixed in waiting PR
+  [arcanist123/abaplint#1](https://github.com/arcanist123/abaplint/pull/1), in the patch: after `CASE` parentheses only around a calculation (an arithmetic or bit
   expression, or a numeric built-in function of a calculated argument, `( abs( a + 1 ) )`), after `WHEN` none.
   Not covered: parentheses inside a string expression after `CASE`, `( c ) && s`
 - [ ] [#4749](https://github.com/abaplint/abaplint/issues/4749) parentheses around a single operand as the argument
@@ -117,22 +176,26 @@ Found 2026-11-26, with 2.120.120 and the patch.
   functions with a character-like result (`condense( )`, `to_upper( )`, `substring( )`, `boolc( )`, `xsdbool( )`),
   bit expressions and table expressions (`tab[ 1 ]`) are accepted, while ABAP is expected to reject them. The same
   forms after `CASE`, `'a' & 'b'` and an expression inside a constructor expression are valid. PR #4761 does not cover
-  them. Same code (`when.ts`) as PR #4761: a waiting branch on top of `case-when-arithmetic-4747`, as for the
-  `WHEN ( b ).` part of #4748
+  them. Same code (`when.ts`) as #4761 and #4748: a waiting PR on top of
+  `case-parentheses-4748`
 
-### Waiting branches
+### Waiting PRs on the fork
 
-Fixes written on top of an open PR's branch, pushed to the fork without a PR and listed in
-`patches/abaplint-branches.txt`, so they are in the patch (see "How a fix gets in"). In order; each one is rebased
-onto `main` and opened once the branch under it is merged. #4761 is already a PR (a draft), so the script takes it
-from the PR list, not from the branch file.
+Fixes that need the code of an open upstream PR (see "How a fix gets in"): open PRs on
+[arcanist123/abaplint](https://github.com/arcanist123/abaplint/pulls), never merged there, all in the patch. Listed by
+`gh pr list -R arcanist123/abaplint`; in order, each chain from the bottom up.
 
-| Branch | Fixes | Waits for |
-|---|---|---|
-| `case-when-arithmetic-4747` | [#4747](https://github.com/abaplint/abaplint/issues/4747), already [PR #4761](https://github.com/abaplint/abaplint/pull/4761) (draft): rebase onto `main`, drop the #4741 commits, mark it ready | [PR #4741](https://github.com/abaplint/abaplint/pull/4741) |
-| `case-parentheses-4748` | [#4748](https://github.com/abaplint/abaplint/issues/4748) | `case-when-arithmetic-4747` |
+Chain on `when.ts`, which starts going up once [PR #4741](https://github.com/abaplint/abaplint/pull/4741) is merged:
 
-Next, on top of `case-parentheses-4748`: [#4762](https://github.com/abaplint/abaplint/issues/4762).
+| Order | PR | Branch | Base | Fixes |
+|---|---|---|---|---|
+| 1 | [abaplint#4761](https://github.com/abaplint/abaplint/pull/4761) (upstream, draft) | `case-when-arithmetic-4747` | upstream `main`, still with the #4741 commits | [#4747](https://github.com/abaplint/abaplint/issues/4747) |
+| 2 | [arcanist123/abaplint#1](https://github.com/arcanist123/abaplint/pull/1) | `case-parentheses-4748` | `case-when-arithmetic-4747` | [#4748](https://github.com/abaplint/abaplint/issues/4748) |
+
+#4761 was opened stacked before this rule, so it stays the upstream draft rather than move to the fork: once #4741 is
+merged, rebase it onto `main` (which drops the #4741 commit) and mark it ready. Once #4761 is merged, #1 goes up as in
+"When a waiting PR goes up". Next in this chain: [#4762](https://github.com/abaplint/abaplint/issues/4762), on top of
+`case-parentheses-4748`.
 
 ### Syntax checks to move out of the compiler
 
@@ -224,7 +287,8 @@ HTML tag in ABAP Doc is expected to give warnings only ([#4655](https://github.c
 
 ## In the patch
 
-PRs the pinned release does not contain, as of 2026-11-26. The patch file was last generated with PR #4761 and the waiting branch `case-parentheses-4748`.
+PRs the pinned release does not contain, as of 2026-11-26. The patch file was last generated with PR #4761 and waiting PR arcanist123/abaplint#1, which is not in this table
+(see "Waiting PRs on the fork").
 
 | PR | What | State |
 |---|---|---|
