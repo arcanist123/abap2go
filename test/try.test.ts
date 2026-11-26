@@ -172,6 +172,52 @@ out->write( sy-index ).`);
   assert.deepEqual(run("clas", source), { stdout: lines("retry", "retry", 3, 0) });
 });
 
+test("RETURN leaves a TRY and the processing block; no CLEANUP runs", () => {
+  const source = classrun(`DATA n TYPE i.
+DO 2 TIMES.
+  TRY.
+      TRY.
+          out->write( sy-index ).
+          IF sy-index = 2.
+            RETURN.
+          ENDIF.
+        CATCH cx_root.
+          out->write( 'never' ).
+      ENDTRY.
+    CLEANUP.
+      out->write( 'never' ).
+  ENDTRY.
+ENDDO.
+out->write( 'never' ).`);
+  assert.deepEqual(run("clas", source), { stdout: lines(1, 2) });
+});
+
+test("CHECK and EXIT outside a loop leave a TRY and their START-OF-SELECTION block", () => {
+  const source = `REPORT zprobe.
+DATA n TYPE i.
+START-OF-SELECTION.
+  TRY.
+      WRITE / 'first'.
+      CHECK n = 1.
+      WRITE / 'never'.
+    CATCH cx_root.
+  ENDTRY.
+  WRITE / 'never'.
+START-OF-SELECTION.
+  TRY.
+      TRY.
+          WRITE / 'second'.
+          EXIT.
+        CATCH cx_sy_zerodivide.
+      ENDTRY.
+    CLEANUP.
+      WRITE / 'never'.
+  ENDTRY.
+START-OF-SELECTION.
+  WRITE / 'never'.`;
+  assert.deepEqual(run("prog", source), { stdout: "first\nsecond\n" });
+});
+
 test("EXIT, CONTINUE and CHECK leave a TRY for a loop around it; no CLEANUP runs", () => {
   const source = classrun(`DATA n TYPE i.
 DATA z TYPE i.

@@ -6,7 +6,7 @@ import { lowerSource, Variables, Where } from "./lower_common";
 
 const { Statements, Expressions } = abaplint;
 
-/** Lowers an executable program. Only START-OF-SELECTION is supported, explicit or implicit. */
+/** Lowers an executable program. Only START-OF-SELECTION is supported, explicit or implicit, in one or more blocks. */
 export function lowerReport(registry: abaplint.IRegistry, obj: abaplint.Objects.Program): IRReport {
   const subc = /<SUBC>([^<]*)<\/SUBC>/.exec(obj.getXML() ?? "")?.[1];
   if (subc !== "1") {
@@ -26,9 +26,7 @@ export function lowerReport(registry: abaplint.IRegistry, obj: abaplint.Objects.
   }
   const lowerer = new BlockLowerer(file, variables, (statement, where) => {
     const kind = statement.get();
-    if (kind instanceof Statements.StartOfSelection) {
-      return undefined;
-    } else if (kind instanceof Statements.Report) {
+    if (kind instanceof Statements.Report) {
       lineSize = lowerReportStatement(statement, where);
       return undefined;
     } else if (kind instanceof Statements.Write) {
@@ -36,8 +34,19 @@ export function lowerReport(registry: abaplint.IRegistry, obj: abaplint.Objects.
     }
     throw new BuildError(`statement ${kind.constructor.name} is not supported yet`, where);
   });
-  const body = lowerer.lower([structure]);
-  return { kind: "report", name: obj.getName(), lineSize, body };
+  // each START-OF-SELECTION starts a block; the statements before the first one are a block of their own
+  const blocks: IRStatement[][] = [];
+  let nodes: (abaplint.Nodes.StatementNode | abaplint.Nodes.StructureNode)[] = [];
+  for (const node of structure.getChildren()) {
+    if (node instanceof abaplint.Nodes.StatementNode && node.get() instanceof Statements.StartOfSelection) {
+      blocks.push(lowerer.lower(nodes));
+      nodes = [];
+    } else {
+      nodes.push(node as abaplint.Nodes.StatementNode | abaplint.Nodes.StructureNode);
+    }
+  }
+  blocks.push(lowerer.lower(nodes));
+  return { kind: "report", name: obj.getName(), lineSize, blocks };
 }
 
 /** REPORT: returns LINE-SIZE if given. */

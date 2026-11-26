@@ -3,15 +3,18 @@
 /** One compilation root and what it runs. */
 export type IRRoot = IRReport | IRClassrun;
 
-/** An executable program: its START-OF-SELECTION writes the basic list. */
+/** An executable program: its START-OF-SELECTION event blocks write the basic list. */
 export interface IRReport {
   kind: "report";
   /** Program name, upper case. */
   name: string;
   /** LINE-SIZE of REPORT, undefined if not given (the runtime's default then applies). */
   lineSize: number | undefined;
-  /** START-OF-SELECTION, including the statements before any event keyword. */
-  body: IRStatement[];
+  /**
+   * The START-OF-SELECTION event blocks in the order they run, the first one holding the statements before any event
+   * keyword. Each block starts a new line of the list.
+   */
+  blocks: IRStatement[][];
 }
 
 /** A class implementing IF_OO_ADT_CLASSRUN: an instance is created and MAIN runs with the console as OUT. */
@@ -75,7 +78,7 @@ export interface IRSubstring {
 }
 
 export type IRStatement = IRListWrite | IRConsoleWrite | IRData | IRMove | IRCalculate | IRAssert
-  | IRIf | IRDo | IRWhile | IRExit | IRContinue | IRCheck | IRTry | IRRetry;
+  | IRIf | IRDo | IRWhile | IRExit | IRContinue | IRCheck | IRReturn | IRTry | IRRetry;
 
 /**
  * TRY. body CATCH ... [CLEANUP. ...] ENDTRY. An exception raised in the body (also in a procedure it calls) goes to
@@ -139,10 +142,23 @@ export interface IRContinue {
   kind: "continue";
 }
 
-/** CHECK condition in a loop: when the condition does not hold, goes on with the next pass. */
+/**
+ * CHECK condition: when the condition does not hold, it leaves what it stands in. In a loop it goes on with the next
+ * pass of the innermost loop; outside a loop it leaves its processing block, and in a report the next
+ * START-OF-SELECTION block then runs.
+ */
 export interface IRCheck {
   kind: "check";
   condition: IRCondition;
+  leaves: "pass" | "block";
+}
+
+/**
+ * RETURN, and EXIT outside a loop: ends the method, or START-OF-SELECTION with all the blocks still to run. The list
+ * is written all the same.
+ */
+export interface IRReturn {
+  kind: "return";
 }
 
 /** ASSERT condition: when the condition does not hold, the program ends with the runtime error ASSERTION_FAILED. */

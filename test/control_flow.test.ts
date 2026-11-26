@@ -2,8 +2,8 @@ import { test } from "node:test";
 import * as assert from "node:assert/strict";
 import { classrun, run } from "./harness";
 
-// IF, CASE, DO, WHILE, EXIT, CONTINUE, CHECK and sy-index. Conditions follow docs/spec/comparison.md; the cells of
-// comparison_expr.tsv run in comparison_expr.test.ts.
+// IF, CASE, DO, WHILE, EXIT, CONTINUE, CHECK, RETURN and sy-index. Conditions follow docs/spec/comparison.md; the
+// cells of comparison_expr.tsv run in comparison_expr.test.ts.
 
 // out->write( ) of an i writes it converted to a string, with the blank of its sign after it
 const lines = (...l: (string | number)[]) => l.map(x => typeof x === "number" ? `${x} \n` : `${x}\n`).join("");
@@ -266,10 +266,169 @@ START-OF-SELECTION.
   assert.deepEqual(run("prog", source), { stdout: lines("no", "        20", "no") });
 });
 
+// Outside a loop, RETURN, EXIT and a CHECK whose condition does not hold leave the processing block
+for (const leave of ["RETURN.", "EXIT.", "CHECK 1 = 0."]) {
+  test(`${leave} outside a loop leaves the method, also from within IF and CASE`, () => {
+    const source = classrun(`DATA a TYPE i VALUE 1.
+out->write( 'before' ).
+IF a = 1.
+  CASE a.
+    WHEN 1.
+      ${leave}
+  ENDCASE.
+  out->write( 'not reached in IF' ).
+ENDIF.
+out->write( 'not reached' ).`);
+    assert.deepEqual(run("clas", source), { stdout: lines("before") });
+  });
+
+  test(`${leave} outside a loop leaves START-OF-SELECTION, and the list is written`, () => {
+    // the last line is not finished when the block is left
+    const source = `REPORT zprobe.
+START-OF-SELECTION.
+  WRITE 'first'.
+  WRITE / 'last'.
+  WRITE 'line'.
+  ${leave}
+  WRITE / 'not reached'.`;
+    assert.deepEqual(run("prog", source), { stdout: lines("first", "last line") });
+  });
+}
+
+test("RETURN in nested loops leaves the whole processing block", () => {
+  const body = `DATA k TYPE i.
+DO 3 TIMES.
+  WHILE k < 10.
+    k = k + 1.
+    DO 3 TIMES.
+      IF k = 2.
+        RETURN.
+      ENDIF.
+    ENDDO.
+  ENDWHILE.
+  k = 100.
+ENDDO.`;
+  assert.deepEqual(run("clas", classrun(`out->write( 'before' ).
+${body}
+out->write( 'not reached' ).`)),
+    { stdout: lines("before") });
+  assert.deepEqual(run("prog", `REPORT zprobe.
+WRITE 'before'.
+${body}
+WRITE / 'not reached'.`), { stdout: lines("before") });
+});
+
+test("CHECK outside a loop does nothing when the condition holds", () => {
+  const classBody = `DATA a TYPE i VALUE 1.
+CHECK a = 1.
+IF a = 1.
+  CHECK a <> 2.
+  out->write( 'in IF' ).
+ENDIF.
+out->write( 'after' ).`;
+  assert.deepEqual(run("clas", classrun(classBody)), { stdout: lines("in IF", "after") });
+  const report = `REPORT zprobe.
+DATA a TYPE i VALUE 1.
+CHECK a = 1.
+WRITE 'after'.`;
+  assert.deepEqual(run("prog", report), { stdout: lines("after") });
+});
+
+test("CHECK outside a loop evaluates its condition with short circuit", () => {
+  const declarations = `DATA x TYPE i VALUE 1.
+DATA z TYPE i.
+DATA s TYPE string VALUE \`ab\`.
+DATA off TYPE i VALUE 5.`;
+  const passed = run("clas", classrun(`${declarations}
+CHECK x = 1 OR 1 / z = 1.
+CHECK x = 1 OR s+off(1) = 'a'.
+out->write( 'passed' ).
+CHECK x = 0 AND 1 / z = 1.
+out->write( 'not reached' ).`));
+  assert.deepEqual(passed, { stdout: lines("passed") });
+  const report = `REPORT zprobe.
+${declarations}
+CHECK x = 1 OR 1 / z = 1.
+WRITE 'passed'.
+CHECK x = 0 AND s+off(1) = 'a'.
+WRITE / 'not reached'.`;
+  assert.deepEqual(run("prog", report), { stdout: lines("passed") });
+  const raised = run("clas", classrun(`${declarations}
+out->write( 'before' ).
+CHECK 1 / z = 1 OR x = 1.
+out->write( 'not reached' ).`));
+  assert.equal(raised.stdout, lines("before"));
+  assert.match(raised.failed ?? "", /CX_SY_ZERODIVIDE/);
+});
+
+// A report can have several START-OF-SELECTION blocks, the statements before the first one being a block of their
+// own. They run in order, and each starts a new line of the list.
+test("START-OF-SELECTION: each block starts a new line", () => {
+  const source = `REPORT zprobe.
+WRITE 'implicit'.
+START-OF-SELECTION.
+  WRITE 'second'.
+  WRITE 'same line'.
+START-OF-SELECTION.
+START-OF-SELECTION.
+  WRITE / 'fourth'.`;
+  assert.deepEqual(run("prog", source), { stdout: lines("implicit", "second same line", "fourth") });
+});
+
+test("START-OF-SELECTION: CHECK outside a loop leaves its block only, the next block runs", () => {
+  const source = `REPORT zprobe.
+DATA k TYPE i.
+WRITE 'implicit'.
+CHECK k = 1.
+WRITE 'not reached'.
+START-OF-SELECTION.
+  WRITE 'second'.
+  IF k = 0.
+    CHECK k = 1.
+  ENDIF.
+  WRITE 'not reached'.
+START-OF-SELECTION.
+  DO 2 TIMES.
+    CHECK sy-index = 2.
+    WRITE 'pass two'.
+  ENDDO.
+  CHECK k = 0.
+  WRITE 'third'.
+START-OF-SELECTION.
+  WRITE 'fourth'.
+  CHECK k = 1.
+  WRITE 'not reached'.`;
+  assert.deepEqual(run("prog", source), { stdout: lines("implicit", "second", "pass two third", "fourth") });
+});
+
+for (const leave of ["RETURN.", "EXIT."]) {
+  test(`START-OF-SELECTION: ${leave} outside a loop skips the blocks after its own`, () => {
+    const source = (first: string) => `REPORT zprobe.
+DATA k TYPE i.
+WRITE 'implicit'.
+${first}
+START-OF-SELECTION.
+  WRITE 'second'.
+  DO 1 TIMES.
+    EXIT.
+  ENDDO.
+  IF k = 0.
+    ${leave}
+  ENDIF.
+  WRITE 'not reached'.
+START-OF-SELECTION.
+  WRITE 'not reached'.`;
+    assert.deepEqual(run("prog", source("")), { stdout: lines("implicit", "second") });
+    assert.deepEqual(run("prog", source(leave)), { stdout: lines("implicit") });
+  });
+}
+
 const refusals: [string, string, RegExp][] = [
-  ["EXIT outside a loop", "EXIT.", /EXIT outside a loop/],
-  ["CONTINUE outside a loop", "IF 1 = 1. CONTINUE. ENDIF.", /CONTINUE outside a loop/],
-  ["CHECK outside a loop", "CHECK 1 = 1.", /CHECK outside a loop/],
+  ["CONTINUE outside a loop", "IF 1 = 1. CONTINUE. ENDIF.", /CONTINUE is only possible in a loop/],
+  ["RETURN with an operand outside a functional method", "RETURN 1.", /does not have a RETURNING parameter/],
+  ["EXIT FROM STEP-LOOP", "EXIT FROM STEP-LOOP.", /no additions are supported/],
+  ["EXIT FROM SQL", "EXIT FROM SQL.", /no additions are supported/],
+  ["CHECK without a condition", "CHECK sy-index.", /only CHECK <condition>/],
   ["DO VARYING", "DATA a TYPE i.\nDATA b TYPE i.\nDATA c TYPE i.\nDO 2 TIMES VARYING a FROM b NEXT c.\nENDDO.", /not VARYING/],
   ["WHILE VARY", "DATA a TYPE i.\nDATA b TYPE i.\nDATA c TYPE i.\nWHILE 1 = 0 VARY a FROM b NEXT c.\nENDWHILE.", /VARY is not supported/],
   ["DO with an arithmetic expression", "DATA a TYPE i.\nDO a + 1 TIMES.\nENDDO.", /only a literal, a variable or a subfield/],

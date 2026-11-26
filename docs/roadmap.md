@@ -122,11 +122,11 @@ Done:
   - `NOT` repeated any number of times (2026-11-25, abaplint #4714, in the abaplint patch): an even number cancels out
   - `DATA` is not executable: every variable of a processing block exists from its start with its start value, also
     one declared in a loop or a branch
-  - refused: `EXIT`, `CONTINUE` and `CHECK` outside a loop (they leave the processing block), `DO … VARYING`,
-    `WHILE … VARY`, an arithmetic expression as the operand of `CASE`, `WHEN` or `DO … TIMES`, `CASE` without
-    `WHEN`, a lone built-in function as a comparison operand, comparisons of kinds without a comparison type (`d` with
-    `t`, `utclong` with anything but `c`, `string` and `utclong`), a non-numeric single operand against an arithmetic
-    expression, the other predicates (`IS`, `IN`, `CO`, …), `WRITE sy-index` (the output length of its data element)
+  - refused: `DO … VARYING`, `WHILE … VARY`, an arithmetic expression as the operand of `CASE`, `WHEN` or
+    `DO … TIMES`, `CASE` without `WHEN`, a lone built-in function as a comparison operand, comparisons of kinds
+    without a comparison type (`d` with `t`, `utclong` with anything but `c`, `string` and `utclong`), a non-numeric
+    single operand against an arithmetic expression, the other predicates (`IS`, `IN`, `CO`, …), `WRITE sy-index`
+    (the output length of its data element)
 - the arithmetic tests of abaplint/transpiler as end-to-end fixtures (2026-11-25, `test/transpiler/*.txt`, run by
   `test/transpiler.test.ts`, MIT, see `NOTICE`): the 157 ABAP snippets of `test/operators/arithmetics*.ts`,
   `mod.ts`, `test/types/*_operations.ts`, `integer8_calculation_type.ts` and `conversion_no_number.ts`, one
@@ -145,13 +145,25 @@ Done:
     literals 6, `abap_true` and `abap_false` 5, `IS INITIAL` 4, `CONSTANTS` 3, `CLEAR` 2, field symbols 2, `CO` 1,
     `&&` 1. A waiting case runs as a todo, so it shows once it passes
   - no compiled snippet gave a value other than the expected one
+- leaving the processing block (2026-11-26, `src/lower_block.ts`, `test/control_flow.test.ts`): `RETURN` anywhere,
+  and outside a loop `EXIT` and `CHECK <condition>`. In a method the method ends; in a report the list is still
+  written
+  - a report can have several `START-OF-SELECTION` blocks, the statements before the first one being a block of
+    their own. They run in order and each starts a new line of the list (before, they ran as one block, without that
+    line break). A `CHECK` outside a loop whose condition is false leaves its block only, so the next one runs;
+    `RETURN` and `EXIT` skip the blocks still to run. The same difference is expected to matter for
+    `END-OF-SELECTION` once it is compiled: per the keyword documentation, no further reporting event is raised
+    after `RETURN` or `EXIT`, while `CHECK` ends the block in the regular way
+  - refused: `CONTINUE` outside a loop (a syntax error), `RETURN` with an operand (functional methods are not
+    compiled), `EXIT` with an addition, `CHECK` without a condition
 - `TRY … CATCH … CLEANUP … ENDTRY` and `RETRY` (2026-11-26, `abap.Session.Try` in `runtime/go/abap/try.go`,
   `test/try.test.ts`): a `CATCH` clause catches the classes it names and their subclasses, the first matching clause
   wins. As ABAP decides it where the exception is raised, an exception no `TRY` catches ends the program without
   running any `CLEANUP` block; one caught further out runs the `CLEANUP` blocks of the `TRY`s it leaves, innermost
   first, before the `CATCH` block. An exception raised in a `CATCH` block goes to the `TRY`s further out (its own
   `CLEANUP` does not run), and one that leaves a `CLEANUP` block ends the program. `sy-index` is set back when an
-  exception or `RETRY` leaves a loop. `EXIT`, `CONTINUE` and `CHECK` leave a `TRY` for a loop around it
+  exception or `RETRY` leaves a loop. `EXIT`, `CONTINUE` and `CHECK` leave a `TRY` for a loop around it, and
+  `RETURN`, `EXIT` and `CHECK` outside a loop for the end of the processing block, without running a `CLEANUP` block
   - the target after an exception: `=` and `result = expression` store the value the exception leaves (see "The
     target after an exception" in [spec/conversion.md](spec/conversion.md)) before raising it; 171 cells of results
     of every calculation type that do not fit integer, `p`, `n`, `c`, `f` and `decfloat16` result fields run end
@@ -163,16 +175,15 @@ Done:
     `decfloat16` field, is a runtime error naming the gap when a `TRY` could read the field (an exception to the
     guiding principle, see [aot_for_abap.md](aot_for_abap.md)); uncaught, it ends the program as the exception does
   - refused: `CATCH … INTO` and `CLEANUP INTO` (object references are not compiled), `CATCH BEFORE UNWIND`, and,
-    as ABAP syntax errors, `RETRY` outside a `CATCH` block, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block,
+    as ABAP syntax errors, `RETRY` outside a `CATCH` block, `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block,
     a `TRY` without `CATCH` or `CLEANUP`, a `CATCH` of a class not derived from `CX_ROOT` (abaplint does not report
     the last three yet: #4723, #4724, #4725); constants and built-in
     data objects (`abap_true`) as operands
 
 Next:
-- [ ] control flow, the rest: `EXIT`, `CHECK` and `RETURN` outside loops (leaving the processing block), `IS
-  INITIAL` and the other predicates once the comparison table has them, built-in functions and `CONV` as single
-  comparison operands (operands with the type of their result), `CASE` and `DO … TIMES` with expressions,
-  `WRITE sy-index` with the output length of its data element
+- [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them, built-in
+  functions and `CONV` as single comparison operands (operands with the type of their result), `CASE` and
+  `DO … TIMES` with expressions, `WRITE sy-index` with the output length of its data element
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
