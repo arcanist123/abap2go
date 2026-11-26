@@ -137,16 +137,16 @@ describes.
 Valid code rejected: nothing open in abaplint. The last case, a static offset or length beyond a `c` or `x` field
 while the other one is a variable (`c+5(off)`, `c+off(6)` with `c TYPE c LENGTH 5`,
 [#4742](https://github.com/abaplint/abaplint/issues/4742)), is fixed by
-[PR #4759](https://github.com/abaplint/abaplint/pull/4759), merged and in the patch: ABAP is expected to accept it and
+[PR #4759](https://github.com/abaplint/abaplint/pull/4759), in 2.120.121: ABAP is expected to accept it and
 to decide at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static.
 - [ ] follow-up in the compiler: its own check (`lowerSubstring` in `src/lower_common.ts`) still refuses `c+5(off)`
 
 [#4726](https://github.com/abaplint/abaplint/issues/4726) is fixed by
-[PR #4727](https://github.com/abaplint/abaplint/pull/4727), in the patch.
+[PR #4727](https://github.com/abaplint/abaplint/pull/4727), in 2.120.121.
 
 Valid code mistyped: nothing open. The last case, a number literal beyond the range of `i` typed `i`
 ([#4736](https://github.com/abaplint/abaplint/issues/4736)), is fixed by
-[PR #4737](https://github.com/abaplint/abaplint/pull/4737), merged and in the patch: such a literal is expected to be a `p`
+[PR #4737](https://github.com/abaplint/abaplint/pull/4737), in 2.120.121: such a literal is expected to be a `p`
 without decimals, of length 8 for up to 15 digits (leading zeros not counted) and length 16 above.
 - [ ] follow-up in the compiler, which types number literals itself (`integerLiteral` in `src/lower_common.ts`): it
   takes length 16 for every such `p`
@@ -214,7 +214,7 @@ Removed that day, since abaplint reports them:
   [PR #4739](https://github.com/abaplint/abaplint/pull/4739), in the patch)
 - `CATCH` of an interface or of a class not derived from `CX_ROOT`
   ([#4725](https://github.com/abaplint/abaplint/issues/4725),
-  [PR #4740](https://github.com/abaplint/abaplint/pull/4740), merged, in the patch)
+  [PR #4740](https://github.com/abaplint/abaplint/pull/4740), in 2.120.121)
 - a comparison of kinds without a comparison type, `d = t` or `utclong = i`
   ([#4728](https://github.com/abaplint/abaplint/issues/4728)), and a non-numeric operand compared with an arithmetic
   expression ([#4738](https://github.com/abaplint/abaplint/issues/4738);
@@ -291,8 +291,8 @@ HTML tag in ABAP Doc is expected to give warnings only ([#4655](https://github.c
 
 ## In the patch
 
-PRs the pinned release does not contain, as of 2026-11-26. The patch file was last generated with PR #4761 and waiting PRs arcanist123/abaplint#1 and #2, which are not in this
-table (see "Waiting PRs on the fork").
+PRs that the pinned release, 2.120.121, does not contain, as of 2026-11-26. The patch also holds waiting PRs
+arcanist123/abaplint#1 and #2, which are not in this table (see "Waiting PRs on the fork").
 
 | PR | What | State |
 |---|---|---|
@@ -300,19 +300,23 @@ table (see "Waiting PRs on the fork").
 | [#4633](https://github.com/abaplint/abaplint/pull/4633) | `METHODS` see only the types defined above them ([#2556](https://github.com/abaplint/abaplint/issues/2556)) | changes requested, parked (see "Parked") |
 | [#4635](https://github.com/abaplint/abaplint/pull/4635) | a write to a `READ-ONLY` attribute from outside the class ([#2097](https://github.com/abaplint/abaplint/issues/2097)). It also covers [#2611](https://github.com/abaplint/abaplint/issues/2611): add `closes #2611` to the PR, or comment on #2611 after the merge | open |
 | [#4684](https://github.com/abaplint/abaplint/pull/4684) | `\|` and `}` in EXEC SQL or an AMDP body taken as a string template, valid code mis-lexed ([#4329](https://github.com/abaplint/abaplint/issues/4329)) | open |
-| [#4716](https://github.com/abaplint/abaplint/pull/4716) | `NOT NOT a = 1` does not parse, also in `LOOP`, `DELETE` and `MODIFY … WHERE` ([#4714](https://github.com/abaplint/abaplint/issues/4714)) | merged, not released |
-| [#4727](https://github.com/abaplint/abaplint/pull/4727) | a `d` compared with a built-in function or method result of type `i` (`d = strlen( s )`, `abs( d ) = d`) is rejected as incompatible ([#4726](https://github.com/abaplint/abaplint/issues/4726)); the compiler compiles these functions as comparison operands | merged, not released |
-| [#4737](https://github.com/abaplint/abaplint/pull/4737) | a number literal beyond the range of `i` is typed `p`, not `i`; parameters, `VALUE` rows and `INSERT` rows are checked accordingly ([#4736](https://github.com/abaplint/abaplint/issues/4736)) | merged, not released |
 | [#4739](https://github.com/abaplint/abaplint/pull/4739) | `RETRY` outside a `CATCH` block is an error ([#4723](https://github.com/abaplint/abaplint/issues/4723)) | open |
-| [#4740](https://github.com/abaplint/abaplint/pull/4740) | `CATCH` of an interface or of a class not derived from `CX_ROOT` is an error ([#4725](https://github.com/abaplint/abaplint/issues/4725)) | merged, not released |
 | [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
-| [#4758](https://github.com/abaplint/abaplint/pull/4758) | `SPLIT ... IN BYTE MODE` takes byte-like operands, and its inline targets are `xstring` ([#4757](https://github.com/abaplint/abaplint/issues/4757)) | merged, not released |
-| [#4759](https://github.com/abaplint/abaplint/pull/4759) | a static offset or length beyond a `c` or `x` field is rejected although the other one is a variable ([#4742](https://github.com/abaplint/abaplint/issues/4742)) | merged, not released |
 | [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | draft, waits for #4741 |
 | [#4766](https://github.com/abaplint/abaplint/pull/4766) | `bit-set( )` and `boolx( bool = <logical expression> )` parse, typed `xstring` ([#4764](https://github.com/abaplint/abaplint/issues/4764)) | open |
 
-Released and out of the patch: `WRITE` of a utclong ([#4700](https://github.com/abaplint/abaplint/issues/4700),
-[PR #4701](https://github.com/abaplint/abaplint/pull/4701), in 2.120.119), which the compiler now compiles.
+Released and out of the patch:
+- in 2.120.121: [PR #4716](https://github.com/abaplint/abaplint/pull/4716) (`NOT NOT`,
+  [#4714](https://github.com/abaplint/abaplint/issues/4714)), [PR #4727](https://github.com/abaplint/abaplint/pull/4727)
+  (`d` against a result of type `i`, [#4726](https://github.com/abaplint/abaplint/issues/4726)),
+  [PR #4737](https://github.com/abaplint/abaplint/pull/4737) (number literals beyond `i`,
+  [#4736](https://github.com/abaplint/abaplint/issues/4736)), [PR #4740](https://github.com/abaplint/abaplint/pull/4740)
+  (`CATCH` of a non-exception, [#4725](https://github.com/abaplint/abaplint/issues/4725)),
+  [PR #4758](https://github.com/abaplint/abaplint/pull/4758) (`SPLIT ... IN BYTE MODE`,
+  [#4757](https://github.com/abaplint/abaplint/issues/4757)), [PR #4759](https://github.com/abaplint/abaplint/pull/4759)
+  (substring bounds with a variable, [#4742](https://github.com/abaplint/abaplint/issues/4742))
+- in 2.120.119: `WRITE` of a utclong ([#4700](https://github.com/abaplint/abaplint/issues/4700),
+  [PR #4701](https://github.com/abaplint/abaplint/pull/4701)), which the compiler now compiles
 
 ## Backlog
 
@@ -326,7 +330,7 @@ abaplint (main `af7440a`, default config, `v757`).
   documentation: a macro is valid from its DEFINE onward). Valid code is expanded wrongly
 - [x] [#4757](https://github.com/abaplint/abaplint/issues/4757) `SPLIT ... IN BYTE MODE`: byte-like targets are
   rejected and inline targets are typed `string` instead of `xstring` (character targets are accepted, though an error
-  is expected). Fixed by [PR #4758](https://github.com/abaplint/abaplint/pull/4758), merged, in the patch
+  is expected). Fixed by [PR #4758](https://github.com/abaplint/abaplint/pull/4758), in 2.120.121
 - [ ] [#4755](https://github.com/abaplint/abaplint/issues/4755) `INSERT itab.` parses as InsertDatabase
   (context-free parser); putting it in the InsertInternal grammar is a design question for the abaplint maintainer.
   Valid code gets the wrong statement

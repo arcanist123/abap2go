@@ -187,8 +187,8 @@ Done:
   ([spec/comparison.md](spec/comparison.md), "Built-in functions as operands"), and evaluated only when their
   comparison is (`abap.ValueOf`). `ipow( )`, a function of an expression and a function with an arithmetic expression
   on the other side are calculated with the comparison
-  - abaplint 2.120.120 rejects a `d` compared by `=` or `<>` with `abs( )` or `strlen( )` (`abs( d ) = d`), which
-    ABAP is expected to accept, so the build refuses it (abaplint#4726, [abaplint_roadmap.md](abaplint_roadmap.md))
+  - abaplint 2.120.120 rejected a `d` compared by `=` or `<>` with `abs( )` or `strlen( )` (`abs( d ) = d`), which
+    ABAP is expected to accept; fixed in 2.120.121 (abaplint#4726, [abaplint_roadmap.md](abaplint_roadmap.md))
 - `CASE` and `DO … TIMES` with expressions and built-in functions (2026-11-26, `src/lower_cond.ts`,
   `src/lower_block.ts`, `test/case_do.test.ts`)
   - `DO n TIMES` calculates an arithmetic expression or a built-in function once, as for an `i` result field, with the
