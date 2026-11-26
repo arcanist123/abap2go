@@ -7,28 +7,24 @@ belongs to the repository of its section.
 
 **The goal is an AOT compiler for ABAP:** ABAP compiled ahead of time into standalone executables that run at a
 speed comparable to Go, with no ABAP application server and no JS runtime (a database, embedded or external, is
-allowed). The design is [aot_for_abap.md](aot_for_abap.md). Work on abaplint and open-abap-core is listed here
-to the extent that it moves the AOT compiler forward.
+allowed). The design is [aot_for_abap.md](aot_for_abap.md). Work on open-abap-core is listed here to the extent that
+it moves the AOT compiler forward. Work on abaplint is a line of work of its own, with its own rules, priorities and
+status in [abaplint_roadmap.md](abaplint_roadmap.md).
 
 Priority, when choosing what to pick up next:
 1. **the specification of ABAP's rule tables** (the critical path, below): runtime-neutral, SAP is the reference
-2. **abaplint** (parser, check_syntax): the compiler's types come from abaplint, so a mistyped expression becomes
-   wrong native code. Within it, valid ABAP that abaplint mistypes or fails to parse comes before invalid ABAP that
-   abaplint accepts, because the compiler's input is code that already activates
-3. **open-abap-core**: its pure-ABAP classes (RTTI, XML, JSON, HTTP, conversions, ...) are compiled into AOT
+2. **open-abap-core**: its pure-ABAP classes (RTTI, XML, JSON, HTTP, conversions, ...) are compiled into AOT
    binaries as they are; its kernel and JS parts do not carry over
 
-- ABAP behaviour is the reference, not abaplint's rules. **Classic modern ABAP is the reference**: the current
-  on-premise language with its modern syntax (7.40 and later), not ABAP Cloud
+- ABAP behaviour is the reference. **Classic modern ABAP is the reference**: the current on-premise language with
+  its modern syntax (7.40 and later), not ABAP Cloud
 - the expected behaviour is worked out (keyword documentation) and written down as tests before it goes into code
   or a PR
 - nothing that would stop ABAP from compiling ahead of time: nothing that needs a JS host or a compiler at run time
-- lint rules are out of scope: only the parser and check_syntax count
-- a gap in abaplint or open-abap-core that the compiler runs into, within the scope it compiles, is fixed right
-  away: offered upstream as a PR, and carried in `patches/` until an abaplint release has it. It goes before the other work items
-  of that repository
+- a gap in open-abap-core that the compiler runs into, within the scope it compiles, is fixed right away: offered
+  upstream as a PR. It goes before the other work items of that repository
 
-This file is the source of status for abap2go and the work it needs in other repositories.
+This file is the source of status for abap2go and the work it needs in open-abap-core.
 
 ## The compiler (status 2026-11-26)
 
@@ -65,7 +61,8 @@ Done:
   2026-11-24): `@abaplint/core` is pinned to an upstream release, and `patch-package` applies
   `patches/@abaplint+core+<version>.patch` on `npm install`. The patch holds the abap2go PRs to abaplint that the
   release does not contain yet, open or merged but unreleased (listed in `patches/abaplint-prs.txt`);
-  `scripts/abaplint-patch.sh` regenerates it, and each PR drops out once a release has it. Fixes carried this way:
+  `scripts/abaplint-patch.sh` regenerates it, and each PR drops out once a release has it. The fixes the compiler's
+  features rest on (all work in abaplint: [abaplint_roadmap.md](abaplint_roadmap.md)):
   - `WRITE` of a utclong (abaplint#4700, PR abaplint#4701), which now compiles; released in 2.120.119, so no
     longer in the patch
   - INT1 and INT2 keep their size (abaplint#4630, PR abaplint#4631): `b` and `s` are declared through data
@@ -176,7 +173,7 @@ Done:
   - refused: `CATCH … INTO` and `CLEANUP INTO` (object references are not compiled), `CATCH BEFORE UNWIND`, and,
     as ABAP syntax errors, `RETRY` outside a `CATCH` block, `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block,
     a `TRY` without `CATCH` or `CLEANUP`, a `CATCH` of a class not derived from `CX_ROOT` (abaplint does not report
-    the last three yet: #4723, #4724, #4725); constants and built-in
+    the last three yet: abaplint#4723, abaplint#4724, abaplint#4725); constants and built-in
     data objects (`abap_true`) as operands
 - built-in functions as comparison operands (2026-11-26, `src/lower_cond.ts`, `runtime/go/abap/function.go`,
   `test/function_operand.test.ts`): `abs( )`, `sqrt( )` and `strlen( )` of a single data object are values with the
@@ -185,7 +182,7 @@ Done:
   comparison is (`abap.ValueOf`). `ipow( )`, a function of an expression and a function with an arithmetic expression
   on the other side are calculated with the comparison
   - abaplint 2.120.120 rejects a `d` compared by `=` or `<>` with `abs( )` or `strlen( )` (`abs( d ) = d`), which
-    ABAP is expected to accept, so the build refuses it (work item below)
+    ABAP is expected to accept, so the build refuses it (abaplint#4726, [abaplint_roadmap.md](abaplint_roadmap.md))
 
 Next:
 - [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,
@@ -196,8 +193,8 @@ Next:
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
   calculation type fixed at build time, `i`, `int8` and `f` as native Go operations with overflow checks, `p` and
   `decfloat34` as direct calls; comparison types chosen at build time; every TSV cell run on both paths
-  - a literal that does not convert to its static target is a syntax error, refused
-    at build time; the six "as written" transpiler fixtures are its test cases
+  - a literal that does not convert to its static target is a syntax error, to be reported by abaplint
+    (abaplint#4712); the six "as written" transpiler fixtures are its test cases
 - [ ] the rest of `calculation_contexts.tsv` as its statements are compiled: inline declarations, templates, `CONV`,
   `EXACT`, `ADD` and the others, the result field after an exception (with `TRY`). The expression parser of
   `calculation_test.go` still attaches a leading `-` to its operand; fix it if it is to run these cells too
@@ -358,43 +355,10 @@ critical path: the rule tables stay abap2go's own, and every part taken has to p
   item
 - [ ] attribution kept current: `NOTICE` names every file taken or ported, with the pinned commit
 
-## Work items
+## Work items in open-abap-core
 
-Reranked 2026-11-24 under the Purpose: the AOT compiler first. The critical path (the rule-table specification)
-is above. Below it, in order:
-1. abaplint: valid ABAP that abaplint misparses, mistypes or rejects. The compiler's input is code that already
-   activates, so these produce wrong native code or refuse a valid program
-2. open-abap-core: the pure-ABAP classes an AOT service actually calls (RTTI, JSON, the HTTP server side)
-3. abaplint: invalid ABAP that abaplint accepts. Correct to fix, but it barely affects AOT output
-
-### 1. abaplint: valid ABAP mistreated (review on main `af7440a`, 2026-11-23)
-
-All 380 open issues were read; the parser / check_syntax ones run through abaplint (default config, `v757`).
-
-- [ ] **#1809** a macro of the same name in two methods: the second call expands the first definition, `"foo" not
-  found`; macros need scoping by position (keyword documentation: a macro is valid from its DEFINE onward). Valid
-  code is expanded wrongly
-- [ ] `INSERT itab.` parses as InsertDatabase (context-free parser); putting it in the InsertInternal grammar is a
-  design question for the abaplint maintainer, not raised. Valid code gets the wrong statement
-- [ ] side finding, no issue: `NEW lcl( )->attr = 1.` gives "Not an object reference, target" for any attribute.
-  Check first that ABAP accepts it; if so, valid code is rejected
-- [ ] side finding, no issue (2026-11-26, 2.120.120): a `d` compared by `=` or `<>` with a built-in function of
-  type `i` (`d = strlen( s )`, `abs( d ) = d`) gives "Incompatible types for comparison", while `d = i` passes.
-  ABAP is expected to compare them in `i`, so valid code is rejected
-- [ ] dataset statements: #4644 (ENDIAN, TRUNCATE AT POSITION, SET DATASET ATTRIBUTES not parsed) and #4645
-  (inline declarations not handled): valid code fails to parse or is mistyped
-
-- in flight: #4329 (`|` and `}` in EXEC SQL or an AMDP body taken as a string template, valid code mis-lexed) is
-  in PR abaplint#4684; in the abaplint patch
-- done: #4700 (`WRITE` of a utclong gives "Source not character like", valid code rejected), PR abaplint#4701,
-  released in abaplint 2.120.119
-- in flight: #4714 (`NOT NOT a = 1` does not parse, valid code rejected; also in `LOOP`, `DELETE` and `MODIFY …
-  WHERE`): PR abaplint#4716 is merged, not released yet; in the abaplint patch
-
-Suggested order: #1809, then the dataset pair; `INSERT itab.` after asking the abaplint
-maintainer.
-
-### 2. open-abap-core: what an AOT service calls (TODO review on main `fbc211e`, 2026-11-23)
+What an AOT service calls (TODO review on main `fbc211e`, 2026-11-23). They come after the critical path above;
+the work in abaplint is in [abaplint_roadmap.md](abaplint_roadmap.md).
 
 Its pure-ABAP classes are compiled into AOT binaries as they are; kernel and JS parts do not carry over. A stub
 (`ASSERT 1 = 'todo'`) a root can reach is a run-time failure SAP does not have, so the AOT compiler will have to
@@ -469,71 +433,3 @@ Not relevant for AOT, not picked up:
   `CONVERT_ITF_TO_STREAM_TEXT`, `WWW*`
 
 - testing: `npm test` in the open-abap-core root
-
-### 3. abaplint: invalid ABAP accepted
-
-Correct to fix (ABAP is the reference), but it barely affects AOT output, because the compiler's input already
-activates on SAP. Lower priority than sections 1 and 2.
-
-check_syntax (no error from abaplint where ABAP is expected to give one):
-- [ ] **#2088** rest: assignment to an IMPORTING (by reference) parameter or a constant is reported; `SORT itab`,
-  `APPEND ... TO itab` and `CLEAR text` on IMPORTING parameters are not. Overlaps #2097 / #4635 (write positions);
-  do it together with #4635
-- [ ] **#4683** INTO before WHERE when WHERE has an SQL expression (strict mode): only the `strict_sql`
-  rule reports it, and too broadly; add to `strictModeChecks` in `5_syntax/expressions/select.ts`
-- [ ] APPEND (and other index operations) to a generic `ANY TABLE` is expected to be an error, abaplint only checks
-  hashed; the test "ok, APPEND TO generic tables" still expects no error for `ct_any`
-- [ ] **#1692** PRIVATE SECTION of a global class uses a class from `locals_imp`: no error (only the PUBLIC SECTION
-  check exists, "is local to the class pool")
-- [ ] #895 `CLASS lcl DEFINITION DEFERRED.` and the class never defined
-- [ ] #3398 REPORT statement in an include program (SUBC I) that is included in a report
-- [ ] #3611 rest: TYPES names over 30 characters (BEGIN OF name, table type) not reported; field names and DATA
-  names are
-- [ ] #3041 `APPEND INITIAL LINE TO sorted_tab`: the docs suggest a runtime check (ITAB_ILLEGAL_SORT_ORDER); work
-  out the expected behaviour before any PR, ask to close if runtime only
-- [ ] #4643 DELETE/GET/SET DATASET operands are not checked; `syntax/statements/transfer.ts` looks for a Target
-  that the TRANSFER grammar never produces (not raised)
-
-Expected behaviour not worked out yet: #3398, #1692. Dropped: #3414 is an ABAP Cloud issue ("Class ... not
-found/released"), and ABAP Cloud is not the reference.
-
-
-Diagnostics only (no effect on what is accepted):
-- [ ] #2267 a statement that does not parse inside a method gives "Expected ENDMETHOD" at the start of the class,
-  far from the real error; the maintainer points to the structure rewrite #1975, so probably large
-
-Rules that replace the syntax check (2026-11-23). Some findings that ABAP gives as syntax errors come from rules,
-not from check_syntax: they can be switched off, and code that uses SyntaxLogic directly (e.g. downport) does not
-see them. Such checks belong in check_syntax. abap2go already turns on unknown_types, implement_methods and
-begin_end_names next to check_syntax (`src/validation.ts`), so for those three the gain is consistency. Inventory done:
-on a snippet for each, check_syntax alone reports nothing and the rule reports it. ABAP is expected to give an
-error for:
-- unknown_types: unknown type (respects errorNamespace, keep that when moving)
-- implement_methods: method or interface method not implemented; ABSTRACT method in a non-abstract class
-- method_implemented_twice: METHOD twice; method declared twice
-- superclass_final: INHERITING FROM a FINAL class
-- begin_end_names: END OF name differs from BEGIN OF; TYPES BEGIN OF without components
-- identical_form_names: two FORMs with the same name
-- check_include: INCLUDE that does not exist (without IF FOUND)
-
-Not syntax errors, dropped: mix_returning (a Clean ABAP style rule), unhandled_classic_exception (a runtime
-error). Not part of the source syntax check, dropped: global_class, cloud_types, local_testclass_consistency.
-- [ ] start with one small, clear case as a PR, so the shape (move the check, what happens to the rule) is
-  settled in review before the rest follow, once #4690 is answered. Suggested first: identical_form_names or
-  superclass_final (small, self-contained)
-- note: our own open PRs #4633 and #4636 report through unknown_types; once the approach is agreed, they move too
-
-Non-Unicode-only syntax (2026-11-22). abaplint has no notion of non-Unicode programs: no config setting, the
-UCCHECK flag of the program is not read. The grammar accepts old and modern forms together, while the syntax check
-assumes Unicode (e.g. byte lengths in `_check_database_work_area.ts`). In modern ABAP every program is Unicode, so
-non-Unicode-only forms are expected to be syntax errors; abaplint accepts them for every `syntax.version`. Following
-ABAP, this belongs in the parser / check_syntax, not in a rule option.
-- [ ] confirmed case: `OPEN DATASET f.` without `FOR ...` and `IN ... MODE`; all OPEN DATASET additions became
-  optional in 66bfba641 (#3571). Ask the maintainer whether that was for old code on purpose, then a check
-  depending on the release rather than undoing it
-- [ ] inventory first: work out the expected behaviour of the usual non-Unicode-only forms (offset/length on
-  structures, old DESCRIBE forms, TRANSLATE ... CODE PAGE, ...), compare with abaplint, raise the gaps as issues
-
-Testing note: `npm test`/`--parallel` gives 25-37 "statement type" failures, all 250ms timeouts under load, and a
-timeout skips the rest of that file. Serial: `npx mocha --no-config --no-package --recursive build/test/abap/syntax`
-(the package.json `spec` overrides a folder argument otherwise)

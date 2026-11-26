@@ -2,7 +2,8 @@
 
 Design notes for compiling ABAP ahead of time into a standalone native executable. Worked out in a discussion on
 2026-11-24. Several points rest on measurements of open-steamgate's ABAP-to-Go backend (gogen), in
-[open-steamgate-notes.md](open-steamgate-notes.md). The work items are in [roadmap.md](roadmap.md).
+[open-steamgate-notes.md](open-steamgate-notes.md). The work items are in [roadmap.md](roadmap.md), those in abaplint
+in [abaplint_roadmap.md](abaplint_roadmap.md).
 Decisions and the open points are at the end.
 
 ## Guiding principle
@@ -64,6 +65,29 @@ What the rule demands:
   into one type (a bug of this kind was found in gogen: [oisee/open-steamgate#1012](https://github.com/oisee/open-steamgate/issues/1012)) is exactly the kind of bug the rule forbids.
 - **Optimisations must be invisible.** Trimming, specialisation and devirtualisation may not change what the
   program does, except where the documentation leaves the result unspecified (above).
+
+## No syntax check of its own
+
+**abap2go does not reimplement the syntax check (2026-11-26).** Whether the input is valid ABAP, by the rules of
+ABAP in general, is decided by abaplint: its parser, check_syntax, and the rules `src/validation.ts` turns on for
+syntax errors check_syntax does not report. **The compiler's code assumes that input which passes is valid ABAP.**
+Valid does not mean accepted: abap2go compiles only part of valid ABAP, and refuses the rest for its own reasons.
+
+When work on abap2go identifies invalid syntax that abaplint accepts, the fix goes into abaplint:
+1. raise it as an abaplint issue;
+2. fix it in abaplint, carried here in `patches/`;
+3. send the same fix upstream as a PR.
+
+No check for it goes into the compiler, not even for the time being: the patch takes a fix from an open PR, so
+nothing has to wait for a release. A check in the compiler would be a second syntax check that can drift from
+abaplint's, and only abap2go would gain from it. Checks the compiler still has from before this decision are listed
+in [abaplint_roadmap.md](abaplint_roadmap.md), "Syntax checks to move out of the compiler".
+
+Not a syntax check, so part of abap2go:
+- refusing valid ABAP because of the restrictions of AOT compilation (code named dynamically, `CASTING`,
+  `GENERATE SUBROUTINE POOL`, ...);
+- refusing valid ABAP that is not compiled yet;
+- the run-time rules for generic operands, where a pair that is a syntax error with static types is a run-time error.
 
 ## Goal and scope
 
@@ -249,7 +273,9 @@ from the program.
 - **Correct types for valid code.** The compiler's types come from abaplint, so a mistyped expression becomes wrong
   native code. Fixing "valid ABAP that abaplint mistypes or fails to parse" (abaplint#4633, #4689, #4687, #1809,
   #4644/#4645) helps AOT directly. "Invalid ABAP that abaplint accepts" barely affects AOT output, because the
-  input is code that already activates.
+  input is code that already activates, so in the general backlog it comes second.
+- **The whole syntax check.** A case of invalid syntax that abap2go identifies is fixed in abaplint (see "No syntax
+  check of its own").
 - **Metadata export:** descriptors, signatures and dictionary information, in a form the runtime can load.
 - **A reverse index over the world:** interface → implementers, class → subclasses. abaplint's registry holds the
   data; the index does not exist yet.
