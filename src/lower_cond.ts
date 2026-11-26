@@ -1,6 +1,6 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
-import { IRAssert, IRComparand, IRCompareOp, IRCondition, IRExpr, IRFunction, IRType } from "./ir";
+import { IRAssert, IRComparand, IRCompareOp, IRCondition, IRExpr, IRFunction, IRSource, IRType } from "./ir";
 import { isArithmetic, isDataObjectFunction, lowerArithmetic } from "./lower_arith";
 import { lowerSource, Variables, Where } from "./lower_common";
 
@@ -148,37 +148,20 @@ export function lowerComparison(op: IRCompareOp, left: abaplint.Nodes.Expression
  * calculated on its own before the comparisons.
  */
 export function caseOperand(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRComparand {
-  if (!isCalculation(source)) {
-    return comparand(source, variables, where);
-  }
-  if (isParenthesizedOperand(source)) {
-    // an ABAP syntax error, unlike parentheses around a calculation
-    throw new BuildError(`CASE ${source.concatTokens()}: parentheses around a single operand are not possible here`, where);
-  }
-  return { kind: "result", expression: lowerArithmetic(source, variables, where) };
+  return isCalculation(source) ? { kind: "result", expression: lowerArithmetic(source, variables, where) }
+    : comparand(source, variables, where);
 }
 
 /** A value after WHEN, compared with operand: a data object or abs( ), sqrt( ) or strlen( ) of one. */
 export function caseValue(operand: IRComparand, source: abaplint.Nodes.ExpressionNode, variables: Variables,
-    where: Where): IRComparand {
-  if (isCalculation(source)) {
-    // an ABAP syntax error: WHEN is no position for expressions
-    throw new BuildError(`WHEN ${source.concatTokens()}: only a data object or abs( ), sqrt( ) or strlen( ) of one is possible after WHEN`, where);
-  }
+    where: Where): IRSource | IRFunction {
   const value = comparand(source, variables, where);
-  checkComparable(operand, value, where);
-  return value;
-}
-
-/** ( x ) and nothing else, where x has no operator and no sign. */
-function isParenthesizedOperand(source: abaplint.Nodes.ExpressionNode): boolean {
-  const children = source.getChildren();
-  const inner = children[1];
-  if (children.length !== 3 || children[0].concatTokens() !== "(" || !(inner instanceof abaplint.Nodes.ExpressionNode)) {
-    return false;
+  if (operand.kind !== "result") {
+    checkComparable(operand, value, where);
+  } else if (value.type.kind === "utclong") {
+    throw new BuildError(`WHEN ${source.concatTokens()}: a utclong against an arithmetic expression is not supported yet`, where);
   }
-  return inner.findDirectExpression(Expressions.ArithOperator) === undefined
-    && !["-", "+"].includes(inner.getChildren()[0].concatTokens());
+  return value;
 }
 
 /**
@@ -214,7 +197,7 @@ function isCalculation(source: abaplint.Nodes.ExpressionNode): boolean {
  * An operand of a comparison of data objects: a literal, a variable, a subfield, sy-index or a built-in function of
  * one of these.
  */
-function comparand(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRComparand {
+function comparand(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRSource | IRFunction {
   return isDataObjectFunction(source) ? dataObjectFunction(source, variables, where)
     : lowerSource(source, variables, where, "comparison of");
 }
@@ -267,13 +250,9 @@ function calcOperand(source: abaplint.Nodes.ExpressionNode, variables: Variables
   return { kind: "operand", source: single };
 }
 
-/**
- * Two kinds without a comparison type are a syntax error: d with t, utclong with anything but c, string, utclong. The
- * result of an arithmetic expression is a number.
- */
-function checkComparable(left: IRComparand, right: IRComparand, where: Where): void {
-  const kind = (x: IRComparand) => x.kind === "result" ? "number" : x.type.kind;
-  const [a, b] = [kind(left), kind(right)];
+/** Two kinds without a comparison type are a syntax error: d with t, utclong with anything but c, string, utclong. */
+function checkComparable(left: IRSource | IRFunction, right: IRSource | IRFunction, where: Where): void {
+  const [a, b] = [left.type.kind, right.type.kind];
   const dateTime = (a === "d" && b === "t") || (a === "t" && b === "d");
   const utclong = (x: string, y: string) => x === "utclong" && !["c", "string", "utclong"].includes(y);
   if (dateTime || utclong(a, b) || utclong(b, a)) {

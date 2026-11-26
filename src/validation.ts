@@ -5,7 +5,7 @@
 // Differences: the release is v758 (the transpiler's skipVersionCheck), and forbidden_identifier is left out: it
 // keeps ABAP names from clashing with the names the transpiler generates in JavaScript, which abap2go does not have.
 // Some of the rules report what ABAP reports as syntax errors but abaplint's check_syntax does not (unknown types,
-// methods not implemented, END OF names); see "Rules that replace the syntax check" in docs/roadmap.md.
+// methods not implemented, END OF names); see "Rules that replace the syntax check" in docs/abaplint_roadmap.md.
 
 import * as abaplint from "@abaplint/core";
 

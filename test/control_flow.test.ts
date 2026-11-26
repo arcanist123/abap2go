@@ -432,13 +432,7 @@ const refusals: [string, string, RegExp][] = [
   ["DO VARYING", "DATA a TYPE i.\nDATA b TYPE i.\nDATA c TYPE i.\nDO 2 TIMES VARYING a FROM b NEXT c.\nENDDO.", /not VARYING/],
   ["WHILE VARY", "DATA a TYPE i.\nDATA b TYPE i.\nDATA c TYPE i.\nWHILE 1 = 0 VARY a FROM b NEXT c.\nENDWHILE.", /VARY is not supported/],
   ["CASE without WHEN", "DATA a TYPE i.\nCASE a.\nENDCASE.", /CASE without WHEN/],
-  ...["a + 1", "- a", "( a )", "abs( a + 0 )", "abs( - 1 )", "abs( abs( a ) )", "ipow( base = a exp = 2 )"].map(
-    (value): [string, string, RegExp] => [`WHEN ${value}`, `DATA a TYPE i.\nCASE a.\nWHEN 1 OR ${value}.\nENDCASE.`,
-      /only a data object or abs\( \), sqrt\( \) or strlen\( \) of one/]),
-  ...["( a )", "( abs( a ) )", "( ( a ) )", "( sy-index )"].map(
-    (operand): [string, string, RegExp] => [`CASE ${operand}`, `DATA a TYPE i.\nCASE ${operand}.\nWHEN 1.\nENDCASE.`,
-      /parentheses around a single operand/]),
-  ["CASE of an arithmetic expression with a utclong value", "DATA a TYPE i.\nDATA u TYPE utclong.\nCASE a + 1.\nWHEN u.\nENDCASE.", /no comparison type/],
+  ["CASE of an arithmetic expression with a utclong value", "DATA a TYPE i.\nDATA u TYPE utclong.\nCASE a + 1.\nWHEN u.\nENDCASE.", /against an arithmetic expression is not supported/],
   ["CASE of a utclong with an i value", "DATA u TYPE utclong.\nCASE u.\nWHEN 1.\nENDCASE.", /no comparison type/],
   ["DO u TIMES with a utclong", "DATA u TYPE utclong.\nDO u TIMES.\nENDDO.", /must be numeric/],
   ["DO with a utclong expression", "DATA u TYPE utclong.\nDO u + 1 TIMES.\nENDDO.", /utclong/],

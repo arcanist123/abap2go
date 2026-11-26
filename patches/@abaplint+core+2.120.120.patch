@@ -339,6 +339,25 @@ index 244b0b7..eb85e32 100644
      // the fixture methods of a test class are called by ABAP Unit only, returns the message otherwise
      checkSpecialTestMethodCall(method, foundDef) {
          if (method === undefined
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
+index 8af0c79..af44b2a 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
+@@ -291,12 +291,8 @@ class TypeUtils {
+         if (source2 instanceof basic_1.HexType && this.isCalculated(node2) && source1 instanceof basic_1.IntegerType) {
+             return false;
+         }
+-        if (source1 instanceof basic_1.DateType && this.isCalculated(node2) && source2 instanceof basic_1.IntegerType) {
+-            return false;
+-        }
+-        if (source2 instanceof basic_1.DateType && this.isCalculated(node1) && source1 instanceof basic_1.IntegerType) {
+-            return false;
+-        }
++        // a date compared with an arithmetic expression is reported by Compare, a date compared with
++        // a function or method result of type i is compared like a date compared with a data object of type i
+         return true;
+     }
+     structureContainsString(structure) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
 index f17395d..74b4adf 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
@@ -375,6 +394,28 @@ index 24beacc..f8979be 100644
      }
      else if (type instanceof Basic.Integer8Type || type instanceof Basic.FloatType
          || type instanceof Basic.DecFloat16Type || type instanceof Basic.UTCLongType) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
+index 69a0432..8de6a4d 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
+@@ -85,16 +85,7 @@ class Compare {
+         else if (node.findDirectExpression(Expressions.CompareOperator)
+             && typeUtils.isCompareable(sourceTypes[0], sourceTypes[1], sources[0], sources[1]) === false
+             && sourceTypes.length === 2) {
+-            let message = "Incompatible types for comparison";
+-            if ((sourceTypes[0] instanceof basic_1.DateType
+-                && sourceTypes[1] instanceof basic_1.IntegerType
+-                && sources[1].findFirstExpression(Expressions.ArithOperator))
+-                || (sourceTypes[1] instanceof basic_1.DateType
+-                    && sourceTypes[0] instanceof basic_1.IntegerType
+-                    && sources[0].findFirstExpression(Expressions.ArithOperator))) {
+-                message = "Date cannot be compared with arithmetic result of type Integer";
+-            }
+-            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), message));
++            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), "Incompatible types for comparison"));
+         }
+     }
+     // a built-in function with a character-like result cannot be the operand of IS [NOT] INITIAL,
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
 index aa854c7..fa8bacb 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
@@ -621,6 +662,340 @@ index 806fab4..23baef6 100644
              case "INT4":
                  return Types.IntegerType.get(extra);
              case "INT8":
+diff --git a/node_modules/@abaplint/core/build/src/objects/rename/rename_bsp_application.js b/node_modules/@abaplint/core/build/src/objects/rename/rename_bsp_application.js
+new file mode 100644
+index 0000000..c60b64c
+--- /dev/null
++++ b/node_modules/@abaplint/core/build/src/objects/rename/rename_bsp_application.js
+@@ -0,0 +1,91 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.RenameBSPApplication = void 0;
++const vscode_languageserver_types_1 = require("vscode-languageserver-types");
++const __1 = require("..");
++const renamer_helper_1 = require("./renamer_helper");
++/** Renames a BSP application: APPLNAME and APPLEXT in the XML, the name in front of ".wapa." of every
++ *  file and the URLs of the MIME objects in its MIME folder. The pages keep their names (PAGEKEY, PAGENAME and the page part of a file name): they are paths
++ *  inside the application, which its files refer to, e.g. "thirdparty/zfoo/lib.js" of the application ZFOO.
++ *  abapGit finds the file of a page by its page name, a renamed page name has no file */
++class RenameBSPApplication {
++    constructor(reg) {
++        this.reg = reg;
++    }
++    buildEdits(obj, oldName, newName) {
++        if (!(obj instanceof __1.BSPApplication)) {
++            throw new Error("RenameBSPApplication, not a BSP application");
++        }
++        let changes = [];
++        const helper = new renamer_helper_1.RenamerHelper(this.reg);
++        changes = changes.concat(helper.buildXMLFileEdits(obj, "APPLNAME", oldName, newName));
++        changes = changes.concat(helper.buildXMLFileEdits(obj, "APPLEXT", oldName, newName));
++        changes = changes.concat(this.renameFiles(obj, oldName, newName));
++        changes = changes.concat(this.renameMIMEURLs(oldName, newName));
++        return {
++            documentChanges: changes,
++        };
++    }
++    /** The MIME folder of the application and everything below it (SMIM objects) move with it:
++     *  /SAP/BC/BSP/SAP/ZFOO/... for an application ZFOO, /SAP/BC/BSP/NS/BAR/... for /NS/BAR.
++     *  abapGit creates MIME objects by their URL, the object and file names are GUIDs and stay */
++    renameMIMEURLs(oldName, newName) {
++        const oldPrefix = mimeFolder(oldName);
++        const newPrefix = mimeFolder(newName);
++        const changes = [];
++        for (const o of this.reg.getObjectsByType("SMIM")) {
++            if (!(o instanceof __1.MIMEObject) || this.reg.isDependency(o)) {
++                continue;
++            }
++            const xml = o.getXMLFile();
++            if (xml === undefined) {
++                continue;
++            }
++            const rows = xml.getRawRows();
++            for (let i = 0; i < rows.length; i++) {
++                const start = rows[i].indexOf("<URL>");
++                const end = rows[i].indexOf("</URL>");
++                if (start < 0 || end < start) {
++                    continue;
++                }
++                const url = rows[i].substring(start + 5, end);
++                const upper = url.toUpperCase();
++                if (upper !== oldPrefix && upper.startsWith(oldPrefix + "/") === false) {
++                    continue;
++                }
++                const prefix = url.substring(0, oldPrefix.length) === oldPrefix ? newPrefix : newPrefix.toLowerCase();
++                const range = vscode_languageserver_types_1.Range.create(i, start + 5, i, start + 5 + oldPrefix.length);
++                changes.push(vscode_languageserver_types_1.TextDocumentEdit.create({ uri: xml.getFilename(), version: 1 }, [vscode_languageserver_types_1.TextEdit.replace(range, prefix)]));
++            }
++        }
++        return changes;
++    }
++    /** only the name in front of ".wapa.", folders and page parts keep the old name if they contain it */
++    renameFiles(obj, oldName, newName) {
++        const list = [];
++        const oldPrefix = oldName.toLowerCase().replace(/\//g, "#") + ".wapa.";
++        const newPrefix = newName.toLowerCase().replace(/\//g, "#") + ".wapa.";
++        for (const f of obj.getFiles()) {
++            const filename = f.getFilename();
++            const slash = Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"));
++            const base = filename.substring(slash + 1);
++            if (base.toLowerCase().startsWith(oldPrefix) === false) {
++                continue;
++            }
++            list.push(vscode_languageserver_types_1.RenameFile.create(filename, filename.substring(0, slash + 1) + newPrefix + base.substring(oldPrefix.length)));
++        }
++        return list;
++    }
++}
++exports.RenameBSPApplication = RenameBSPApplication;
++/** the URL of the MIME folder of a BSP application, upper case. A namespaced application sits below its
++ *  namespace instead of below SAP: ZFOO -> /SAP/BC/BSP/SAP/ZFOO, /NS/BAR -> /SAP/BC/BSP/NS/BAR */
++function mimeFolder(name) {
++    const upper = name.toUpperCase();
++    const namespaced = upper.match(/^\/([^/]+)\/([^/]+)$/);
++    if (namespaced) {
++        return "/SAP/BC/BSP/" + namespaced[1] + "/" + namespaced[2];
++    }
++    return "/SAP/BC/BSP/SAP/" + upper;
++}
++//# sourceMappingURL=rename_bsp_application.js.map
+\ No newline at end of file
+diff --git a/node_modules/@abaplint/core/build/src/objects/rename/rename_icf_service.js b/node_modules/@abaplint/core/build/src/objects/rename/rename_icf_service.js
+index 4fd155b..c066f22 100644
+--- a/node_modules/@abaplint/core/build/src/objects/rename/rename_icf_service.js
++++ b/node_modules/@abaplint/core/build/src/objects/rename/rename_icf_service.js
+@@ -1,6 +1,42 @@
+ "use strict";
++var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    var desc = Object.getOwnPropertyDescriptor(m, k);
++    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
++      desc = { enumerable: true, get: function() { return m[k]; } };
++    }
++    Object.defineProperty(o, k2, desc);
++}) : (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    o[k2] = m[k];
++}));
++var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
++    Object.defineProperty(o, "default", { enumerable: true, value: v });
++}) : function(o, v) {
++    o["default"] = v;
++});
++var __importStar = (this && this.__importStar) || (function () {
++    var ownKeys = function(o) {
++        ownKeys = Object.getOwnPropertyNames || function (o) {
++            var ar = [];
++            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
++            return ar;
++        };
++        return ownKeys(o);
++    };
++    return function (mod) {
++        if (mod && mod.__esModule) return mod;
++        var result = {};
++        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
++        __setModuleDefault(result, mod);
++        return result;
++    };
++})();
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.RenameICFService = void 0;
++exports.namespacedURL = namespacedURL;
++const crypto = __importStar(require("crypto"));
++const vscode_languageserver_types_1 = require("vscode-languageserver-types");
+ const __1 = require("..");
+ const renamer_helper_1 = require("./renamer_helper");
+ class RenameICFService {
+@@ -38,14 +74,138 @@ class RenameICFService {
+         const cleanNewName = (_d = (_b = newName.match(/^[^ ]+/)) === null || _b === void 0 ? void 0 : _b[0]) !== null && _d !== void 0 ? _d : newName;
+         let changes = [];
+         const helper = new renamer_helper_1.RenamerHelper(this.reg);
+-        changes = changes.concat(helper.buildURLFileEdits(obj, cleanOldName, cleanNewName));
+-        changes = changes.concat(helper.buildXMLFileEdits(obj, "ICF_NAME", cleanOldName, cleanNewName));
+-        changes = changes.concat(helper.buildXMLFileEdits(obj, "ORIG_NAME", cleanOldName, cleanNewName, true));
+-        changes = changes.concat(helper.renameFiles(obj, oldName, fileNewName));
++        const namespaced = cleanNewName.match(/^\/([^/]+)\/([^/]+)$/);
++        if (namespaced) {
++            // ICF node names carry no slashes: "/NS/LEAF" is the node LEAF below a node NS
++            const leaf = namespaced[2];
++            if (leaf.length > ICF_NAME_LENGTH) {
++                throw new Error("RenameICFService, " + leaf + " is longer than " + ICF_NAME_LENGTH + " characters");
++            }
++            const url = obj.getURL();
++            const newURL = url === undefined ? undefined : namespacedURL(url, cleanOldName, namespaced[1], leaf);
++            if (newURL !== undefined) {
++                changes = changes.concat(this.buildURLEdit(obj, newURL));
++            }
++            changes = changes.concat(helper.buildXMLFileEdits(obj, "ICF_NAME", cleanOldName, leaf));
++            changes = changes.concat(helper.buildXMLFileEdits(obj, "ORIG_NAME", cleanOldName, leaf, true));
++            const files = newURL === undefined ? undefined : this.renameAbapGitFiles(obj, leaf, newURL);
++            changes = changes.concat(files !== null && files !== void 0 ? files : helper.renameFiles(obj, cleanOldName, leaf));
++            if (newURL !== undefined && files !== undefined) {
++                changes = changes.concat(this.buildNamespaceNode(obj, namespaced[1], newURL));
++            }
++        }
++        else {
++            changes = changes.concat(helper.buildURLFileEdits(obj, cleanOldName, cleanNewName));
++            changes = changes.concat(helper.buildXMLFileEdits(obj, "ICF_NAME", cleanOldName, cleanNewName));
++            changes = changes.concat(helper.buildXMLFileEdits(obj, "ORIG_NAME", cleanOldName, cleanNewName, true));
++            const url = obj.getURL();
++            const files = url === undefined ? undefined :
++                this.renameAbapGitFiles(obj, cleanNewName, url.replace(cleanOldName.toLowerCase(), cleanNewName.toLowerCase()));
++            changes = changes.concat(files !== null && files !== void 0 ? files : helper.renameFiles(obj, oldName, fileNewName));
++        }
+         return {
+             documentChanges: changes,
+         };
+     }
++    buildURLEdit(obj, newURL) {
++        const xml = obj.getXMLFile();
++        if (xml === undefined) {
++            return [];
++        }
++        const rows = xml.getRawRows();
++        for (let i = 0; i < rows.length; i++) {
++            const start = rows[i].indexOf("<URL>");
++            const end = rows[i].indexOf("</URL>");
++            if (start >= 0 && end > start) {
++                const range = vscode_languageserver_types_1.Range.create(i, start + 5, i, end);
++                return [vscode_languageserver_types_1.TextDocumentEdit.create({ uri: xml.getFilename(), version: 1 }, [vscode_languageserver_types_1.TextEdit.replace(range, newURL)])];
++            }
++        }
++        return [];
++    }
++    /** The node of the namespace above the renamed one (/sap/bc/ns/ above /sap/bc/ns/leaf/). It does not exist
++     *  in a fresh system and abapGit does not create nodes in between, so it is added next to the renamed node,
++     *  unless the registry has a node with that URL already */
++    buildNamespaceNode(obj, namespace, newURL) {
++        var _a;
++        const parentURL = newURL.replace(/[^/]+\/?$/, "");
++        for (const o of this.reg.getObjects()) {
++            if (o instanceof __1.ICFService && ((_a = o.getURL()) === null || _a === void 0 ? void 0 : _a.toLowerCase()) === parentURL.toLowerCase()) {
++                return [];
++            }
++        }
++        const xml = obj.getXMLFile();
++        if (xml === undefined) {
++            return [];
++        }
++        const filename = xml.getFilename();
++        const slash = Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"));
++        const name = namespace.toLowerCase();
++        const hash = crypto.createHash("sha1").update(parentURL).digest("hex").substring(0, ICF_HASH_LENGTH);
++        const uri = filename.substring(0, slash + 1) + name.padEnd(ICF_NAME_LENGTH, " ") + hash + ".sicf.xml";
++        const content = `<?xml version="1.0" encoding="utf-8"?>
++<abapGit version="v1.0.0" serializer="LCL_OBJECT_SICF" serializer_version="v1.0.0">
++ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
++  <asx:values>
++   <URL>${parentURL}</URL>
++   <ICFSERVICE>
++    <ICF_NAME>${name.toUpperCase()}</ICF_NAME>
++    <ORIG_NAME>${name}</ORIG_NAME>
++   </ICFSERVICE>
++   <ICFDOCU>
++    <ICF_NAME>${name.toUpperCase()}</ICF_NAME>
++    <ICF_LANGU>E</ICF_LANGU>
++    <ICF_DOCU>Namespace ${name}</ICF_DOCU>
++   </ICFDOCU>
++  </asx:values>
++ </asx:abap>
++</abapGit>
++`;
++        return [
++            vscode_languageserver_types_1.CreateFile.create(uri),
++            vscode_languageserver_types_1.TextDocumentEdit.create({ uri, version: 1 }, [vscode_languageserver_types_1.TextEdit.insert({ line: 0, character: 0 }, content)]),
++        ];
++    }
++    /** abapGit names a SICF file "<ICF_NAME, lower case, padded to 15><first 25 hex chars of SHA1(URL)>.sicf.xml",
++     *  the URL is the one in the XML. Both parts change with the name, keeping the old ones gives an object name
++     *  abapGit does not derive from the node. Returns undefined if the files are not in this layout */
++    renameAbapGitFiles(obj, newName, newURL) {
++        if (newName.length > ICF_NAME_LENGTH) {
++            return undefined;
++        }
++        const hash = crypto.createHash("sha1").update(newURL).digest("hex").substring(0, ICF_HASH_LENGTH);
++        const stem = newName.toLowerCase().padEnd(ICF_NAME_LENGTH, " ") + hash;
++        const list = [];
++        for (const f of obj.getFiles()) {
++            const filename = f.getFilename();
++            const slash = Math.max(filename.lastIndexOf("/"), filename.lastIndexOf("\\"));
++            const base = filename.substring(slash + 1);
++            const match = base.match(/^[^ ]+ +[0-9a-f]{25}(\..+)$/i);
++            if (match === null) {
++                return undefined;
++            }
++            list.push(vscode_languageserver_types_1.RenameFile.create(filename, filename.substring(0, slash + 1) + stem + match[1]));
++        }
++        return list;
++    }
+ }
+ exports.RenameICFService = RenameICFService;
++const ICF_NAME_LENGTH = 15;
++const ICF_HASH_LENGTH = 25;
++/** The URL of the node moved into a namespace. The node is the last segment of the URL. Below
++ *  /sap/bc/bsp/ and /sap/bc/ui5_ui5/ an SAP name sits below a node "sap", and a namespaced one
++ *  below the namespace instead: /sap/bc/bsp/sap/old/ -> /sap/bc/bsp/ns/leaf/. Elsewhere the
++ *  namespace node is added: /sap/bc/old/ -> /sap/bc/ns/leaf/ */
++function namespacedURL(url, oldName, namespace, leaf) {
++    const segments = url.split("/");
++    const last = segments.length - (url.endsWith("/") ? 2 : 1);
++    if (last < 1 || segments[last].toLowerCase() !== oldName.toLowerCase()) {
++        return undefined;
++    }
++    const before = segments.slice(0, last).join("/").toLowerCase();
++    const replaceSap = before.endsWith("/sap/bc/bsp/sap") || before.endsWith("/sap/bc/ui5_ui5/sap");
++    const start = replaceSap ? last - 1 : last;
++    segments.splice(start, last - start + 1, namespace.toLowerCase(), leaf.toLowerCase());
++    return segments.join("/");
++}
+ //# sourceMappingURL=rename_icf_service.js.map
+\ No newline at end of file
+diff --git a/node_modules/@abaplint/core/build/src/objects/rename/renamer.js b/node_modules/@abaplint/core/build/src/objects/rename/renamer.js
+index 880fc48..77d5110 100644
+--- a/node_modules/@abaplint/core/build/src/objects/rename/renamer.js
++++ b/node_modules/@abaplint/core/build/src/objects/rename/renamer.js
+@@ -12,6 +12,7 @@ const rename_table_1 = require("./rename_table");
+ const rename_table_type_1 = require("./rename_table_type");
+ const rename_message_class_1 = require("./rename_message_class");
+ const rename_icf_service_1 = require("./rename_icf_service");
++const rename_bsp_application_1 = require("./rename_bsp_application");
+ class Renamer {
+     constructor(reg) {
+         this.reg = reg;
+@@ -68,6 +69,8 @@ class Renamer {
+                 return new rename_message_class_1.RenameMessageClass(this.reg);
+             case "SICF":
+                 return new rename_icf_service_1.RenameICFService(this.reg);
++            case "WAPA":
++                return new rename_bsp_application_1.RenameBSPApplication(this.reg);
+             default:
+                 throw new Error("Renaming of " + type + " not yet supported");
+         }
+@@ -79,11 +82,21 @@ class Renamer {
+             deletedFiles: new Set(),
+             updatedFiles: new Set(),
+         };
+-        // assumption: only renames or text changes, no deletes or creates
++        // assumption: only renames, creates or text changes, no deletes. A created file starts empty,
++        // its content is a text edit after the create
+         for (const dc of edits.documentChanges || []) {
+             if (vscode_languageserver_types_1.TextDocumentEdit.is(dc)) {
+                 this.applyEdit(dc);
+-                result.updatedFiles.add(dc.textDocument.uri);
++                if (result.addedFiles.has(dc.textDocument.uri) === false) {
++                    result.updatedFiles.add(dc.textDocument.uri);
++                }
++            }
++            else if (vscode_languageserver_types_1.CreateFile.is(dc)) {
++                if (this.reg.getFileByName(dc.uri) !== undefined) {
++                    throw new Error("apply, file " + dc.uri + " already exists");
++                }
++                this.reg.addFile(new memory_file_1.MemoryFile(dc.uri, ""));
++                result.addedFiles.add(dc.uri);
+             }
+             else if (vscode_languageserver_types_1.RenameFile.is(dc)) {
+                 renames.push(dc);
 diff --git a/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js b/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js
 index da959b4..d9efafc 100644
 --- a/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js
@@ -682,6 +1057,42 @@ index 0d2141e..96bbad3 100644
          if (rest.length !== 3 || !(rest[0] instanceof nodes_1.ExpressionNode) || !(rest[2] instanceof nodes_1.ExpressionNode)
              || !(rest[1].get() instanceof Expressions.CompareOperator)) {
              return undefined;
+diff --git a/node_modules/@abaplint/core/build/src/rules/downport.js b/node_modules/@abaplint/core/build/src/rules/downport.js
+index 46ce2f9..5189177 100644
+--- a/node_modules/@abaplint/core/build/src/rules/downport.js
++++ b/node_modules/@abaplint/core/build/src/rules/downport.js
+@@ -1165,7 +1165,7 @@ ${indentation}`);
+             const indentation = " ".repeat(high.getFirstToken().getStart().getCol() - 1);
+             const firstToken = high.getFirstToken();
+             const fix1 = edit_helper_1.EditHelper.insertAt(lowFile, firstToken.getStart(), `DATA ${uniqueName} LIKE LINE OF ${target === null || target === void 0 ? void 0 : target.concatTokens()}.
+-${indentation}${uniqueName} = ${source.concatTokens()}.\n${indentation}`);
++${indentation}${uniqueName} = ${source.concatTokensWithLinebreaks()}.\n${indentation}`);
+             const fix2 = edit_helper_1.EditHelper.replaceRange(lowFile, source.getFirstToken().getStart(), source.getLastToken().getEnd(), uniqueName);
+             const fix = edit_helper_1.EditHelper.merge(fix2, fix1);
+             return issue_1.Issue.atToken(lowFile, high.getFirstToken(), "Outline APPEND source expression", this.getMetadata().key, this.conf.severity, fix);
+@@ -1221,7 +1221,7 @@ ${indentation}${uniqueName} = ${source.concatTokens()}.\n${indentation}`);
+             const indentation = " ".repeat(high.getFirstToken().getStart().getCol() - 1);
+             const firstToken = high.getFirstToken();
+             const fix1 = edit_helper_1.EditHelper.insertAt(lowFile, firstToken.getStart(), `DATA ${uniqueName} LIKE LINE OF ${target === null || target === void 0 ? void 0 : target.concatTokens()}.
+-${indentation}${uniqueName} = ${source.concatTokens()}.\n${indentation}`);
++${indentation}${uniqueName} = ${source.concatTokensWithLinebreaks()}.\n${indentation}`);
+             const fix2 = edit_helper_1.EditHelper.replaceRange(lowFile, source.getFirstToken().getStart(), source.getLastToken().getEnd(), uniqueName);
+             const fix = edit_helper_1.EditHelper.merge(fix2, fix1);
+             return issue_1.Issue.atToken(lowFile, high.getFirstToken(), "Outline INSERT source expression", this.getMetadata().key, this.conf.severity, fix);
+@@ -2903,11 +2903,11 @@ ${indentation}    output = ${uniqueName}.\n`;
+                         }
+                         else if (b.get() instanceof Expressions.Source) {
+                             // note: it wont work with APPEND for Hashed/Sorted Tables, so use INSERT,
+-                            body += indentation + "INSERT " + b.concatTokens() + ` INTO TABLE ${uniqueName}.\n`;
++                            body += indentation + "INSERT " + b.concatTokensWithLinebreaks() + ` INTO TABLE ${uniqueName}.\n`;
+                             skip = true;
+                         }
+                         else if (b.get() instanceof Expressions.ValueBodyLines) {
+-                            body += indentation + "INSERT " + b.concatTokens() + ` INTO TABLE ${uniqueName}.\n`;
++                            body += indentation + "INSERT " + b.concatTokensWithLinebreaks() + ` INTO TABLE ${uniqueName}.\n`;
+                             skip = true;
+                         }
+                         else if (b.concatTokens() === ")") {
 diff --git a/node_modules/@abaplint/core/build/src/rules/identical_conditions.js b/node_modules/@abaplint/core/build/src/rules/identical_conditions.js
 index f968373..63b01e3 100644
 --- a/node_modules/@abaplint/core/build/src/rules/identical_conditions.js
