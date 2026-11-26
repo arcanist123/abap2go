@@ -119,10 +119,10 @@ Done:
   - `NOT` repeated any number of times (2026-11-25, abaplint #4714, in the abaplint patch): an even number cancels out
   - `DATA` is not executable: every variable of a processing block exists from its start with its start value, also
     one declared in a loop or a branch
-  - refused: `DO … VARYING`, `WHILE … VARY`, `CASE` without `WHEN`, comparisons of kinds without a comparison type
-    (`d` with `t`, `utclong` with anything but `c`, `string` and `utclong`), a non-numeric single operand against an
-    arithmetic expression, the other predicates (`IS`, `IN`, `CO`, …), `WRITE sy-index` (the output length of its
-    data element)
+  - refused: `DO … VARYING`, `WHILE … VARY`, `CASE` without `WHEN`, statements between `CASE` and the first `WHEN`
+    (valid ABAP, see "Next"), comparisons of kinds without a comparison type (`d` with `t`, `utclong` with anything but
+    `c`, `string` and `utclong`), a non-numeric single operand against an arithmetic expression, the other predicates
+    (`IS`, `IN`, `CO`, …), `WRITE sy-index` (the output length of its data element)
 - the arithmetic tests of abaplint/transpiler as end-to-end fixtures (2026-11-25, `test/transpiler/*.txt`, run by
   `test/transpiler.test.ts`, MIT, see `NOTICE`): the 157 ABAP snippets of `test/operators/arithmetics*.ts`,
   `mod.ts`, `test/types/*_operations.ts`, `integer8_calculation_type.ts` and `conversion_no_number.ts`, one
@@ -199,6 +199,8 @@ Next:
 - [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,
   `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as operands of comparisons and `CASE`;
   `WRITE sy-index` with the output length of its data element
+  - statements between `CASE` and the first `WHEN`: ABAP is expected to give only a warning, so the code is valid
+    and is to be compiled, not refused (`src/lower_block.ts`). Work out first whether these statements run
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
