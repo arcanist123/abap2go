@@ -14,18 +14,16 @@ export function emitGo(root: IRRoot): string {
   out.push("func main() {");
   out.push("\tabap.Run(func(session *abap.Session) {");
   out.push("\t\t_ = session");
-  // DATA is not executable: every variable of the block exists from its start, with its start value
-  const body = [...declarations(root.body).flatMap(statement), ...block(root.body)];
   switch (root.kind) {
     case "report":
       out.push(`\t\tlist := abap.NewList(${root.lineSize ?? 0})`);
-      out.push(...indent(body, 2));
+      out.push(...indent(processing(root.blocks), 2));
       out.push("\t\tlist.End()");
       break;
     case "classrun":
       out.push("\t\tout := abap.NewConsole()");
-      out.push(...indent(body, 2));
       out.push("\t\t_ = out");
+      out.push(...indent(processing([root.body]), 2));
       break;
   }
   out.push("\t})");
@@ -36,6 +34,38 @@ export function emitGo(root: IRRoot): string {
 
 function indent(lines: string[], depth = 1): string[] {
   return lines.map(l => "\t".repeat(depth) + l);
+}
+
+/** The processing block being emitted, which CHECK outside a loop leaves. */
+let current = { label: "", last: true, used: false };
+
+/**
+ * The processing blocks of the root, run one after the other by a function literal, so that return ends all of them
+ * and what follows the call (the end of the list) still runs. Returning from within loops does not set sy-index back
+ * to its value before them; nothing can observe that, as nothing of the program runs afterwards.
+ */
+function processing(blocks: IRStatement[][]): string[] {
+  // DATA is not executable: every variable exists from the start, with its start value
+  const data = blocks.flatMap(declarations).flatMap(statement);
+  const run = blocks.flatMap((body, k) => {
+    // CHECK leaves the last block by returning, an earlier one by breaking out of a loop that runs it once
+    current = { label: `block${k + 1}`, last: k === blocks.length - 1, used: false };
+    const lines = block(body);
+    return [
+      ...(k === 0 ? [] : ["list.NewBlock()"]), // only a report has several blocks
+      ...(current.used ? [`${current.label}:`, "for {", ...indent([...lines, "break"]), "}"] : lines),
+    ];
+  });
+  return [...data, "func() {", ...indent(run), "}()"];
+}
+
+/** The Go statement by which CHECK leaves the processing block being emitted. */
+function leaveBlock(): string {
+  if (current.last) {
+    return "return";
+  }
+  current.used = true;
+  return `break ${current.label}`;
 }
 
 /** The DATA statements of a block and of the blocks nested in it, in order. */
@@ -106,7 +136,7 @@ function assign(target: IRTarget, value: string): string {
   return `${goName(target.base)} = abap.Overwrite(${goTypeValue(target.base.type)}, ${goName(target.base)}, ${off}, ${value})`;
 }
 
-/** The enclosing loops, innermost last: EXIT, CONTINUE and CHECK refer to the innermost one by its label. */
+/** The enclosing loops, innermost last: EXIT, CONTINUE and CHECK in a loop refer to the innermost one by its label. */
 const loops: { label: string; used: boolean }[] = [];
 let labelCount = 0;
 
@@ -185,7 +215,9 @@ function statementOnly(s: IRStatement): string[] {
     case "continue":
       return [`continue ${innermostLoop()}`];
     case "check":
-      return [`if !${condition(s.condition)} {`, `\tcontinue ${innermostLoop()}`, "}"];
+      return [`if !${condition(s.condition)} {`, `\t${s.leaves === "pass" ? `continue ${innermostLoop()}` : leaveBlock()}`, "}"];
+    case "return":
+      return ["return"];
   }
 }
 

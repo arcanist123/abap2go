@@ -64,6 +64,11 @@ func (l *List) Write(text string, newLine bool) {
 	l.written = true
 }
 
+// NewBlock starts an event block after the first one: its output begins on a new line.
+func (l *List) NewBlock() {
+	l.endLine()
+}
+
 // End finishes the list when the program ends: the current line, if it has output, is written.
 func (l *List) End() {
 	l.endLine()
