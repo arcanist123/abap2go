@@ -160,7 +160,7 @@ Found 2026-11-26, with 2.120.120 and the patch.
   object or a built-in function of one there. The build still refuses them, as operands it does not compile. Fix in
   [PR #4761](https://github.com/abaplint/abaplint/pull/4761), set to draft by the maintainer since it was stacked on
   [PR #4741](https://github.com/abaplint/abaplint/pull/4741) (see "Waiting PRs on the fork"); in the patch. It also
-  rejects `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 and #4750 stays
+  rejects `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 stays
 - [ ] [#4748](https://github.com/abaplint/abaplint/issues/4748) `CASE ( a ).` and `WHEN ( b ).`, parentheses around
   a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), are accepted, while ABAP is expected to reject
   them; the compiler compiles `CASE ( a ).` as without them. `CASE ( a + 1 ).` is valid. Fixed in waiting PR
@@ -171,7 +171,10 @@ Found 2026-11-26, with 2.120.120 and the patch.
   of `strlen( )`, or of `abs( )` in a comparison, are accepted, while ABAP is expected to reject them
   (`i = abs( ( i ) ).` is valid)
 - [ ] [#4750](https://github.com/abaplint/abaplint/issues/4750) a parameter name for the argument of `abs( )`,
-  `abs( val = i )`, is accepted
+  `abs( val = i )`, is accepted. Fix in [PR #4767](https://github.com/abaplint/abaplint/pull/4767),
+  in the patch: the same for every built-in function with one unnamed argument (`strlen( )`, `lines( )`, `sqrt( )` and
+  the others), except `boolc( )`, whose argument is a logical expression. After `WHEN`, `abs( val = b )` is reported
+  twice, also by #4761
 - [ ] [#4762](https://github.com/abaplint/abaplint/issues/4762) after `WHEN`, `&&`, string templates, built-in
   functions with a character-like result (`condense( )`, `to_upper( )`, `substring( )`, `boolc( )`, `xsdbool( )`),
   bit expressions and table expressions (`tab[ 1 ]`) are accepted, while ABAP is expected to reject them. The same
@@ -181,7 +184,7 @@ Found 2026-11-26, with 2.120.120 and the patch.
   covered: `bit-set( )` and `boolx( )`, which did not parse at all ([#4764](https://github.com/abaplint/abaplint/issues/4764)).
   With [PR #4766](https://github.com/abaplint/abaplint/pull/4766) they parse as their own forms in `Source`, not as
   method calls, so the check after `WHEN` does not see them and accepts them
-  - [ ] follow-up once #4766 and #2 are both upstream: reject `bit-set( )` and `boolx( )` after `WHEN`
+  - [ ] follow-up once #2 is upstream (#4766 is merged): reject `bit-set( )` and `boolx( )` after `WHEN`
 
 ### Waiting PRs on the fork
 
@@ -303,7 +306,8 @@ arcanist123/abaplint#1 and #2, which are not in this table (see "Waiting PRs on 
 | [#4739](https://github.com/abaplint/abaplint/pull/4739) | `RETRY` outside a `CATCH` block is an error ([#4723](https://github.com/abaplint/abaplint/issues/4723)) | open |
 | [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
 | [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | draft, waits for #4741 |
-| [#4766](https://github.com/abaplint/abaplint/pull/4766) | `bit-set( )` and `boolx( bool = <logical expression> )` parse, typed `xstring` ([#4764](https://github.com/abaplint/abaplint/issues/4764)) | open |
+| [#4766](https://github.com/abaplint/abaplint/pull/4766) | `bit-set( )` and `boolx( bool = <logical expression> )` parse, typed `xstring` ([#4764](https://github.com/abaplint/abaplint/issues/4764)) | merged, not released |
+| [#4767](https://github.com/abaplint/abaplint/pull/4767) | a parameter name for the argument of a built-in function with one unnamed argument, `abs( val = i )`, is an error ([#4750](https://github.com/abaplint/abaplint/issues/4750)) | open |
 
 Released and out of the patch:
 - in 2.120.121: [PR #4716](https://github.com/abaplint/abaplint/pull/4716) (`NOT NOT`,

@@ -542,6 +542,36 @@ index ba69e57..64b87f8 100644
          }
          else if (type instanceof basic_1.StringType) {
              return basic_1.StringType.get(rest);
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_param.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_param.js
+index e1f29a8..50bd13c 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_param.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_param.js
+@@ -133,6 +133,11 @@ class MethodCallParam {
+             }
+             return sourceType;
+         }
++        else if (this.takesOnlyUnnamedArgument(method)) {
++            const message = `Built-in function "${method.getName().toLowerCase()}" takes its argument without a parameter name`;
++            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), message));
++            return;
++        }
+         else if (child instanceof nodes_1.ExpressionNode && child.get() instanceof Expressions.ParameterListS) {
+             new method_parameters_1.MethodParameters().checkExporting(child, input, method);
+         }
+@@ -146,6 +151,13 @@ class MethodCallParam {
+         }
+         return undefined;
+     }
++    // "abs( val = i )" is expected to be a syntax error. The argument of boolc( ) is a logical expression,
++    // where "a = b" is a comparison, which parses as a named argument before 7.02
++    static takesOnlyUnnamedArgument(method) {
++        return method instanceof _builtin_1.BuiltInMethod
++            && method.getName().toUpperCase() !== "BOOLC"
++            && _builtin_1.BuiltIn.hasUnnamedArgument(method.getName());
++    }
+     static isAssignable(sourceType, targetType, child, method, input) {
+         const typeUtils = new _type_utils_1.TypeUtils(input.scope);
+         return method instanceof _builtin_1.BuiltInMethod
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
 index ff132e0..4746582 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
