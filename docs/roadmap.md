@@ -30,7 +30,7 @@ Priority, when choosing what to pick up next:
 
 This file is the source of status for abap2go and the work it needs in other repositories.
 
-## The compiler (status 2026-11-25)
+## The compiler (status 2026-11-26)
 
 TypeScript on `@abaplint/core`, emitting Go (`src/`, runtime in `runtime/go`); `npm test` builds and runs small
 programs end to end and runs the Go runtime's tests. No CI yet.
@@ -139,11 +139,34 @@ Done:
     Their fixtures move the literal through a text variable, so the conversion at run time is still tested; the
     snippet as written is kept as a case that must be refused
   - a snippet runs to its end (every `ASSERT` holds), or ends with the runtime error or exception its status line
-    names (`int` overflow, `100 MOD 0`). 93 of 163 cases run end to end (79 before control flow); the other 70 are
-    marked as waiting for what the compiler refuses first: string templates 22, `TRY … CATCH` 14, structures and
-    internal tables 11, `ADD`/`SUBTRACT`/`MULTIPLY`/`DIVIDE` 6, `sign( )` and `exp( )` 6, `CONSTANTS` 3, field
-    symbols 1, `CO` 1, the build-time check of literals 6. A waiting case runs as a todo, so it shows once it passes
+    names (`int` overflow, `100 MOD 0`). 94 of 163 cases run end to end (79 before control flow, 93 before `TRY`);
+    the other 69 are marked as waiting for what the compiler refuses first: string templates 22, structures and
+    internal tables 11, `ADD`/`SUBTRACT`/`MULTIPLY`/`DIVIDE` 6, `sign( )` and `exp( )` 6, the build-time check of
+    literals 6, `abap_true` and `abap_false` 5, `IS INITIAL` 4, `CONSTANTS` 3, `CLEAR` 2, field symbols 2, `CO` 1,
+    `&&` 1. A waiting case runs as a todo, so it shows once it passes
   - no compiled snippet gave a value other than the expected one
+- `TRY … CATCH … CLEANUP … ENDTRY` and `RETRY` (2026-11-26, `abap.Session.Try` in `runtime/go/abap/try.go`,
+  `test/try.test.ts`): a `CATCH` clause catches the classes it names and their subclasses, the first matching clause
+  wins. As ABAP decides it where the exception is raised, an exception no `TRY` catches ends the program without
+  running any `CLEANUP` block; one caught further out runs the `CLEANUP` blocks of the `TRY`s it leaves, innermost
+  first, before the `CATCH` block. An exception raised in a `CATCH` block goes to the `TRY`s further out (its own
+  `CLEANUP` does not run), and one that leaves a `CLEANUP` block ends the program. `sy-index` is set back when an
+  exception or `RETRY` leaves a loop. `EXIT`, `CONTINUE` and `CHECK` leave a `TRY` for a loop around it
+  - the target after an exception: `=` and `result = expression` store the value the exception leaves (see "The
+    target after an exception" in [spec/conversion.md](spec/conversion.md)) before raising it; 171 cells of results
+    of every calculation type that do not fit integer, `p`, `n`, `c`, `f` and `decfloat16` result fields run end
+    to end (`test/result_field.test.ts`). An `int8` result keeps an `i` result field, unlike the conversion of an
+    `int8` data object
+  - the exception classes the runtime raises are global classes of the built-in library (`lib/`), with their
+    superclasses up to `CX_ROOT`; a `CATCH` of another class is refused as unknown
+  - special values: an exception that would leave `+Inf`, `-Inf` or NaN in an `f` field, or an infinity in a
+    `decfloat16` field, is a runtime error naming the gap when a `TRY` could read the field (an exception to the
+    guiding principle, see [aot_for_abap.md](aot_for_abap.md)); uncaught, it ends the program as the exception does
+  - refused: `CATCH … INTO` and `CLEANUP INTO` (object references are not compiled), `CATCH BEFORE UNWIND`, and,
+    as ABAP syntax errors, `RETRY` outside a `CATCH` block, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block,
+    a `TRY` without `CATCH` or `CLEANUP`, a `CATCH` of a class not derived from `CX_ROOT` (abaplint does not report
+    the last three yet: #4723, #4724, #4725); constants and built-in
+    data objects (`abap_true`) as operands
 
 Next:
 - [ ] control flow, the rest: `EXIT`, `CHECK` and `RETURN` outside loops (leaving the processing block), `IS
@@ -174,11 +197,8 @@ Next:
   and its ANORMALIES list entries are the test cases
 - [ ] `out->write( )` of structures and tables (open-steamgate's format: a structure as one
   `field: value, field: value` line, a table as a header row and tab-separated rows)
-- [ ] `TRY … CATCH` (blocked by the special values left after an exception, under "Next" below): the generated
-  code writes the value `abap.Convert` and `abap.Calculate` return with an
-  exception into the target before raising it (see "The target after an exception" in
-  [spec/conversion.md](spec/conversion.md)); the cells of `conversion_target.tsv` and the result fields of
-  `calculation_contexts.tsv` run end to end once a `CATCH` can show them
+- [ ] the cells of `conversion_target.tsv` and `conversion_edges.tsv` end to end through `TRY … CATCH`, as the
+  result-field grid of `test/result_field.test.ts` runs; `CATCH … INTO` once object references are compiled
 - [ ] CI (Node and Go, `npm test`)
 
 ## Critical path: the specification of ABAP's rule tables
@@ -248,10 +268,9 @@ whose expected behaviour contradicts a spec is reopened there.
 Next:
 - [ ] special values left after an exception: what `WRITE`, the conversions, comparisons and arithmetic do with
   an f holding `+Inf`, `-Inf` or NaN and a decfloat16 holding an infinity; the runtime keeps a decfloat16 target
-  instead of storing an infinity until its decfloat value can hold one. This blocks `TRY … CATCH`: until `TRY` is
-  compiled no program can see a target after an exception, so the stand-in is not observable; once a `CATCH` can
-  see it, a kept target would be a silently different result. If `TRY` has to come first, the stand-in becomes a
-  run-time error naming the gap, listed as an exception in [aot_for_abap.md](aot_for_abap.md)
+  instead of storing an infinity until its decfloat value can hold one. `TRY` came first (2026-11-26), so where a
+  `TRY` could read such a target the program ends with the run-time error `SPECIAL_VALUE_NOT_SUPPORTED`, listed
+  as an exception in [aot_for_abap.md](aot_for_abap.md); closing this gap removes it
 - [ ] the rest of the comparison table: the string and byte operators (`CO`, `CN`, `CA`, `NA`, `CS`, `NS`, `CP`,
   `NP`, `BYTE-…`, `O`, `Z`, `M`), predicate expressions (`IS INITIAL`, `IS ASSIGNED`, `IN` ranges), structures,
   internal tables and references, and the comparisons inside statements (`READ TABLE … WITH KEY`, table keys,

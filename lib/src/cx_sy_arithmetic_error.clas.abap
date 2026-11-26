@@ -1,0 +1,6 @@
+CLASS cx_sy_arithmetic_error DEFINITION PUBLIC INHERITING FROM cx_dynamic_check CREATE PUBLIC.
+  PUBLIC SECTION.
+ENDCLASS.
+
+CLASS cx_sy_arithmetic_error IMPLEMENTATION.
+ENDCLASS.

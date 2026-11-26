@@ -45,6 +45,7 @@ function declarations(body: IRStatement[]): IRData[] {
       case "data": return [s];
       case "if": return [...s.branches.flatMap(b => declarations(b.body)), ...declarations(s.otherwise ?? [])];
       case "do": case "while": return declarations(s.body);
+      case "try": return [...declarations(s.body), ...s.catches.flatMap(c => declarations(c.body)), ...declarations(s.cleanup ?? [])];
       default: return [];
     }
   });
@@ -106,18 +107,91 @@ function assign(target: IRTarget, value: string): string {
   return `${goName(target.base)} = abap.Overwrite(${goTypeValue(target.base.type)}, ${goName(target.base)}, ${off}, ${value})`;
 }
 
-/** The enclosing loops, innermost last: EXIT, CONTINUE and CHECK refer to the innermost one by its label. */
-const loops: { label: string; used: boolean }[] = [];
+/**
+ * The enclosing loops, innermost last: EXIT, CONTINUE and CHECK refer to the innermost one by its label. depth is
+ * the number of function literals (the blocks of a TRY) around the loop.
+ */
+const loops: { label: string; used: boolean; depth: number }[] = [];
 let labelCount = 0;
 
-/** The label of the innermost loop, which is then emitted. */
-function innermostLoop(): string {
+/**
+ * The blocks of the TRYs being emitted are function literals, innermost last. A jump to a loop outside the literal
+ * returns its name ("break loop3" as "b3", "continue loop3" as "c3"); escapes collects them per TRY, so the code
+ * after the TRY can jump on or return the name further out.
+ */
+const escapes: Set<string>[] = [];
+
+/** The statement that breaks out of the innermost loop or goes on with its next pass. */
+function jump(kind: "break" | "continue"): string {
   const loop = loops[loops.length - 1];
   if (loop === undefined) {
     throw new Error("internal error: EXIT, CONTINUE or CHECK outside a loop");
   }
+  if (loop.depth < escapes.length) {
+    const name = `${kind[0]}${loop.label.slice("loop".length)}`;
+    escapes[escapes.length - 1].add(name);
+    return `return "${name}"`;
+  }
   loop.used = true;
-  return loop.label;
+  return `${kind} ${loop.label}`;
+}
+
+/** A function literal returning the jump that left it, "" at its end (see escapes). */
+function closure(head: string, body: string[]): string[] {
+  return [`${head} {`, ...indent(body), "\treturn \"\"", "}"];
+}
+
+/** A call whose arguments span lines: each argument starts on the line where the one before it ends. */
+function call(fn: string, args: string[][]): string[] {
+  const lines = [`${fn}(`];
+  args.forEach((arg, i) => {
+    lines[lines.length - 1] += (i === 0 ? "" : ", ") + arg[0];
+    lines.push(...arg.slice(1));
+  });
+  lines[lines.length - 1] += ")";
+  return lines;
+}
+
+/**
+ * TRY as abap.Session.Try (runtime/go/abap/try.go). Its blocks are function literals, so the jumps that leave them
+ * come back as names: the TRY's code breaks or continues a loop of its own literal, and returns any other name to
+ * the literal around it.
+ */
+function tryStatement(s: IRStatement & { kind: "try" }): string[] {
+  const names = new Set<string>();
+  escapes.push(names);
+  const body = closure("func() string", block(s.body));
+  const handler = s.catches.length === 0 ? ["nil"] : closure("func(k int) string", [
+    "switch k {",
+    ...s.catches.flatMap((c, k) => [`case ${k}:`, ...indent(block(c.body))]),
+    "}",
+  ]);
+  const cleanup = s.cleanup === undefined ? ["nil"] : ["func() {", ...indent(block(s.cleanup)), "}"];
+  escapes.pop();
+  const catches = s.catches.length === 0 ? "nil"
+    : `[][]string{${s.catches.map(c => `{${c.classes.map(n => JSON.stringify(n)).join(", ")}}`).join(", ")}}`;
+  const lines = call("session.Try", [body, [catches], handler, cleanup]);
+  if (names.size === 0) {
+    return lines;
+  }
+  const cases: string[] = [];
+  let returns = false;
+  for (const name of [...names].sort()) {
+    const loop = loops.find(l => l.label === `loop${name.slice(1)}`)!;
+    if (loop.depth === escapes.length) {
+      loop.used = true;
+      cases.push(`case "${name}":`, `\t${name[0] === "b" ? "break" : "continue"} ${loop.label}`);
+    } else {
+      escapes[escapes.length - 1].add(name);
+      returns = true;
+    }
+  }
+  if (returns) {
+    cases.push("default:", "\treturn j");
+  }
+  lines[0] = `if j := ${lines[0]}`;
+  lines[lines.length - 1] += `; j != "" {`;
+  return [...lines, "\tswitch j {", ...indent(cases), "\t}", "}"];
 }
 
 /**
@@ -126,7 +200,7 @@ function innermostLoop(): string {
  * set.
  */
 function loop(head: string, before: string[], start: string[], body: IRStatement[]): string[] {
-  const entry = { label: `loop${++labelCount}`, used: false };
+  const entry = { label: `loop${++labelCount}`, used: false, depth: escapes.length };
   loops.push(entry);
   const inner = [...start, ...block(body)];
   loops.pop();
@@ -158,9 +232,12 @@ function statementOnly(s: IRStatement): string[] {
       return [`${goName(s.variable)} := ${init}`, `_ = ${goName(s.variable)}`];
     }
     case "move":
-      return [assign(s.target, convert(s.source, s.target.type, s.target.kind === "substring" ? typeValue(s.target) : undefined))];
+      if (s.target.kind === "variable" && s.source.kind !== "substring" && sameType(s.source.type, s.target.type)) {
+        return [assign(s.target, operand(s.source))];
+      }
+      return [store(s.target, "Move", `${typeValue(s.source)}, ${operand(s.source)}`)];
     case "calculate":
-      return [assign(s.target, `abap.MustCalculate[${goType(s.target.type)}](${expr(s.expression)}, ${typeValue(s.target)})`)];
+      return [store(s.target, "Compute", expr(s.expression))];
     case "assert":
       return [`abap.Assert(${condition(s.condition)})`];
     case "if": {
@@ -181,12 +258,29 @@ function statementOnly(s: IRStatement): string[] {
     case "while":
       return loop("pass := int32(1); ; pass++", [], [`if !${condition(s.condition)} {`, "\tbreak", "}"], s.body);
     case "exit":
-      return [`break ${innermostLoop()}`];
+      return [jump("break")];
     case "continue":
-      return [`continue ${innermostLoop()}`];
+      return [jump("continue")];
     case "check":
-      return [`if !${condition(s.condition)} {`, `\tcontinue ${innermostLoop()}`, "}"];
+      return [`if !${condition(s.condition)} {`, `\t${jump("continue")}`, "}"];
+    case "try":
+      return tryStatement(s);
+    case "retry":
+      // RETRY is only allowed directly in a CATCH block (loops aside), so it returns from the CATCH literal
+      return ["return abap.Retry"];
   }
+}
+
+/**
+ * target = what fn (abap.Move or abap.Compute) computes from args, of the target's type: the value an exception
+ * leaves in the target is stored before it is raised.
+ */
+function store(target: IRTarget, fn: "Move" | "Compute", args: string): string {
+  if (target.kind === "variable") {
+    return `abap.${fn}(&${goName(target)}, ${args}, ${goTypeValue(target.type)})`;
+  }
+  const set = `func(r string) { ${assign(target, "r")} }`;
+  return `abap.${fn}To(${set}, ${args}, ${typeValue(target)})`;
 }
 
 const GO_COMPARE: Record<IRCompareOp, string> = { "=": "==", "<>": "!=", "<": "<", ">": ">", "<=": "<=", ">=": ">=" };
@@ -247,14 +341,14 @@ function expr(e: IRExpr): string {
 }
 
 /**
- * The source converted to type to, by the runtime's conversion rules; a plain copy when the types are the same.
- * toValue is the abap.Type of to as a Go expression, given for a subfield target, whose type is known at run time.
+ * The source converted to type to, by the runtime's conversion rules, as an operand; a plain copy when the types are
+ * the same. Assignments go through store, which keeps the value an exception leaves.
  */
-function convert(source: IRSource, to: IRType, toValue?: string): string {
-  if (source.kind !== "substring" && toValue === undefined && sameType(source.type, to)) {
+function convert(source: IRSource, to: IRType): string {
+  if (source.kind !== "substring" && sameType(source.type, to)) {
     return operand(source);
   }
-  return `abap.MustConvert[${goType(to)}](${typeValue(source)}, ${operand(source)}, ${toValue ?? goTypeValue(to)})`;
+  return `abap.MustConvert[${goType(to)}](${typeValue(source)}, ${operand(source)}, ${goTypeValue(to)})`;
 }
 
 /** The abap.Type of a source or target: a subfield's comes from its temporary. */

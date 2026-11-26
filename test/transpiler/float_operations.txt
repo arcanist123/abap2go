@@ -37,7 +37,7 @@ lv_r = tanh( lv_a ).
 ASSERT lv_r = '0.7615941559557649'.
 
 *** sqrt, log, log10, acos outside their domain, log( 0 ), #2190
-* waits: TRY ... CATCH
+* waits: the operator &&
 DATA lv_r TYPE f.
 DATA lv_result TYPE string.
 TRY.
@@ -219,7 +219,7 @@ lv_r /= 8.
 ASSERT lv_r = '2.6875'.
 
 *** division by zero is CX_SY_ZERODIVIDE and keeps the target, 0 / 0 is 0, text that is no number
-* waits: TRY ... CATCH
+* waits: abap_true and abap_false
 DATA lv_text TYPE string.
 DATA lv_a TYPE f.
 DATA lv_b TYPE f.

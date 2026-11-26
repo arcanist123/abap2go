@@ -280,7 +280,7 @@ lv_r /= 4.
 ASSERT lv_r = '1.953125'.
 
 *** decfloat16: division by zero is CX_SY_ZERODIVIDE and keeps the target, 0 / 0 is 0
-* waits: TRY ... CATCH
+* waits: abap_true and abap_false
 DATA lv_a TYPE decfloat16.
 DATA lv_b TYPE decfloat16.
 DATA lv_r TYPE decfloat16.
@@ -299,7 +299,7 @@ lv_r = lv_a / lv_b.
 ASSERT lv_r = 0.
 
 *** decfloat34: division by zero is CX_SY_ZERODIVIDE and keeps the target, 0 / 0 is 0
-* waits: TRY ... CATCH
+* waits: abap_true and abap_false
 DATA lv_a TYPE decfloat34.
 DATA lv_b TYPE decfloat34.
 DATA lv_r TYPE decfloat34.

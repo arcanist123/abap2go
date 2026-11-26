@@ -49,6 +49,8 @@ func (s Settings) separators() (decimal, thousands byte) {
 type Session struct {
 	Settings Settings
 	Sy       Sy
+	// handlers has a frame per running TRY, innermost last: the classes of its CATCH clauses (see Try).
+	handlers [][][]string
 }
 
 // Sy holds the system fields of a session that compiled code sets and reads.
