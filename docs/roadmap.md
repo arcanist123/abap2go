@@ -23,6 +23,10 @@ Priority, when choosing what to pick up next:
 - nothing that would stop ABAP from compiling ahead of time: nothing that needs a JS host or a compiler at run time
 - a gap in open-abap-core that the compiler runs into, within the scope it compiles, is fixed right away: offered
   upstream as a PR. It goes before the other work items of that repository
+- out of scope: the transpiler's JS runtime. Its issues matter as cells of the specification (a snippet with
+  ABAP's expected behaviour), not as JS fixes, which are tracked with the transpiler, not here
+- upstream PRs follow the working rules in [abaplint_roadmap.md](abaplint_roadmap.md), "How a fix gets in": the
+  maintainer merges, no update of an open PR without a conflict, other people's issues are not closed by hand
 
 This file is the source of status for abap2go and the work it needs in open-abap-core.
 
@@ -130,15 +134,16 @@ Done:
   - rewritten to `ASSERT` form: what a snippet wrote is asserted instead, with the expected value worked out again
     for ABAP. Some differ from the source tests: `int8 / int8` into `f` and into `p LENGTH 8 DECIMALS 1` is 3.5,
     not 3, since the calculation type is that of the result field
-  - six snippets move a literal ABAP is expected to reject as a syntax error, since it does not fit the type: `-1`
-    into `x LENGTH 1`, `'abc'`, `'1E3'` and `'2.5'` into `i`, `int8` and `f`, `'x10'` as a key of an `n` component.
-    Their fixtures move the literal through a text variable, so the conversion at run time is still tested; the
-    snippet as written is kept as a case that must be refused
+  - six snippets move a literal that does not fit the type: `-1` into `x LENGTH 1`, `'abc'`, `'1E3'` and `'2.5'`
+    into `i`, `int8` and `f`, `'x10'` as a key of an `n` component. Their fixtures move the literal through a text
+    variable, so the conversion at run time is tested. ABAP is expected to give only a warning for the snippets as
+    written (revised 2026-11-26; first taken for syntax errors), so they are valid code and are to run as written,
+    with the same result as through the variable
   - a snippet runs to its end (every `ASSERT` holds), or ends with the runtime error or exception its status line
     names (`int` overflow, `100 MOD 0`). 94 of 163 cases run end to end (79 before control flow, 93 before `TRY`);
     the other 69 are marked as waiting for what the compiler refuses first: string templates 22, structures and
-    internal tables 11, `ADD`/`SUBTRACT`/`MULTIPLY`/`DIVIDE` 6, `sign( )` and `exp( )` 6, the build-time check of
-    literals 6, `abap_true` and `abap_false` 5, `IS INITIAL` 4, `CONSTANTS` 3, `CLEAR` 2, field symbols 2, `CO` 1,
+    internal tables 11, `ADD`/`SUBTRACT`/`MULTIPLY`/`DIVIDE` 6, `sign( )` and `exp( )` 6, the literal moves as
+    written 6 (their status line still says "syntax error"; to be changed to the result of the run, see above), `abap_true` and `abap_false` 5, `IS INITIAL` 4, `CONSTANTS` 3, `CLEAR` 2, field symbols 2, `CO` 1,
     `&&` 1. A waiting case runs as a todo, so it shows once it passes
   - no compiled snippet gave a value other than the expected one
 - leaving the processing block (2026-11-26, `src/lower_block.ts`, `test/control_flow.test.ts`): `RETURN` anywhere,
@@ -172,9 +177,11 @@ Done:
     guiding principle, see [aot_for_abap.md](aot_for_abap.md)); uncaught, it ends the program as the exception does
   - refused: `CATCH … INTO` and `CLEANUP INTO` (object references are not compiled), `CATCH BEFORE UNWIND`, and,
     as ABAP syntax errors, `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block, `RETRY` outside a
-    `CATCH` block, a `TRY` without `CATCH` or `CLEANUP`, a `CATCH` of a class not derived from `CX_ROOT` (the compiler
-    checks the last three itself, as abaplint does not report them yet: abaplint#4723, abaplint#4724, abaplint#4725);
-    constants and built-in data objects (`abap_true`) as operands
+    `CATCH` block, a `CATCH` of a class not derived from `CX_ROOT` (the compiler checks the last two itself until
+    the abaplint patch has abaplint#4723 and abaplint#4725); constants and built-in data objects (`abap_true`) as
+    operands
+  - refused by mistake: a `TRY` without `CATCH` or `CLEANUP`, which the compiler takes for a syntax error. ABAP is
+    expected to give only a warning, so it is valid code (abaplint#4724, closed) and is to be compiled (see "Next")
 - built-in functions as comparison operands (2026-11-26, `src/lower_cond.ts`, `runtime/go/abap/function.go`,
   `test/function_operand.test.ts`): `abs( )`, `sqrt( )` and `strlen( )` of a single data object are values with the
   type of their result, compared as data objects are
@@ -206,15 +213,20 @@ Done:
 Next:
 - [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,
   `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as operands of comparisons and `CASE`
-  - statements between `CASE` and the first `WHEN`: ABAP is expected to give only a warning, so the code is valid
-    and is to be compiled, not refused (`src/lower_block.ts`). Work out first whether these statements run
+  - statements between `CASE` and the first `WHEN`, and `CASE` without `WHEN`, in a report outside classes: ABAP is
+    expected to give only a warning, so the code is valid and is to be compiled, not refused (`src/lower_block.ts`).
+    Work out first whether these statements run. In a class both are syntax errors (abaplint#4744)
+  - a `TRY` without `CATCH` or `CLEANUP` (valid, a warning only): compiled as its `TRY` block, instead of being
+    refused as a syntax error (`src/lower_block.ts`)
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
   calculation type fixed at build time, `i`, `int8` and `f` as native Go operations with overflow checks, `p` and
   `decfloat34` as direct calls; comparison types chosen at build time; every TSV cell run on both paths
-  - a literal that does not convert to its static target is a syntax error, to be reported by abaplint
-    (abaplint#4712); the six "as written" transpiler fixtures are its test cases
+  - a literal that does not convert to its static target, moved by `=` (`i = 'abc'.`), is expected to give only a
+    warning: valid code, whose conversion fails at run time as for a variable. Such a move is compiled with the
+    exception of its cell, not refused; the six "as written" transpiler fixtures are its test cases. Only the
+    literal of a `VALUE` addition that would raise is a syntax error, to be reported by abaplint (abaplint#4712)
 - [ ] the rest of `calculation_contexts.tsv` as its statements are compiled: inline declarations, templates, `CONV`,
   `EXACT`, `ADD` and the others, the result field after an exception (with `TRY`). The expression parser of
   `calculation_test.go` still attaches a leading `-` to its operand; fix it if it is to run these cells too
@@ -400,11 +412,11 @@ Most useful for AOT first:
   `pretty_name` ignored in one path
 - [ ] HTTP (~80), the server side first, since `if_http_extension` roots run on request and response entities. Plan
   of 2026-11-23, one PR per step, expected behaviour from public docs only (clean room, never SAP source):
-  - [ ] step 1, string functions: `cl_http_utility` `escape_javascript`, `escape_xml_attr_value`,
+  - [x] step 1, string functions (done 2026-11-25): `cl_http_utility` `escape_javascript`, `escape_xml_attr_value`,
     `normalize_url`, `get_last_error`; `cl_http_server` static helpers (`escape_url`, `unescape_url`,
     `escape_html`, `encode/decode_base64`, `append_field_url`) delegate to `cl_http_utility`;
-    `cl_http_client` `escape_url`, `create_abs_url` (host + `~request_uri`). Fixes of existing methods in PR
-    open-abap-core#1352; the new methods follow once it is merged. Gaps raised: #1353 (step 4), #1354
+    `cl_http_client` `escape_url`, `create_abs_url` (host + `~request_uri`). Fixes of existing methods merged as
+    open-abap-core#1352, the new methods as open-abap-core#1356. Gaps raised: #1353 (step 4), #1354 (low priority)
   - [ ] step 2, entity state: `cl_http_entity` gets a cookie table, a version and a table of multipart parts
     (each a `cl_http_entity`); then cookies (`add_cookie_field`, `get_cookie(s)`, `set_cookie`,
     `delete_cookie*`, `get_cookie_field`), header/form-field deletes, `append_data`, `append_cdata`,
