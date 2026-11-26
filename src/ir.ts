@@ -224,7 +224,7 @@ export type IRCondition =
   | { kind: "not"; operand: IRCondition }
   | { kind: "and" | "or" | "equiv"; left: IRCondition; right: IRCondition };
 
-/** WRITE [/] of a literal or variable onto the basic list, formatted with the session's user settings. */
+/** WRITE [/] of a source onto the basic list, formatted with the session's user settings. */
 export interface IRListWrite {
   kind: "list_write";
   /** `/` was given: start a new line first. */

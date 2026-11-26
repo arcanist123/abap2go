@@ -122,7 +122,7 @@ Done:
   - refused: `DO … VARYING`, `WHILE … VARY`, `CASE` without `WHEN`, statements between `CASE` and the first `WHEN`
     (valid ABAP, see "Next"), comparisons of kinds without a comparison type (`d` with `t`, `utclong` with anything but
     `c`, `string` and `utclong`), a non-numeric single operand against an arithmetic expression, the other predicates
-    (`IS`, `IN`, `CO`, …), `WRITE sy-index` (the output length of its data element)
+    (`IS`, `IN`, `CO`, …)
 - the arithmetic tests of abaplint/transpiler as end-to-end fixtures (2026-11-25, `test/transpiler/*.txt`, run by
   `test/transpiler.test.ts`, MIT, see `NOTICE`): the 157 ABAP snippets of `test/operators/arithmetics*.ts`,
   `mod.ts`, `test/types/*_operations.ts`, `integer8_calculation_type.ts` and `conversion_no_number.ts`, one
@@ -194,11 +194,13 @@ Done:
   - a `p` result in a `string` whose rounding carries into one more digit now keeps 31 digits
   - refused: a `utclong` value against the number an expression gives. Syntax errors in these statements are left to
     abaplint ([abaplint_roadmap.md](abaplint_roadmap.md))
+- `WRITE sy-index` (2026-11-26, `src/lower_report.ts`, `test/control_flow.test.ts`): its data element,
+  `SYST_INDEX`, is expected to have the output length of `i` and no conversion exit, so it is written as an `i` (see
+  "Output length" in [spec/write.md](spec/write.md))
 
 Next:
 - [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,
-  `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as operands of comparisons and `CASE`;
-  `WRITE sy-index` with the output length of its data element
+  `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as operands of comparisons and `CASE`
   - statements between `CASE` and the first `WHEN`: ABAP is expected to give only a warning, so the code is valid
     and is to be compiled, not refused (`src/lower_block.ts`). Work out first whether these statements run
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static

@@ -77,7 +77,9 @@ These are the lengths of the built-in types. A data element from the dictionary 
 `sy-datum` takes 10 characters and shows the separators of the date format. b and s only come from the
 dictionary (INT1 and INT2, output lengths 3 and 6). A data element (typed directly or through a domain) with the
 output length of its built-in type and no conversion exit is expected to be written by the rules here; the sign
-flag of a domain does not change the output. The compiler refuses `WRITE` of any other dictionary type for now.
+flag of a domain does not change the output. `sy-index` is such a case: its data element, `SYST_INDEX`, is
+expected to have the output length of `i` (11) and no conversion exit, so `WRITE sy-index` writes it as an `i`.
+The compiler refuses `WRITE` of any other dictionary type for now.
 
 ## Rules per kind
 

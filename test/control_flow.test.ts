@@ -450,7 +450,52 @@ for (const [name, body, refused] of refusals) {
   });
 }
 
-test("refused: WRITE of sy-index, which has the output length of its data element", () => {
-  const result = run("prog", "DO 1 TIMES.\nWRITE sy-index.\nENDDO.");
-  assert.match(result.refused ?? "", /WRITE of sy-index/);
+// The data element of sy-index has the output length of i and no conversion exit, so WRITE formats it as an i: 11
+// characters, thousands separators of the user, the blank of the sign at the end.
+test("WRITE sy-index: 0 outside a loop, right-aligned in 11 columns", () => {
+  const source = `REPORT zprobe.
+WRITE sy-index.
+WRITE '|'.
+WRITE / sy-index.
+WRITE sy-index.
+WRITE / SY-INDEX.`;
+  assert.deepEqual(run("prog", source), { stdout: lines("         0  |", "         0           0", "         0") });
+});
+
+test("WRITE sy-index: the number of the pass in DO and WHILE, back to its value before the loop after it", () => {
+  const source = `REPORT zprobe.
+DO 3 TIMES.
+  WRITE sy-index.
+ENDDO.
+DO 2 TIMES.
+  DO 2 TIMES.
+    WRITE / sy-index.
+  ENDDO.
+  WRITE sy-index.
+ENDDO.
+WHILE sy-index < 3.
+  WRITE / sy-index.
+ENDWHILE.
+WRITE / sy-index.`;
+  const w = (n: number) => `         ${n}`;
+  const row = (...n: number[]) => n.map(w).join("  ");
+  assert.deepEqual(run("prog", source), {
+    stdout: lines(row(1, 2, 3), w(1), row(2, 1), w(1), row(2, 2), w(1), w(2), w(0)),
+  });
+});
+
+const THOUSAND = `REPORT zprobe.
+DO 1000 TIMES.
+  CHECK sy-index = 1000.
+  WRITE sy-index.
+  WRITE '|'.
+ENDDO.`;
+
+test("WRITE sy-index: thousands separators", () => {
+  assert.deepEqual(run("prog", THOUSAND), { stdout: lines("     1.000  |") });
+});
+
+test("WRITE sy-index: the decimal notation of the user", () => {
+  const user = { users: [{ user: "alice", decimalNotation: "X" }] };
+  assert.deepEqual(run("prog", THOUSAND, user), { stdout: lines("     1,000  |") });
 });
