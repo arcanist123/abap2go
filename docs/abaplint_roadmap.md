@@ -43,11 +43,12 @@ Valid code rejected: nothing open. The last case,
 [#4726](https://github.com/abaplint/abaplint/issues/4726), is fixed by
 [PR #4727](https://github.com/abaplint/abaplint/pull/4727), in the patch.
 
-Valid code mistyped:
-- [ ] a number literal beyond the range of `i` is typed `i` (`DATA(y) = 1234567890123456789012345678901.`); ABAP
-  makes it a `p`. Not run into yet, since the compiler types number literals itself (`integerLiteral` in
-  `src/lower_common.ts`), but it goes before the syntax checks below, together with the 31-digit limit. No issue
-  raised yet; work out the length of the `p` first
+Valid code mistyped: nothing open. The last case, a number literal beyond the range of `i` typed `i`
+([#4736](https://github.com/abaplint/abaplint/issues/4736)), is fixed by
+[PR #4737](https://github.com/abaplint/abaplint/pull/4737), in the patch: such a literal is expected to be a `p`
+without decimals, of length 8 for up to 15 digits (leading zeros not counted) and length 16 above.
+- [ ] follow-up in the compiler, which types number literals itself (`integerLiteral` in `src/lower_common.ts`): it
+  takes length 16 for every such `p`
 
 ### Invalid syntax to fix, not raised yet
 
@@ -82,8 +83,9 @@ abaplint accepts these, so the fix goes into abaplint:
 - [ ] [#4730](https://github.com/abaplint/abaplint/issues/4730) a subfield of length 0 of a flat field, `c+1(0)`
   (`src/lower_common.ts`)
 - [ ] a number literal of more than 31 digits (`src/lower_common.ts`): ABAP is expected to give a syntax error, and
-  31 digits are fine, as the compiler has it. Still to work out: whether leading zeros count. With the typing of
-  number literals above
+  31 digits are fine. Leading zeros are expected to count and the sign not, while the compiler strips leading zeros
+  before counting. No issue raised yet; not part of [PR #4737](https://github.com/abaplint/abaplint/pull/4737). The
+  literal is also expected to be too long in a `VALUE` addition, which `Constant.runSyntax` does not see
 - [ ] expected behaviour to work out first: `CASE` without any `WHEN` (`src/lower_block.ts`)
 
 Out of this list: statements between `CASE` and the first `WHEN`. ABAP is expected to give only a warning, so the
@@ -146,7 +148,8 @@ PRs the pinned release does not contain, as of 2026-11-26:
 | [#4635](https://github.com/abaplint/abaplint/pull/4635) | a write to a `READ-ONLY` attribute from outside the class ([#2097](https://github.com/abaplint/abaplint/issues/2097)) | open |
 | [#4684](https://github.com/abaplint/abaplint/pull/4684) | `\|` and `}` in EXEC SQL or an AMDP body taken as a string template, valid code mis-lexed ([#4329](https://github.com/abaplint/abaplint/issues/4329)) | open |
 | [#4716](https://github.com/abaplint/abaplint/pull/4716) | `NOT NOT a = 1` does not parse, also in `LOOP`, `DELETE` and `MODIFY … WHERE` ([#4714](https://github.com/abaplint/abaplint/issues/4714)) | merged, not released |
-| [#4727](https://github.com/abaplint/abaplint/pull/4727) | a `d` compared with a built-in function or method result of type `i` (`d = strlen( s )`, `abs( d ) = d`) is rejected as incompatible ([#4726](https://github.com/abaplint/abaplint/issues/4726)); the compiler compiles these functions as comparison operands | open |
+| [#4727](https://github.com/abaplint/abaplint/pull/4727) | a `d` compared with a built-in function or method result of type `i` (`d = strlen( s )`, `abs( d ) = d`) is rejected as incompatible ([#4726](https://github.com/abaplint/abaplint/issues/4726)); the compiler compiles these functions as comparison operands | merged, not released |
+| [#4737](https://github.com/abaplint/abaplint/pull/4737) | a number literal beyond the range of `i` is typed `p`, not `i`; parameters, `VALUE` rows and `INSERT` rows are checked accordingly ([#4736](https://github.com/abaplint/abaplint/issues/4736)) | open |
 
 Released and out of the patch: `WRITE` of a utclong ([#4700](https://github.com/abaplint/abaplint/issues/4700),
 [PR #4701](https://github.com/abaplint/abaplint/pull/4701), in 2.120.119), which the compiler now compiles.
@@ -179,6 +182,9 @@ No error from check_syntax where ABAP is expected to give one:
   [PR #4635](https://github.com/abaplint/abaplint/pull/4635)
 - [ ] APPEND (and other index operations) to a generic `ANY TABLE` is expected to be an error, abaplint only checks
   hashed; the test "ok, APPEND TO generic tables" still expects no error for `ct_any`
+- [ ] a number literal of type `i` passed to a `p` parameter with decimals is expected to be an error (not
+  type-compatible), abaplint accepts it; a literal of type `p` is checked since
+  [PR #4737](https://github.com/abaplint/abaplint/pull/4737). No issue raised
 - [ ] **[#1692](https://github.com/abaplint/abaplint/issues/1692)** PRIVATE SECTION of a global class uses a class
   from `locals_imp`: no error (only the PUBLIC SECTION check exists, "is local to the class pool")
 - [ ] [#895](https://github.com/abaplint/abaplint/issues/895) `CLASS lcl DEFINITION DEFERRED.` and the class never
