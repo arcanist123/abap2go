@@ -69,7 +69,7 @@ function lowerReportStatement(statement: abaplint.Nodes.StatementNode, where: Wh
   return lineSize;
 }
 
-/** WRITE [/] literal or variable. */
+/** WRITE [/] of a literal, a variable, a subfield or sy-index. */
 function lowerWrite(statement: abaplint.Nodes.StatementNode, variables: Variables, where: Where): IRStatement {
   const children = statement.getChildren();
   let index = 1; // after WRITE
@@ -89,10 +89,8 @@ function lowerWrite(statement: abaplint.Nodes.StatementNode, variables: Variable
     throw new BuildError("only WRITE [/] <literal or variable>. is supported yet, no additions", where);
   }
   const value = lowerSource(source, variables, where, "WRITE of");
-  if (value.kind === "system_field") {
-    // typed with its data element, which has its own output length
-    throw new BuildError(`WRITE of sy-${value.name} is not supported yet`, where);
-  }
+  // sy-index needs no check: its data element, SYST_INDEX, is expected to have the output length of its type i
+  // and no conversion exit
   if (value.kind === "variable") {
     variables.checkWriteFormat(value, where);
   }
