@@ -202,6 +202,19 @@ index 2394369..f4a6196 100644
          const corr = (0, combi_1.ver)(version_1.Release.v740sp05, (0, combi_1.seq)("CORRESPONDING", _1.TypeNameOrInfer, (0, combi_1.tok)(tokens_1.ParenLeftW), _1.CorrespondingBody, rparen, (0, combi_1.optPrio)(after)), { also: combi_1.AlsoIn.OpenABAP });
          const conv = (0, combi_1.ver)(version_1.Release.v740sp02, (0, combi_1.seq)("CONV", _1.TypeNameOrInfer, lparenNoSpace, _1.ConvBody, rparenNoSpace, (0, combi_1.optPrio)(after)), { also: combi_1.AlsoIn.OpenABAP });
          const swit = (0, combi_1.ver)(version_1.Release.v740sp02, (0, combi_1.seq)("SWITCH", _1.TypeNameOrInfer, (0, combi_1.tok)(tokens_1.ParenLeftW), _1.SwitchBody, rparenNoSpace, (0, combi_1.optPrio)(after)), { also: combi_1.AlsoIn.OpenABAP });
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin.js
+index dc3fe3d..34a2a20 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin.js
+@@ -781,7 +781,7 @@ BuiltIn.methods = {
+         },
+         optional: {
+             "case": new basic_1.CharacterType(1),
+-            "sep": basic_1.IntegerType.get(),
++            "sep": basic_1.CLikeType.get(),
+             "min": basic_1.IntegerType.get(),
+         },
+         return: basic_1.StringType.get(),
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js
 index 449a5e8..484ac84 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js
@@ -425,6 +438,194 @@ index 0000000..0ecd44f
 +}
 +//# sourceMappingURL=_parentheses.js.map
 \ No newline at end of file
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_parenthesized_operand.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_parenthesized_operand.js
+new file mode 100644
+index 0000000..63ad959
+--- /dev/null
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_parenthesized_operand.js
+@@ -0,0 +1,181 @@
++"use strict";
++var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    var desc = Object.getOwnPropertyDescriptor(m, k);
++    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
++      desc = { enumerable: true, get: function() { return m[k]; } };
++    }
++    Object.defineProperty(o, k2, desc);
++}) : (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    o[k2] = m[k];
++}));
++var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
++    Object.defineProperty(o, "default", { enumerable: true, value: v });
++}) : function(o, v) {
++    o["default"] = v;
++});
++var __importStar = (this && this.__importStar) || (function () {
++    var ownKeys = function(o) {
++        ownKeys = Object.getOwnPropertyNames || function (o) {
++            var ar = [];
++            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
++            return ar;
++        };
++        return ownKeys(o);
++    };
++    return function (mod) {
++        if (mod && mod.__esModule) return mod;
++        var result = {};
++        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
++        __setModuleDefault(result, mod);
++        return result;
++    };
++})();
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.checkParenthesizedOperand = checkParenthesizedOperand;
++exports.checkConcatenationParentheses = checkConcatenationParentheses;
++const Expressions = __importStar(require("../2_statements/expressions"));
++const nodes_1 = require("../nodes");
++const _builtin_call_1 = require("./_builtin_call");
++const _syntax_input_1 = require("./_syntax_input");
++const constructors = new Set(["CONV", "VALUE", "COND", "SWITCH", "REDUCE", "REF", "EXACT", "CORRESPONDING", "FILTER"]);
++// the source inside the parentheses when the source is exactly "( ... )"
++function parenthesized(source) {
++    const children = source.getChildren();
++    if (children.length === 3
++        && children[0] instanceof nodes_1.TokenNode && children[0].getFirstToken().getStr() === "("
++        && children[1] instanceof nodes_1.ExpressionNode && children[1].get() instanceof Expressions.Source) {
++        return children[1];
++    }
++    return undefined;
++}
++function startsWithParenthesis(source) {
++    const first = source.getFirstChild();
++    return first instanceof nodes_1.TokenNode && first.getFirstToken().getStr() === "(";
++}
++// an arithmetic or bit expression, or a sign, "i + 1", "- i", "BIT-NOT x"
++function isArithmetic(source) {
++    var _a;
++    const children = source.getChildren();
++    const first = children[0];
++    if (first instanceof nodes_1.TokenNode && ["-", "+"].includes(first.getFirstToken().getStr())) {
++        return true;
++    }
++    // "BIT-NOT" is lexed as three tokens
++    if (first instanceof nodes_1.TokenNode && first.getFirstToken().getStr().toUpperCase() === "BIT"
++        && ((_a = children[2]) === null || _a === void 0 ? void 0 : _a.concatTokens().toUpperCase()) === "NOT") {
++        return true;
++    }
++    return source.findDirectExpression(Expressions.ArithOperator) !== undefined;
++}
++function callArguments(call) {
++    var _a;
++    const param = call.findDirectExpression(Expressions.MethodCallParam);
++    const unnamed = param === null || param === void 0 ? void 0 : param.findDirectExpression(Expressions.Source);
++    if (unnamed !== undefined) {
++        return [unnamed];
++    }
++    return (((_a = param === null || param === void 0 ? void 0 : param.findDirectExpression(Expressions.ParameterListS)) === null || _a === void 0 ? void 0 : _a.findDirectExpressions(Expressions.ParameterS)) || [])
++        .map(p => p.findDirectExpression(Expressions.Source))
++        .filter((s) => s !== undefined);
++}
++// Inside parentheses an operand is a calculation: an arithmetic expression, or a numeric built-in function
++// with an argument that is more than a data object, "abs( i + 1 )", "strlen( lcl=>get( ) )"
++function isCalculation(source, input) {
++    if (isArithmetic(source)) {
++        return true;
++    }
++    const inner = parenthesized(source);
++    if (inner !== undefined) {
++        return isCalculation(inner, input);
++    }
++    const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
++    return call !== undefined
++        && _builtin_call_1.BuiltInCall.isNumeric(call)
++        && callArguments(call).some(a => isComputed(a, input));
++}
++// the argument of a numeric built-in function is more than a data object: a calculation, a method call, a table or
++// constructor expression, a numeric built-in function, or a string expression or template with one of these.
++// A character-like built-in function is not, "to_upper( lcl=>get( ) )"
++function isComputed(source, input) {
++    if (isArithmetic(source)) {
++        return true;
++    }
++    const inner = parenthesized(source);
++    if (inner !== undefined) {
++        return isComputed(inner, input);
++    }
++    for (const child of source.getChildren()) {
++        if (child instanceof nodes_1.TokenNode) {
++            const text = child.getFirstToken().getStr().toUpperCase();
++            if (constructors.has(text)) {
++                return true;
++            }
++            continue;
++        }
++        const get = child.get();
++        if (get instanceof Expressions.Source) {
++            // the operand after "&&"
++            if (isComputed(child, input)) {
++                return true;
++            }
++        }
++        else if (get instanceof Expressions.MethodCallChain) {
++            const call = _builtin_call_1.BuiltInCall.fromChain(child, input);
++            if (call === undefined || child.getChildren().length > 1 || _builtin_call_1.BuiltInCall.isNumeric(call)) {
++                return true;
++            }
++        }
++        else if (get instanceof Expressions.Cast) {
++            return true;
++        }
++        else if (get instanceof Expressions.FieldChain) {
++            if (child.findDirectExpression(Expressions.TableExpression) !== undefined) {
++                return true;
++            }
++        }
++        else if (get instanceof Expressions.StringTemplate) {
++            for (const embedded of child.findDirectExpressions(Expressions.StringTemplateSource)) {
++                const s = embedded.findDirectExpression(Expressions.Source);
++                if (s !== undefined && isComputed(s, input)) {
++                    return true;
++                }
++            }
++        }
++    }
++    return false;
++}
++// In a string template, a constructor expression and as the source of APPEND or INSERT, parentheses are only
++// possible around a calculation, "|{ ( i + 1 ) }|", while "|{ ( i ) }|" or "CONV i( ( i ) )" are syntax errors
++function checkParenthesizedOperand(source, input) {
++    if (!(source instanceof nodes_1.ExpressionNode) || !(source.get() instanceof Expressions.Source)) {
++        return;
++    }
++    const inner = parenthesized(source);
++    if (inner !== undefined && isCalculation(inner, input) === false) {
++        const message = "Parentheses are only allowed around a calculation here";
++        input.issues.push((0, _syntax_input_1.syntaxIssue)(input, source.getFirstToken(), message));
++    }
++}
++// An operand of "&&" cannot be in parentheses, "( s ) && s" or "s && ( s )", not even around a calculation
++function checkConcatenationParentheses(source, input) {
++    const children = source.getChildren();
++    const index = children.findIndex(c => c instanceof nodes_1.TokenNode && c.getFirstToken().getStr() === "&&");
++    if (index < 0) {
++        return;
++    }
++    const message = "Parentheses not allowed around an operand of &&";
++    if (startsWithParenthesis(source)) {
++        input.issues.push((0, _syntax_input_1.syntaxIssue)(input, source.getFirstToken(), message));
++    }
++    // an operand after "&&" that is followed by another "&&" is reported by its own source
++    const after = children[index + 1];
++    if (after instanceof nodes_1.ExpressionNode
++        && after.get() instanceof Expressions.Source
++        && startsWithParenthesis(after)
++        && after.findDirectTokenByText("&&") === undefined) {
++        input.issues.push((0, _syntax_input_1.syntaxIssue)(input, after.getFirstToken(), message));
++    }
++}
++//# sourceMappingURL=_parenthesized_operand.js.map
+\ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
 index 5af7e91..c56c6fb 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
@@ -473,10 +674,10 @@ index f17395d..74b4adf 100644
              type = Types.StringType.get(data);
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_builtin_parentheses.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_builtin_parentheses.js
 new file mode 100644
-index 0000000..a9567fb
+index 0000000..d89d466
 --- /dev/null
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_builtin_parentheses.js
-@@ -0,0 +1,84 @@
+@@ -0,0 +1,87 @@
 +"use strict";
 +var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
 +    if (k2 === undefined) k2 = k;
@@ -551,13 +752,16 @@ index 0000000..a9567fb
 +        || type instanceof basic_1.UTCLongType
 +        || type instanceof basic_1.AnyType;
 +}
-+// "( s )", also as a part of a string expression, "s && ( s )"
++// "( s )", parentheses in a string expression, "s && ( s )", are reported for every operand of "&&" by Source
 +function hasParentheses(source) {
 +    const children = source.getChildren();
++    if (children.some(c => c instanceof nodes_1.TokenNode && c.getFirstToken().getStr() === "&&")) {
++        return false;
++    }
 +    if (children[0] instanceof nodes_1.TokenNode && children[0].getFirstToken().getStr() === "(") {
 +        return true;
 +    }
-+    return children.some(c => c instanceof nodes_1.TokenNode && ["&", "&&"].includes(c.getFirstToken().getStr()))
++    return children.some(c => c instanceof nodes_1.TokenNode && c.getFirstToken().getStr() === "&")
 +        && source.findDirectExpressions(Expressions.Source).some(s => hasParentheses(s));
 +}
 +//# sourceMappingURL=_check_builtin_parentheses.js.map
@@ -754,6 +958,119 @@ index 92044d8..1afdcdb 100644
              const fieldChain = s.findDirectExpression(Expressions.FieldChain);
              const first = fieldChain === null || fieldChain === void 0 ? void 0 : fieldChain.getFirstChild();
              if (rightType && fieldChain && first) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/cond_body.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/cond_body.js
+index 17b2750..34d8457 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/cond_body.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/cond_body.js
+@@ -37,6 +37,7 @@ exports.CondBody = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const _object_oriented_1 = require("../_object_oriented");
+ const source_1 = require("./source");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const let_1 = require("./let");
+ const cond_1 = require("./cond");
+ const _raise_message_1 = require("../_raise_message");
+@@ -62,6 +63,14 @@ class CondBody {
+         for (const s of node.findDirectExpressions(Expressions.Cond)) {
+             cond_1.Cond.runSyntax(s, input);
+         }
++        // the results after THEN and ELSE
++        const children = node.getChildren();
++        for (let i = 1; i < children.length; i++) {
++            const before = children[i - 1].concatTokens().toUpperCase();
++            if (before === "THEN" || before === "ELSE") {
++                (0, _parenthesized_operand_1.checkParenthesizedOperand)(children[i], input);
++            }
++        }
+         let type = undefined;
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
+             if (type === undefined) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/conv_body.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/conv_body.js
+index 52b478b..570d35e 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/conv_body.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/conv_body.js
+@@ -37,6 +37,7 @@ exports.ConvBody = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const source_1 = require("./source");
+ const let_1 = require("./let");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const _syntax_input_1 = require("../_syntax_input");
+ const basic_1 = require("../../types/basic");
+ class ConvBody {
+@@ -52,6 +53,7 @@ class ConvBody {
+             input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), message));
+             return basic_1.VoidType.get(_syntax_input_1.CheckSyntaxKey);
+         }
++        (0, _parenthesized_operand_1.checkParenthesizedOperand)(s, input);
+         const sourceType = source_1.Source.runSyntax(s, input, targetType);
+         if (scoped === true) {
+             input.scope.pop(node.getLastToken().getEnd());
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/corresponding_body.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/corresponding_body.js
+index 8313140..208eff0 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/corresponding_body.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/corresponding_body.js
+@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.CorrespondingBody = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const source_1 = require("./source");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ class CorrespondingBody {
+     static runSyntax(node, input, targetType) {
+         var _a;
+@@ -44,10 +45,12 @@ class CorrespondingBody {
+         }
+         const base = (_a = node.findDirectExpression(Expressions.CorrespondingBodyBase)) === null || _a === void 0 ? void 0 : _a.findDirectExpression(Expressions.Source);
+         if (base) {
++            (0, _parenthesized_operand_1.checkParenthesizedOperand)(base, input);
+             source_1.Source.runSyntax(base, input, targetType);
+         }
+         let type = undefined;
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
++            (0, _parenthesized_operand_1.checkParenthesizedOperand)(s, input);
+             if (type === undefined) {
+                 type = source_1.Source.runSyntax(s, input);
+             }
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_assignment.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_assignment.js
+index 2254fff..4c82c74 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_assignment.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_assignment.js
+@@ -38,6 +38,7 @@ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const basic_1 = require("../../types/basic");
+ const _syntax_input_1 = require("../_syntax_input");
+ const source_1 = require("./source");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const _type_utils_1 = require("../_type_utils");
+ class FieldAssignment {
+     static runSyntax(node, input, targetType) {
+@@ -72,6 +73,7 @@ class FieldAssignment {
+         else if (targetType instanceof basic_1.VoidType) {
+             type = targetType;
+         }
++        (0, _parenthesized_operand_1.checkParenthesizedOperand)(s, input);
+         const sourceType = source_1.Source.runSyntax(s, input, type);
+         if (this.isReference(type)
+             && !(type instanceof basic_1.ObjectReferenceType && sourceType instanceof basic_1.ObjectReferenceType)
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/for.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/for.js
+index 3d8d826..fd3bb9e 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/for.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/for.js
+@@ -37,6 +37,7 @@ exports.For = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const inline_field_definition_1 = require("./inline_field_definition");
+ const source_1 = require("./source");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const inline_loop_definition_1 = require("./inline_loop_definition");
+ const _scope_type_1 = require("../_scope_type");
+ const component_cond_1 = require("./component_cond");
+@@ -79,6 +80,8 @@ class For {
+             }
+             groupsSource = this.runGroups(node, groupsToken, input);
+         }
++        // the iteration expression, FOR i = 0 THEN i + 1
++        (0, _parenthesized_operand_1.checkParenthesizedOperand)(node.findExpressionAfterToken("THEN"), input);
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
+             if (s === groupsSource) {
+                 continue;
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
 index ba69e57..64b87f8 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
@@ -767,6 +1084,46 @@ index ba69e57..64b87f8 100644
          }
          else if (type instanceof basic_1.StringType) {
              return basic_1.StringType.get(rest);
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_field_definition.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_field_definition.js
+index be71963..96bb53a 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_field_definition.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_field_definition.js
+@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.InlineFieldDefinition = void 0;
+ const _typed_identifier_1 = require("../../types/_typed_identifier");
+ const source_1 = require("./source");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const basic_types_1 = require("../basic_types");
+ const unknown_type_1 = require("../../types/basic/unknown_type");
+@@ -53,6 +54,7 @@ class InlineFieldDefinition {
+         }
+         const source = node.findDirectExpression(Expressions.Source);
+         if (source) {
++            (0, _parenthesized_operand_1.checkParenthesizedOperand)(source, input);
+             type = source_1.Source.runSyntax(source, input);
+         }
+         const typeName = node.findDirectExpression(Expressions.TypeName);
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_loop_definition.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_loop_definition.js
+index 34c6f0b..0e14bdf 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_loop_definition.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_loop_definition.js
+@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.InlineLoopDefinition = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const source_1 = require("./source");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const basic_1 = require("../../types/basic");
+ const _typed_identifier_1 = require("../../types/_typed_identifier");
+ const _reference_1 = require("../_reference");
+@@ -52,6 +53,7 @@ class InlineLoopDefinition {
+         }
+         const source = node.findDirectExpression(Expressions.Source);
+         if (source && target) {
++            (0, _parenthesized_operand_1.checkParenthesizedOperand)(source, input);
+             const sourceType = source_1.Source.runSyntax(source, input);
+             const inGroup = node.concatTokens().toUpperCase().includes(" IN GROUP ");
+             let rowType = inGroup ? loop_group_by_1.LoopGroupBy.findMemberType(source, input) : undefined;
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_chain.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_chain.js
 index 675ece3..5a76320 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_chain.js
@@ -819,11 +1176,39 @@ index e1f29a8..50bd13c 100644
      static isAssignable(sourceType, targetType, child, method, input) {
          const typeUtils = new _type_utils_1.TypeUtils(input.scope);
          return method instanceof _builtin_1.BuiltInMethod
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/reduce_next.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/reduce_next.js
+index b32d02d..e7a3aee 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/reduce_next.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/reduce_next.js
+@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.ReduceNext = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const source_1 = require("./source");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const target_1 = require("./target");
+ class ReduceNext {
+     static runSyntax(node, input) {
+@@ -43,6 +44,7 @@ class ReduceNext {
+             return;
+         }
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
++            (0, _parenthesized_operand_1.checkParenthesizedOperand)(s, input);
+             source_1.Source.runSyntax(s, input);
+         }
+         for (const s of node.findDirectExpressions(Expressions.SimpleTarget)) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
-index ff132e0..4746582 100644
+index ff132e0..2ecf993 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
-@@ -79,7 +79,7 @@ class Source {
+@@ -55,6 +55,7 @@ const filter_body_1 = require("./filter_body");
+ const corresponding_body_1 = require("./corresponding_body");
+ const _builtin_1 = require("../_builtin");
+ const _builtin_call_1 = require("../_builtin_call");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const attribute_chain_1 = require("./attribute_chain");
+ const dereference_1 = require("./dereference");
+ const cast_1 = require("./cast");
+@@ -79,14 +80,17 @@ class Source {
          this.logicalArguments.add(source);
      }
      static runSyntax(node, input, targetType, writeReference = false, allowGenericDeference = false, readReference = true) {
@@ -832,7 +1217,8 @@ index ff132e0..4746582 100644
          if (node === undefined) {
              return undefined;
          }
-@@ -87,6 +87,8 @@ class Source {
++        (0, _parenthesized_operand_1.checkConcatenationParentheses)(node, input);
+         const children = node.getChildren().slice();
          let first = children.shift();
          // a leading sign makes the operand part of a calculation, "- foo"
          let signed = false;
@@ -841,7 +1227,7 @@ index ff132e0..4746582 100644
          if (first instanceof nodes_1.TokenNode) {
              const token = first.getFirstToken();
              const tok = token.getStr().toUpperCase();
-@@ -96,7 +98,16 @@ class Source {
+@@ -96,7 +100,16 @@ class Source {
                      signed = true;
                      break;
                  case "(":
@@ -858,7 +1244,7 @@ index ff132e0..4746582 100644
                      break;
                  case "BOOLC":
                      {
-@@ -162,7 +173,7 @@ class Source {
+@@ -162,7 +175,7 @@ class Source {
                      {
                          const foundType = this.determineType(node, input, targetType);
                          const bodyType = conv_body_1.ConvBody.runSyntax(node.findDirectExpression(Expressions.ConvBody), input, foundType);
@@ -867,7 +1253,15 @@ index ff132e0..4746582 100644
                          if (new _type_utils_1.TypeUtils(input.scope).isConvable(foundType, bodyType) === false) {
                              const message = `CONV: Types not compatible, ${foundType === null || foundType === void 0 ? void 0 : foundType.constructor.name}, ${bodyType === null || bodyType === void 0 ? void 0 : bodyType.constructor.name}`;
                              input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), message));
-@@ -238,7 +249,7 @@ class Source {
+@@ -186,6 +199,7 @@ class Source {
+                 case "REF":
+                     {
+                         let foundType = this.determineType(node, input, targetType);
++                        (0, _parenthesized_operand_1.checkParenthesizedOperand)(node.findDirectExpression(Expressions.Source), input);
+                         const s = Source.runSyntax(node.findDirectExpression(Expressions.Source), input);
+                         /*
+                         console.dir(node.concatTokens());
+@@ -238,7 +252,7 @@ class Source {
                          const foundType = this.determineType(node, input, targetType);
                          if ((foundType === null || foundType === void 0 ? void 0 : foundType.isGeneric()) === true
                              && !(foundType instanceof basic_1.DataType)
@@ -876,7 +1270,15 @@ index ff132e0..4746582 100644
                              && !(0, version_1.releaseAtLeast)(input.scope.getRelease(), version_1.Release.v756)
                              && input.scope.getLanguageVersion() !== version_1.LanguageVersion.Cloud
                              && !input.scope.getOpenABAP()) {
-@@ -276,7 +287,7 @@ class Source {
+@@ -253,6 +267,7 @@ class Source {
+                 case "EXACT":
+                     {
+                         const foundType = this.determineType(node, input, targetType);
++                        (0, _parenthesized_operand_1.checkParenthesizedOperand)(node.findDirectExpression(Expressions.Source), input);
+                         Source.runSyntax(node.findDirectExpression(Expressions.Source), input, foundType);
+                         this.addIfInferred(node, input, foundType);
+                         return foundType;
+@@ -276,7 +291,7 @@ class Source {
          else if (first === undefined || !(first instanceof nodes_1.ExpressionNode)) {
              return undefined;
          }
@@ -885,7 +1287,7 @@ index ff132e0..4746582 100644
          const type = [];
          if (readReference) {
              type.push(_reference_1.ReferenceType.DataReadReference);
-@@ -413,6 +424,26 @@ class Source {
+@@ -413,6 +428,26 @@ class Source {
          return true;
      }
      ////////////////////////////////
@@ -912,6 +1314,48 @@ index ff132e0..4746582 100644
      static traverseRemainingChildren(children, input) {
          const last = children[children.length - 1];
          if (last && last.get() instanceof Expressions.Source) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/string_template.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/string_template.js
+index 00afc07..653a26d 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/string_template.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/string_template.js
+@@ -41,6 +41,7 @@ const source_1 = require("./source");
+ const _type_utils_1 = require("../_type_utils");
+ const _syntax_input_1 = require("../_syntax_input");
+ const Tokens = __importStar(require("../../1_lexer/tokens"));
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ class StringTemplate {
+     static runSyntax(node, input) {
+         const typeUtils = new _type_utils_1.TypeUtils(input.scope);
+@@ -48,6 +49,7 @@ class StringTemplate {
+         for (const child of node.getChildren()) {
+             if (child instanceof nodes_1.ExpressionNode && child.get() instanceof Expressions.StringTemplateSource) {
+                 const s = child.findDirectExpression(Expressions.Source);
++                (0, _parenthesized_operand_1.checkParenthesizedOperand)(s, input);
+                 const type = source_1.Source.runSyntax(s, input, ret);
+                 if (type === undefined) {
+                     const message = "No target type determined";
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/switch_body.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/switch_body.js
+index b475411..7468846 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/switch_body.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/switch_body.js
+@@ -37,6 +37,7 @@ exports.SwitchBody = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const _object_oriented_1 = require("../_object_oriented");
+ const source_1 = require("./source");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const _raise_message_1 = require("../_raise_message");
+ const _syntax_input_1 = require("../_syntax_input");
+ const basic_1 = require("../../types/basic");
+@@ -59,6 +60,9 @@ class SwitchBody {
+             input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), message));
+             return basic_1.VoidType.get(_syntax_input_1.CheckSyntaxKey);
+         }
++        for (const s of node.findDirectExpressions(Expressions.Source)) {
++            (0, _parenthesized_operand_1.checkParenthesizedOperand)(s, input);
++        }
+         const type = source_1.Source.runSyntax(thenSource, input, targetType);
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
+             if (s === thenSource) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
 index 89beb8d..2549c4b 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
@@ -995,6 +1439,77 @@ index 89beb8d..2549c4b 100644
      static findTop(node, input) {
          if (node === undefined) {
              return undefined;
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/value_body.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/value_body.js
+index 9dab67b..a3d149f 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/value_body.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/value_body.js
+@@ -38,6 +38,7 @@ const nodes_1 = require("../../nodes");
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const for_1 = require("./for");
+ const source_1 = require("./source");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const let_1 = require("./let");
+ const field_assignment_1 = require("./field_assignment");
+ const basic_1 = require("../../types/basic");
+@@ -45,7 +46,7 @@ const _syntax_input_1 = require("../_syntax_input");
+ const _type_utils_1 = require("../_type_utils");
+ class ValueBody {
+     static runSyntax(node, input, targetType) {
+-        var _a, _b, _c;
++        var _a, _b, _c, _d;
+         if (node === undefined) {
+             return targetType;
+         }
+@@ -96,11 +97,28 @@ class ValueBody {
+         for (const s of node.findDirectExpressions(Expressions.FieldAssignment)) {
+             field_assignment_1.FieldAssignment.runSyntax(s, input, targetType);
+         }
++        // a single value, its DEFAULT, the BASE and the rows, "VALUE #( ( i ) )", "VALUE #( BASE tab ( LINES OF tab ) )"
++        const operands = [
++            ...node.findDirectExpressions(Expressions.Source),
++            ...((_c = node.findDirectExpression(Expressions.ValueBase)) === null || _c === void 0 ? void 0 : _c.findDirectExpressions(Expressions.Source)) || [],
++        ];
++        for (const line of node.findDirectExpressions(Expressions.ValueBodyLine)) {
++            operands.push(...line.findDirectExpressions(Expressions.Source));
++            for (const lines of line.findDirectExpressions(Expressions.ValueBodyLines)) {
++                const tab = lines.findExpressionAfterToken("OF");
++                if (tab !== undefined) {
++                    operands.push(tab);
++                }
++            }
++        }
++        for (const operand of operands) {
++            (0, _parenthesized_operand_1.checkParenthesizedOperand)(operand, input);
++        }
+         let type = undefined; // todo, this is only correct if there is a single source in the body
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
+             type = source_1.Source.runSyntax(s, input, type);
+         }
+-        for (const s of ((_c = node.findDirectExpression(Expressions.ValueBase)) === null || _c === void 0 ? void 0 : _c.findDirectExpressions(Expressions.Source)) || []) {
++        for (const s of ((_d = node.findDirectExpression(Expressions.ValueBase)) === null || _d === void 0 ? void 0 : _d.findDirectExpressions(Expressions.Source)) || []) {
+             type = source_1.Source.runSyntax(s, input, type);
+         }
+         for (const foo of node.findDirectExpressions(Expressions.ValueBodyLine)) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/append.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/append.js
+index c179beb..33ce430 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/append.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/append.js
+@@ -37,6 +37,7 @@ exports.Append = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const nodes_1 = require("../../nodes");
+ const source_1 = require("../expressions/source");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const target_1 = require("../expressions/target");
+ const basic_1 = require("../../types/basic");
+ const fstarget_1 = require("../expressions/fstarget");
+@@ -87,6 +88,7 @@ class Append {
+             source = node.findDirectExpression(Expressions.Source);
+         }
+         if (source) {
++            (0, _parenthesized_operand_1.checkParenthesizedOperand)(source, input);
+             if (targetType !== undefined
+                 && !(targetType instanceof basic_1.TableType)
+                 && !(targetType instanceof basic_1.UnknownType)
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
 index d4e9ca9..d794f3c 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
@@ -1084,6 +1599,26 @@ index d4e9ca9..d794f3c 100644
  // Before 7.40 SP02 the operands of CASE and WHEN are enhanced functional operand positions: besides
  // data objects and functional methods, only built-in functions with exactly one unnamed argument are allowed
  function checkCaseOperand(source, input) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/insert_internal.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/insert_internal.js
+index c679b12..b4c35c1 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/insert_internal.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/insert_internal.js
+@@ -37,6 +37,7 @@ exports.InsertInternal = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const inline_fs_1 = require("../expressions/inline_fs");
+ const source_1 = require("../expressions/source");
++const _parenthesized_operand_1 = require("../_parenthesized_operand");
+ const target_1 = require("../expressions/target");
+ const fstarget_1 = require("../expressions/fstarget");
+ const basic_1 = require("../../types/basic");
+@@ -77,6 +78,7 @@ class InsertInternal {
+                 source = node.findDirectExpression(Expressions.Source);
+             }
+         }
++        (0, _parenthesized_operand_1.checkParenthesizedOperand)(source, input);
+         const sourceType = source ? source_1.Source.runSyntax(source, input, targetType) : targetType;
+         if (targetType === undefined
+             && !(sourceType instanceof basic_1.TableType)
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/retry.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/retry.js
 new file mode 100644
 index 0000000..96da2de

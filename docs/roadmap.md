@@ -209,21 +209,34 @@ Done:
   expression, in moves and comparisons. Before, it was calculated, so `n = ( c )` and `( c ) = i` could give another
   result, and `( c ) = c2` was refused
 
-Next:
+Next, first what is refused or mistyped although it is valid ABAP and within the compiled scope (2026-11-26; none of
+it waits for abaplint, see [abaplint_roadmap.md](abaplint_roadmap.md), "Now"):
+- [ ] `c+5(off)` with `c TYPE c LENGTH 5`: `lowerSubstring` (`src/lower_common.ts`) refuses a static offset equal to
+  the length also when the length is a variable. ABAP is expected to accept it and to decide at run time
+  (`CX_SY_RANGE_OUT_OF_BOUNDS`); abaplint accepts it since 2.120.121 (abaplint#4742)
+- [ ] number literals beyond `i`: `integerLiteral` (`src/lower_common.ts`) types each one `p` of length 16, while it
+  is expected to have length 8 for up to 15 digits, leading zeros not counted, and length 16 above (abaplint#4736).
+  Test what depends on the length
+- [ ] `CASE` in a program outside classes without any `WHEN`, or with statements before the first one: ABAP is
+  expected to give only a warning, so the code is valid there and is to be compiled, not refused
+  (`src/lower_block.ts`); in classes it is a syntax error (abaplint#4744). Work out first whether these statements
+  run
+
+Then:
 - [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,
   `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as operands of comparisons and `CASE`
-  - statements between `CASE` and the first `WHEN`: in a program outside classes ABAP is expected to give only a
-    warning, so the code is valid there and is to be compiled, not refused (`src/lower_block.ts`); in classes it is
-    a syntax error (abaplint#4744). Work out first whether these statements run
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
   calculation type fixed at build time, `i`, `int8` and `f` as native Go operations with overflow checks, `p` and
   `decfloat34` as direct calls; comparison types chosen at build time; every TSV cell run on both paths
   - a literal that does not convert to its static target, moved by `=` (`i = 'abc'.`), is expected to give only a
-    warning: valid code, whose conversion fails at run time as for a variable. Such a move is compiled with the
-    exception of its cell, not refused; the six "as written" transpiler fixtures are its test cases. Only the
-    literal of a `VALUE` addition that would raise is a syntax error, to be reported by abaplint (abaplint#4712)
+    warning: valid code, whose conversion fails at run time as for a variable. Such a move already compiles and
+    raises when it runs, and stays so when its cell is chosen at build time; the six "as written" transpiler fixtures
+    are its test cases. Only the literal of a `VALUE` addition that would raise is a syntax error, to be reported by
+    abaplint (abaplint#4712)
+  - their status lines still say "syntax error": change them to the result of the run. Two of the six build today
+    (`arithmetics`, `integer_operations` "from text"), four wait for `abap_true`, `CLEAR` and `TYPES`
 - [ ] the rest of `calculation_contexts.tsv` as its statements are compiled: inline declarations, templates, `CONV`,
   `EXACT`, `ADD` and the others, the result field after an exception (with `TRY`). The expression parser of
   `calculation_test.go` still attaches a leading `-` to its operand; fix it if it is to run these cells too
