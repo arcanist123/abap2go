@@ -337,7 +337,8 @@ formatting table.
 `CX_SY_ZERODIVIDE`, `CX_SY_CONVERSION_NO_NUMBER`), the result field keeps its value: `r = i_max + 1` leaves `r` as it
 was, and so do `r += 1`, `ADD 1 TO r` and `DIVIDE r BY 0`. When the result is calculated but does not fit the result
 field (`CX_SY_CONVERSION_OVERFLOW`, and `CX_SY_ARITHMETIC_OVERFLOW` of a `p` calculation), an integer result field
-can be left with a value: see [conversion.md](conversion.md), "The target after an exception".
+can be left with a value: see [conversion.md](conversion.md), "The target after an exception". An `int8` result
+keeps an `i` result field, unlike the conversion of an `int8` data object.
 
 **EXACT.** `EXACT type( arithmetic expression )` calculates as above and raises `CX_SY_CONVERSION_ROUNDING` instead of
 rounding, in an interim result or when the result is moved into `type`: `EXACT p8_2( p 1 / 4 )` is 0.25,

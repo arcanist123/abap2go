@@ -165,7 +165,7 @@ ADD 5 TO lv_n3.
 ASSERT lv_n3 = '015'.
 
 *** division by zero and a p target too short
-* waits: TRY ... CATCH
+* waits: abap_true and abap_false
 DATA lv_n TYPE n LENGTH 5 VALUE '12345'.
 DATA lv_zero TYPE n LENGTH 3.
 DATA lv_i TYPE i VALUE 7.
@@ -319,7 +319,7 @@ lv_s = concat_lines_of( table = lt_n sep = `,` ).
 ASSERT lv_s = `100,010,002`.
 
 *** character statements keep blanks and other characters in n
-* waits: TRY ... CATCH
+* waits: field symbols
 DATA lv_n TYPE n LENGTH 5.
 DATA lv_n3 TYPE n LENGTH 3.
 DATA lv_n7 TYPE n LENGTH 7.

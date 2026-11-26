@@ -241,9 +241,12 @@ targets from decfloat; d, t, x and xstring targets (the *via i* overflow); c tar
 from text. An `n` source keeps an integer or p target when it is not a number, unlike c and string.
 
 In arithmetic the same rules apply when the result is moved into the result field: `b += 300` from 5 leaves `49`,
-a p calculation `b = i_300 + p_0` raises `CX_SY_ARITHMETIC_OVERFLOW` and leaves `44`. An exception in the
+a p calculation `b = i_300 + p_0` raises `CX_SY_ARITHMETIC_OVERFLOW` and leaves `44`, with one difference: an
+`int8` result that does not fit an `i` result field keeps it (`i = int8_3000000000 + int8_0` leaves `i` as it was),
+while b and s result fields are left with the lower bytes of an `int8` result as above. An exception in the
 calculation itself, and every exception under `EXACT`, keeps the result field (see
-[calculation.md](calculation.md)).
+[calculation.md](calculation.md)). The cells by calculation type and result field are in
+`test/result_field.test.ts`.
 
 ## Known gaps
 
@@ -253,17 +256,15 @@ calculation itself, and every exception under `EXACT`, keeps the result field (s
   that convert (parameter passing, `MOVE-CORRESPONDING`, table keys, string templates) follow as those statements
   are compiled; they call the same `abap.Convert`.
 - **Special values after an exception.** An f target can be left holding `+Inf`, `-Inf` or NaN and a decfloat16
-  target `+Infinity` or `-Infinity` (see *The target after an exception*). The runtime holds the f values, but what
-  `WRITE`, the conversions, comparisons and arithmetic do with them is not specified yet; it keeps a decfloat16
-  target instead of storing an infinity, which has no representation in its decfloat value yet. This stand-in is
-  not observable only because `TRY` is not compiled (next point): an exception ends the program before anything
-  can read the target. Once a `CATCH` can read it, a kept target would be a silently different result, so the gap
-  has to be closed before `TRY` is compiled. Closing it means a decfloat value that holds an infinity and specified
-  behaviour for `+Inf`, `-Inf` and NaN. If `TRY` has to come first, the stand-in becomes a run-time error naming
-  the gap, listed as an exception to the guiding principle.
-- The compiler cannot catch exceptions yet (`TRY` is not compiled), so a value left in a target cannot be seen
-  by a program: an uncaught exception ends it. `abap.Convert` and `abap.Calculate` return the value with the
-  exception, for the generated code to write once `TRY` is compiled.
+  target `+Infinity` or `-Infinity` (see *The target after an exception*). What `WRITE`, the conversions,
+  comparisons and arithmetic do with these values is not specified yet, and a decfloat value cannot hold an
+  infinity yet. So the runtime does not store them: when a `TRY` catches such an exception, or a `CLEANUP` block
+  would run for it, the program ends with the run-time error `SPECIAL_VALUE_NOT_SUPPORTED` instead of going on with
+  the target (an exception to the guiding principle, see [aot_for_abap.md](../aot_for_abap.md)); uncaught, the
+  exception ends the program as it does in ABAP. Closing the gap means a decfloat value that holds an infinity and
+  specified behaviour for `+Inf`, `-Inf` and NaN.
+- The value left in a target is stored for `=` and `result = expression` (`abap.Move` and `abap.Compute`). Other
+  places that convert follow as those statements are compiled.
 - Speed: the cell is chosen at run time, also for static operands, and every numeric cell goes through exact
   decimal arithmetic (`math/big`) for now. Static operands get their cell chosen at build time once `ASSERT` and
   control flow are compiled ([aot_for_abap.md](../aot_for_abap.md), "Static operands: the cell is chosen at build

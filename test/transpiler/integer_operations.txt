@@ -52,7 +52,7 @@ lv_r = nmin( val1 = lv_a val2 = 3 val3 = 7 ).
 ASSERT lv_r = -15.
 
 *** division by zero is CX_SY_ZERODIVIDE and keeps the target, 0 / 0 is 0, text that is no number, also 1E3
-* waits: TRY ... CATCH
+* waits: CLEAR
 DATA lv_text TYPE string.
 DATA lv_a TYPE i VALUE 7.
 DATA lv_b TYPE i.

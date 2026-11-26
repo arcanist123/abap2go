@@ -293,6 +293,11 @@ func moveResult(ct CalcType, n num, dst Type) (any, error) {
 	case CalcI:
 		return fromInteger(n.i, false, dst)
 	case CalcInt8:
+		if dst.Kind == KindI && (n.i < math.MinInt32 || n.i > math.MaxInt32) {
+			// unlike the conversion of an int8 data object, which leaves the lower four bytes, an i result field
+			// keeps its value; b and s are left with their lower bytes as by the conversion
+			return nil, errOverflow
+		}
 		return fromInteger(n.i, true, dst)
 	case CalcF:
 		if dst.Kind == KindInt8 {
