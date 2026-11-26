@@ -134,12 +134,18 @@ argument otherwise).
 Reviewed 2026-11-26 against abaplint `main` `fc504b57`: every open issue in this file still behaves on `main` as it
 describes.
 
-Valid code rejected: nothing open that abap2go has run into ([#4769](https://github.com/abaplint/abaplint/issues/4769)
-is in "Backlog"). The last case, a static offset or length beyond a `c` or `x` field while the other one is a variable
-(`c+5(off)`, `c+off(6)` with `c TYPE c LENGTH 5`, [#4742](https://github.com/abaplint/abaplint/issues/4742)), is fixed
-by [PR #4759](https://github.com/abaplint/abaplint/pull/4759), in 2.120.121: ABAP is expected to accept it and to decide
-at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static.
-- [ ] follow-up in the compiler: its own check (`lowerSubstring` in `src/lower_common.ts`) still refuses `c+5(off)`
+Nothing in abaplint blocks the compiler's current scope (2026-11-26), so the compiler's own work comes next
+([roadmap.md](roadmap.md), "Next"). Open abaplint issues beyond that scope wait for the compiler step that needs them
+(see "Later"). Alongside: keep the patch current, and send up the waiting PRs as
+[PR #4741](https://github.com/abaplint/abaplint/pull/4741), which four changes wait for, and then
+[PR #4761](https://github.com/abaplint/abaplint/pull/4761) are merged.
+
+Valid code rejected: nothing open that abap2go has run into. The last case, a static offset or length beyond a `c` or
+`x` field while the other one is a variable (`c+5(off)`, `c+off(6)` with `c TYPE c LENGTH 5`,
+[#4742](https://github.com/abaplint/abaplint/issues/4742)), is fixed by
+[PR #4759](https://github.com/abaplint/abaplint/pull/4759), in 2.120.121: ABAP is expected to accept it and to decide
+at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static. The compiler's own check still refuses
+`c+5(off)`, a follow-up in [roadmap.md](roadmap.md), "Next".
 
 [#4726](https://github.com/abaplint/abaplint/issues/4726) is fixed by
 [PR #4727](https://github.com/abaplint/abaplint/pull/4727), in 2.120.121.
@@ -147,9 +153,8 @@ at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static.
 Valid code mistyped: nothing open. The last case, a number literal beyond the range of `i` typed `i`
 ([#4736](https://github.com/abaplint/abaplint/issues/4736)), is fixed by
 [PR #4737](https://github.com/abaplint/abaplint/pull/4737), in 2.120.121: such a literal is expected to be a `p`
-without decimals, of length 8 for up to 15 digits (leading zeros not counted) and length 16 above.
-- [ ] follow-up in the compiler, which types number literals itself (`integerLiteral` in `src/lower_common.ts`): it
-  takes length 16 for every such `p`
+without decimals, of length 8 for up to 15 digits (leading zeros not counted) and length 16 above. The compiler types
+number literals itself and takes length 16 for every such `p`, a follow-up in [roadmap.md](roadmap.md), "Next".
 
 ### Invalid syntax to fix, without a check in the compiler
 
@@ -173,9 +178,9 @@ Found 2026-11-26, with 2.120.120 and the patch.
   (`i = abs( ( i ) ).` is valid). Fixed in two parts, both in the patch:
   - [PR #4768](https://github.com/abaplint/abaplint/pull/4768), merged, not released: no parentheses in a
     character-like, byte-like, table or `utclong` argument of a built-in function, also inside `&&`. Not covered: `bit`
-    of `boolx( )` ([#4770](https://github.com/abaplint/abaplint/issues/4770)) and `sep` of `from_mixed( )`
-    ([#4769](https://github.com/abaplint/abaplint/issues/4769)). After `WHEN`, `strlen( ( s ) )` is reported twice, also
-    by #4761
+    of `boolx( )` ([#4770](https://github.com/abaplint/abaplint/issues/4770)). `sep` of `from_mixed( )` is covered
+    since [PR #4773](https://github.com/abaplint/abaplint/pull/4773) (see "Backlog"). After `WHEN`, `strlen( ( s ) )`
+    is reported twice, also by #4761
   - waiting PR [arcanist123/abaplint#3](https://github.com/arcanist123/abaplint/pull/3): in a comparison, a `WHERE`
     condition and after `CASE`, no parentheses around a data object as the argument of a numeric function, unless an
     operand of the comparison is calculated (`IF abs( ( i ) ) = j + 1.` is valid)
@@ -194,12 +199,14 @@ Found 2026-11-26, with 2.120.120 and the patch.
   With [PR #4766](https://github.com/abaplint/abaplint/pull/4766) they parse as their own forms in `Source`, not as
   method calls, so the check after `WHEN` does not see them and accepts them
   - [ ] follow-up once #2 is upstream (#4766 is merged): reject `bit-set( )` and `boolx( )` after `WHEN`
-- [ ] [#4771](https://github.com/abaplint/abaplint/issues/4771) parentheses around a single operand as an operand of
+- [x] [#4771](https://github.com/abaplint/abaplint/issues/4771) parentheses around a single operand as an operand of
   `&&` (also after `CASE`), as the embedded expression of a string template, in a constructor expression (`CONV`, a
-  `VALUE` row, `THEN`, `ELSE`, `NEXT`) and as the source of `APPEND` and `INSERT` are accepted, while ABAP is expected
+  `VALUE` row, `THEN`, `ELSE`, `NEXT`) and as the source of `APPEND` and `INSERT` were accepted, while ABAP is expected
   to reject them. `s = ( s ).`, `|{ ( i + 1 ) }|` and `APPEND ( i + 1 ) TO itab.` are valid. The compiler reads
   parentheses around a single data object as nothing (`unparenthesized` in `src/lower_arith.ts`), so it relies on
-  abaplint here
+  abaplint here. Fixed by [PR #4774](https://github.com/abaplint/abaplint/pull/4774), merged, not released, in the
+  patch. Not covered: `NEW` ([#4775](https://github.com/abaplint/abaplint/issues/4775)), `MODIFY`, `COLLECT`, `READ TABLE` and
+  `DELETE TABLE` ([#4776](https://github.com/abaplint/abaplint/issues/4776)), see "Later"
 
 ### Waiting PRs on the fork
 
@@ -271,22 +278,39 @@ compiler ([roadmap.md](roadmap.md), "Next").
 
 ## Later: with the compiler step that needs it
 
-The compiler steps are in [roadmap.md](roadmap.md), "Next".
+The compiler steps are in [roadmap.md](roadmap.md), "Next". When a step starts, its valid ABAP comes first.
+
+Valid ABAP that abaplint mistypes, fails to parse or rejects:
+
+| Issue | What | Pick up with |
+|---|---|---|
+| [#4703](https://github.com/abaplint/abaplint/issues/4703) | `sy` components have no type name, so `TYPE sy-datum` cannot be told from `TYPE d`. The data elements are expected to be `SYST_<component>` with their own output lengths (`SYST_DATUM` 10) | `WRITE` of dictionary types with their own output length |
+| [#4756](https://github.com/abaplint/abaplint/issues/4756) | a literal passed to a parameter of the generic type `p` is reported as not compatible: valid code rejected | method calls with parameters |
+| [#4754](https://github.com/abaplint/abaplint/issues/4754) | `NEW lcl( )->attr = 1.` gives "Not an object reference, target" for any attribute | objects and `NEW` |
+| [#4779](https://github.com/abaplint/abaplint/issues/4779) | `NEW` with `LET`, `FOR`, `BASE`, `LINES OF` or default components in front of table rows does not parse | objects and `NEW` |
+| [#4687](https://github.com/abaplint/abaplint/issues/4687) | `CORRESPONDING`: `APPENDING`, `EXACT`, lookup table and `MAPPING ... DEFAULT` not parsed (nested `MAPPING` is merged, [PR #4688](https://github.com/abaplint/abaplint/pull/4688)) | structures and `CORRESPONDING` |
+| [#4755](https://github.com/abaplint/abaplint/issues/4755) | `INSERT itab.`, the short form for a table with a header line, parses as InsertDatabase (context-free parser). Putting it in the InsertInternal grammar is a design question for the abaplint maintainer | tables with a header line, if they are compiled |
+
+Invalid ABAP that abaplint accepts:
 
 | Issue | What | Pick up with |
 |---|---|---|
 | [#4712](https://github.com/abaplint/abaplint/issues/4712) | the literal of a `VALUE` addition that does not convert to a numeric type (`DATA i TYPE i VALUE 'abc'.`, a number outside the range) is accepted. A move of such a literal (`i = 'abc'.`) is expected to give only a warning: valid code, the conversion fails at run time | `CONSTANTS` and `DATA … VALUE` with static operands |
-| [#4703](https://github.com/abaplint/abaplint/issues/4703) | `sy` components have no type name, so `TYPE sy-datum` cannot be told from `TYPE d`. The data elements are expected to be `SYST_<component>` with their own output lengths (`SYST_DATUM` 10) | `WRITE` of dictionary types with their own output length |
-| [#4756](https://github.com/abaplint/abaplint/issues/4756) | a literal passed to a parameter of the generic type `p` is reported as not compatible: valid code rejected | method calls with parameters |
-| [#4687](https://github.com/abaplint/abaplint/issues/4687) | `CORRESPONDING`: `APPENDING`, `EXACT`, lookup table and `MAPPING ... DEFAULT` not parsed (nested `MAPPING` is merged, [PR #4688](https://github.com/abaplint/abaplint/pull/4688)) | structures and `CORRESPONDING` |
 | [#4642](https://github.com/abaplint/abaplint/issues/4642) | an assignment between flat structures with non-matching fragment views is accepted | structure assignments |
+| [#4772](https://github.com/abaplint/abaplint/issues/4772) | parentheses around an actual parameter of a method are accepted when the formal parameter is character-like, a date, a table or of type `data`; with a numeric parameter they are valid | method calls with parameters |
+| [#4775](https://github.com/abaplint/abaplint/issues/4775) | parentheses around a single operand in `NEW`. A check has to cover the forms of [#4779](https://github.com/abaplint/abaplint/issues/4779) too once they parse | objects and `NEW` |
+| [#4776](https://github.com/abaplint/abaplint/issues/4776) | parentheses around the work area of `MODIFY`, `COLLECT`, `READ TABLE` and `DELETE TABLE`, and a calculation there for the last three | internal tables |
+| [#4780](https://github.com/abaplint/abaplint/issues/4780) | a built-in function as the work area of `COLLECT`, `READ TABLE` and `DELETE TABLE` | internal tables |
+| [#4777](https://github.com/abaplint/abaplint/issues/4777) | parentheses around a single operand as the whole source of an inline declaration | inline declarations |
+| [#4778](https://github.com/abaplint/abaplint/issues/4778) | parentheses around a string expression or a string template | `&&` and string templates |
 
 ## Parked
 
 Nothing in the compiler's scope needs these yet.
 
 - [ ] [PR #4633](https://github.com/abaplint/abaplint/pull/4633) `METHODS` see only the types defined above them
-  ([#2556](https://github.com/abaplint/abaplint/issues/2556)), until the compiler compiles classes. Changes requested:
+  ([#2556](https://github.com/abaplint/abaplint/issues/2556)), until the compiler compiles classes. A draft since
+  2026-11-26, changes requested:
   the maintainer sees the cause in the order abaplint reads a class definition (attributes and types first, then
   events, then methods), not in the type lookup that the PR filters. Rework it to read the statements in source order;
   that may also cover the follow-up for `LIKE`, `EVENTS` and `lcl=>ty` on branch `type-before-definition-followups`
@@ -317,7 +341,7 @@ arcanist123/abaplint#1 to #3, which are not in this table (see "Waiting PRs on t
 | PR | What | State |
 |---|---|---|
 | [#4631](https://github.com/abaplint/abaplint/pull/4631) | INT1 and INT2 keep their size ([#4630](https://github.com/abaplint/abaplint/issues/4630)); the compiler declares `b` and `s` through data elements | open |
-| [#4633](https://github.com/abaplint/abaplint/pull/4633) | `METHODS` see only the types defined above them ([#2556](https://github.com/abaplint/abaplint/issues/2556)) | changes requested, parked (see "Parked") |
+| [#4633](https://github.com/abaplint/abaplint/pull/4633) | `METHODS` see only the types defined above them ([#2556](https://github.com/abaplint/abaplint/issues/2556)) | draft, changes requested, parked (see "Parked") |
 | [#4635](https://github.com/abaplint/abaplint/pull/4635) | a write to a `READ-ONLY` attribute from outside the class ([#2097](https://github.com/abaplint/abaplint/issues/2097)). It also covers [#2611](https://github.com/abaplint/abaplint/issues/2611): add `closes #2611` to the PR, or comment on #2611 after the merge | open |
 | [#4684](https://github.com/abaplint/abaplint/pull/4684) | `\|` and `}` in EXEC SQL or an AMDP body taken as a string template, valid code mis-lexed ([#4329](https://github.com/abaplint/abaplint/issues/4329)) | open |
 | [#4739](https://github.com/abaplint/abaplint/pull/4739) | `RETRY` outside a `CATCH` block is an error ([#4723](https://github.com/abaplint/abaplint/issues/4723)) | open |
@@ -326,6 +350,8 @@ arcanist123/abaplint#1 to #3, which are not in this table (see "Waiting PRs on t
 | [#4766](https://github.com/abaplint/abaplint/pull/4766) | `bit-set( )` and `boolx( bool = <logical expression> )` parse, typed `xstring` ([#4764](https://github.com/abaplint/abaplint/issues/4764)) | merged, not released |
 | [#4767](https://github.com/abaplint/abaplint/pull/4767) | a parameter name for the argument of a built-in function with one unnamed argument, `abs( val = i )`, is an error ([#4750](https://github.com/abaplint/abaplint/issues/4750)) | merged, not released |
 | [#4768](https://github.com/abaplint/abaplint/pull/4768) | parentheses in a character-like, byte-like, table or `utclong` argument of a built-in function are an error (part of [#4749](https://github.com/abaplint/abaplint/issues/4749)) | merged, not released |
+| [#4773](https://github.com/abaplint/abaplint/pull/4773) | `sep` of `from_mixed( )` is character-like ([#4769](https://github.com/abaplint/abaplint/issues/4769)) | merged, not released |
+| [#4774](https://github.com/abaplint/abaplint/pull/4774) | parentheses around a single operand of `&&`, in a string template, a constructor expression and the source of `APPEND` and `INSERT` are an error ([#4771](https://github.com/abaplint/abaplint/issues/4771)) | merged, not released |
 
 Released and out of the patch:
 - in 2.120.121: [PR #4716](https://github.com/abaplint/abaplint/pull/4716) (`NOT NOT`,
@@ -353,23 +379,15 @@ abaplint (main `af7440a`, default config, `v757`).
 - [x] [#4757](https://github.com/abaplint/abaplint/issues/4757) `SPLIT ... IN BYTE MODE`: byte-like targets are
   rejected and inline targets are typed `string` instead of `xstring` (character targets are accepted, though an error
   is expected). Fixed by [PR #4758](https://github.com/abaplint/abaplint/pull/4758), in 2.120.121
-- [ ] [#4769](https://github.com/abaplint/abaplint/issues/4769) `from_mixed( val = s sep = c )` with a variable of type
-  `c` is reported as not compatible, `sep` being typed as an integer, while `sep = 1` and `sep = i`, where an error is
-  expected, are accepted. Found 2026-11-26 while fixing #4749
-- [ ] [#4755](https://github.com/abaplint/abaplint/issues/4755) `INSERT itab.` parses as InsertDatabase
-  (context-free parser); putting it in the InsertInternal grammar is a design question for the abaplint maintainer.
-  Valid code gets the wrong statement
-- [ ] [#4754](https://github.com/abaplint/abaplint/issues/4754) `NEW lcl( )->attr = 1.` gives "Not an object
-  reference, target" for any attribute
+- [x] [#4769](https://github.com/abaplint/abaplint/issues/4769) `from_mixed( val = s sep = c )` with a variable of type
+  `c` was reported as not compatible, `sep` being typed as an integer, while `sep = 1` and `sep = i`, where an error is
+  expected, were accepted. Found 2026-11-26 while fixing #4749. Fixed by
+  [PR #4773](https://github.com/abaplint/abaplint/pull/4773), merged, not released, in the patch
 - [x] [#4764](https://github.com/abaplint/abaplint/issues/4764) `bit-set( 1 )` and `boolx( bool = i = 1 )` do not
   parse: `bit-set` is lexed as `bit`, `-`, `set`, and the logical expression of `boolx( )` is not handled the way
   `boolc( )` and `xsdbool( )` are in `Source`. Found 2026-11-26 while fixing #4762; valid code that fails to parse.
   Fixed by [PR #4766](https://github.com/abaplint/abaplint/pull/4766), in the patch: both are their own forms in
   `Source`, typed `xstring`. `boolx( bool = abap_true )`, no logical expression, still parses as a method call
-
-Suggested order: [#4769](https://github.com/abaplint/abaplint/issues/4769) (small), then
-[#1809](https://github.com/abaplint/abaplint/issues/1809); [#4755](https://github.com/abaplint/abaplint/issues/4755)
-after the maintainer's view on the shape.
 
 ### Invalid ABAP accepted
 
@@ -382,10 +400,6 @@ No error from check_syntax where ABAP is expected to give one:
 - [ ] [#4770](https://github.com/abaplint/abaplint/issues/4770) `bit` of `boolx( )` takes a calculation, parentheses, a
   built-in function, a constructor or a table expression, while ABAP is expected to allow only a data object. Found
   2026-11-26 while fixing #4749
-- [ ] [#4772](https://github.com/abaplint/abaplint/issues/4772) parentheses around an actual parameter of a method are
-  accepted when the formal parameter is character-like, a date, a table or of type `data`, while ABAP is expected to
-  reject them; with a numeric parameter they are valid. Found 2026-11-26 while fixing #4749; for the compiler step with
-  method calls with parameters
 - [ ] [#4752](https://github.com/abaplint/abaplint/issues/4752) APPEND (and other index operations) to a generic
   `ANY TABLE` is expected to be an error, abaplint only checks hashed; the test "ok, APPEND TO generic tables" still
   expects no error for `ct_any`
