@@ -340,10 +340,22 @@ index 244b0b7..eb85e32 100644
      checkSpecialTestMethodCall(method, foundDef) {
          if (method === undefined
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
-index 8af0c79..af44b2a 100644
+index 8af0c79..5af7e91 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
-@@ -291,12 +291,8 @@ class TypeUtils {
+@@ -173,6 +173,11 @@ class TypeUtils {
+         }
+         return false;
+     }
++    /** a number literal beyond the range of i */
++    isPackedConstant(type) {
++        var _a;
++        return type instanceof basic_1.PackedType && ((_a = type.getAbstractTypeData()) === null || _a === void 0 ? void 0 : _a.derivedFromConstant) === true;
++    }
+     isOOAssignable(source, target) {
+         let sid = source.getIdentifier();
+         let tid = target.getIdentifier();
+@@ -291,12 +296,8 @@ class TypeUtils {
          if (source2 instanceof basic_1.HexType && this.isCalculated(node2) && source1 instanceof basic_1.IntegerType) {
              return false;
          }
@@ -358,6 +370,29 @@ index 8af0c79..af44b2a 100644
          return true;
      }
      structureContainsString(structure) {
+@@ -512,6 +513,22 @@ class TypeUtils {
+         if (calculated && strictResult === false) {
+             return this.isAssignable(source, target);
+         }
++        // a number literal of type p fits a packed parameter of any length without decimals
++        if (this.isPackedConstant(source)) {
++            if (target instanceof basic_1.PackedType) {
++                return target.getDecimals() === 0;
++            }
++            else if (target instanceof basic_1.StringType
++                || target instanceof basic_1.DateType
++                || target instanceof basic_1.CharacterType
++                || target instanceof cgeneric_type_1.CGenericType
++                || target instanceof basic_1.CSequenceType
++                || target instanceof basic_1.XStringType
++                || target instanceof basic_1.XGenericType
++                || (target instanceof basic_1.StructureType && target.containsVoid() === false)) {
++                return false;
++            }
++        }
+         // an elementary text field is not compatible with a structure, also not with a flat character-like one
+         if (target instanceof basic_1.StructureType
+             && target.containsVoid() === false
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
 index f17395d..74b4adf 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
@@ -416,11 +451,45 @@ index 69a0432..8de6a4d 100644
          }
      }
      // a built-in function with a character-like result cannot be the operand of IS [NOT] INITIAL,
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/constant.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/constant.js
+index 4258d18..16bc40e 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/constant.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/constant.js
+@@ -6,8 +6,9 @@ const expressions_1 = require("../../2_statements/expressions");
+ class Constant {
+     static runSyntax(node) {
+         // todo: ConcatenatedConstant is not used?
+-        if (node.findDirectExpression(expressions_1.Integer)) {
+-            return basic_1.IntegerType.get({ derivedFromConstant: true });
++        const integer = node.findDirectExpression(expressions_1.Integer);
++        if (integer) {
++            return this.numberType(integer.concatTokens());
+         }
+         const first = node.getFirstToken().getStr();
+         if (first.startsWith("'")) {
+@@ -24,6 +25,16 @@ class Constant {
+             return basic_1.StringType.get();
+         }
+     }
++    // a number literal is of type i if its value is in the range of i, else of type p without decimals,
++    // with length 8 for up to 15 digits and length 16 above, leading zeros not counted
++    static numberType(literal) {
++        const value = Number(literal.replace(/\s/g, ""));
++        if (value >= -2147483648 && value <= 2147483647) {
++            return basic_1.IntegerType.get({ derivedFromConstant: true });
++        }
++        const digits = literal.replace(/\D/g, "").replace(/^0+/, "");
++        return new basic_1.PackedType(digits.length <= 15 ? 8 : 16, 0, { derivedFromConstant: true });
++    }
+ }
+ exports.Constant = Constant;
+ //# sourceMappingURL=constant.js.map
+\ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
-index aa854c7..fa8bacb 100644
+index aa854c7..64b87f8 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
-@@ -101,7 +101,7 @@ class InlineData {
+@@ -101,11 +101,14 @@ class InlineData {
              return new basic_1.CharacterType(type.getLength(), rest);
          }
          else if (type instanceof basic_1.IntegerType) {
@@ -429,6 +498,13 @@ index aa854c7..fa8bacb 100644
          }
          else if (type instanceof basic_1.StringType) {
              return basic_1.StringType.get(rest);
+         }
++        else if (type instanceof basic_1.PackedType) {
++            return new basic_1.PackedType(type.getLength(), type.getDecimals(), rest);
++        }
+         return type;
+     }
+ }
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
 index a2ccbb1..92ff1a7 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
@@ -512,6 +588,56 @@ index a2ccbb1..92ff1a7 100644
      static findTop(node, input) {
          if (node === undefined) {
              return undefined;
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/value_body.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/value_body.js
+index e8245aa..9dab67b 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/value_body.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/value_body.js
+@@ -42,6 +42,7 @@ const let_1 = require("./let");
+ const field_assignment_1 = require("./field_assignment");
+ const basic_1 = require("../../types/basic");
+ const _syntax_input_1 = require("../_syntax_input");
++const _type_utils_1 = require("../_type_utils");
+ class ValueBody {
+     static runSyntax(node, input, targetType) {
+         var _a, _b, _c;
+@@ -127,16 +128,17 @@ class ValueBody {
+             }
+             for (const s of foo.findDirectExpressions(Expressions.Source)) {
+                 const sourceType = source_1.Source.runSyntax(s, input, rowType);
++                const sourceKind = new _type_utils_1.TypeUtils(input.scope).isPackedConstant(sourceType) ? "p" : this.numericKind(sourceType);
+                 if ((rowType instanceof basic_1.StringType || rowType instanceof basic_1.XStringType) && sourceType instanceof basic_1.CharacterType) {
+                     const message = "VALUE, source type CharacterType not compatible with " + rowType.constructor.name;
+                     input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), message));
+                 }
+                 else if (this.isDataObject(s)
+                     && this.numericKind(rowType) !== undefined
+-                    && this.numericKind(sourceType) !== undefined
+-                    && this.numericKind(rowType) !== this.numericKind(sourceType)) {
++                    && sourceKind !== undefined
++                    && this.numericKind(rowType) !== sourceKind) {
+                     // a data object given as a row must be compatible with the row type, it is not converted
+-                    const message = `VALUE, source type ${this.numericKind(sourceType)} not compatible with row type ${this.numericKind(rowType)}`;
++                    const message = `VALUE, source type ${sourceKind} not compatible with row type ${this.numericKind(rowType)}`;
+                     input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), message));
+                 }
+                 else if (this.insertsUsingTableKey(targetType)) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/insert_internal.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/insert_internal.js
+index 7b51c5e..c679b12 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/insert_internal.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/insert_internal.js
+@@ -102,6 +102,12 @@ class InsertInternal {
+             if (sourceType instanceof basic_1.IntegerType && targetType instanceof basic_1.Integer8Type) {
+                 error = true;
+             }
++            else if ((source === null || source === void 0 ? void 0 : source.getChildren().length) === 1
++                && new _type_utils_1.TypeUtils(input.scope).isPackedConstant(sourceType)
++                && (targetType instanceof basic_1.IntegerType || targetType instanceof basic_1.Integer8Type)) {
++                // a literal of type p is not converted into an integer row
++                error = true;
++            }
+             else if (targetType instanceof basic_1.TableType && targetType.isWithHeader() && sourceType instanceof basic_1.TableType) {
+                 // LINES OF into a table with header line, compare the row types
+                 error = new _type_utils_1.TypeUtils(input.scope).isAssignable(sourceType.getRowType(), targetType.getRowType()) === false;
 diff --git a/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js b/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js
 index 5c04caf..8f428bd 100644
 --- a/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js
@@ -1058,10 +1184,61 @@ index 0d2141e..96bbad3 100644
              || !(rest[1].get() instanceof Expressions.CompareOperator)) {
              return undefined;
 diff --git a/node_modules/@abaplint/core/build/src/rules/downport.js b/node_modules/@abaplint/core/build/src/rules/downport.js
-index 46ce2f9..5189177 100644
+index 46ce2f9..382359e 100644
 --- a/node_modules/@abaplint/core/build/src/rules/downport.js
 +++ b/node_modules/@abaplint/core/build/src/rules/downport.js
-@@ -1165,7 +1165,7 @@ ${indentation}`);
+@@ -183,6 +183,7 @@ Current rules:
+ * Some occurrences of string template formatting option ALPHA changed to function module call
+ * SELECT/INSERT/MODIFY/DELETE/UPDATE "," in field list removed, "@" in source/targets removed
+ * OPEN CURSOR/FETCH NEXT CURSOR/CLOSE CURSOR "@" in source/targets removed
++* the ABAP language version of an object, ABAP for Cloud Development or ABAP for Key Users, set to standard ABAP
+ * PARTIALLY IMPLEMENTED removed, it can be quick fixed via rule implement_methods
+ * RAISE EXCEPTION ... MESSAGE
+ * Moving with +=, -=, /=, *=, &&= is expanded
+@@ -210,6 +211,29 @@ Make sure to test the downported code, it might not always be completely correct
+         }
+         return this;
+     }
++    /** the ABAP language version of the object, which abapGit keeps in UNICODE (classes, interfaces) or
++     *  ABAP_LANGU_VERSION: 5 is ABAP for Cloud Development, 2 ABAP for Key Users. 7.02 has neither, and a
++     *  system that has them checks the downported code by their rules, eg. the downport's restore of
++     *  SY-TABIX is a write to a system field ABAP Cloud refuses. The downport is standard ABAP, X */
++    downportLanguageVersion(obj) {
++        const xml = obj.getXMLFile();
++        if (xml === undefined) {
++            return undefined;
++        }
++        const rows = xml.getRawRows();
++        for (let i = 0; i < rows.length; i++) {
++            const match = rows[i].match(/<(UNICODE|ABAP_LANGU_VERSION)>([25])<\/\1>/);
++            if (match === null || match.index === undefined) {
++                continue;
++            }
++            const start = new position_1.Position(i + 1, match.index + match[1].length + 3);
++            const end = new position_1.Position(i + 1, start.getCol() + 1);
++            const fix = edit_helper_1.EditHelper.replaceRange(xml, start, end, "X");
++            const name = match[2] === "5" ? "ABAP for Cloud Development" : "ABAP for Key Users";
++            return issue_1.Issue.atRowRange(xml, i + 1, start.getCol(), end.getCol(), "Language version " + name + ", standard ABAP", this.getMetadata().key, this.conf.severity, fix);
++        }
++        return undefined;
++    }
+     listMainForInclude(filename) {
+         if (filename === undefined) {
+             return [];
+@@ -244,6 +268,12 @@ Make sure to test the downported code, it might not always be completely correct
+         else if (!(lowObj instanceof _abap_object_1.ABAPObject)) {
+             return ret;
+         }
++        if (config.getRelease() === version_1.Release.v702) {
++            const languageVersion = this.downportLanguageVersion(lowObj);
++            if (languageVersion !== undefined) {
++                return [languageVersion];
++            }
++        }
+         const highObj = this.highReg.getObject(lowObj.getType(), lowObj.getName());
+         if (highObj === undefined || !(highObj instanceof _abap_object_1.ABAPObject)) {
+             return ret;
+@@ -1165,7 +1195,7 @@ ${indentation}`);
              const indentation = " ".repeat(high.getFirstToken().getStart().getCol() - 1);
              const firstToken = high.getFirstToken();
              const fix1 = edit_helper_1.EditHelper.insertAt(lowFile, firstToken.getStart(), `DATA ${uniqueName} LIKE LINE OF ${target === null || target === void 0 ? void 0 : target.concatTokens()}.
@@ -1070,7 +1247,7 @@ index 46ce2f9..5189177 100644
              const fix2 = edit_helper_1.EditHelper.replaceRange(lowFile, source.getFirstToken().getStart(), source.getLastToken().getEnd(), uniqueName);
              const fix = edit_helper_1.EditHelper.merge(fix2, fix1);
              return issue_1.Issue.atToken(lowFile, high.getFirstToken(), "Outline APPEND source expression", this.getMetadata().key, this.conf.severity, fix);
-@@ -1221,7 +1221,7 @@ ${indentation}${uniqueName} = ${source.concatTokens()}.\n${indentation}`);
+@@ -1221,7 +1251,7 @@ ${indentation}${uniqueName} = ${source.concatTokens()}.\n${indentation}`);
              const indentation = " ".repeat(high.getFirstToken().getStart().getCol() - 1);
              const firstToken = high.getFirstToken();
              const fix1 = edit_helper_1.EditHelper.insertAt(lowFile, firstToken.getStart(), `DATA ${uniqueName} LIKE LINE OF ${target === null || target === void 0 ? void 0 : target.concatTokens()}.
@@ -1079,7 +1256,7 @@ index 46ce2f9..5189177 100644
              const fix2 = edit_helper_1.EditHelper.replaceRange(lowFile, source.getFirstToken().getStart(), source.getLastToken().getEnd(), uniqueName);
              const fix = edit_helper_1.EditHelper.merge(fix2, fix1);
              return issue_1.Issue.atToken(lowFile, high.getFirstToken(), "Outline INSERT source expression", this.getMetadata().key, this.conf.severity, fix);
-@@ -2903,11 +2903,11 @@ ${indentation}    output = ${uniqueName}.\n`;
+@@ -2903,11 +2933,11 @@ ${indentation}    output = ${uniqueName}.\n`;
                          }
                          else if (b.get() instanceof Expressions.Source) {
                              // note: it wont work with APPEND for Hashed/Sorted Tables, so use INSERT,
