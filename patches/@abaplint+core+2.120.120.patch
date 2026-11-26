@@ -1,5 +1,5 @@
 diff --git a/node_modules/@abaplint/core/build/abaplint.d.ts b/node_modules/@abaplint/core/build/abaplint.d.ts
-index e3ac88b..fda1153 100644
+index e3ac88b..1840cbc 100644
 --- a/node_modules/@abaplint/core/build/abaplint.d.ts
 +++ b/node_modules/@abaplint/core/build/abaplint.d.ts
 @@ -432,6 +432,8 @@ declare class Attributes implements IAttributes {
@@ -77,6 +77,38 @@ index e3ac88b..fda1153 100644
  }
  
  declare class Interface extends ABAPObject {
+@@ -7902,6 +7919,11 @@ declare class SyntaxCheck implements IStatement {
+ 
+ declare type SyntaxInput = {
+     scope: CurrentScope;
++    /** of the innermost CASE around the statement, set by it: the type of its operand, which the values after WHEN
++     * are compared with. undefined for the result of an arithmetic expression */
++    caseOperand?: {
++        type?: AbstractType;
++    };
+     filename: string;
+     issues: Issue[];
+     /** checks which can only run once the full object has been traversed, eg. PERFORM parameters,
+@@ -7909,6 +7931,8 @@ declare type SyntaxInput = {
+     deferred: (() => void)[];
+     /** the statement is inside a LOOP structure */
+     inLoop?: boolean;
++    /** of the TRY, CATCH and CLEANUP blocks around the statement, the innermost one is a CATCH block */
++    inCatch?: boolean;
+ };
+ 
+ export declare class SyntaxLogic {
+@@ -7921,8 +7945,10 @@ export declare class SyntaxLogic {
+     private scope;
+     private loopTables;
+     private loopDepth;
++    private inCatch;
+     private currentMethod;
+     private sortedLines;
++    private readonly caseOperands;
+     private helpers;
+     constructor(reg: IRegistry, object: ABAPObject);
+     run(): ISyntaxResult;
 diff --git a/node_modules/@abaplint/core/build/src/abap/1_lexer/lexer.js b/node_modules/@abaplint/core/build/src/abap/1_lexer/lexer.js
 index 3d4907c..477949c 100644
 --- a/node_modules/@abaplint/core/build/src/abap/1_lexer/lexer.js
@@ -340,10 +372,39 @@ index 244b0b7..eb85e32 100644
      checkSpecialTestMethodCall(method, foundDef) {
          if (method === undefined
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
-index 8af0c79..5af7e91 100644
+index 8af0c79..c56c6fb 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
-@@ -173,6 +173,11 @@ class TypeUtils {
+@@ -48,6 +48,28 @@ class TypeUtils {
+     constructor(scope) {
+         this.scope = scope;
+     }
++    /** false for two elementary types which cannot be compared with each other: a date and a time, and a time stamp
++     * of type utclong with anything but another one or a text of type c or string */
++    hasComparisonType(type1, type2) {
++        if ((type1 instanceof basic_1.DateType && type2 instanceof basic_1.TimeType)
++            || (type1 instanceof basic_1.TimeType && type2 instanceof basic_1.DateType)) {
++            return false;
++        }
++        const other = type1 instanceof basic_1.UTCLongType ? type2 : type2 instanceof basic_1.UTCLongType ? type1 : undefined;
++        return !(other instanceof basic_1.IntegerType
++            || other instanceof basic_1.Integer8Type
++            || other instanceof basic_1.PackedType
++            || other instanceof basic_1.FloatType
++            || other instanceof basic_1.FloatingPointType
++            || other instanceof basic_1.DecFloat16Type
++            || other instanceof basic_1.DecFloat34Type
++            || other instanceof basic_1.DecFloatType
++            || (other instanceof basic_1.NumericType && !(other instanceof ngeneric_type_1.NGenericType))
++            || other instanceof basic_1.HexType
++            || other instanceof basic_1.XStringType
++            || other instanceof basic_1.DateType
++            || other instanceof basic_1.TimeType);
++    }
+     isCharLikeStrict(type) {
+         if (type === undefined) {
+             return false;
+@@ -173,6 +195,11 @@ class TypeUtils {
          }
          return false;
      }
@@ -355,7 +416,7 @@ index 8af0c79..5af7e91 100644
      isOOAssignable(source, target) {
          let sid = source.getIdentifier();
          let tid = target.getIdentifier();
-@@ -291,12 +296,8 @@ class TypeUtils {
+@@ -291,12 +318,8 @@ class TypeUtils {
          if (source2 instanceof basic_1.HexType && this.isCalculated(node2) && source1 instanceof basic_1.IntegerType) {
              return false;
          }
@@ -370,7 +431,7 @@ index 8af0c79..5af7e91 100644
          return true;
      }
      structureContainsString(structure) {
-@@ -512,6 +513,22 @@ class TypeUtils {
+@@ -512,6 +535,22 @@ class TypeUtils {
          if (calculated && strictResult === false) {
              return this.isAssignable(source, target);
          }
@@ -430,10 +491,43 @@ index 24beacc..f8979be 100644
      else if (type instanceof Basic.Integer8Type || type instanceof Basic.FloatType
          || type instanceof Basic.DecFloat16Type || type instanceof Basic.UTCLongType) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
-index 69a0432..8de6a4d 100644
+index 69a0432..c5c2dae 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
-@@ -85,16 +85,7 @@ class Compare {
+@@ -44,6 +44,12 @@ const basic_1 = require("../../types/basic");
+ const _type_utils_1 = require("../_type_utils");
+ const _builtin_1 = require("../_builtin");
+ const _builtin_call_1 = require("../_builtin_call");
++const COMPARISON_OPERATORS = ["=", "EQ", "<>", "NE", "><", "<", "LT", ">", "GT", "<=", "LE", "=<", ">=", "GE", "=>"];
++// built-in numeric functions of one argument, and those with further parameters
++const ONE_ARGUMENT_FUNCTIONS = ["abs", "sign", "ceil", "floor", "trunc", "frac", "acos", "asin", "atan", "cos",
++    "sin", "tan", "cosh", "sinh", "tanh", "exp", "log", "log10", "sqrt"];
++const SEVERAL_PARAMETER_FUNCTIONS = ["ipow", "nmax", "nmin", "round", "rescale"];
++const LENGTH_FUNCTIONS = ["strlen", "xstrlen", "numofchar"];
+ class Compare {
+     static runSyntax(node, input) {
+         var _a;
+@@ -69,14 +75,17 @@ class Compare {
+         if (operandMessage !== undefined) {
+             return;
+         }
+-        const arithmeticMessage = this.checkArithmeticOperands(node, sources, sourceTypes);
++        const arithmeticMessage = this.checkArithmeticOperands(node, sources, sourceTypes, input);
+         if (arithmeticMessage !== undefined) {
+             input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), arithmeticMessage));
+             return;
+         }
+         const typeUtils = new _type_utils_1.TypeUtils(input.scope);
+         const compareOperator = (_a = node.findDirectExpression(Expressions.CompareOperator)) === null || _a === void 0 ? void 0 : _a.concatTokens().toUpperCase();
+-        if (compareOperator === "CS"
++        if (this.lacksComparisonType(node, sourceTypes, typeUtils)) {
++            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), "Incompatible types for comparison"));
++        }
++        else if (compareOperator === "CS"
+             && sourceTypes.length === 2
+             && sourceTypes.some((type) => typeUtils.isCharLikeForCompare(type) === false)) {
+             const message = "CS operands must be character-like (data type C, N, D, T, or STRING)";
+@@ -85,16 +94,7 @@ class Compare {
          else if (node.findDirectExpression(Expressions.CompareOperator)
              && typeUtils.isCompareable(sourceTypes[0], sourceTypes[1], sources[0], sources[1]) === false
              && sourceTypes.length === 2) {
@@ -451,6 +545,115 @@ index 69a0432..8de6a4d 100644
          }
      }
      // a built-in function with a character-like result cannot be the operand of IS [NOT] INITIAL,
+@@ -142,31 +142,51 @@ class Compare {
+         const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
+         return call === undefined ? undefined : _builtin_call_1.BuiltInCall.callName(call);
+     }
+-    // an arithmetic expression can only be compared with a numeric operand or another arithmetic expression,
+-    // a character-like, byte-like, date, time or structured operand is expected to be a syntax error,
+-    // the operand can be made an arithmetic expression with a "+" in front, "+ lv_c"
+-    static checkArithmeticOperands(node, sources, types) {
++    // two operands without a comparison type, eg. a date and a time, also as operand and bound of BETWEEN. The
++    // operators for character-like and byte-like operands, like CS or O, have their own rules
++    static lacksComparisonType(node, types, typeUtils) {
++        var _a;
++        const operator = (_a = node.findDirectExpression(Expressions.CompareOperator)) === null || _a === void 0 ? void 0 : _a.concatTokens().toUpperCase();
+         let pairs = [];
+-        if (node.findDirectExpression(Expressions.CompareOperator) !== undefined && sources.length === 2) {
++        if (operator !== undefined && COMPARISON_OPERATORS.includes(operator) && types.length === 2) {
+             pairs = [[0, 1]];
+         }
+-        else if (node.findDirectTokenByText("BETWEEN") !== undefined && sources.length === 3) {
++        else if (node.findDirectTokenByText("BETWEEN") !== undefined && types.length === 3) {
+             pairs = [[0, 1], [0, 2]];
+         }
+-        for (const [a, b] of pairs) {
+-            for (const [arith, other] of [[a, b], [b, a]]) {
+-                if (this.isArithmetic(sources[arith]) === true
+-                    && this.isArithmetic(sources[other]) === false
+-                    && this.isNonNumeric(types[other]) === true) {
+-                    const operand = sources[other].concatTokens();
+-                    return `Arithmetic expression cannot be compared with non-numeric operand "${operand}", use "+ ${operand}"`;
+-                }
++        return pairs.some(([a, b]) => typeUtils.hasComparisonType(types[a], types[b]) === false);
++    }
++    // an arithmetic expression can only be compared with a numeric operand or another arithmetic expression,
++    // a character-like, byte-like, date, time or structured operand is expected to be a syntax error,
++    // the operand can be made an arithmetic expression with a "+" in front, "+ lv_c". The three operands of
++    // BETWEEN share one calculation, so an arithmetic expression among them applies to the two others
++    static checkArithmeticOperands(node, sources, types, input) {
++        const comparison = node.findDirectExpression(Expressions.CompareOperator) !== undefined && sources.length === 2;
++        const between = node.findDirectTokenByText("BETWEEN") !== undefined && sources.length === 3;
++        if (comparison === false && between === false) {
++            return undefined;
++        }
++        const arithmetic = sources.map(s => this.isArithmetic(s, input));
++        if (arithmetic.includes(true) === false) {
++            return undefined;
++        }
++        for (let i = 0; i < sources.length; i++) {
++            if (arithmetic[i] === true) {
++                continue;
++            }
++            else if (types[i] instanceof basic_1.UTCLongType) {
++                return `A time stamp of type utclong cannot be compared with an arithmetic expression`;
++            }
++            else if (this.isNonNumeric(types[i]) === true) {
++                const operand = sources[i].concatTokens();
++                return `Arithmetic expression cannot be compared with non-numeric operand "${operand}", use "+ ${operand}"`;
+             }
+         }
+         return undefined;
+     }
+-    // "a + b", "- a", "( a * b )", but not "( a )", "a && b" or "a BIT-AND b"
+-    static isArithmetic(source) {
++    // "a + b", "- a", "( a * b )", "ipow( base = a exp = b )" or "abs( a + b )",
++    // but not "( a )", "abs( a )", "a && b" or "a BIT-AND b"
++    static isArithmetic(source, input) {
+         const children = source.getChildren();
+         const first = children[0];
+         if (first instanceof nodes_1.TokenNode) {
+@@ -175,7 +195,7 @@ class Compare {
+                 return true;
+             }
+             else if (str === "(" && children.length === 3 && children[1] instanceof nodes_1.ExpressionNode) {
+-                return this.isArithmetic(children[1]);
++                return this.isArithmetic(children[1], input);
+             }
+         }
+         for (const child of children) {
+@@ -185,7 +205,30 @@ class Compare {
+                 return true;
+             }
+         }
+-        return false;
++        return this.isArithmeticFunction(source, input);
++    }
++    // a built-in numeric function is part of a calculation when it has several parameters, or when its argument
++    // is calculated itself, "abs( a + b )" or "abs( strlen( s ) )". Of a data object it is a value of its own
++    static isArithmeticFunction(source, input) {
++        var _a, _b, _c;
++        const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
++        const name = call === undefined ? undefined : (_a = _builtin_call_1.BuiltInCall.callName(call)) === null || _a === void 0 ? void 0 : _a.toLowerCase();
++        if (call === undefined || name === undefined) {
++            return false;
++        }
++        else if (SEVERAL_PARAMETER_FUNCTIONS.includes(name)) {
++            return true;
++        }
++        else if (ONE_ARGUMENT_FUNCTIONS.includes(name) === false) {
++            return false;
++        }
++        const argument = (_b = call.findDirectExpression(Expressions.MethodCallParam)) === null || _b === void 0 ? void 0 : _b.findDirectExpression(Expressions.Source);
++        if (argument === undefined) {
++            return false;
++        }
++        const inner = (_c = this.builtinCallName(argument, input)) === null || _c === void 0 ? void 0 : _c.toLowerCase();
++        return this.isArithmetic(argument, input)
++            || (inner !== undefined && (ONE_ARGUMENT_FUNCTIONS.includes(inner) || LENGTH_FUNCTIONS.includes(inner)));
+     }
+     static isNonNumeric(type) {
+         return type instanceof basic_1.CharacterType
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/constant.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/constant.js
 index 4258d18..16bc40e 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/constant.js
@@ -621,6 +824,80 @@ index e8245aa..9dab67b 100644
                      input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), message));
                  }
                  else if (this.insertsUsingTableKey(targetType)) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
+index d4e9ca9..3e7ec30 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
+@@ -37,6 +37,7 @@ exports.Case = void 0;
+ exports.checkCaseOperand = checkCaseOperand;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const source_1 = require("../expressions/source");
++const compare_1 = require("../expressions/compare");
+ const _syntax_input_1 = require("../_syntax_input");
+ const _builtin_1 = require("../_builtin");
+ const _object_oriented_1 = require("../_object_oriented");
+@@ -44,10 +45,13 @@ const basic_1 = require("../../types/basic");
+ const version_1 = require("../../../version");
+ class Case {
+     runSyntax(node, input) {
+-        // just recurse
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
+-            source_1.Source.runSyntax(s, input);
++            const type = source_1.Source.runSyntax(s, input);
+             checkCaseOperand(s, input);
++            // an arithmetic expression is calculated on its own, the values after WHEN are compared with its result
++            if (input.caseOperand && compare_1.Compare.isArithmetic(s, input) === false) {
++                input.caseOperand.type = type;
++            }
+         }
+     }
+ }
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/catch.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/catch.js
+index 7b986a8..0423743 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/catch.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/catch.js
+@@ -56,6 +56,10 @@ class Catch {
+             const found = input.scope.existsObject(className);
+             if (found === null || found === void 0 ? void 0 : found.id) {
+                 input.scope.addReference(token, found.id, _reference_1.ReferenceType.ObjectOrientedReference, input.filename);
++                const message = this.checkExceptionClass(className, input);
++                if (message !== undefined) {
++                    input.issues.push((0, _syntax_input_1.syntaxIssue)(input, token, message));
++                }
+             }
+             else if (input.scope.getDDIC().inErrorNamespace(className) === false) {
+                 const extra = { ooName: className, ooType: "Void" };
+@@ -104,6 +108,30 @@ class Catch {
+             }
+         }
+     }
++    // the classes of a CATCH are exception classes, that is CX_ROOT or a subclass of it. A class is only
++    // reported when its superclasses are known up to the last one, a chain ending in a void class is skipped
++    checkExceptionClass(name, input) {
++        var _a;
++        const visited = new Set();
++        let current = input.scope.findClassDefinition(name);
++        if (current === undefined) {
++            return input.scope.findInterfaceDefinition(name)
++                ? `CATCH, ${name} is an interface, not an exception class`
++                : undefined;
++        }
++        while (current !== undefined && visited.has(current.getName().toUpperCase()) === false) {
++            visited.add(current.getName().toUpperCase());
++            const superclass = (_a = current.getSuperClass()) === null || _a === void 0 ? void 0 : _a.toUpperCase();
++            if (current.getName().toUpperCase() === "CX_ROOT" || superclass === "CX_ROOT") {
++                return undefined;
++            }
++            else if (superclass === undefined) {
++                return `CATCH, ${name} is not an exception class, it is not derived from CX_ROOT`;
++            }
++            current = input.scope.findClassDefinition(superclass);
++        }
++        return undefined;
++    }
+     // static type of an inline target: the first class, replaced by each following class that is one of its
+     // super classes; any other following class makes it CX_ROOT, also when the classes share a closer super class
+     inlineType(classNames, input) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/insert_internal.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/insert_internal.js
 index 7b51c5e..c679b12 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/insert_internal.js
@@ -638,6 +915,146 @@ index 7b51c5e..c679b12 100644
              else if (targetType instanceof basic_1.TableType && targetType.isWithHeader() && sourceType instanceof basic_1.TableType) {
                  // LINES OF into a table with header line, compare the row types
                  error = new _type_utils_1.TypeUtils(input.scope).isAssignable(sourceType.getRowType(), targetType.getRowType()) === false;
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/retry.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/retry.js
+new file mode 100644
+index 0000000..96da2de
+--- /dev/null
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/retry.js
+@@ -0,0 +1,14 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.Retry = void 0;
++const _syntax_input_1 = require("../_syntax_input");
++// RETRY restarts the TRY block of the CATCH block it is in, so it is only possible in a CATCH block
++class Retry {
++    runSyntax(node, input) {
++        if (input.inCatch !== true) {
++            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), "RETRY is only allowed in a CATCH block"));
++        }
++    }
++}
++exports.Retry = Retry;
++//# sourceMappingURL=retry.js.map
+\ No newline at end of file
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
+index 5d1d028..84239ea 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
+@@ -36,11 +36,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.When = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const source_1 = require("../expressions/source");
++const _syntax_input_1 = require("../_syntax_input");
++const _type_utils_1 = require("../_type_utils");
+ const case_1 = require("./case");
+ class When {
+     runSyntax(node, input) {
++        var _a;
++        // the values the CASE operand is compared with, "WHEN a OR b"
++        const values = [...node.findDirectExpressions(Expressions.Source),
++            ...node.findDirectExpressions(Expressions.Or).map(o => o.findDirectExpression(Expressions.Source))];
++        const typeUtils = new _type_utils_1.TypeUtils(input.scope);
+         for (const s of node.findAllExpressions(Expressions.Source)) {
+-            source_1.Source.runSyntax(s, input);
++            const type = source_1.Source.runSyntax(s, input);
++            if (values.includes(s) && typeUtils.hasComparisonType((_a = input.caseOperand) === null || _a === void 0 ? void 0 : _a.type, type) === false) {
++                input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), "Incompatible types for comparison"));
++            }
+         }
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
+             (0, case_1.checkCaseOperand)(s, input);
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
+index f848b28..f74d39e 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
+@@ -106,6 +106,7 @@ const call_function_1 = require("./statements/call_function");
+ const clear_1 = require("./statements/clear");
+ const refresh_1 = require("./statements/refresh");
+ const return_1 = require("./statements/return");
++const retry_1 = require("./statements/retry");
+ const free_1 = require("./statements/free");
+ const replace_1 = require("./statements/replace");
+ const get_bit_1 = require("./statements/get_bit");
+@@ -337,12 +338,15 @@ if (Object.keys(map).length === 0) {
+     addToMap(new field_group_1.FieldGroup());
+     addToMap(new editor_call_1.EditorCall());
+     addToMap(new delete_memory_1.DeleteMemory());
++    addToMap(new retry_1.Retry());
+ }
+ // -----------------------------------
+ class SyntaxLogic {
+     constructor(reg, object) {
+         // files the traversal walked into through INCLUDEs, outermost first
+         this.includeStack = [];
++        // the operands of the CASE structures around the statement being traversed, innermost last
++        this.caseOperands = [];
+         this.reg = reg;
+         this.issues = [];
+         this.deferred = [];
+@@ -362,6 +366,7 @@ class SyntaxLogic {
+         this.deferred = [];
+         this.loopTables = new _loop_table_change_1.LoopTableChange();
+         this.loopDepth = 0;
++        this.inCatch = false;
+         this.sortedLines = new _sorted_key_write_1.SortedKeyWrite();
+         this.reg.getDDICReferences().clear(this.object);
+         this.reg.getMSAGReferences().clear(this.object);
+@@ -428,6 +433,10 @@ class SyntaxLogic {
+         this.issues.push(issue);
+     }
+     traverse(node) {
++        const isCase = node instanceof nodes_1.StructureNode && node.get() instanceof Structures.Case;
++        if (isCase) {
++            this.caseOperands.push({});
++        }
+         const loop = node instanceof nodes_1.StructureNode
+             && node.get() instanceof Structures.Loop
+             && this.loopTables.push(node, this.scope);
+@@ -438,6 +447,13 @@ class SyntaxLogic {
+         if (node instanceof nodes_1.StructureNode) {
+             this.sortedLines.enter(node, this.currentFile.getFilename());
+         }
++        const wasInCatch = this.inCatch;
++        if (node.get() instanceof Structures.Catch) {
++            this.inCatch = true;
++        }
++        else if (node.get() instanceof Structures.Try || node.get() instanceof Structures.Cleanup) {
++            this.inCatch = false;
++        }
+         for (const child of node.getChildren()) {
+             const isStructure = child instanceof nodes_1.StructureNode;
+             const isStatement = child instanceof nodes_1.StatementNode;
+@@ -480,6 +496,7 @@ class SyntaxLogic {
+                 this.traverse(child);
+             }
+         }
++        this.inCatch = wasInCatch;
+         if (loop === true) {
+             this.loopTables.pop();
+         }
+@@ -495,6 +512,9 @@ class SyntaxLogic {
+         if (node instanceof nodes_1.StructureNode) {
+             this.sortedLines.leave(node);
+         }
++        if (isCase) {
++            this.caseOperands.pop();
++        }
+     }
+     /**
+      * if this returns true, then the traversal should continue with next child
+@@ -568,10 +588,12 @@ class SyntaxLogic {
+         this.updateSelectionEventScope(node);
+         const input = {
+             scope: this.scope,
++            caseOperand: this.caseOperands[this.caseOperands.length - 1],
+             filename,
+             issues: this.issues,
+             deferred: this.deferred,
+             inLoop: this.loopDepth > 0,
++            inCatch: this.inCatch,
+         };
+         // todo, refactor
+         if (s instanceof Statements.Type) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js b/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js
 index 5c04caf..8f428bd 100644
 --- a/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js
@@ -887,7 +1304,7 @@ index 0000000..c60b64c
 +//# sourceMappingURL=rename_bsp_application.js.map
 \ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/objects/rename/rename_icf_service.js b/node_modules/@abaplint/core/build/src/objects/rename/rename_icf_service.js
-index 4fd155b..c066f22 100644
+index 4fd155b..dc1f2e2 100644
 --- a/node_modules/@abaplint/core/build/src/objects/rename/rename_icf_service.js
 +++ b/node_modules/@abaplint/core/build/src/objects/rename/rename_icf_service.js
 @@ -1,6 +1,42 @@
@@ -933,7 +1350,7 @@ index 4fd155b..c066f22 100644
  const __1 = require("..");
  const renamer_helper_1 = require("./renamer_helper");
  class RenameICFService {
-@@ -38,14 +74,138 @@ class RenameICFService {
+@@ -38,14 +74,139 @@ class RenameICFService {
          const cleanNewName = (_d = (_b = newName.match(/^[^ ]+/)) === null || _b === void 0 ? void 0 : _b[0]) !== null && _d !== void 0 ? _d : newName;
          let changes = [];
          const helper = new renamer_helper_1.RenamerHelper(this.reg);
@@ -1010,7 +1427,8 @@ index 4fd155b..c066f22 100644
 +        const name = namespace.toLowerCase();
 +        const hash = crypto.createHash("sha1").update(parentURL).digest("hex").substring(0, ICF_HASH_LENGTH);
 +        const uri = filename.substring(0, slash + 1) + name.padEnd(ICF_NAME_LENGTH, " ") + hash + ".sicf.xml";
-+        const content = `<?xml version="1.0" encoding="utf-8"?>
++        // abapGit writes every XML file with a UTF-8 byte order mark, xml_bom checks it
++        const content = `\ufeff<?xml version="1.0" encoding="utf-8"?>
 +<abapGit version="v1.0.0" serializer="LCL_OBJECT_SICF" serializer_version="v1.0.0">
 + <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
 +  <asx:values>
