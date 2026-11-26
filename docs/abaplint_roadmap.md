@@ -57,12 +57,12 @@ argument otherwise).
 Reviewed 2026-11-26 against abaplint `main` `fc504b57`: every open issue in this file still behaves on `main` as it
 describes.
 
-Valid code rejected:
-- [ ] [#4742](https://github.com/abaplint/abaplint/issues/4742) a static offset or length beyond a flat field while
-  the other one is a variable (`c+5(off)`, `c+off(6)` with `c TYPE c LENGTH 5`): ABAP is expected to accept it and to
-  decide at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`). The compiler's own check refuses `c+5(off)` too
-  (`src/lower_common.ts`). First of all open work. #4730, #4745 and #4746 change the same code (`_substring.ts`):
-  stack them on its branch
+Valid code rejected: nothing open in abaplint. The last case, a static offset or length beyond a `c` or `x` field
+while the other one is a variable (`c+5(off)`, `c+off(6)` with `c TYPE c LENGTH 5`,
+[#4742](https://github.com/abaplint/abaplint/issues/4742)), is fixed by
+[PR #4759](https://github.com/abaplint/abaplint/pull/4759), open and in the patch: ABAP is expected to accept it and
+to decide at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static.
+- [ ] follow-up in the compiler: its own check (`lowerSubstring` in `src/lower_common.ts`) still refuses `c+5(off)`
 
 [#4726](https://github.com/abaplint/abaplint/issues/4726) is fixed by
 [PR #4727](https://github.com/abaplint/abaplint/pull/4727), in the patch.
@@ -112,7 +112,9 @@ Removed that day, since abaplint reports them:
 Removed that day, since it was no syntax error: a `TRY` without `CATCH` or `CLEANUP` is expected to give only a
 warning. [#4724](https://github.com/abaplint/abaplint/issues/4724), which asked abaplint to report it, is closed.
 
-abaplint accepts these, so the fix goes into abaplint:
+abaplint accepts these, so the fix goes into abaplint. #4730, #4745 and #4746 change the same code as
+[PR #4759](https://github.com/abaplint/abaplint/pull/4759) (`_substring.ts`): while it is open, stack them on its
+branch `substring-variable-part-4742`.
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
   with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-26). Review
   it rather than write our own; not ours, so not in the patch, and the compiler's check stays until a release has it
@@ -193,6 +195,7 @@ PRs the pinned release does not contain, as of 2026-11-26:
 | [#4740](https://github.com/abaplint/abaplint/pull/4740) | `CATCH` of an interface or of a class not derived from `CX_ROOT` is an error ([#4725](https://github.com/abaplint/abaplint/issues/4725)) | merged, not released |
 | [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
 | [#4758](https://github.com/abaplint/abaplint/pull/4758) | `SPLIT ... IN BYTE MODE` takes byte-like operands, and its inline targets are `xstring` ([#4757](https://github.com/abaplint/abaplint/issues/4757)) | open |
+| [#4759](https://github.com/abaplint/abaplint/pull/4759) | a static offset or length beyond a `c` or `x` field is rejected although the other one is a variable ([#4742](https://github.com/abaplint/abaplint/issues/4742)) | open |
 
 Released and out of the patch: `WRITE` of a utclong ([#4700](https://github.com/abaplint/abaplint/issues/4700),
 [PR #4701](https://github.com/abaplint/abaplint/pull/4701), in 2.120.119), which the compiler now compiles.
@@ -241,6 +244,10 @@ No error from check_syntax where ABAP is expected to give one:
 - [ ] [#3041](https://github.com/abaplint/abaplint/issues/3041) `APPEND INITIAL LINE TO sorted_tab`: the docs suggest
   a runtime check (ITAB_ILLEGAL_SORT_ORDER); work out the expected behaviour before any PR, ask to close if runtime
   only
+- [ ] the value of a constant as offset or length is not evaluated: `c+lc_off` or `c+2(lc_len)` reaching beyond the
+  field is expected to be an error (not raised; the test "ok, offset given by a constant" expects none). With
+  [PR #4759](https://github.com/abaplint/abaplint/pull/4759), `c+5(ref->lc_len)`, a constant behind `->`, is
+  accepted too, as if it were a variable
 
 Expected behaviour not worked out yet: [#3398](https://github.com/abaplint/abaplint/issues/3398),
 [#1692](https://github.com/abaplint/abaplint/issues/1692). Dropped:

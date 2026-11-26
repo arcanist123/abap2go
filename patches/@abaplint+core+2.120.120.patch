@@ -520,6 +520,113 @@ index 24beacc..f8979be 100644
      }
      else if (type instanceof Basic.Integer8Type || type instanceof Basic.FloatType
          || type instanceof Basic.DecFloat16Type || type instanceof Basic.UTCLongType) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_substring.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_substring.js
+index d49ccce..97c4a1f 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_substring.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_substring.js
+@@ -35,17 +35,23 @@ var __importStar = (this && this.__importStar) || (function () {
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.substringType = substringType;
+ exports.isFieldSymbolItself = isFieldSymbolItself;
++const nodes_1 = require("../../nodes");
++const tokens_1 = require("../../1_lexer/tokens");
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const basic_1 = require("../../types/basic");
++const class_attribute_1 = require("../../types/class_attribute");
++const _object_oriented_1 = require("../_object_oriented");
+ const _syntax_input_1 = require("../_syntax_input");
+ // The type of a substring with a static offset or length, used for reading and writing positions.
+ // On a character or byte field of fixed length the substring must lie inside the field, else it is
+-// a syntax error. Other types, a dynamic offset or length and "*" (undefined) are left alone, as is
+-// length 0. The offset is applied first, so the length is compared to what remains after the offset.
++// a syntax error, unless the offset or length is a variable: then the bounds are left to the runtime.
++// Other types, a dynamic offset or length and "*" (undefined) are left alone, as is length 0.
++// The offset is applied first, so the length is compared to what remains after the offset.
++// "chain" holds the nodes of the surrounding chain, including both the offset and the length.
+ // A substring of a date, time or numeric text field has type n; its bounds are not checked.
+ // An offset or length on a numeric field (i, int8, p, f, decfloat) is a syntax error, whatever its value,
+ // except a length without offset covering the full packed field, eg. "lv_p(5)" for "lv_p(5) TYPE p".
+-function substringType(context, offset, length, node, input) {
++function substringType(context, offset, length, node, chain, input) {
+     const numericName = numericTypeName(context);
+     if (context instanceof basic_1.PackedType && offset === undefined && length === context.getLength()) {
+         // the offset is checked in a separate call before the length, so this is a length without offset
+@@ -65,6 +71,9 @@ function substringType(context, offset, length, node, input) {
+     const fieldLength = context.getLength();
+     if (offset !== undefined && offset > 0) {
+         if (offset >= fieldLength) {
++            if (hasVariablePart(chain, input)) {
++                return context;
++            }
+             const message = `Offset ${offset} is outside the field of length ${fieldLength}`;
+             input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), message));
+             return basic_1.VoidType.get(_syntax_input_1.CheckSyntaxKey);
+@@ -73,6 +82,9 @@ function substringType(context, offset, length, node, input) {
+     }
+     if (length !== undefined && length > 0) {
+         if (length > fieldLength) {
++            if (hasVariablePart(chain, input)) {
++                return context;
++            }
+             const message = `Length ${length} exceeds the remaining length ${fieldLength} of the field`;
+             input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), message));
+             return basic_1.VoidType.get(_syntax_input_1.CheckSyntaxKey);
+@@ -81,6 +93,37 @@ function substringType(context, offset, length, node, input) {
+     }
+     return context;
+ }
++// true if the offset or the length is given by a variable, a constant counts as static
++function hasVariablePart(chain, input) {
++    return chain.some(node => {
++        if (!(node instanceof nodes_1.ExpressionNode)
++            || !(node.get() instanceof Expressions.FieldOffset || node.get() instanceof Expressions.FieldLength)) {
++            return false;
++        }
++        const field = node.findDirectExpression(Expressions.SimpleFieldChain2);
++        return field !== undefined && isConstant(field, input) === false;
++    });
++}
++// a constant or a component of one, an attribute behind "->" is not resolved here
++function isConstant(field, input) {
++    var _a;
++    const children = field.getChildren();
++    if (children.some(c => c.get() instanceof tokens_1.InstanceArrow)) {
++        return false;
++    }
++    const name = children[0].getFirstToken().getStr();
++    if (children[0].get() instanceof Expressions.ClassName) {
++        const def = input.scope.findObjectDefinition(name);
++        const attribute = (_a = children[2]) === null || _a === void 0 ? void 0 : _a.getFirstToken().getStr();
++        return new _object_oriented_1.ObjectOriented(input.scope).searchConstantName(def, attribute) !== undefined;
++    }
++    const found = input.scope.findVariable(name);
++    if (found === undefined || found instanceof class_attribute_1.ClassAttribute) {
++        return false;
++    }
++    const meta = found.getMeta();
++    return meta.includes("read_only" /* IdentifierMeta.ReadOnly */) && meta.includes("static" /* IdentifierMeta.Static */);
++}
+ // the internal type code the ABAP syntax check names: I, 8, P, F, a (decfloat16), e (decfloat34)
+ function numericTypeName(context) {
+     if (context instanceof basic_1.IntegerType) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/attribute_chain.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/attribute_chain.js
+index 3c71752..10635a4 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/attribute_chain.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/attribute_chain.js
+@@ -123,11 +123,11 @@ class AttributeChain {
+             }
+             else if (child instanceof nodes_1.ExpressionNode && child.get() instanceof Expressions.FieldOffset) {
+                 const offset = field_offset_1.FieldOffset.runSyntax(child, input);
+-                contextType = (0, _substring_1.substringType)(contextType, offset, undefined, child, input);
++                contextType = (0, _substring_1.substringType)(contextType, offset, undefined, child, children, input);
+             }
+             else if (child instanceof nodes_1.ExpressionNode && child.get() instanceof Expressions.FieldLength) {
+                 const length = field_length_1.FieldLength.runSyntax(child, input);
+-                contextType = (0, _substring_1.substringType)(contextType, undefined, length, child, input);
++                contextType = (0, _substring_1.substringType)(contextType, undefined, length, child, children, input);
+             }
+         }
+         return contextType;
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
 index 69a0432..c5c2dae 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
@@ -718,6 +825,26 @@ index 4258d18..16bc40e 100644
  exports.Constant = Constant;
  //# sourceMappingURL=constant.js.map
 \ No newline at end of file
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_chain.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_chain.js
+index 5b27765..ad95ded 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_chain.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_chain.js
+@@ -171,13 +171,13 @@ class FieldChain {
+             else if (current.get() instanceof Expressions.FieldOffset && current instanceof nodes_1.ExpressionNode) {
+                 const offset = field_offset_1.FieldOffset.runSyntax(current, input);
+                 if (!(0, _substring_1.isFieldSymbolItself)(children, i)) {
+-                    context = (0, _substring_1.substringType)(context, offset, undefined, current, input);
++                    context = (0, _substring_1.substringType)(context, offset, undefined, current, children, input);
+                 }
+             }
+             else if (current.get() instanceof Expressions.FieldLength && current instanceof nodes_1.ExpressionNode) {
+                 const length = field_length_1.FieldLength.runSyntax(current, input);
+                 if (!(0, _substring_1.isFieldSymbolItself)(children, i)) {
+-                    context = (0, _substring_1.substringType)(context, undefined, length, current, input);
++                    context = (0, _substring_1.substringType)(context, undefined, length, current, children, input);
+                 }
+             }
+             prev = current.concatTokens();
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
 index aa854c7..64b87f8 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
@@ -739,7 +866,7 @@ index aa854c7..64b87f8 100644
      }
  }
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
-index a2ccbb1..92ff1a7 100644
+index a2ccbb1..2549c4b 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
 @@ -51,6 +51,8 @@ const source_field_1 = require("./source_field");
@@ -792,6 +919,24 @@ index a2ccbb1..92ff1a7 100644
          // the substring is checked, but the type of the whole field is returned
          let substring = context;
          const offset = node.findDirectExpression(Expressions.FieldOffset);
+@@ -177,7 +189,7 @@ class Target {
+             }
+             const value = field_offset_1.FieldOffset.runSyntax(offset, input);
+             if (!(0, _substring_1.isFieldSymbolItself)(children, children.indexOf(offset))) {
+-                substring = (0, _substring_1.substringType)(substring, value, undefined, offset, input);
++                substring = (0, _substring_1.substringType)(substring, value, undefined, offset, children, input);
+             }
+         }
+         const length = node.findDirectExpression(Expressions.FieldLength);
+@@ -189,7 +201,7 @@ class Target {
+             }
+             const value = field_length_1.FieldLength.runSyntax(length, input);
+             if (!(0, _substring_1.isFieldSymbolItself)(children, children.indexOf(length))) {
+-                substring = (0, _substring_1.substringType)(substring, undefined, value, length, input);
++                substring = (0, _substring_1.substringType)(substring, undefined, value, length, children, input);
+             }
+         }
+         if (substring instanceof basic_1.VoidType && !(context instanceof basic_1.VoidType)) {
 @@ -198,6 +210,28 @@ class Target {
          return context;
      }
