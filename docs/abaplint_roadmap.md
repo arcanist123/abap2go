@@ -57,10 +57,12 @@ abaplint accepts these, so the fix goes into abaplint:
   `CX_ROOT` (`src/lower_block.ts`)
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
   with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open
-- [ ] no issue yet: a comparison of kinds without a comparison type, `d = t` or `utclong = i` (`src/lower_cond.ts`)
-- [ ] no issue yet: `utclong` in or against an arithmetic expression, `u + 1` or `u = i + 1` (`src/lower_arith.ts`,
-  `src/lower_cond.ts`)
-- [ ] no issue yet: a subfield of length 0 of a flat field, `c+1(0)` (`src/lower_common.ts`)
+- [ ] [#4728](https://github.com/abaplint/abaplint/issues/4728) a comparison of kinds without a comparison type,
+  `d = t` or `utclong = i` (`src/lower_cond.ts`)
+- [ ] [#4729](https://github.com/abaplint/abaplint/issues/4729) `utclong` in or against an arithmetic expression,
+  `u + 1` or `u = i + 1` (`src/lower_arith.ts`, `src/lower_cond.ts`)
+- [ ] [#4730](https://github.com/abaplint/abaplint/issues/4730) a subfield of length 0 of a flat field, `c+1(0)`
+  (`src/lower_common.ts`)
 - [ ] expected behaviour to work out first: a number literal of more than 31 digits (`src/lower_common.ts`), and
   statements between `CASE` and the first `WHEN` (`src/lower_block.ts`)
 
