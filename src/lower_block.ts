@@ -15,8 +15,6 @@ type Node = abaplint.Nodes.StatementNode | abaplint.Nodes.StructureNode | abapli
  */
 export class BlockLowerer {
   private loops = 0;
-  /** The blocks of the TRYs around the statement being lowered, innermost last: RETRY belongs in a CATCH block. */
-  private readonly handlers: ("try" | "catch" | "cleanup")[] = [];
 
   constructor(private readonly file: abaplint.ABAPFile, private readonly variables: Variables,
       private readonly leaf: (statement: abaplint.Nodes.StatementNode, where: Where) => IRStatement | undefined) {}
@@ -70,10 +68,6 @@ export class BlockLowerer {
         || kind instanceof Statements.Return) {
       return this.leaveStatement(statement, where);
     } else if (kind instanceof Statements.Retry) {
-      // an ABAP syntax error that abaplint does not report yet (abaplint #4723)
-      if (this.handlers[this.handlers.length - 1] !== "catch") {
-        throw new BuildError("RETRY is only allowed in a CATCH block", where);
-      }
       return { kind: "retry" };
     }
     return this.leaf(statement, where);
@@ -181,11 +175,7 @@ export class BlockLowerer {
 
   /** TRY. ... [CATCH cx ... . ...]* [CLEANUP. ...] ENDTRY. */
   private lowerTry(node: abaplint.Nodes.StructureNode): IRStatement {
-    // an ABAP syntax error that abaplint does not report yet (abaplint #4724)
-    if (node.findDirectStructure(Structures.Catch) === undefined && node.findDirectStructure(Structures.Cleanup) === undefined) {
-      throw new BuildError("TRY needs a CATCH or a CLEANUP block", this.where(node));
-    }
-    const body = this.handlerBody("try", node);
+    const body = this.body(node);
     const catches = node.findDirectStructures(Structures.Catch).map(c => {
       const statement = c.findDirectStatement(Statements.Catch)!;
       const where = this.where(statement);
@@ -199,7 +189,7 @@ export class BlockLowerer {
       for (const name of statement.findDirectExpressions(Expressions.ClassName)) {
         catchClasses(this.variables.registry, name.concatTokens(), where).forEach(c => classes.add(c));
       }
-      return { classes: [...classes].sort(), body: this.handlerBody("catch", c) };
+      return { classes: [...classes].sort(), body: this.body(c) };
     });
     const cleanupNode = node.findDirectStructure(Structures.Cleanup);
     let cleanup: IRStatement[] | undefined;
@@ -208,18 +198,9 @@ export class BlockLowerer {
       if (statement.findDirectExpression(Expressions.Target) !== undefined) {
         throw new BuildError("CLEANUP INTO is not supported yet: object references are not compiled", this.where(statement));
       }
-      cleanup = this.handlerBody("cleanup", cleanupNode);
+      cleanup = this.body(cleanupNode);
     }
     return { kind: "try", body, catches, cleanup };
-  }
-
-  private handlerBody(kind: "try" | "catch" | "cleanup", node: abaplint.Nodes.StructureNode): IRStatement[] {
-    this.handlers.push(kind);
-    try {
-      return this.body(node);
-    } finally {
-      this.handlers.pop();
-    }
   }
 
   private loopBody(node: abaplint.Nodes.StructureNode): IRStatement[] {
@@ -249,9 +230,8 @@ export class BlockLowerer {
 
 /**
  * The global classes a CATCH of name catches: the class and all its subclasses in the world, upper case. The
- * runtime raises exceptions by the name of their class, so a CATCH clause is the set of names it matches. name must
- * be a global class derived from CX_ROOT; the exception classes the runtime raises are in the built-in library.
- * Anything else is an ABAP syntax error that abaplint does not report yet (abaplint #4725).
+ * runtime raises exceptions by the name of their class, so a CATCH clause is the set of names it matches. The
+ * exception classes the runtime raises are in the built-in library.
  */
 function catchClasses(registry: abaplint.IRegistry, name: string, where: Where): string[] {
   const upper = name.toUpperCase();
@@ -262,9 +242,7 @@ function catchClasses(registry: abaplint.IRegistry, name: string, where: Where):
     }
   }
   if (!parents.has(upper)) {
-    throw new BuildError(registry.getObject("INTF", upper) !== undefined
-      ? `CATCH ${name}: ${upper} is an interface, not a class derived from CX_ROOT`
-      : `CATCH ${name}: only global exception classes are supported yet`, where);
+    throw new BuildError(`CATCH ${name}: only global exception classes are supported yet`, where);
   }
   const ancestors = (c: string): string[] => {
     const out: string[] = [];
@@ -273,8 +251,5 @@ function catchClasses(registry: abaplint.IRegistry, name: string, where: Where):
     }
     return out;
   };
-  if (!ancestors(upper).includes("CX_ROOT")) {
-    throw new BuildError(`CATCH ${name}: ${upper} is not derived from CX_ROOT`, where);
-  }
   return [...parents.keys()].filter(c => ancestors(c).includes(upper));
 }

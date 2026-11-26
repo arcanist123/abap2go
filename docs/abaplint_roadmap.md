@@ -40,9 +40,10 @@ argument otherwise).
 ## Now: what abap2go has run into
 
 Valid code rejected:
-- [ ] a static offset or length beyond a flat field while the other one is a variable (`c+5(off)`, `c+off(6)` with
-  `c TYPE c LENGTH 5`): ABAP is expected to accept it and to decide at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`). The
-  compiler's own check refuses `c+5(off)` too (`src/lower_common.ts`). Not raised
+- [ ] [#4742](https://github.com/abaplint/abaplint/issues/4742) a static offset or length beyond a flat field while
+  the other one is a variable (`c+5(off)`, `c+off(6)` with `c TYPE c LENGTH 5`): ABAP is expected to accept it and to
+  decide at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`). The compiler's own check refuses `c+5(off)` too
+  (`src/lower_common.ts`)
 
 [#4726](https://github.com/abaplint/abaplint/issues/4726) is fixed by
 [PR #4727](https://github.com/abaplint/abaplint/pull/4727), in the patch.
@@ -54,58 +55,68 @@ without decimals, of length 8 for up to 15 digits (leading zeros not counted) an
 - [ ] follow-up in the compiler, which types number literals itself (`integerLiteral` in `src/lower_common.ts`): it
   takes length 16 for every such `p`
 
-### Invalid syntax to fix, not raised yet
+### Invalid syntax to fix, without a check in the compiler
 
-Found 2026-11-26 while compiling `CASE`, with 2.120.120 and the patch; the compiler has no check of its own for
-these.
+Found 2026-11-26, with 2.120.120 and the patch.
 
-- [ ] an arithmetic expression after `WHEN` (`WHEN a + 1`, `WHEN ipow( base = a exp = 2 )`, `WHEN abs( a + 0 )`) is
-  accepted, while ABAP is expected to allow only a data object or a built-in function of one there. The build still
-  refuses them, as operands it does not compile
-- [ ] `CASE ( a ).`, parentheses around a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), is
-  accepted and compiled as without them, while ABAP is expected to reject it. `CASE ( a + 1 ).` is valid
-- [ ] parentheses around a single operand as the argument of a built-in function (`abs( ( i ) )`,
-  `strlen( ( c ) )`) are accepted, while ABAP is expected to reject them
+- [ ] [#4747](https://github.com/abaplint/abaplint/issues/4747) an arithmetic expression after `WHEN` (`WHEN a + 1`,
+  `WHEN ipow( base = a exp = 2 )`, `WHEN abs( a + 0 )`) is accepted, while ABAP is expected to allow only a data
+  object or a built-in function of one there. The build still refuses them, as operands it does not compile
+- [ ] [#4748](https://github.com/abaplint/abaplint/issues/4748) `CASE ( a ).` and `WHEN ( b ).`, parentheses around
+  a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), are accepted, while ABAP is expected to reject
+  them; the compiler compiles `CASE ( a ).` as without them. `CASE ( a + 1 ).` is valid
+- [ ] [#4749](https://github.com/abaplint/abaplint/issues/4749) parentheses around a single operand as the argument
+  of `strlen( )`, or of `abs( )` in a comparison, are accepted, while ABAP is expected to reject them
+  (`i = abs( ( i ) ).` is valid)
+- [ ] [#4750](https://github.com/abaplint/abaplint/issues/4750) a parameter name for the argument of `abs( )`,
+  `abs( val = i )`, is accepted
 
 ### Syntax checks to move out of the compiler
 
 The compiler still has syntax checks of its own, from before the decision that it does not reimplement the syntax
 check. Each one goes once abaplint reports the case in every form. Compared on 2026-11-26 with 2.120.120 and the
-patch. Removed that day, since abaplint reports them: `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP`
-block, a subfield of a string as a target, and `strlen( )` of an argument that is not character-like.
+patch.
+
+Removed that day, since abaplint reports them:
+- `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block, a subfield of a string as a target, and
+  `strlen( )` of an argument that is not character-like (reported by the release)
+- `RETRY` outside a `CATCH` block ([#4723](https://github.com/abaplint/abaplint/issues/4723),
+  [PR #4739](https://github.com/abaplint/abaplint/pull/4739), in the patch)
+- `CATCH` of an interface or of a class not derived from `CX_ROOT`
+  ([#4725](https://github.com/abaplint/abaplint/issues/4725),
+  [PR #4740](https://github.com/abaplint/abaplint/pull/4740), in the patch)
+- a comparison of kinds without a comparison type, `d = t` or `utclong = i`
+  ([#4728](https://github.com/abaplint/abaplint/issues/4728)), and a non-numeric operand compared with an arithmetic
+  expression ([#4738](https://github.com/abaplint/abaplint/issues/4738);
+  both [PR #4741](https://github.com/abaplint/abaplint/pull/4741), in the patch)
+
+Removed that day, since it was no syntax error: a `TRY` without `CATCH` or `CLEANUP` is expected to give only a
+warning. [#4724](https://github.com/abaplint/abaplint/issues/4724), which asks abaplint to report it, is wrong and to
+be closed.
 
 abaplint accepts these, so the fix goes into abaplint:
-- [ ] [#4723](https://github.com/abaplint/abaplint/issues/4723) `RETRY` outside a `CATCH` block (`src/lower_block.ts`)
-- [ ] [#4724](https://github.com/abaplint/abaplint/issues/4724) `TRY` without `CATCH` or `CLEANUP`
-  (`src/lower_block.ts`)
-- [ ] [#4725](https://github.com/abaplint/abaplint/issues/4725) `CATCH` of an interface or of a class not derived from
-  `CX_ROOT` (`src/lower_block.ts`)
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
   with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-26). Review
   it rather than write our own; not ours, so not in the patch, and the compiler's check stays until a release has it
-- [ ] [#4728](https://github.com/abaplint/abaplint/issues/4728) a comparison of kinds without a comparison type,
-  `d = t` or `utclong = i` (`src/lower_cond.ts`)
-- [ ] [#4729](https://github.com/abaplint/abaplint/issues/4729) `utclong` in or against an arithmetic expression,
-  `u + 1` or `u = i + 1` (`src/lower_arith.ts`, `src/lower_cond.ts`)
+- [ ] [#4729](https://github.com/abaplint/abaplint/issues/4729) `utclong` in an arithmetic expression, `u + 1`
+  (`src/lower_arith.ts`)
 - [ ] [#4730](https://github.com/abaplint/abaplint/issues/4730) a subfield of length 0 of a flat field, `c+1(0)`
   (`src/lower_common.ts`)
-- [ ] a number literal of more than 31 digits (`src/lower_common.ts`): ABAP is expected to give a syntax error, and
-  31 digits are fine. Leading zeros are expected to count and the sign not, while the compiler strips leading zeros
-  before counting. No issue raised yet; not part of [PR #4737](https://github.com/abaplint/abaplint/pull/4737). The
-  literal is also expected to be too long in a `VALUE` addition, which `Constant.runSyntax` does not see
-- [ ] `CASE` without any `WHEN` (`src/lower_block.ts`): ABAP is expected to give a syntax error. Not raised
-- [ ] a subfield of a `utclong` in a reading position, `s = u+1(1)` (`src/lower_common.ts`); abaplint reports
-  subfields of the numeric types. Not raised
-- [ ] static bounds outside a flat field of type `n`, `d` or `t`, `d+8`, `n(5)` (`src/lower_common.ts`); abaplint
-  checks `c` and `x`. Not raised
-- [ ] a non-numeric operand against `ipow( )` or a function of an expression, `c = abs( i + 1 )`, and against an
-  arithmetic expression elsewhere in a `BETWEEN`, `1 BETWEEN c AND i + 1` (`src/lower_cond.ts`); abaplint reports
-  it for operators and signs, between the two sides of a comparison and between the operand of a `BETWEEN` and each
-  bound. Not raised
+- [ ] [#4743](https://github.com/abaplint/abaplint/issues/4743) a number literal of more than 31 digits
+  (`src/lower_common.ts`): leading zeros are expected to count and the sign not, while the compiler strips leading
+  zeros before counting
+- [ ] [#4744](https://github.com/abaplint/abaplint/issues/4744) `CASE` without any `WHEN` (`src/lower_block.ts`):
+  a syntax error is expected in classes, only a warning in a program outside classes, where the compiler's check
+  refuses valid code
+- [ ] [#4745](https://github.com/abaplint/abaplint/issues/4745) a subfield of a `utclong` in a reading position,
+  `s = u+1(1)` (`src/lower_common.ts`)
+- [ ] [#4746](https://github.com/abaplint/abaplint/issues/4746) static bounds outside a flat field of type `n`, `d`
+  or `t`, `d+8`, `n(5)` (`src/lower_common.ts`)
 
-Out of this list: statements between `CASE` and the first `WHEN`. ABAP is expected to give only a warning, so the
-code is valid and abaplint is right to accept it. The compiler refuses it as not supported yet, a gap of the compiler
-([roadmap.md](roadmap.md), "Next").
+Statements between `CASE` and the first `WHEN` are part of
+[#4744](https://github.com/abaplint/abaplint/issues/4744) for classes. In a program outside classes ABAP is expected
+to give only a warning, so the code is valid there. The compiler refuses it as not supported yet, a gap of the
+compiler ([roadmap.md](roadmap.md), "Next").
 
 ## Later: with the compiler step that needs it
 
@@ -158,6 +169,9 @@ PRs the pinned release does not contain, as of 2026-11-26:
 | [#4716](https://github.com/abaplint/abaplint/pull/4716) | `NOT NOT a = 1` does not parse, also in `LOOP`, `DELETE` and `MODIFY … WHERE` ([#4714](https://github.com/abaplint/abaplint/issues/4714)) | merged, not released |
 | [#4727](https://github.com/abaplint/abaplint/pull/4727) | a `d` compared with a built-in function or method result of type `i` (`d = strlen( s )`, `abs( d ) = d`) is rejected as incompatible ([#4726](https://github.com/abaplint/abaplint/issues/4726)); the compiler compiles these functions as comparison operands | merged, not released |
 | [#4737](https://github.com/abaplint/abaplint/pull/4737) | a number literal beyond the range of `i` is typed `p`, not `i`; parameters, `VALUE` rows and `INSERT` rows are checked accordingly ([#4736](https://github.com/abaplint/abaplint/issues/4736)) | open |
+| [#4739](https://github.com/abaplint/abaplint/pull/4739) | `RETRY` outside a `CATCH` block is an error ([#4723](https://github.com/abaplint/abaplint/issues/4723)) | open |
+| [#4740](https://github.com/abaplint/abaplint/pull/4740) | `CATCH` of an interface or of a class not derived from `CX_ROOT` is an error ([#4725](https://github.com/abaplint/abaplint/issues/4725)) | open |
+| [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
 
 Released and out of the patch: `WRITE` of a utclong ([#4700](https://github.com/abaplint/abaplint/issues/4700),
 [PR #4701](https://github.com/abaplint/abaplint/pull/4701), in 2.120.119), which the compiler now compiles.
@@ -172,13 +186,14 @@ abaplint (main `af7440a`, default config, `v757`).
 - [ ] **[#1809](https://github.com/abaplint/abaplint/issues/1809)** a macro of the same name in two methods: the
   second call expands the first definition, `"foo" not found`; macros need scoping by position (keyword
   documentation: a macro is valid from its DEFINE onward). Valid code is expanded wrongly
-- [ ] `INSERT itab.` parses as InsertDatabase (context-free parser); putting it in the InsertInternal grammar is a
-  design question for the abaplint maintainer, not raised. Valid code gets the wrong statement
-- [ ] side finding, no issue: `NEW lcl( )->attr = 1.` gives "Not an object reference, target" for any attribute.
-  Check first that ABAP accepts it; if so, valid code is rejected
+- [ ] [#4755](https://github.com/abaplint/abaplint/issues/4755) `INSERT itab.` parses as InsertDatabase
+  (context-free parser); putting it in the InsertInternal grammar is a design question for the abaplint maintainer.
+  Valid code gets the wrong statement
+- [ ] [#4754](https://github.com/abaplint/abaplint/issues/4754) `NEW lcl( )->attr = 1.` gives "Not an object
+  reference, target" for any attribute
 
-Suggested order: [#1809](https://github.com/abaplint/abaplint/issues/1809) first; `INSERT itab.` after asking the
-abaplint maintainer.
+Suggested order: [#1809](https://github.com/abaplint/abaplint/issues/1809) first;
+[#4755](https://github.com/abaplint/abaplint/issues/4755) after the maintainer's view on the shape.
 
 ### Invalid ABAP accepted
 
@@ -188,11 +203,12 @@ No error from check_syntax where ABAP is expected to give one:
   are not. Overlaps [#2097](https://github.com/abaplint/abaplint/issues/2097) /
   [PR #4635](https://github.com/abaplint/abaplint/pull/4635) (write positions); do it together with
   [PR #4635](https://github.com/abaplint/abaplint/pull/4635)
-- [ ] APPEND (and other index operations) to a generic `ANY TABLE` is expected to be an error, abaplint only checks
-  hashed; the test "ok, APPEND TO generic tables" still expects no error for `ct_any`
-- [ ] a number literal of type `i` passed to a `p` parameter with decimals is expected to be an error (not
-  type-compatible), abaplint accepts it; a literal of type `p` is checked since
-  [PR #4737](https://github.com/abaplint/abaplint/pull/4737). No issue raised
+- [ ] [#4752](https://github.com/abaplint/abaplint/issues/4752) APPEND (and other index operations) to a generic
+  `ANY TABLE` is expected to be an error, abaplint only checks hashed; the test "ok, APPEND TO generic tables" still
+  expects no error for `ct_any`
+- [ ] [#4751](https://github.com/abaplint/abaplint/issues/4751) a number literal of type `i` passed to a `p`
+  parameter with decimals is expected to be an error (not type-compatible), abaplint accepts it; a literal of type
+  `p` is checked since [PR #4737](https://github.com/abaplint/abaplint/pull/4737)
 - [ ] **[#1692](https://github.com/abaplint/abaplint/issues/1692)** PRIVATE SECTION of a global class uses a class
   from `locals_imp`: no error (only the PUBLIC SECTION check exists, "is local to the class pool")
 - [ ] [#895](https://github.com/abaplint/abaplint/issues/895) `CLASS lcl DEFINITION DEFERRED.` and the class never
@@ -246,9 +262,10 @@ is not read. The grammar accepts old and modern forms together, while the syntax
 lengths in `_check_database_work_area.ts`). In modern ABAP every program is Unicode, so non-Unicode-only forms are
 expected to be syntax errors; abaplint accepts them for every `syntax.version`. Following ABAP, this belongs in the
 parser / check_syntax, not in a rule option.
-- [ ] confirmed case: `OPEN DATASET f.` without `FOR ...` and `IN ... MODE`; all OPEN DATASET additions became
-  optional in [66bfba641](https://github.com/abaplint/abaplint/commit/66bfba641)
-  ([PR #3571](https://github.com/abaplint/abaplint/pull/3571)). Ask the maintainer whether that was for old code on
-  purpose, then a check depending on the release rather than undoing it
+- [ ] [#4753](https://github.com/abaplint/abaplint/issues/4753) `OPEN DATASET f.` without `FOR ...` or
+  `IN ... MODE`; all OPEN DATASET additions became optional in
+  [66bfba641](https://github.com/abaplint/abaplint/commit/66bfba641)
+  ([PR #3571](https://github.com/abaplint/abaplint/pull/3571)). The issue asks whether that was for old code on
+  purpose; then a check depending on the program rather than undoing it
 - [ ] inventory first: work out the expected behaviour of the usual non-Unicode-only forms (offset/length on
   structures, old DESCRIBE forms, TRANSLATE ... CODE PAGE, ...), compare with abaplint, raise the gaps as issues

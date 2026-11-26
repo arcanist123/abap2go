@@ -137,10 +137,7 @@ export function lowerComparison(op: IRCompareOp, left: abaplint.Nodes.Expression
   if (isCalculation(left) || isCalculation(right)) {
     return { kind: "compare_calc", op, left: calcOperand(left, variables, where), right: calcOperand(right, variables, where) };
   }
-  const l = comparand(left, variables, where);
-  const r = comparand(right, variables, where);
-  checkComparable(l, r, where);
-  return { kind: "compare", op, left: l, right: r };
+  return { kind: "compare", op, left: comparand(left, variables, where), right: comparand(right, variables, where) };
 }
 
 /**
@@ -156,9 +153,7 @@ export function caseOperand(source: abaplint.Nodes.ExpressionNode, variables: Va
 export function caseValue(operand: IRComparand, source: abaplint.Nodes.ExpressionNode, variables: Variables,
     where: Where): IRSource | IRFunction {
   const value = comparand(source, variables, where);
-  if (operand.kind !== "result") {
-    checkComparable(operand, value, where);
-  } else if (value.type.kind === "utclong") {
+  if (operand.kind === "result" && value.type.kind === "utclong") {
     throw new BuildError(`WHEN ${source.concatTokens()}: a utclong against an arithmetic expression is not supported yet`, where);
   }
   return value;
@@ -232,30 +227,9 @@ function resultType(fn: "abs" | "sqrt", arg: IRType): IRType {
   }
 }
 
-const NUMERIC = new Set<IRType["kind"]>(["i", "int8", "b", "s", "p", "f", "decfloat16", "decfloat34"]);
-
-/**
- * A side of a comparison with an arithmetic expression: the expression, or a single operand, which must be numeric
- * (a text, date, time, byte or time stamp operand is a syntax error there; with a sign it is an expression itself).
- */
+/** A side of a comparison with an arithmetic expression: the expression, or a single operand. */
 function calcOperand(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRExpr {
-  if (isArithmetic(source)) {
-    // a lone function as well: with an arithmetic expression on the other side, it is calculated with it
-    return lowerArithmetic(source, variables, where);
-  }
-  const single = lowerSource(source, variables, where, "comparison of");
-  if (!NUMERIC.has(single.type.kind)) {
-    throw new BuildError(`${source.concatTokens()}: a ${single.type.kind} operand cannot be compared with an arithmetic expression`, where);
-  }
-  return { kind: "operand", source: single };
-}
-
-/** Two kinds without a comparison type are a syntax error: d with t, utclong with anything but c, string, utclong. */
-function checkComparable(left: IRSource | IRFunction, right: IRSource | IRFunction, where: Where): void {
-  const [a, b] = [left.type.kind, right.type.kind];
-  const dateTime = (a === "d" && b === "t") || (a === "t" && b === "d");
-  const utclong = (x: string, y: string) => x === "utclong" && !["c", "string", "utclong"].includes(y);
-  if (dateTime || utclong(a, b) || utclong(b, a)) {
-    throw new BuildError(`a comparison of ${a} with ${b} is not possible: the types have no comparison type`, where);
-  }
+  // a lone function is arithmetic here as well: with an arithmetic expression on the other side, it is calculated with it
+  return isArithmetic(source) ? lowerArithmetic(source, variables, where)
+    : { kind: "operand", source: lowerSource(source, variables, where, "comparison of") };
 }

@@ -171,10 +171,11 @@ Done:
     `decfloat16` field, is a runtime error naming the gap when a `TRY` could read the field (an exception to the
     guiding principle, see [aot_for_abap.md](aot_for_abap.md)); uncaught, it ends the program as the exception does
   - refused: `CATCH … INTO` and `CLEANUP INTO` (object references are not compiled), `CATCH BEFORE UNWIND`, and,
-    as ABAP syntax errors, `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block, `RETRY` outside a
-    `CATCH` block, a `TRY` without `CATCH` or `CLEANUP`, a `CATCH` of a class not derived from `CX_ROOT` (the compiler
-    checks the last three itself, as abaplint does not report them yet: abaplint#4723, abaplint#4724, abaplint#4725);
-    constants and built-in data objects (`abap_true`) as operands
+    as ABAP syntax errors reported by abaplint, `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block,
+    `RETRY` outside a `CATCH` block and a `CATCH` of a class not derived from `CX_ROOT`; constants and built-in data
+    objects (`abap_true`) as operands
+  - a `TRY` without `CATCH` or `CLEANUP` is expected to give only a warning, so it compiles (2026-11-26, before it
+    was refused)
 - built-in functions as comparison operands (2026-11-26, `src/lower_cond.ts`, `runtime/go/abap/function.go`,
   `test/function_operand.test.ts`): `abs( )`, `sqrt( )` and `strlen( )` of a single data object are values with the
   type of their result, compared as data objects are
@@ -206,8 +207,9 @@ Done:
 Next:
 - [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,
   `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as operands of comparisons and `CASE`
-  - statements between `CASE` and the first `WHEN`: ABAP is expected to give only a warning, so the code is valid
-    and is to be compiled, not refused (`src/lower_block.ts`). Work out first whether these statements run
+  - statements between `CASE` and the first `WHEN`: in a program outside classes ABAP is expected to give only a
+    warning, so the code is valid there and is to be compiled, not refused (`src/lower_block.ts`); in classes it is
+    a syntax error (abaplint#4744). Work out first whether these statements run
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the

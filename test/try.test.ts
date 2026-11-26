@@ -404,15 +404,12 @@ ENDTRY.`), /CATCH BEFORE UNWIND is not supported yet/);
   assert.match(refused(`TRY.
     n = 1.
   CATCH if_oo_adt_classrun.
-ENDTRY.`), /IF_OO_ADT_CLASSRUN is an interface/);
+ENDTRY.`), /do not pass the syntax check[\s\S]*IF_OO_ADT_CLASSRUN is an interface/);
   // ABAP syntax errors
-  assert.match(refused(`TRY.
-    n = 1.
-ENDTRY.`), /TRY needs a CATCH or a CLEANUP block/);
   assert.match(refused(`TRY.
     RETRY.
   CATCH cx_root.
-ENDTRY.`), /RETRY is only allowed in a CATCH block/);
+ENDTRY.`), /do not pass the syntax check[\s\S]*RETRY is only allowed in a CATCH block/);
   assert.match(refused(`TRY.
     n = 1.
   CATCH cx_root.
@@ -421,7 +418,7 @@ ENDTRY.`), /RETRY is only allowed in a CATCH block/);
       CLEANUP.
         RETRY.
     ENDTRY.
-ENDTRY.`), /RETRY is only allowed in a CATCH block/);
+ENDTRY.`), /do not pass the syntax check[\s\S]*RETRY is only allowed in a CATCH block/);
   for (const leave of ["RETURN.", "EXIT.", "CONTINUE.", "CHECK n = 1."]) {
     assert.match(refused(`DO 2 TIMES.
   TRY.
@@ -442,4 +439,22 @@ ENDTRY.`), /CX_SY_ZERODIVIDE after the CATCH of its superclass/);
     n = 1.
   CATCH cx_sy_precision_loss.
 ENDTRY.`), /unknown class CX_SY_PRECISION_LOSS/);
+});
+
+// ABAP is expected to give only a warning for it
+test("TRY without CATCH or CLEANUP runs its block, and an exception in it is not caught", () => {
+  const result = run("clas", classrun(`DATA n TYPE i.
+TRY.
+    n = 1.
+    out->write( n ).
+ENDTRY.
+TRY.
+ENDTRY.
+TRY.
+    n = n / 0.
+ENDTRY.
+out->write( 'after' ).`));
+  assert.equal(result.refused, undefined, result.refused);
+  assert.equal(result.stdout, "1 \n");
+  assert.match(result.failed ?? "", /exception CX_SY_ZERODIVIDE not caught/);
 });
