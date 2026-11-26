@@ -206,13 +206,17 @@ abaplint (main `af7440a`, default config, `v757`).
 - [ ] **[#1809](https://github.com/abaplint/abaplint/issues/1809)** a macro of the same name in two methods: the
   second call expands the first definition, `"foo" not found`; macros need scoping by position (keyword
   documentation: a macro is valid from its DEFINE onward). Valid code is expanded wrongly
+- [ ] [#4757](https://github.com/abaplint/abaplint/issues/4757) `SPLIT ... IN BYTE MODE`: byte-like targets are
+  rejected and inline targets are typed `string` instead of `xstring` (character targets are accepted, though an error
+  is expected). `5_syntax/statements/split.ts` does not look at the mode. We offered a PR
 - [ ] [#4755](https://github.com/abaplint/abaplint/issues/4755) `INSERT itab.` parses as InsertDatabase
   (context-free parser); putting it in the InsertInternal grammar is a design question for the abaplint maintainer.
   Valid code gets the wrong statement
 - [ ] [#4754](https://github.com/abaplint/abaplint/issues/4754) `NEW lcl( )->attr = 1.` gives "Not an object
   reference, target" for any attribute
 
-Suggested order: [#1809](https://github.com/abaplint/abaplint/issues/1809) first;
+Suggested order: [#1809](https://github.com/abaplint/abaplint/issues/1809) first, then
+[#4757](https://github.com/abaplint/abaplint/issues/4757);
 [#4755](https://github.com/abaplint/abaplint/issues/4755) after the maintainer's view on the shape.
 
 ### Invalid ABAP accepted
@@ -282,12 +286,20 @@ error). Not part of the source syntax check, dropped: global_class, cloud_types,
 Found 2026-11-22. abaplint has no notion of non-Unicode programs: no config setting, the UCCHECK flag of the program
 is not read. The grammar accepts old and modern forms together, while the syntax check assumes Unicode (e.g. byte
 lengths in `_check_database_work_area.ts`). In modern ABAP every program is Unicode, so non-Unicode-only forms are
-expected to be syntax errors; abaplint accepts them for every `syntax.version`. Following ABAP, this belongs in the
-parser / check_syntax, not in a rule option.
+expected to be syntax errors; abaplint accepts several of them, for every `syntax.version`. Following ABAP, this
+belongs in the parser / check_syntax, not in a rule option.
+
+**Waiting for the maintainer** (asked 2026-11-26 in
+[a comment on #4753](https://github.com/abaplint/abaplint/issues/4753#issuecomment-7196231659)): either non-Unicode-only
+forms are errors everywhere, or the Unicode flag of the program (UCCHECK) or a config setting decides, with Unicode as
+the default. No fix and no further issue here before the answer.
+
 - [ ] [#4753](https://github.com/abaplint/abaplint/issues/4753) `OPEN DATASET f.` without `FOR ...` or
-  `IN ... MODE`; all OPEN DATASET additions became optional in
+  `IN ... MODE`; with no addition at all it parses since
   [66bfba641](https://github.com/abaplint/abaplint/commit/66bfba641)
-  ([PR #3571](https://github.com/abaplint/abaplint/pull/3571)). The issue asks whether that was for old code on
-  purpose; then a check depending on the program rather than undoing it
-- [ ] inventory first: work out the expected behaviour of the usual non-Unicode-only forms (offset/length on
-  structures, old DESCRIBE forms, TRANSLATE ... CODE PAGE, ...), compare with abaplint, raise the gaps as issues
+  ([PR #3571](https://github.com/abaplint/abaplint/pull/3571)), which adds a test for it
+- [ ] also accepted, named in the comment: `DESCRIBE FIELD ... LENGTH` and `DESCRIBE DISTANCE` without
+  `IN ... MODE`, and an offset/length that reaches past the character-like start of a structure. Already errors:
+  `CONCATENATE` of byte-like fields without `IN BYTE MODE`, and `TRANSLATE ... CODE PAGE` (does not parse)
+- [ ] rest of the inventory: work out the expected behaviour of the other non-Unicode-only forms, compare with
+  abaplint
