@@ -264,6 +264,34 @@ index 203e4d2..2e0f8e7 100644
          return another;
      }
  }
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js
+index 449a5e8..484ac84 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js
+@@ -80,7 +80,22 @@ class BuiltInCall {
+     // the call has a single argument, without a parameter name, that is a data object and not an expression
+     static hasDataObjectArgument(call) {
+         var _a;
+-        const argument = (_a = call.findDirectExpression(Expressions.MethodCallParam)) === null || _a === void 0 ? void 0 : _a.findDirectExpression(Expressions.Source);
++        return this.isDataObject((_a = call.findDirectExpression(Expressions.MethodCallParam)) === null || _a === void 0 ? void 0 : _a.findDirectExpression(Expressions.Source));
++    }
++    // the arguments of the call, unnamed or named, "abs( a )" or "ipow( base = a exp = 2 )"
++    static callArguments(call) {
++        var _a;
++        const param = call.findDirectExpression(Expressions.MethodCallParam);
++        const unnamed = param === null || param === void 0 ? void 0 : param.findDirectExpression(Expressions.Source);
++        if (unnamed !== undefined) {
++            return [unnamed];
++        }
++        return (((_a = param === null || param === void 0 ? void 0 : param.findDirectExpression(Expressions.ParameterListS)) === null || _a === void 0 ? void 0 : _a.findDirectExpressions(Expressions.ParameterS)) || [])
++            .map(p => p.findDirectExpression(Expressions.Source))
++            .filter((s) => s !== undefined);
++    }
++    // a data object and not an expression
++    static isDataObject(argument) {
+         const children = (argument === null || argument === void 0 ? void 0 : argument.getChildren()) || [];
+         // a literal or a text symbol, text-001
+         if (children.length === 1
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_current_scope.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_current_scope.js
 index 1c14059..5aaf579 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_current_scope.js
@@ -1000,18 +1028,24 @@ index e8245aa..9dab67b 100644
                  }
                  else if (this.insertsUsingTableKey(targetType)) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
-index d4e9ca9..3e7ec30 100644
+index d4e9ca9..11142bd 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
-@@ -37,6 +37,7 @@ exports.Case = void 0;
+@@ -34,9 +34,13 @@ var __importStar = (this && this.__importStar) || (function () {
+ })();
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.Case = void 0;
++exports.parenthesized = parenthesized;
  exports.checkCaseOperand = checkCaseOperand;
  const Expressions = __importStar(require("../../2_statements/expressions"));
++const nodes_1 = require("../../nodes");
++const _builtin_call_1 = require("../_builtin_call");
  const source_1 = require("../expressions/source");
 +const compare_1 = require("../expressions/compare");
  const _syntax_input_1 = require("../_syntax_input");
  const _builtin_1 = require("../_builtin");
  const _object_oriented_1 = require("../_object_oriented");
-@@ -44,10 +45,13 @@ const basic_1 = require("../../types/basic");
+@@ -44,14 +48,77 @@ const basic_1 = require("../../types/basic");
  const version_1 = require("../../../version");
  class Case {
      runSyntax(node, input) {
@@ -1019,6 +1053,11 @@ index d4e9ca9..3e7ec30 100644
          for (const s of node.findDirectExpressions(Expressions.Source)) {
 -            source_1.Source.runSyntax(s, input);
 +            const type = source_1.Source.runSyntax(s, input);
++            const inner = parenthesized(s);
++            if (inner !== undefined && isCalculation(inner, input) === false) {
++                const message = "Parentheses after CASE only around a calculation, not around a single operand";
++                input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), message));
++            }
              checkCaseOperand(s, input);
 +            // an arithmetic expression is calculated on its own, the values after WHEN are compared with its result
 +            if (input.caseOperand && compare_1.Compare.isArithmetic(s, input) === false) {
@@ -1027,6 +1066,65 @@ index d4e9ca9..3e7ec30 100644
          }
      }
  }
+ exports.Case = Case;
++// the source inside the parentheses when the source is exactly "( ... )"
++function parenthesized(source) {
++    const children = source.getChildren();
++    if (children.length === 3
++        && children[0] instanceof nodes_1.TokenNode && children[0].getFirstToken().getStr() === "("
++        && children[1] instanceof nodes_1.ExpressionNode && children[1].get() instanceof Expressions.Source) {
++        return children[1];
++    }
++    return undefined;
++}
++// "a + 1", "- a", "BIT-NOT x", "x BIT-AND y", or a built-in numeric function of a calculated argument,
++// "abs( a + 1 )", "strlen( lcl=>get( ) )", "ipow( base = abs( a ) exp = 2 )". Not a single operand: a data object,
++// a method call, a constructor or table expression, a built-in function of data objects only, or a string
++// expression, "( a )", "( lcl=>get( a + 1 ) )", "( CONV i( a + 1 ) )", "( strlen( s ) )" or "( c && s )"
++function isCalculation(source, input) {
++    const inner = parenthesized(source);
++    if (inner !== undefined) {
++        return isCalculation(inner, input);
++    }
++    const children = source.getChildren();
++    const first = children[0];
++    if (first instanceof nodes_1.TokenNode && ["+", "-"].includes(first.getFirstToken().getStr())) {
++        return true;
++    }
++    else if (first instanceof nodes_1.TokenNode && /^BIT-NOT /i.test(source.concatTokens())) {
++        // the lexer splits BIT-NOT into three tokens
++        return true;
++    }
++    else if (children.some(c => c.get() instanceof Expressions.ArithOperator)) {
++        return true;
++    }
++    const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
++    return call !== undefined
++        && _builtin_call_1.BuiltInCall.isNumeric(call)
++        && _builtin_call_1.BuiltInCall.callArguments(call).some(a => isCalculatedArgument(a, input));
++}
++// an argument that makes a built-in function a calculation: anything but a data object or a string expression
++function isCalculatedArgument(argument, input) {
++    var _a, _b;
++    const inner = parenthesized(argument);
++    if (inner !== undefined) {
++        return isCalculation(inner, input);
++    }
++    else if (_builtin_call_1.BuiltInCall.isDataObject(argument)) {
++        return false;
++    }
++    const children = argument.getChildren();
++    if (children.some(c => c instanceof nodes_1.TokenNode && ["&", "&&"].includes(c.getFirstToken().getStr()))
++        || ((_a = children[0]) === null || _a === void 0 ? void 0 : _a.get()) instanceof Expressions.StringTemplate
++        || ["BOOLC", "XSDBOOL"].includes((_b = children[0]) === null || _b === void 0 ? void 0 : _b.getFirstToken().getStr().toUpperCase())) {
++        return false;
++    }
++    const call = _builtin_call_1.BuiltInCall.fromSource(argument, input);
++    return call === undefined || _builtin_call_1.BuiltInCall.isNumeric(call);
++}
+ // Before 7.40 SP02 the operands of CASE and WHEN are enhanced functional operand positions: besides
+ // data objects and functional methods, only built-in functions with exactly one unnamed argument are allowed
+ function checkCaseOperand(source, input) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/catch.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/catch.js
 index 7b986a8..0423743 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/catch.js
@@ -1161,15 +1259,20 @@ index 2964ea7..dac7539 100644
  //# sourceMappingURL=split.js.map
 \ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
-index 5d1d028..84239ea 100644
+index 5d1d028..8b7ab64 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
-@@ -36,11 +36,21 @@ Object.defineProperty(exports, "__esModule", { value: true });
+@@ -35,17 +35,62 @@ var __importStar = (this && this.__importStar) || (function () {
+ Object.defineProperty(exports, "__esModule", { value: true });
  exports.When = void 0;
  const Expressions = __importStar(require("../../2_statements/expressions"));
++const nodes_1 = require("../../nodes");
  const source_1 = require("../expressions/source");
++const compare_1 = require("../expressions/compare");
 +const _syntax_input_1 = require("../_syntax_input");
 +const _type_utils_1 = require("../_type_utils");
++const _builtin_1 = require("../_builtin");
++const _builtin_call_1 = require("../_builtin_call");
  const case_1 = require("./case");
  class When {
      runSyntax(node, input) {
@@ -1178,15 +1281,53 @@ index 5d1d028..84239ea 100644
 +        const values = [...node.findDirectExpressions(Expressions.Source),
 +            ...node.findDirectExpressions(Expressions.Or).map(o => o.findDirectExpression(Expressions.Source))];
 +        const typeUtils = new _type_utils_1.TypeUtils(input.scope);
++        const calculated = [];
          for (const s of node.findAllExpressions(Expressions.Source)) {
 -            source_1.Source.runSyntax(s, input);
 +            const type = source_1.Source.runSyntax(s, input);
-+            if (values.includes(s) && typeUtils.hasComparisonType((_a = input.caseOperand) === null || _a === void 0 ? void 0 : _a.type, type) === false) {
++            if (values.includes(s) === false) {
++                continue;
++            }
++            const message = this.checkCalculation(s, input);
++            if (message !== undefined) {
++                calculated.push(s);
++                input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), message));
++            }
++            else if (typeUtils.hasComparisonType((_a = input.caseOperand) === null || _a === void 0 ? void 0 : _a.type, type) === false) {
 +                input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), "Incompatible types for comparison"));
 +            }
          }
          for (const s of node.findDirectExpressions(Expressions.Source)) {
-             (0, case_1.checkCaseOperand)(s, input);
+-            (0, case_1.checkCaseOperand)(s, input);
++            if (calculated.includes(s) === false) {
++                (0, case_1.checkCaseOperand)(s, input);
++            }
+         }
+     }
++    // a value after WHEN cannot be calculated, unlike the operand of CASE: no arithmetic expression, no
++    // parentheses, and of the numeric built-in functions only those with one unnamed argument, which is a data object
++    checkCalculation(source, input) {
++        if (compare_1.Compare.isArithmetic(source, input)) {
++            return "Arithmetic expression not allowed after WHEN";
++        }
++        const first = source.getChildren()[0];
++        if (first instanceof nodes_1.TokenNode && first.getFirstToken().getStr() === "(") {
++            return "Parentheses not allowed after WHEN";
++        }
++        const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
++        if (call === undefined || _builtin_call_1.BuiltInCall.isNumeric(call) === false) {
++            return undefined;
++        }
++        const name = _builtin_call_1.BuiltInCall.callName(call);
++        if (_builtin_1.BuiltIn.hasUnnamedArgument(name) && _builtin_call_1.BuiltInCall.hasDataObjectArgument(call)) {
++            return undefined;
++        }
++        return `Built-in function "${name}" not allowed after WHEN, only a function of a data object`;
++    }
+ }
+ exports.When = When;
+ //# sourceMappingURL=when.js.map
+\ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
 index f848b28..f74d39e 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js

@@ -1,9 +1,10 @@
 #!/bin/sh
 # Regenerates patches/@abaplint+core+<version>.patch: the abaplint release abap2go depends on, plus every
 # abaplint PR by the abap2go author that the release does not contain yet (open PRs, and merged PRs that are
-# not released), plus the waiting branches of the fork listed in patches/abaplint-branches.txt (fixes not
-# opened upstream yet, see docs/abaplint_roadmap.md). Each one is merged into a scratch worktree of the
-# abaplint checkout, so the checkout itself is left alone. When both lists come out empty, delete the patch and
+# not released), plus the open waiting PRs on the author's fork (fixes that need the code of an open upstream PR
+# and so cannot go upstream yet, see docs/abaplint_roadmap.md, "Waiting PRs on the fork"). Each one is merged into
+# a scratch worktree of the abaplint checkout, so the checkout itself is left alone. The upstream PRs are merged
+# first, then the waiting PRs in the order they were opened. When both lists come out empty, delete the patch and
 # the postinstall hook.
 #
 # usage: scripts/abaplint-patch.sh <abaplint checkout> [<version>]
@@ -18,7 +19,8 @@ version=${2:-$(cd "$root" && node -p "require('./package.json').dependencies['@a
 work=$(mktemp -d)
 trap 'git -C "$repo" worktree remove --force "$work/abl" 2>/dev/null; rm -rf "$work"' EXIT
 
-git -C "$repo" fetch -q origin --tags
+upstream=https://github.com/abaplint/abaplint.git
+git -C "$repo" fetch -q "$upstream" --tags
 git -C "$repo" worktree add -q --detach "$work/abl" "v$version"
 cd "$work/abl/packages/core"
 npm install --no-audit --no-fund -s >/dev/null
@@ -33,27 +35,28 @@ prs=$(gh pr list -R abaplint/abaplint --author "$author" --state all --limit 500
   done | sort -n)
 echo "PRs not in $version: $(echo $prs)"
 for n in $prs; do
-  git fetch -q origin "pull/$n/head:abap2go-pr$n"
+  git fetch -q "$upstream" "pull/$n/head:abap2go-pr$n"
   git -c user.name=abap2go -c user.email=abap2go@invalid merge -q --no-edit "abap2go-pr$n" ||
     { echo "PR $n does not merge cleanly onto $version"; exit 1; }
   git branch -q -D "abap2go-pr$n"
 done
-branches=$(grep -v '^#' "$root/patches/abaplint-branches.txt" 2>/dev/null | tr -d '\r' | grep . || true)
-echo "waiting branches: $(echo $branches)"
-for b in $branches; do
-  git fetch -q "https://github.com/$author/abaplint.git" "$b:abap2go-branch"
-  git -c user.name=abap2go -c user.email=abap2go@invalid merge -q --no-edit abap2go-branch ||
-    { echo "branch $b does not merge cleanly onto $version and the PRs"; exit 1; }
-  git branch -q -D abap2go-branch
+fork=https://github.com/$author/abaplint.git
+waiting=$(gh pr list -R "$author/abaplint" --state open --limit 100 --json number -q '.[].number' | sort -n)
+echo "waiting PRs on the fork: $(echo $waiting)"
+for n in $waiting; do
+  git fetch -q "$fork" "pull/$n/head:abap2go-fork$n"
+  git -c user.name=abap2go -c user.email=abap2go@invalid merge -q --no-edit "abap2go-fork$n" ||
+    { echo "fork PR $n does not merge cleanly onto $version and the upstream PRs"; exit 1; }
+  git branch -q -D "abap2go-fork$n"
 done
-[ -z "$prs$branches" ] || npx mocha --reporter dot >/dev/null || { echo "abaplint tests fail with the PRs and branches merged"; exit 1; }
+[ -z "$prs$waiting" ] || npx mocha --reporter dot >/dev/null || { echo "abaplint tests fail with the PRs merged"; exit 1; }
 build patched
 
 cd "$root"
 rm -rf node_modules/@abaplint/core && npm install --no-audit --no-fund --ignore-scripts -s
 rm -f patches/@abaplint+core+*.patch
-if [ -z "$prs$branches" ]; then echo "nothing to patch: remove the postinstall hook and patch-package"; exit 0; fi
-# copy only the published files the PRs and branches change, so a local build's other differences stay out of the patch
+if [ -z "$prs$waiting" ]; then echo "nothing to patch: remove the postinstall hook and patch-package"; exit 0; fi
+# copy only the published files the PRs change, so a local build's other differences stay out of the patch
 (cd "$work/patched" && find src -name '*.js'; echo abaplint.d.ts) | while read -r f; do
   if ! cmp -s "$work/pristine/$f" "$work/patched/$f"; then
     mkdir -p "$(dirname "node_modules/@abaplint/core/build/$f")"
@@ -61,4 +64,5 @@ if [ -z "$prs$branches" ]; then echo "nothing to patch: remove the postinstall h
   fi
 done
 npx patch-package @abaplint/core
-{ [ -z "$prs" ] || echo "$prs" | sed 's/^/abaplint#/'; } > patches/abaplint-prs.txt
+{ [ -z "$prs" ] || echo "$prs" | sed 's/^/abaplint#/'
+  [ -z "$waiting" ] || echo "$waiting" | sed "s|^|$author/abaplint#|"; } > patches/abaplint-prs.txt
