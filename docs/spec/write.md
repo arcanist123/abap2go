@@ -126,7 +126,9 @@ How outputs are placed on the line (open-abap-gui's list processor, ported in
   an output, so `` WRITE ``. WRITE 'b'. `` gives ` b`
 - a line that holds only blanks is not output (the default of `SET BLANK LINES`): `WRITE / ''. WRITE / 'x'.`
   outputs only `x`
-- a number literal is an i: `WRITE 1000.` outputs `     1.000 ` (default settings)
+- a number literal is an i: `WRITE 1000.` outputs `     1.000 ` (default settings). Beyond the range of i it is a
+  p without decimals ([comparison.md](comparison.md), "Literals and constructor expressions"), so `WRITE
+  3000000000.` takes 16 characters and a literal of 16 digits or more takes 32
 
 ## The user setup file
 

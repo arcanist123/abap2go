@@ -211,12 +211,12 @@ Done:
 - parentheses around a single data object (2026-11-26): `( c )` is the data object `c`, not an arithmetic
   expression, in moves and comparisons. Before, it was calculated, so `n = ( c )` and `( c ) = i` could give another
   result, and `( c ) = c2` was refused
+- number literals beyond `i` (2026-11-26, `src/lower_common.ts`, `test/build.test.ts`): a `p` of length 8 for up to
+  15 digits, leading zeros not counted, and of length 16 above (abaplint#4736). Before, every one had length 16, so
+  `WRITE` of such a literal of up to 15 digits took 32 characters instead of 16
 
 Next, first what is refused or mistyped although it is valid ABAP and within the compiled scope (2026-11-26; none of
 it waits for abaplint, see [abaplint_roadmap.md](abaplint_roadmap.md), "Now"):
-- [ ] number literals beyond `i`: `integerLiteral` (`src/lower_common.ts`) types each one `p` of length 16, while it
-  is expected to have length 8 for up to 15 digits, leading zeros not counted, and length 16 above (abaplint#4736).
-  Test what depends on the length
 - [ ] `CASE` in a program outside classes without any `WHEN`, or with statements before the first one: ABAP is
   expected to give only a warning, so the code is valid there and is to be compiled, not refused
   (`src/lower_block.ts`); in classes it is a syntax error (abaplint#4744). Work out first whether these statements
