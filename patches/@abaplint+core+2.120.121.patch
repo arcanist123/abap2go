@@ -314,6 +314,117 @@ index 244b0b7..eb85e32 100644
      // the fixture methods of a test class are called by ABAP Unit only, returns the message otherwise
      checkSpecialTestMethodCall(method, foundDef) {
          if (method === undefined
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_parentheses.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_parentheses.js
+new file mode 100644
+index 0000000..0ecd44f
+--- /dev/null
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_parentheses.js
+@@ -0,0 +1,104 @@
++"use strict";
++var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    var desc = Object.getOwnPropertyDescriptor(m, k);
++    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
++      desc = { enumerable: true, get: function() { return m[k]; } };
++    }
++    Object.defineProperty(o, k2, desc);
++}) : (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    o[k2] = m[k];
++}));
++var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
++    Object.defineProperty(o, "default", { enumerable: true, value: v });
++}) : function(o, v) {
++    o["default"] = v;
++});
++var __importStar = (this && this.__importStar) || (function () {
++    var ownKeys = function(o) {
++        ownKeys = Object.getOwnPropertyNames || function (o) {
++            var ar = [];
++            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
++            return ar;
++        };
++        return ownKeys(o);
++    };
++    return function (mod) {
++        if (mod && mod.__esModule) return mod;
++        var result = {};
++        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
++        __setModuleDefault(result, mod);
++        return result;
++    };
++})();
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.parenthesized = parenthesized;
++exports.checkOperandParentheses = checkOperandParentheses;
++const Expressions = __importStar(require("../2_statements/expressions"));
++const nodes_1 = require("../nodes");
++const basic_1 = require("../types/basic");
++const _builtin_1 = require("./_builtin");
++const _builtin_call_1 = require("./_builtin_call");
++const _syntax_input_1 = require("./_syntax_input");
++// the source inside the parentheses when the source is exactly "( ... )"
++function parenthesized(source) {
++    const children = source.getChildren();
++    if (children.length === 3
++        && children[0] instanceof nodes_1.TokenNode && children[0].getFirstToken().getStr() === "("
++        && children[1] instanceof nodes_1.ExpressionNode && children[1].get() instanceof Expressions.Source) {
++        return children[1];
++    }
++    return undefined;
++}
++function withoutParentheses(source) {
++    const inner = parenthesized(source);
++    return inner === undefined ? source : withoutParentheses(inner);
++}
++// Outside of a calculation, in a comparison or after CASE, a data object as the argument of a numeric function cannot
++// be in parentheses, "abs( ( a ) ) = 1", while "abs( ( a ) ) = b + 1" is a calculation. The operands share the
++// calculation, so one of them being calculated is enough
++function checkOperandParentheses(operands, input) {
++    var _a, _b;
++    if (operands.some(o => isCalculationOperand(o, input))) {
++        return;
++    }
++    for (const operand of operands) {
++        const call = _builtin_call_1.BuiltInCall.fromSource(withoutParentheses(operand), input);
++        const name = call === undefined ? undefined : _builtin_call_1.BuiltInCall.callName(call);
++        const parameter = (_a = _builtin_1.BuiltIn.searchBuiltin(name === null || name === void 0 ? void 0 : name.toUpperCase())) === null || _a === void 0 ? void 0 : _a.getParameters().getImporting()[0];
++        if (call === undefined
++            || _builtin_1.BuiltIn.hasUnnamedArgument(name) === false
++            || !((parameter === null || parameter === void 0 ? void 0 : parameter.getType()) instanceof basic_1.NumericGenericType)) {
++            continue;
++        }
++        const argument = (_b = call.findDirectExpression(Expressions.MethodCallParam)) === null || _b === void 0 ? void 0 : _b.findDirectExpression(Expressions.Source);
++        const inner = argument === undefined ? undefined : parenthesized(argument);
++        if (inner !== undefined && _builtin_call_1.BuiltInCall.isDataObject(withoutParentheses(inner))) {
++            const message = `Parentheses around the argument of "${name}" are only allowed in a calculation`;
++            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, argument.getFirstToken(), message));
++        }
++    }
++}
++// an arithmetic expression, or a numeric function which is more than a function of a single data object,
++// "abs( a + 1 )", "abs( lcl=>get( ) )", "strlen( s && s )" or "ipow( base = a exp = 2 )"
++function isCalculationOperand(source, input) {
++    var _a;
++    const operand = withoutParentheses(source);
++    const children = operand.getChildren();
++    const first = children[0];
++    if (first instanceof nodes_1.TokenNode && ["+", "-"].includes(first.getFirstToken().getStr())) {
++        return true;
++    }
++    else if (children.some(c => c.get() instanceof Expressions.ArithOperator
++        && c instanceof nodes_1.ExpressionNode && c.concatTokens().toUpperCase().startsWith("BIT-") === false)) {
++        return true;
++    }
++    const call = _builtin_call_1.BuiltInCall.fromSource(operand, input);
++    if (call === undefined || _builtin_call_1.BuiltInCall.isNumeric(call) === false) {
++        return false;
++    }
++    const argument = (_a = call.findDirectExpression(Expressions.MethodCallParam)) === null || _a === void 0 ? void 0 : _a.findDirectExpression(Expressions.Source);
++    return argument === undefined || _builtin_call_1.BuiltInCall.isDataObject(withoutParentheses(argument)) === false;
++}
++//# sourceMappingURL=_parentheses.js.map
+\ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
 index 5af7e91..c56c6fb 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
@@ -360,6 +471,97 @@ index f17395d..74b4adf 100644
          }
          else if (type instanceof Types.StringType) {
              type = Types.StringType.get(data);
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_builtin_parentheses.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_builtin_parentheses.js
+new file mode 100644
+index 0000000..a9567fb
+--- /dev/null
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_builtin_parentheses.js
+@@ -0,0 +1,84 @@
++"use strict";
++var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    var desc = Object.getOwnPropertyDescriptor(m, k);
++    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
++      desc = { enumerable: true, get: function() { return m[k]; } };
++    }
++    Object.defineProperty(o, k2, desc);
++}) : (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    o[k2] = m[k];
++}));
++var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
++    Object.defineProperty(o, "default", { enumerable: true, value: v });
++}) : function(o, v) {
++    o["default"] = v;
++});
++var __importStar = (this && this.__importStar) || (function () {
++    var ownKeys = function(o) {
++        ownKeys = Object.getOwnPropertyNames || function (o) {
++            var ar = [];
++            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
++            return ar;
++        };
++        return ownKeys(o);
++    };
++    return function (mod) {
++        if (mod && mod.__esModule) return mod;
++        var result = {};
++        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
++        __setModuleDefault(result, mod);
++        return result;
++    };
++})();
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.checkBuiltinParentheses = checkBuiltinParentheses;
++const Expressions = __importStar(require("../../2_statements/expressions"));
++const nodes_1 = require("../../nodes");
++const basic_1 = require("../../types/basic");
++const _syntax_input_1 = require("../_syntax_input");
++// the arguments of a built-in function that are character-like, byte-like, tables or time stamps are no positions for
++// parentheses, "strlen( ( s ) )" or "condense( val = s && ( s ) )", unlike numeric ones, "abs( ( i ) )". The
++// arguments of boolc( ), xsdbool( ) and the bool parameter of boolx( ) are logical expressions
++function checkBuiltinParentheses(param, method, input) {
++    var _a;
++    const name = method.getName().toLowerCase();
++    if (name === "boolc" || name === "xsdbool") {
++        return;
++    }
++    const unnamed = param.findDirectExpression(Expressions.Source);
++    const args = unnamed !== undefined
++        ? [[method.getParameters().getDefaultImporting(), unnamed]]
++        : (((_a = param.findDirectExpression(Expressions.ParameterListS)) === null || _a === void 0 ? void 0 : _a.findDirectExpressions(Expressions.ParameterS)) || []).map(p => { var _a; return [(_a = p.findDirectExpression(Expressions.ParameterName)) === null || _a === void 0 ? void 0 : _a.concatTokens(), p.findDirectExpression(Expressions.Source)]; });
++    for (const [parameter, source] of args) {
++        const found = method.getParameters().getImporting().find(i => i.getName().toUpperCase() === (parameter === null || parameter === void 0 ? void 0 : parameter.toUpperCase()));
++        if (found === undefined || source === undefined || found.getName() === "bool") {
++            continue;
++        }
++        // the format of escape( ) is a constant of cl_abap_format
++        if ((isNonNumeric(found.getType()) || (name === "escape" && found.getName() === "format"))
++            && hasParentheses(source)) {
++            const message = `Parentheses not allowed in parameter "${found.getName()}" of built-in function "${name}"`;
++            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, source.getFirstToken(), message));
++        }
++    }
++}
++function isNonNumeric(type) {
++    return type instanceof basic_1.CLikeType
++        || type instanceof basic_1.CharacterType
++        || type instanceof basic_1.XSequenceType
++        || type instanceof basic_1.TableType
++        || type instanceof basic_1.UTCLongType
++        || type instanceof basic_1.AnyType;
++}
++// "( s )", also as a part of a string expression, "s && ( s )"
++function hasParentheses(source) {
++    const children = source.getChildren();
++    if (children[0] instanceof nodes_1.TokenNode && children[0].getFirstToken().getStr() === "(") {
++        return true;
++    }
++    return children.some(c => c instanceof nodes_1.TokenNode && ["&", "&&"].includes(c.getFirstToken().getStr()))
++        && source.findDirectExpressions(Expressions.Source).some(s => hasParentheses(s));
++}
++//# sourceMappingURL=_check_builtin_parentheses.js.map
+\ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_database_work_area.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_database_work_area.js
 index 24beacc..f8979be 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_database_work_area.js
@@ -384,13 +586,14 @@ index 24beacc..f8979be 100644
      else if (type instanceof Basic.Integer8Type || type instanceof Basic.FloatType
          || type instanceof Basic.DecFloat16Type || type instanceof Basic.UTCLongType) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
-index 8de6a4d..c5c2dae 100644
+index 8de6a4d..51cd1e2 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
-@@ -44,6 +44,12 @@ const basic_1 = require("../../types/basic");
+@@ -44,6 +44,13 @@ const basic_1 = require("../../types/basic");
  const _type_utils_1 = require("../_type_utils");
  const _builtin_1 = require("../_builtin");
  const _builtin_call_1 = require("../_builtin_call");
++const _parentheses_1 = require("../_parentheses");
 +const COMPARISON_OPERATORS = ["=", "EQ", "<>", "NE", "><", "<", "LT", ">", "GT", "<=", "LE", "=<", ">=", "GE", "=>"];
 +// built-in numeric functions of one argument, and those with further parameters
 +const ONE_ARGUMENT_FUNCTIONS = ["abs", "sign", "ceil", "floor", "trunc", "frac", "acos", "asin", "atan", "cos",
@@ -400,11 +603,12 @@ index 8de6a4d..c5c2dae 100644
  class Compare {
      static runSyntax(node, input) {
          var _a;
-@@ -69,14 +75,17 @@ class Compare {
+@@ -69,14 +76,18 @@ class Compare {
          if (operandMessage !== undefined) {
              return;
          }
 -        const arithmeticMessage = this.checkArithmeticOperands(node, sources, sourceTypes);
++        (0, _parentheses_1.checkOperandParentheses)(sources, input);
 +        const arithmeticMessage = this.checkArithmeticOperands(node, sources, sourceTypes, input);
          if (arithmeticMessage !== undefined) {
              input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), arithmeticMessage));
@@ -420,7 +624,7 @@ index 8de6a4d..c5c2dae 100644
              && sourceTypes.length === 2
              && sourceTypes.some((type) => typeUtils.isCharLikeForCompare(type) === false)) {
              const message = "CS operands must be character-like (data type C, N, D, T, or STRING)";
-@@ -133,31 +142,51 @@ class Compare {
+@@ -133,31 +144,51 @@ class Compare {
          const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
          return call === undefined ? undefined : _builtin_call_1.BuiltInCall.callName(call);
      }
@@ -488,7 +692,7 @@ index 8de6a4d..c5c2dae 100644
          const children = source.getChildren();
          const first = children[0];
          if (first instanceof nodes_1.TokenNode) {
-@@ -166,7 +195,7 @@ class Compare {
+@@ -166,7 +197,7 @@ class Compare {
                  return true;
              }
              else if (str === "(" && children.length === 3 && children[1] instanceof nodes_1.ExpressionNode) {
@@ -497,7 +701,7 @@ index 8de6a4d..c5c2dae 100644
              }
          }
          for (const child of children) {
-@@ -176,7 +205,30 @@ class Compare {
+@@ -176,7 +207,30 @@ class Compare {
                  return true;
              }
          }
@@ -529,6 +733,27 @@ index 8de6a4d..c5c2dae 100644
      }
      static isNonNumeric(type) {
          return type instanceof basic_1.CharacterType
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/component_compare.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/component_compare.js
+index 92044d8..1afdcdb 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/component_compare.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/component_compare.js
+@@ -36,6 +36,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.ComponentCompare = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const _syntax_input_1 = require("../_syntax_input");
++const _parentheses_1 = require("../_parentheses");
+ const component_chain_1 = require("./component_chain");
+ const component_name_1 = require("./component_name");
+ const source_1 = require("./source");
+@@ -49,6 +50,8 @@ class ComponentCompare {
+         }
+         const fieldType = component_chain_1.ComponentChain.runSyntax(leftType, chain, input);
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
++            // unlike the bounds of BETWEEN in a logical expression, each operand is on its own
++            (0, _parentheses_1.checkOperandParentheses)([s], input);
+             const fieldChain = s.findDirectExpression(Expressions.FieldChain);
+             const first = fieldChain === null || fieldChain === void 0 ? void 0 : fieldChain.getFirstChild();
+             if (rightType && fieldChain && first) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
 index ba69e57..64b87f8 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
@@ -542,6 +767,28 @@ index ba69e57..64b87f8 100644
          }
          else if (type instanceof basic_1.StringType) {
              return basic_1.StringType.get(rest);
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_chain.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_chain.js
+index 675ece3..5a76320 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_chain.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_chain.js
+@@ -48,6 +48,7 @@ const component_name_1 = require("./component_name");
+ const attribute_name_1 = require("./attribute_name");
+ const table_expression_1 = require("./table_expression");
+ const _syntax_input_1 = require("../_syntax_input");
++const _check_builtin_parentheses_1 = require("./_check_builtin_parentheses");
+ class MethodCallChain {
+     static runSyntax(node, input, targetType) {
+         var _a, _b;
+@@ -150,6 +151,9 @@ class MethodCallChain {
+                 const param = current.findDirectExpression(Expressions.MethodCallParam);
+                 if (param && method) {
+                     const argumentType = method_call_param_1.MethodCallParam.runSyntax(param, input, method);
++                    if (method instanceof _builtin_1.BuiltInMethod) {
++                        (0, _check_builtin_parentheses_1.checkBuiltinParentheses)(param, method, input);
++                    }
+                     if (method instanceof _builtin_1.BuiltInMethod
+                         && _builtin_1.BuiltIn.returnsArgumentType(methodName)
+                         && this.isNumeric(argumentType)) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_param.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_param.js
 index e1f29a8..50bd13c 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/method_call_param.js
@@ -749,24 +996,22 @@ index 89beb8d..2549c4b 100644
          if (node === undefined) {
              return undefined;
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
-index d4e9ca9..11142bd 100644
+index d4e9ca9..d794f3c 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
-@@ -34,9 +34,13 @@ var __importStar = (this && this.__importStar) || (function () {
- })();
- Object.defineProperty(exports, "__esModule", { value: true });
+@@ -36,7 +36,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
  exports.Case = void 0;
-+exports.parenthesized = parenthesized;
  exports.checkCaseOperand = checkCaseOperand;
  const Expressions = __importStar(require("../../2_statements/expressions"));
 +const nodes_1 = require("../../nodes");
 +const _builtin_call_1 = require("../_builtin_call");
++const _parentheses_1 = require("../_parentheses");
  const source_1 = require("../expressions/source");
 +const compare_1 = require("../expressions/compare");
  const _syntax_input_1 = require("../_syntax_input");
  const _builtin_1 = require("../_builtin");
  const _object_oriented_1 = require("../_object_oriented");
-@@ -44,14 +48,77 @@ const basic_1 = require("../../types/basic");
+@@ -44,14 +48,70 @@ const basic_1 = require("../../types/basic");
  const version_1 = require("../../../version");
  class Case {
      runSyntax(node, input) {
@@ -774,10 +1019,13 @@ index d4e9ca9..11142bd 100644
          for (const s of node.findDirectExpressions(Expressions.Source)) {
 -            source_1.Source.runSyntax(s, input);
 +            const type = source_1.Source.runSyntax(s, input);
-+            const inner = parenthesized(s);
++            const inner = (0, _parentheses_1.parenthesized)(s);
 +            if (inner !== undefined && isCalculation(inner, input) === false) {
 +                const message = "Parentheses after CASE only around a calculation, not around a single operand";
 +                input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), message));
++            }
++            else {
++                (0, _parentheses_1.checkOperandParentheses)([s], input);
 +            }
              checkCaseOperand(s, input);
 +            // an arithmetic expression is calculated on its own, the values after WHEN are compared with its result
@@ -788,22 +1036,12 @@ index d4e9ca9..11142bd 100644
      }
  }
  exports.Case = Case;
-+// the source inside the parentheses when the source is exactly "( ... )"
-+function parenthesized(source) {
-+    const children = source.getChildren();
-+    if (children.length === 3
-+        && children[0] instanceof nodes_1.TokenNode && children[0].getFirstToken().getStr() === "("
-+        && children[1] instanceof nodes_1.ExpressionNode && children[1].get() instanceof Expressions.Source) {
-+        return children[1];
-+    }
-+    return undefined;
-+}
 +// "a + 1", "- a", "BIT-NOT x", "x BIT-AND y", or a built-in numeric function of a calculated argument,
 +// "abs( a + 1 )", "strlen( lcl=>get( ) )", "ipow( base = abs( a ) exp = 2 )". Not a single operand: a data object,
 +// a method call, a constructor or table expression, a built-in function of data objects only, or a string
 +// expression, "( a )", "( lcl=>get( a + 1 ) )", "( CONV i( a + 1 ) )", "( strlen( s ) )" or "( c && s )"
 +function isCalculation(source, input) {
-+    const inner = parenthesized(source);
++    const inner = (0, _parentheses_1.parenthesized)(source);
 +    if (inner !== undefined) {
 +        return isCalculation(inner, input);
 +    }
@@ -827,7 +1065,7 @@ index d4e9ca9..11142bd 100644
 +// an argument that makes a built-in function a calculation: anything but a data object or a string expression
 +function isCalculatedArgument(argument, input) {
 +    var _a, _b;
-+    const inner = parenthesized(argument);
++    const inner = (0, _parentheses_1.parenthesized)(argument);
 +    if (inner !== undefined) {
 +        return isCalculation(inner, input);
 +    }
