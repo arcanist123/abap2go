@@ -78,7 +78,31 @@ export interface IRSubstring {
 }
 
 export type IRStatement = IRListWrite | IRConsoleWrite | IRData | IRMove | IRCalculate | IRAssert
-  | IRIf | IRDo | IRWhile | IRExit | IRContinue | IRCheck | IRReturn;
+  | IRIf | IRDo | IRWhile | IRExit | IRContinue | IRCheck | IRReturn | IRTry | IRRetry;
+
+/**
+ * TRY. body CATCH ... [CLEANUP. ...] ENDTRY. An exception raised in the body (also in a procedure it calls) goes to
+ * the first CATCH clause that names its class or a superclass; one that no TRY catches ends the program without
+ * running any CLEANUP block. When an outer TRY catches it, the CLEANUP block runs first. An exception raised in a
+ * CATCH block goes to the TRYs further out, and one that leaves a CLEANUP block ends the program. A statement whose
+ * exception leaves a value in its target (docs/spec/conversion.md) stores that value before raising.
+ */
+export interface IRTry {
+  kind: "try";
+  body: IRStatement[];
+  /**
+   * The CATCH clauses in order. classes: the exception classes the clause catches, upper case: the classes it names
+   * and all their subclasses in the world of the build.
+   */
+  catches: { classes: string[]; body: IRStatement[] }[];
+  /** undefined without CLEANUP. */
+  cleanup: IRStatement[] | undefined;
+}
+
+/** RETRY in a CATCH block: the TRY block of that TRY runs again. */
+export interface IRRetry {
+  kind: "retry";
+}
 
 /**
  * IF / ELSEIF / ELSE: the body of the first branch whose condition holds, else the ELSE body. CASE is lowered to

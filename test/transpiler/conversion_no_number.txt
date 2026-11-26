@@ -4,7 +4,7 @@
 * again for ABAP, and some differ from the source test. Format: test/transpiler.test.ts.
 
 *** TYPE i, from a string
-* waits: TRY ... CATCH
+* waits: IS INITIAL
 DATA target TYPE i.
 DATA text TYPE string VALUE 'seven'.
 DATA caught TYPE c LENGTH 1.
@@ -18,7 +18,7 @@ ASSERT caught = 'X'.
 ASSERT target IS INITIAL.
 
 *** TYPE int8, from a string
-* waits: TRY ... CATCH
+* waits: IS INITIAL
 DATA target TYPE int8.
 DATA text TYPE string VALUE 'seven'.
 DATA caught TYPE c LENGTH 1.
@@ -32,7 +32,7 @@ ASSERT caught = 'X'.
 ASSERT target IS INITIAL.
 
 *** TYPE p LENGTH 8 DECIMALS 2, from a string
-* waits: TRY ... CATCH
+* waits: IS INITIAL
 DATA target TYPE p LENGTH 8 DECIMALS 2.
 DATA text TYPE string VALUE 'seven'.
 DATA caught TYPE c LENGTH 1.
@@ -46,7 +46,7 @@ ASSERT caught = 'X'.
 ASSERT target IS INITIAL.
 
 *** TYPE f, from a string
-* waits: TRY ... CATCH
+* waits: IS INITIAL
 DATA target TYPE f.
 DATA text TYPE string VALUE 'seven'.
 DATA caught TYPE c LENGTH 1.
@@ -60,7 +60,6 @@ ASSERT caught = 'X'.
 ASSERT target IS INITIAL.
 
 *** TYPE i, from a character field
-* waits: TRY ... CATCH
 DATA target TYPE i.
 DATA text TYPE c LENGTH 5 VALUE 'abc'.
 target = 5.

@@ -56,7 +56,7 @@ export class Variables {
   private readonly origins = new Map<string, TypeOrigin>();
 
   /** methods: the method names of the class being lowered, lower case; a method hides a built-in function. */
-  constructor(private readonly registry: abaplint.IRegistry, obj: abaplint.ABAPObject, private readonly file: abaplint.ABAPFile,
+  constructor(readonly registry: abaplint.IRegistry, obj: abaplint.ABAPObject, private readonly file: abaplint.ABAPFile,
       private readonly methods: ReadonlySet<string> = new Set()) {
     this.spaghetti = new abaplint.SyntaxLogic(registry, obj).run().spaghetti;
   }
@@ -121,6 +121,10 @@ export class Variables {
     const found = scope?.findVariable(name);
     if (found === undefined) {
       throw new BuildError(`${name}: variable not found`, where);
+    }
+    // built-in data objects (abap_true, space, sy) and constants are not variables of the root
+    if (found.getFilename() !== this.file.getFilename() || found.getMeta().includes("read_only" as abaplint.IdentifierMeta)) {
+      throw new BuildError(`${name}: only variables declared with DATA in the root are supported yet, not constants or built-in data objects`, where);
     }
     return { kind: "variable", name: name.toLowerCase(), type: irType(found.getType(), name, where) };
   }

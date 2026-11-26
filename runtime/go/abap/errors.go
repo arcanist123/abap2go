@@ -1,10 +1,16 @@
 package abap
 
 // Exception is a class-based exception raised by a statement, such as CX_SY_CONVERSION_OVERFLOW. Generated code
-// panics with it; a TRY that catches the class recovers it, otherwise the program ends with a runtime error.
+// panics with it; a TRY that catches the class recovers it (Session.Try), otherwise the program ends with a runtime
+// error.
 type Exception struct {
 	// Class is the exception class name, upper case.
 	Class string
+	// gap is set when the exception leaves a value in its target that the runtime does not support yet: what the
+	// target would hold. See special in try.go.
+	gap string
+	// uncaught is set when the exception left a CLEANUP block: nothing catches it any more.
+	uncaught bool
 }
 
 func (e *Exception) Error() string { return e.Class }

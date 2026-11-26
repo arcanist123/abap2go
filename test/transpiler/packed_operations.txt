@@ -100,7 +100,7 @@ lv_r /= 3.
 ASSERT lv_r = '2.61'.
 
 *** division by zero is CX_SY_ZERODIVIDE and keeps the target, 0 / 0 is 0
-* waits: TRY ... CATCH
+* waits: abap_true and abap_false
 DATA lv_a TYPE p LENGTH 8 DECIMALS 2 VALUE '1.5'.
 DATA lv_b TYPE p LENGTH 8 DECIMALS 1.
 DATA lv_r TYPE p LENGTH 8 DECIMALS 2 VALUE 5.

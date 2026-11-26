@@ -45,7 +45,11 @@ func run(root func(session *Session), session *Session) (err error) {
 func reportRuntimeError(w io.Writer, err error) {
 	var exc *Exception
 	if errors.As(err, &exc) {
-		fmt.Fprintf(w, "runtime error: exception %s not caught\n", exc.Class)
+		where := ""
+		if exc.uncaught {
+			where = " in a CLEANUP block"
+		}
+		fmt.Fprintf(w, "runtime error: exception %s not caught%s\n", exc.Class, where)
 		return
 	}
 	fmt.Fprintf(w, "runtime error: %v\n", err)

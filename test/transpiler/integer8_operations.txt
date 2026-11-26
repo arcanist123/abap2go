@@ -77,7 +77,7 @@ lv_r /= 3.
 ASSERT |{ lv_r }| = `3002399751580329`.
 
 *** division by zero is CX_SY_ZERODIVIDE and keeps the target, 0 / 0 is 0, text that is no number, also 1E3
-* waits: TRY ... CATCH
+* waits: CLEAR
 DATA lv_text TYPE string.
 DATA lv_a TYPE int8 VALUE 7.
 DATA lv_b TYPE int8.
