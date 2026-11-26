@@ -116,6 +116,31 @@ for (const [condition, error] of errors) {
   });
 }
 
+test("function operands: TRY catches the exception of a function, not the runtime error", () => {
+  const source = `${DECLARATIONS}TRY.
+  IF abs( imin ) = 0.
+  ENDIF.
+CATCH cx_sy_arithmetic_overflow.
+  out->write( 'overflow' ).
+ENDTRY.
+TRY.
+  IF zero = 1 OR sqrt( neg ) = 0.
+  ENDIF.
+CATCH cx_sy_arg_out_of_domain.
+  out->write( 'domain' ).
+ENDTRY.
+TRY.
+  IF abs( decimals15 ) > 0.
+  ENDIF.
+CATCH cx_root.
+  out->write( 'not caught here' ).
+ENDTRY.`;
+  const result = run("clas", classrun(source));
+  assert.equal(result.refused, undefined, result.refused);
+  assert.equal(result.stdout, "overflow\ndomain\n");
+  assert.match(result.failed ?? "", /SYSTEM_TYPE_NOT_ELEMENTARY/);
+});
+
 const refusals: [string, RegExp][] = [
   // an arithmetic expression cannot be compared with a non-numeric operand
   ["abs( i ) + 0 = bad", /cannot be compared with|syntax check/],
