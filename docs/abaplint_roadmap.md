@@ -178,7 +178,10 @@ Found 2026-11-26, with 2.120.120 and the patch.
   forms after `CASE`, `'a' & 'b'` and an expression inside a constructor expression are valid. Fixed in waiting PR
   [arcanist123/abaplint#2](https://github.com/arcanist123/abaplint/pull/2), on top of `case-parentheses-4748`, in the
   patch: after `WHEN` no string, bit or table expression, and no built-in function with a non-numeric result. Not
-  covered: `bit-set( )` and `boolx( )`, which do not parse at all ([#4764](https://github.com/abaplint/abaplint/issues/4764))
+  covered: `bit-set( )` and `boolx( )`, which did not parse at all ([#4764](https://github.com/abaplint/abaplint/issues/4764)).
+  With [PR #4766](https://github.com/abaplint/abaplint/pull/4766) they parse as their own forms in `Source`, not as
+  method calls, so the check after `WHEN` does not see them and accepts them
+  - [ ] follow-up once #4766 and #2 are both upstream: reject `bit-set( )` and `boolx( )` after `WHEN`
 
 ### Waiting PRs on the fork
 
@@ -306,6 +309,7 @@ table (see "Waiting PRs on the fork").
 | [#4758](https://github.com/abaplint/abaplint/pull/4758) | `SPLIT ... IN BYTE MODE` takes byte-like operands, and its inline targets are `xstring` ([#4757](https://github.com/abaplint/abaplint/issues/4757)) | merged, not released |
 | [#4759](https://github.com/abaplint/abaplint/pull/4759) | a static offset or length beyond a `c` or `x` field is rejected although the other one is a variable ([#4742](https://github.com/abaplint/abaplint/issues/4742)) | merged, not released |
 | [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | draft, waits for #4741 |
+| [#4766](https://github.com/abaplint/abaplint/pull/4766) | `bit-set( )` and `boolx( bool = <logical expression> )` parse, typed `xstring` ([#4764](https://github.com/abaplint/abaplint/issues/4764)) | open |
 
 Released and out of the patch: `WRITE` of a utclong ([#4700](https://github.com/abaplint/abaplint/issues/4700),
 [PR #4701](https://github.com/abaplint/abaplint/pull/4701), in 2.120.119), which the compiler now compiles.
@@ -328,12 +332,13 @@ abaplint (main `af7440a`, default config, `v757`).
   Valid code gets the wrong statement
 - [ ] [#4754](https://github.com/abaplint/abaplint/issues/4754) `NEW lcl( )->attr = 1.` gives "Not an object
   reference, target" for any attribute
-- [ ] [#4764](https://github.com/abaplint/abaplint/issues/4764) `bit-set( 1 )` and `boolx( bool = i = 1 )` do not
+- [x] [#4764](https://github.com/abaplint/abaplint/issues/4764) `bit-set( 1 )` and `boolx( bool = i = 1 )` do not
   parse: `bit-set` is lexed as `bit`, `-`, `set`, and the logical expression of `boolx( )` is not handled the way
-  `boolc( )` and `xsdbool( )` are in `Source`. Found 2026-11-26 while fixing #4762; valid code that fails to parse
+  `boolc( )` and `xsdbool( )` are in `Source`. Found 2026-11-26 while fixing #4762; valid code that fails to parse.
+  Fixed by [PR #4766](https://github.com/abaplint/abaplint/pull/4766), in the patch: both are their own forms in
+  `Source`, typed `xstring`. `boolx( bool = abap_true )`, no logical expression, still parses as a method call
 
-Suggested order: [#1809](https://github.com/abaplint/abaplint/issues/1809) and
-[#4764](https://github.com/abaplint/abaplint/issues/4764) first;
+Suggested order: [#1809](https://github.com/abaplint/abaplint/issues/1809) first;
 [#4755](https://github.com/abaplint/abaplint/issues/4755) after the maintainer's view on the shape.
 
 ### Invalid ABAP accepted

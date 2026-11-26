@@ -264,6 +264,26 @@ index 203e4d2..2e0f8e7 100644
          return another;
      }
  }
+diff --git a/node_modules/@abaplint/core/build/src/abap/2_statements/expressions/source.js b/node_modules/@abaplint/core/build/src/abap/2_statements/expressions/source.js
+index 2394369..f4a6196 100644
+--- a/node_modules/@abaplint/core/build/src/abap/2_statements/expressions/source.js
++++ b/node_modules/@abaplint/core/build/src/abap/2_statements/expressions/source.js
+@@ -27,8 +27,14 @@ class Source extends combi_1.Expression {
+         const paren = (0, combi_1.seq)((0, combi_1.tok)(tokens_1.WParenLeftW), Source, rparen);
+         const after = (0, combi_1.seq)((0, combi_1.altPrio)("&", "&&", _1.ArithOperator), Source);
+         const bool = (0, combi_1.seq)((0, combi_1.altPrio)((0, combi_1.ver)(version_1.Release.v702, (0, combi_1.regex)(/^BOOLC$/i), { also: combi_1.AlsoIn.OpenABAP }), (0, combi_1.ver)(version_1.Release.v740sp08, (0, combi_1.regex)(/^XSDBOOL$/i), { also: combi_1.AlsoIn.OpenABAP })), (0, combi_1.tok)(tokens_1.ParenLeftW), _1.Cond, ")");
++        // the bool parameter of boolx( ) is a logical expression, the parameters can come in any order
++        const boolxBool = (0, combi_1.seq)("BOOL", "=", _1.Cond);
++        const boolxBit = (0, combi_1.seq)("BIT", "=", Source);
++        const boolx = (0, combi_1.ver)(version_1.Release.v702, (0, combi_1.seq)((0, combi_1.regex)(/^BOOLX$/i), (0, combi_1.tok)(tokens_1.ParenLeftW), (0, combi_1.altPrio)((0, combi_1.seq)(boolxBool, (0, combi_1.optPrio)(boolxBit)), (0, combi_1.seq)(boolxBit, boolxBool)), ")"));
++        // "bit-set" is lexed as three tokens, without space around the dash
++        const bitSet = (0, combi_1.ver)(version_1.Release.v702, (0, combi_1.seq)((0, combi_1.regex)(/^BIT$/i), (0, combi_1.tok)(tokens_1.Dash), (0, combi_1.regex)(/^SET$/i), (0, combi_1.tok)(tokens_1.ParenLeftW), (0, combi_1.optPrio)((0, combi_1.seq)("VAL", "=")), Source, ")"));
+         const prefix = (0, combi_1.altPrio)((0, combi_1.tok)(tokens_1.WPlus), "BIT-NOT");
+-        const old = (0, combi_1.seq)((0, combi_1.optPrio)(prefix), (0, combi_1.altPrio)(_1.Constant, _1.StringTemplate, text_element_1.TextElement, bool, castDeref, method, (0, combi_1.seq)(_1.FieldChain, deref), paren), (0, combi_1.optPrio)(after));
++        const old = (0, combi_1.seq)((0, combi_1.optPrio)(prefix), (0, combi_1.altPrio)(_1.Constant, _1.StringTemplate, text_element_1.TextElement, bool, boolx, bitSet, castDeref, method, (0, combi_1.seq)(_1.FieldChain, deref), paren), (0, combi_1.optPrio)(after));
+         const corr = (0, combi_1.ver)(version_1.Release.v740sp05, (0, combi_1.seq)("CORRESPONDING", _1.TypeNameOrInfer, (0, combi_1.tok)(tokens_1.ParenLeftW), _1.CorrespondingBody, rparen, (0, combi_1.optPrio)(after)), { also: combi_1.AlsoIn.OpenABAP });
+         const conv = (0, combi_1.ver)(version_1.Release.v740sp02, (0, combi_1.seq)("CONV", _1.TypeNameOrInfer, lparenNoSpace, _1.ConvBody, rparenNoSpace, (0, combi_1.optPrio)(after)), { also: combi_1.AlsoIn.OpenABAP });
+         const swit = (0, combi_1.ver)(version_1.Release.v740sp02, (0, combi_1.seq)("SWITCH", _1.TypeNameOrInfer, (0, combi_1.tok)(tokens_1.ParenLeftW), _1.SwitchBody, rparenNoSpace, (0, combi_1.optPrio)(after)), { also: combi_1.AlsoIn.OpenABAP });
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js
 index 449a5e8..484ac84 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js
@@ -893,6 +913,99 @@ index aa854c7..64b87f8 100644
          return type;
      }
  }
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
+index ff132e0..4746582 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
+@@ -79,7 +79,7 @@ class Source {
+         this.logicalArguments.add(source);
+     }
+     static runSyntax(node, input, targetType, writeReference = false, allowGenericDeference = false, readReference = true) {
+-        var _a, _b;
++        var _a, _b, _c;
+         if (node === undefined) {
+             return undefined;
+         }
+@@ -87,6 +87,8 @@ class Source {
+         let first = children.shift();
+         // a leading sign makes the operand part of a calculation, "- foo"
+         let signed = false;
++        // the type of a built-in function call that the grammar parses as part of the source, "bit-set( 1 )"
++        let called = undefined;
+         if (first instanceof nodes_1.TokenNode) {
+             const token = first.getFirstToken();
+             const tok = token.getStr().toUpperCase();
+@@ -96,7 +98,16 @@ class Source {
+                     signed = true;
+                     break;
+                 case "(":
++                    break;
+                 case "BIT":
++                    if (((_a = children[1]) === null || _a === void 0 ? void 0 : _a.concatTokens().toUpperCase()) === "SET") {
++                        called = this.runBuiltinCall("BIT-SET", token, children, input);
++                        first = children.shift();
++                    }
++                    break;
++                case "BOOLX":
++                    called = this.runBuiltinCall(tok, token, children, input);
++                    first = children.shift();
+                     break;
+                 case "BOOLC":
+                     {
+@@ -162,7 +173,7 @@ class Source {
+                     {
+                         const foundType = this.determineType(node, input, targetType);
+                         const bodyType = conv_body_1.ConvBody.runSyntax(node.findDirectExpression(Expressions.ConvBody), input, foundType);
+-                        const inferred = (_a = node.findDirectExpression(Expressions.TypeNameOrInfer)) === null || _a === void 0 ? void 0 : _a.concatTokens();
++                        const inferred = (_b = node.findDirectExpression(Expressions.TypeNameOrInfer)) === null || _b === void 0 ? void 0 : _b.concatTokens();
+                         if (new _type_utils_1.TypeUtils(input.scope).isConvable(foundType, bodyType) === false) {
+                             const message = `CONV: Types not compatible, ${foundType === null || foundType === void 0 ? void 0 : foundType.constructor.name}, ${bodyType === null || bodyType === void 0 ? void 0 : bodyType.constructor.name}`;
+                             input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), message));
+@@ -238,7 +249,7 @@ class Source {
+                         const foundType = this.determineType(node, input, targetType);
+                         if ((foundType === null || foundType === void 0 ? void 0 : foundType.isGeneric()) === true
+                             && !(foundType instanceof basic_1.DataType)
+-                            && ((_b = node.findDirectExpression(Expressions.TypeNameOrInfer)) === null || _b === void 0 ? void 0 : _b.concatTokens()) === "#"
++                            && ((_c = node.findDirectExpression(Expressions.TypeNameOrInfer)) === null || _c === void 0 ? void 0 : _c.concatTokens()) === "#"
+                             && !(0, version_1.releaseAtLeast)(input.scope.getRelease(), version_1.Release.v756)
+                             && input.scope.getLanguageVersion() !== version_1.LanguageVersion.Cloud
+                             && !input.scope.getOpenABAP()) {
+@@ -276,7 +287,7 @@ class Source {
+         else if (first === undefined || !(first instanceof nodes_1.ExpressionNode)) {
+             return undefined;
+         }
+-        let context = new unknown_type_1.UnknownType("todo, Source type");
++        let context = called !== undefined ? called : new unknown_type_1.UnknownType("todo, Source type");
+         const type = [];
+         if (readReference) {
+             type.push(_reference_1.ReferenceType.DataReadReference);
+@@ -413,6 +424,26 @@ class Source {
+         return true;
+     }
+     ////////////////////////////////
++    // checks the arguments of a built-in function call parsed as part of the source, bit-set( ) or boolx( ),
++    // removes the call from the children and returns its type
++    static runBuiltinCall(name, token, children, input) {
++        var _a;
++        const method = _builtin_1.BuiltIn.searchBuiltin(name);
++        input.scope.addReference(token, method, _reference_1.ReferenceType.BuiltinMethodReference, input.filename);
++        while (children.length > 0) {
++            const child = children.shift();
++            if (child instanceof nodes_1.ExpressionNode && child.get() instanceof Expressions.Cond) {
++                cond_1.Cond.runSyntax(child, input);
++            }
++            else if (child instanceof nodes_1.ExpressionNode && child.get() instanceof Expressions.Source) {
++                Source.runSyntax(child, input, basic_1.IntegerType.get());
++            }
++            else if (child instanceof nodes_1.TokenNode && child.getFirstToken().getStr() === ")") {
++                break;
++            }
++        }
++        return (_a = method === null || method === void 0 ? void 0 : method.getParameters().getReturning()) === null || _a === void 0 ? void 0 : _a.getType();
++    }
+     static traverseRemainingChildren(children, input) {
+         const last = children[children.length - 1];
+         if (last && last.get() instanceof Expressions.Source) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
 index a2ccbb1..2549c4b 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
@@ -2066,6 +2179,19 @@ index 880fc48..099f5d7 100644
              }
              else if (vscode_languageserver_types_1.RenameFile.is(dc)) {
                  renames.push(dc);
+diff --git a/node_modules/@abaplint/core/build/src/registry.js b/node_modules/@abaplint/core/build/src/registry.js
+index 376c076..8b91207 100644
+--- a/node_modules/@abaplint/core/build/src/registry.js
++++ b/node_modules/@abaplint/core/build/src/registry.js
+@@ -78,7 +78,7 @@ class Registry {
+     }
+     static abaplintVersion() {
+         // magic, see build script "version.js"
+-        return "2.120.120";
++        return "2.120.121";
+     }
+     getDDICReferences() {
+         return this.ddicReferences;
 diff --git a/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js b/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js
 index da959b4..d9efafc 100644
 --- a/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js
