@@ -1,7 +1,7 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
-import { IRAssert, IRCompareOp, IRCondition, IRExpr, IRSource, IRType } from "./ir";
-import { isArithmetic, isFunctionCall, lowerArithmetic } from "./lower_arith";
+import { IRAssert, IRComparand, IRCompareOp, IRCondition, IRExpr, IRFunction, IRType } from "./ir";
+import { isArithmetic, isDataObjectFunction, lowerArithmetic } from "./lower_arith";
 import { lowerSource, Variables, Where } from "./lower_common";
 
 const { Expressions } = abaplint;
@@ -128,11 +128,13 @@ function lowerCompare(compare: abaplint.Nodes.ExpressionNode, variables: Variabl
   return negate(condition, nots);
 }
 
-/** left op right: two data objects, or with an arithmetic expression on either side, a calculation. */
+/**
+ * left op right: two data objects or functions of data objects, or with an arithmetic expression on either side, a
+ * calculation.
+ */
 export function lowerComparison(op: IRCompareOp, left: abaplint.Nodes.ExpressionNode, right: abaplint.Nodes.ExpressionNode,
     variables: Variables, where: Where): IRCondition {
-  if (isArithmetic(left) || isArithmetic(right)) {
-    // also when a side is a lone built-in function: calcOperand refuses it
+  if (isCalculation(left) || isCalculation(right)) {
     return { kind: "compare_calc", op, left: calcOperand(left, variables, where), right: calcOperand(right, variables, where) };
   }
   const l = comparand(left, variables, where);
@@ -147,7 +149,7 @@ export function lowerComparison(op: IRCompareOp, left: abaplint.Nodes.Expression
  */
 function lowerBetween(operand: abaplint.Nodes.ExpressionNode, low: abaplint.Nodes.ExpressionNode, high: abaplint.Nodes.ExpressionNode,
     variables: Variables, where: Where): IRCondition {
-  if ([operand, low, high].some(isArithmetic)) {
+  if ([operand, low, high].some(isCalculation)) {
     return {
       kind: "between_calc",
       operand: calcOperand(operand, variables, where),
@@ -162,9 +164,51 @@ function lowerBetween(operand: abaplint.Nodes.ExpressionNode, low: abaplint.Node
   };
 }
 
-/** An operand of a comparison of data objects: a literal, a variable, a subfield or sy-index. */
-function comparand(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRSource {
-  return lowerSource(source, variables, where, "comparison of");
+/**
+ * An operand that makes its comparison a calculation: an arithmetic expression, which a lone function of a data
+ * object is not.
+ */
+function isCalculation(source: abaplint.Nodes.ExpressionNode): boolean {
+  return isArithmetic(source) && !isDataObjectFunction(source);
+}
+
+/**
+ * An operand of a comparison of data objects: a literal, a variable, a subfield, sy-index or a built-in function of
+ * one of these.
+ */
+function comparand(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRComparand {
+  return isDataObjectFunction(source) ? dataObjectFunction(source, variables, where)
+    : lowerSource(source, variables, where, "comparison of");
+}
+
+/** abs( ), sqrt( ) or strlen( ) of a data object, with the type of its result. */
+function dataObjectFunction(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRFunction {
+  const call = lowerArithmetic(source, variables, where);
+  if (call.kind === "strlen") {
+    return { kind: "function", call, type: { kind: "i" } };
+  }
+  if (call.kind !== "unary" || call.fn === "-" || call.operand.kind !== "operand") {
+    throw new BuildError(`${source.concatTokens()}: this function is not supported as an operand of a comparison yet`, where);
+  }
+  return { kind: "function", call, type: resultType(call.fn, call.operand.source.type) };
+}
+
+/**
+ * The type of abs( ) or sqrt( ) outside an arithmetic expression. abs( ) has the type of its argument: i for i, b, s,
+ * d, t, x and xstring, p for p and for text. sqrt( ) is an f, a decfloat34 for a decimal floating point argument.
+ */
+function resultType(fn: "abs" | "sqrt", arg: IRType): IRType {
+  if (fn === "sqrt") {
+    return { kind: arg.kind === "decfloat16" || arg.kind === "decfloat34" ? "decfloat34" : "f" };
+  }
+  switch (arg.kind) {
+    case "int8": case "p": case "f": case "decfloat16": case "decfloat34":
+      return arg;
+    case "c": case "n": case "string":
+      return { kind: "p", length: 16, decimals: 0 };
+    default:
+      return { kind: "i" };
+  }
 }
 
 const NUMERIC = new Set<IRType["kind"]>(["i", "int8", "b", "s", "p", "f", "decfloat16", "decfloat34"]);
@@ -175,10 +219,7 @@ const NUMERIC = new Set<IRType["kind"]>(["i", "int8", "b", "s", "p", "f", "decfl
  */
 function calcOperand(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRExpr {
   if (isArithmetic(source)) {
-    if (isFunctionCall(source)) {
-      // a functional operand with the type of its result, not an arithmetic expression
-      throw new BuildError(`${source.concatTokens()}: a built-in function as an operand of a comparison is not supported yet`, where);
-    }
+    // a lone function as well: with an arithmetic expression on the other side, it is calculated with it
     return lowerArithmetic(source, variables, where);
   }
   const single = lowerSource(source, variables, where, "comparison of");
@@ -189,7 +230,7 @@ function calcOperand(source: abaplint.Nodes.ExpressionNode, variables: Variables
 }
 
 /** Two kinds without a comparison type are a syntax error: d with t, utclong with anything but c, string, utclong. */
-function checkComparable(left: IRSource, right: IRSource, where: Where): void {
+function checkComparable(left: IRComparand, right: IRComparand, where: Where): void {
   const [a, b] = [left.type.kind, right.type.kind];
   const dateTime = (a === "d" && b === "t") || (a === "t" && b === "d");
   const utclong = (x: string, y: string) => x === "utclong" && !["c", "string", "utclong"].includes(y);

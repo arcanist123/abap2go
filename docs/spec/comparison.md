@@ -9,7 +9,7 @@ Arithmetic Expressions* and *log_exp - Boolean Operators and Parentheses*; the d
 documentation where it is silent (rounding of a text compared with an integer, which conversion errors end the
 program, length adjustments, short-circuit evaluation).
 
-**Status (2026-11-24): specified; the comparison of two data objects is implemented in the runtime**
+**Status (2026-11-26): specified; the comparison of two data objects is implemented in the runtime**
 (`abap.Compare`, `runtime/go/abap/compare.go`), which passes every cell. The test cases are
 [`testdata/comparison.tsv`](../../runtime/go/abap/testdata/comparison.tsv), every ordered pair of 162 values over all
 elementary kinds (26,244 cells), and
@@ -17,9 +17,10 @@ elementary kinds (26,244 cells), and
 out while the rules were worked out, which the runtime passed without a change. Logical expressions, arithmetic
 operands, literals and syntax errors are in
 [`testdata/comparison_expr.tsv`](../../runtime/go/abap/testdata/comparison_expr.tsv) (404 cells). Since 2026-11-25
-the compiler compiles them as `IF` (`test/comparison_expr.test.ts`): 330 cells run end to end and pass, arithmetic
-operands on `abap.CompareCalculated` (`compare_calc.go`); the others wait for predicates, `CONV`, built-in functions
-as single operands, and `NOT NOT`, which abaplint does not parse yet. A line of `comparison.tsv`
+the compiler compiles them as `IF` (`test/comparison_expr.test.ts`): 340 cells run end to end and pass, arithmetic
+operands on `abap.CompareCalculated` (`compare_calc.go`) and built-in functions on `abap.ValueOf` (`function.go`);
+the others wait for predicates, `CONV`, `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true`. A line of
+`comparison.tsv`
 
 ```
 c10	[1-]	i	[-1]	=
@@ -194,6 +195,43 @@ functions and constructor expressions are operands with the type of their result
 false (a `string` holding a blank against a `c` that becomes the empty string), `xsdbool( 1 = 2 ) = abap_false` is
 true, `CONV t( '120000' ) = '12'` is true, `CONV f( '0.15' ) = CONV decfloat34( '0.15' )` is false.
 
+## Built-in functions as operands
+
+A built-in function of a single data object is not an arithmetic expression: its result is a value of its own, which
+is compared by the rules of two data objects (sections 1 to 4), so `strlen( s ) = '3'` compares an `i` with a `c`.
+For the numeric functions the argument decides the type of the result, per the keyword documentation:
+
+| Function | Argument | Type of the result |
+|---|---|---|
+| `strlen( )` | `c`, `n`, `d`, `t`, `string` | `i` |
+| `abs( )` | `i`, `b`, `s`, `d`, `t`, `x`, `xstring` | `i` |
+| `abs( )` | `int8`, `p`, `f`, `decfloat16`, `decfloat34` | that of the argument (decimal floating point: compared in `decfloat34`) |
+| `abs( )` | `c`, `n`, `string` | `p` |
+| `sqrt( )` | `decfloat16`, `decfloat34` | `decfloat34` |
+| `sqrt( )` | any other | `f` |
+
+- The function is calculated in the calculation type of its argument alone, whatever it is compared with, and its
+  errors are the catchable exceptions of the calculation: `abs( i_min ) = int8_0` raises
+  `CX_SY_ARITHMETIC_OVERFLOW`, `abs( c_'abc' ) = 0` and `abs( c_'1E1' ) = f_10` raise
+  `CX_SY_CONVERSION_NO_NUMBER` (text is read as for a `p` calculation), `sqrt( i_-1 ) = 0` raises
+  `CX_SY_ARG_OUT_OF_DOMAIN`.
+- The `p` that `abs( )` makes of a **text** is expected to have the decimals of the number as written, trailing zeros
+  included, and these decide how a text on the other side is rounded: `abs( c_'-1.25' ) = '1.2504'` is true,
+  `abs( c_'-1.250' ) = '1.254'` is false. It holds 31 digits, the digits before the point counting as at least one:
+  decimals beyond that are rounded off, and more than 31 digits before the point raise `CX_SY_CONVERSION_OVERFLOW`.
+  A `p` has at most 14 decimals, so a number that keeps more ends the program with the runtime error
+  `SYSTEM_TYPE_NOT_ELEMENTARY`, also when its value is 0.
+- The operands are evaluated from left to right, both before they are compared, and only when their relational
+  expression is (see *Logical expressions*): with `x` below the lower bound, the function in the upper bound of
+  `BETWEEN` is not called.
+
+**Arithmetic expressions.** `ipow( )`, and `abs( )` or `sqrt( )` of an arithmetic expression or of another function,
+are arithmetic expressions: the rules of *Arithmetic expressions as operands* apply, so `ipow( base = i exp = 2 ) =
+c` is a syntax error, and `abs( i_min + 0 ) > int8_0` and `abs( abs( i_min ) ) > int8_0` are calculated in `int8`
+without an overflow. The same holds for any function when the other side, or another operand of the `BETWEEN`, is an
+arithmetic expression: its argument takes part in the calculation type (`abs( i_min ) > int8_0 + 0` is true,
+`sqrt( i_2 ) = decfloat34_root_2 + 0` calculates the root in `decfloat34`).
+
 ## Syntax errors
 
 Besides the arithmetic cases above, a comparison of two operands whose kinds have no comparison type (the `-` cells
@@ -207,6 +245,8 @@ the program with the runtime error `COMPARE_NOT_SUPPORTED`.
 |---|---|
 | `CONVT_NO_NUMBER` (runtime error) | a text operand that is not a number in a numeric comparison type |
 | `CONVT_OVERFLOW` (runtime error) | a text or `n` operand that does not fit the comparison type `p` (more than 31 digits) |
+| `SYSTEM_TYPE_NOT_ELEMENTARY` (runtime error) | `abs( )` of a text whose number needs more than 14 decimals, outside an arithmetic expression |
+| `CX_SY_CONVERSION_OVERFLOW` | `abs( )` of a text whose number has more than 31 digits before the point, outside an arithmetic expression |
 | `COMPARE_NOT_SUPPORTED` (runtime error) | operands of kinds without a comparison type, known at run time only |
 | `CX_SY_CONVERSION_NO_NUMBER` | a text operand of an arithmetic expression that is not a number for its calculation type |
 | `CX_SY_ARITHMETIC_OVERFLOW`, `CX_SY_ZERODIVIDE`, … | an arithmetic expression, as in [calculation.md](calculation.md) |

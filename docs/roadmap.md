@@ -116,17 +116,16 @@ Done:
   - conditions: comparisons with `= <> < > <= >=` (all forms) of literals, variables, subfields and `sy-index` on
     `abap.Compare`; arithmetic expressions as operands, with one calculation type for all operands of the comparison
     (`abap.CompareCalculated`); `[NOT] BETWEEN`; `NOT`, `AND`, `OR`, `EQUIV` and parentheses with their priorities
-    and short-circuit evaluation (a subfield is computed only when its comparison is evaluated). 338 of the 404 cells
+    and short-circuit evaluation (a subfield is computed only when its comparison is evaluated). 340 of the 404 cells
     of `comparison_expr.tsv` run end to end (`test/comparison_expr.test.ts`); the others wait for `IS INITIAL`,
-    `CONV` and built-in functions as single operands
+    `CONV`, `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true`
   - `NOT` repeated any number of times (2026-11-25, abaplint #4714, in the abaplint patch): an even number cancels out
   - `DATA` is not executable: every variable of a processing block exists from its start with its start value, also
     one declared in a loop or a branch
-  - refused: `DO … VARYING`, `WHILE … VARY`, an arithmetic expression as the operand of `CASE`, `WHEN` or
-    `DO … TIMES`, `CASE` without `WHEN`, a lone built-in function as a comparison operand, comparisons of kinds
-    without a comparison type (`d` with `t`, `utclong` with anything but `c`, `string` and `utclong`), a non-numeric
-    single operand against an arithmetic expression, the other predicates (`IS`, `IN`, `CO`, …), `WRITE sy-index`
-    (the output length of its data element)
+  - refused: `DO … VARYING`, `WHILE … VARY`, an arithmetic expression or a built-in function as the operand of
+    `CASE`, `WHEN` or `DO … TIMES`, `CASE` without `WHEN`, comparisons of kinds without a comparison type (`d` with
+    `t`, `utclong` with anything but `c`, `string` and `utclong`), a non-numeric single operand against an arithmetic
+    expression, the other predicates (`IS`, `IN`, `CO`, …), `WRITE sy-index` (the output length of its data element)
 - the arithmetic tests of abaplint/transpiler as end-to-end fixtures (2026-11-25, `test/transpiler/*.txt`, run by
   `test/transpiler.test.ts`, MIT, see `NOTICE`): the 157 ABAP snippets of `test/operators/arithmetics*.ts`,
   `mod.ts`, `test/types/*_operations.ts`, `integer8_calculation_type.ts` and `conversion_no_number.ts`, one
@@ -155,11 +154,19 @@ Done:
     after `RETURN` or `EXIT`, while `CHECK` ends the block in the regular way
   - refused: `CONTINUE` outside a loop (a syntax error), `RETURN` with an operand (functional methods are not
     compiled), `EXIT` with an addition, `CHECK` without a condition
+- built-in functions as comparison operands (2026-11-26, `src/lower_cond.ts`, `runtime/go/abap/function.go`,
+  `test/function_operand.test.ts`): `abs( )`, `sqrt( )` and `strlen( )` of a single data object are values with the
+  type of their result, compared as data objects are
+  ([spec/comparison.md](spec/comparison.md), "Built-in functions as operands"), and evaluated only when their
+  comparison is (`abap.ValueOf`). `ipow( )`, a function of an expression and a function with an arithmetic expression
+  on the other side are calculated with the comparison
+  - abaplint 2.120.120 rejects a `d` compared by `=` or `<>` with `abs( )` or `strlen( )` (`abs( d ) = d`), which
+    ABAP is expected to accept, so the build refuses it (work item below)
 
 Next:
-- [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them, built-in
-  functions and `CONV` as single comparison operands (operands with the type of their result), `CASE` and
-  `DO … TIMES` with expressions, `WRITE sy-index` with the output length of its data element
+- [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,
+  `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as comparison operands; `CASE` and `DO … TIMES`
+  with expressions and built-in functions; `WRITE sy-index` with the output length of its data element
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
@@ -351,6 +358,9 @@ All 380 open issues were read; the parser / check_syntax ones run through abapli
   design question for the abaplint maintainer, not raised. Valid code gets the wrong statement
 - [ ] side finding, no issue: `NEW lcl( )->attr = 1.` gives "Not an object reference, target" for any attribute.
   Check first that ABAP accepts it; if so, valid code is rejected
+- [ ] side finding, no issue (2026-11-26, 2.120.120): a `d` compared by `=` or `<>` with a built-in function of
+  type `i` (`d = strlen( s )`, `abs( d ) = d`) gives "Incompatible types for comparison", while `d = i` passes.
+  ABAP is expected to compare them in `i`, so valid code is rejected
 - [ ] dataset statements: #4644 (ENDIAN, TRUNCATE AT POSITION, SET DATASET ATTRIBUTES not parsed) and #4645
   (inline declarations not handled): valid code fails to parse or is mistyped
 
