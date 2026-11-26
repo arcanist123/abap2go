@@ -84,10 +84,6 @@ Found 2026-11-26, with 2.120.120 and the patch.
   [PR #4761](https://github.com/abaplint/abaplint/pull/4761), open, stacked on
   [PR #4741](https://github.com/abaplint/abaplint/pull/4741); the patch file does not contain it yet. It also rejects
   `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 and #4750 stays
-- [ ] after `WHEN`, `&&`, string templates, string functions (`condense( )`, `to_upper( )`, `substring( )`),
-  `boolc( )`, `xsdbool( )`, bit expressions and table expressions (`tab[ 1 ]`) are accepted, while ABAP is expected
-  to reject them; PR #4761 does not cover them (not raised). Same code (`when.ts`): while PR #4761 is open, stack on
-  its branch `case-when-arithmetic-4747`, as for the `WHEN ( b ).` part of #4748
 - [ ] [#4748](https://github.com/abaplint/abaplint/issues/4748) `CASE ( a ).` and `WHEN ( b ).`, parentheses around
   a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), are accepted, while ABAP is expected to reject
   them; the compiler compiles `CASE ( a ).` as without them. `CASE ( a + 1 ).` is valid
@@ -96,6 +92,12 @@ Found 2026-11-26, with 2.120.120 and the patch.
   (`i = abs( ( i ) ).` is valid)
 - [ ] [#4750](https://github.com/abaplint/abaplint/issues/4750) a parameter name for the argument of `abs( )`,
   `abs( val = i )`, is accepted
+- [ ] [#4762](https://github.com/abaplint/abaplint/issues/4762) after `WHEN`, `&&`, string templates, built-in
+  functions with a character-like result (`condense( )`, `to_upper( )`, `substring( )`, `boolc( )`, `xsdbool( )`),
+  bit expressions and table expressions (`tab[ 1 ]`) are accepted, while ABAP is expected to reject them. The same
+  forms after `CASE`, `'a' & 'b'` and an expression inside a constructor expression are valid. PR #4761 does not cover
+  them. Same code (`when.ts`): while PR #4761 is open, stack on its branch `case-when-arithmetic-4747`, as for the
+  `WHEN ( b ).` part of #4748
 
 ### Syntax checks to move out of the compiler
 
