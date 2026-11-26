@@ -192,6 +192,7 @@ PRs the pinned release does not contain, as of 2026-11-26:
 | [#4739](https://github.com/abaplint/abaplint/pull/4739) | `RETRY` outside a `CATCH` block is an error ([#4723](https://github.com/abaplint/abaplint/issues/4723)) | open |
 | [#4740](https://github.com/abaplint/abaplint/pull/4740) | `CATCH` of an interface or of a class not derived from `CX_ROOT` is an error ([#4725](https://github.com/abaplint/abaplint/issues/4725)) | merged, not released |
 | [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
+| [#4758](https://github.com/abaplint/abaplint/pull/4758) | `SPLIT ... IN BYTE MODE` takes byte-like operands, and its inline targets are `xstring` ([#4757](https://github.com/abaplint/abaplint/issues/4757)) | open |
 
 Released and out of the patch: `WRITE` of a utclong ([#4700](https://github.com/abaplint/abaplint/issues/4700),
 [PR #4701](https://github.com/abaplint/abaplint/pull/4701), in 2.120.119), which the compiler now compiles.
@@ -208,15 +209,14 @@ abaplint (main `af7440a`, default config, `v757`).
   documentation: a macro is valid from its DEFINE onward). Valid code is expanded wrongly
 - [ ] [#4757](https://github.com/abaplint/abaplint/issues/4757) `SPLIT ... IN BYTE MODE`: byte-like targets are
   rejected and inline targets are typed `string` instead of `xstring` (character targets are accepted, though an error
-  is expected). `5_syntax/statements/split.ts` does not look at the mode. We offered a PR
+  is expected). Fixed by [PR #4758](https://github.com/abaplint/abaplint/pull/4758), open, in the patch
 - [ ] [#4755](https://github.com/abaplint/abaplint/issues/4755) `INSERT itab.` parses as InsertDatabase
   (context-free parser); putting it in the InsertInternal grammar is a design question for the abaplint maintainer.
   Valid code gets the wrong statement
 - [ ] [#4754](https://github.com/abaplint/abaplint/issues/4754) `NEW lcl( )->attr = 1.` gives "Not an object
   reference, target" for any attribute
 
-Suggested order: [#1809](https://github.com/abaplint/abaplint/issues/1809) first, then
-[#4757](https://github.com/abaplint/abaplint/issues/4757);
+Suggested order: [#1809](https://github.com/abaplint/abaplint/issues/1809) first;
 [#4755](https://github.com/abaplint/abaplint/issues/4755) after the maintainer's view on the shape.
 
 ### Invalid ABAP accepted

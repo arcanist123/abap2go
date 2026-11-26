@@ -1,5 +1,5 @@
 diff --git a/node_modules/@abaplint/core/build/abaplint.d.ts b/node_modules/@abaplint/core/build/abaplint.d.ts
-index e3ac88b..1840cbc 100644
+index e3ac88b..9107469 100644
 --- a/node_modules/@abaplint/core/build/abaplint.d.ts
 +++ b/node_modules/@abaplint/core/build/abaplint.d.ts
 @@ -432,6 +432,8 @@ declare class Attributes implements IAttributes {
@@ -77,7 +77,37 @@ index e3ac88b..1840cbc 100644
  }
  
  declare class Interface extends ABAPObject {
-@@ -7902,6 +7919,11 @@ declare class SyntaxCheck implements IStatement {
+@@ -4277,6 +4294,9 @@ export declare interface IRenameSettings {
+      * @uniqueItems true
+      */
+     skip?: string[];
++    /** also rename the URLs of renamed ICF nodes (SICF) in the pages of the BSP applications (WAPA),
++     * eg. a data source in a manifest.json, a URL is matched as a whole path, disabled by default */
++    urls?: boolean;
+     /** List of rename patterns
+      * @uniqueItems true
+      */
+@@ -6431,12 +6451,19 @@ declare type ReleaseName = (typeof releaseDefsRaw)[number][0];
+ 
+ export declare class Rename {
+     private readonly reg;
++    private readonly renamedURLs;
+     constructor(reg: IRegistry);
+     /** Applies the renaming to the objects and files in the registry,
+      *  after renaming the registry is not parsed */
+     rename(type: string, oldName: string, newName: string): IRenameResult;
++    /** Renames the old URLs of the ICF nodes renamed by this renamer in the pages of the BSP
++     *  applications, see RenameURLs */
++    renameURLs(): IRenameResult;
+     /** Builds edits, but does not apply to registry, used by LSP */
+     buildEdits(type: string, oldName: string, newName: string): WorkspaceEdit | undefined;
++    private findObject;
++    /** the new URL is the one in the XML file the old XML file was renamed to */
++    private rememberURL;
+     private factory;
+     private apply;
+     private applyEdit;
+@@ -7902,6 +7929,11 @@ declare class SyntaxCheck implements IStatement {
  
  declare type SyntaxInput = {
      scope: CurrentScope;
@@ -89,7 +119,7 @@ index e3ac88b..1840cbc 100644
      filename: string;
      issues: Issue[];
      /** checks which can only run once the full object has been traversed, eg. PERFORM parameters,
-@@ -7909,6 +7931,8 @@ declare type SyntaxInput = {
+@@ -7909,6 +7941,8 @@ declare type SyntaxInput = {
      deferred: (() => void)[];
      /** the statement is inside a LOOP structure */
      inLoop?: boolean;
@@ -98,7 +128,7 @@ index e3ac88b..1840cbc 100644
  };
  
  export declare class SyntaxLogic {
-@@ -7921,8 +7945,10 @@ export declare class SyntaxLogic {
+@@ -7921,8 +7955,10 @@ export declare class SyntaxLogic {
      private scope;
      private loopTables;
      private loopDepth;
@@ -936,6 +966,55 @@ index 0000000..96da2de
 +exports.Retry = Retry;
 +//# sourceMappingURL=retry.js.map
 \ No newline at end of file
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/split.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/split.js
+index 2964ea7..dac7539 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/split.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/split.js
+@@ -43,8 +43,11 @@ const _type_utils_1 = require("../_type_utils");
+ const _syntax_input_1 = require("../_syntax_input");
+ class Split {
+     runSyntax(node, input) {
++        const byteMode = node.findDirectTokenByText("BYTE") !== undefined;
+         const intoTable = node.findTokenSequencePosition("INTO", "TABLE") !== undefined;
+-        const type = intoTable ? new basic_1.TableType(basic_1.StringType.get(), { withHeader: false, keyType: basic_1.TableKeyType.default }) : basic_1.StringType.get();
++        const segment = byteMode ? basic_1.XStringType.get() : basic_1.StringType.get();
++        const type = intoTable ? new basic_1.TableType(segment, { withHeader: false, keyType: basic_1.TableKeyType.default }) : segment;
++        const utils = new _type_utils_1.TypeUtils(input.scope);
+         for (const target of node.findAllExpressions(Expressions.Target)) {
+             const inline = target.findDirectExpression(Expressions.InlineData);
+             if (inline) {
+@@ -64,17 +67,27 @@ class Split {
+                         targetType = targetType.getRowType();
+                     }
+                 }
+-                if (new _type_utils_1.TypeUtils(input.scope).isCharLikeStrict(targetType) === false) {
+-                    const message = "Incompatible, target not character like";
++                const compatible = byteMode ? this.isByteLike(targetType, utils) : utils.isCharLikeStrict(targetType);
++                if (compatible === false) {
++                    const message = "Incompatible, target not " + (byteMode ? "byte" : "character") + " like";
+                     input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), message));
+                     return;
+                 }
+             }
+         }
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
+-            source_1.Source.runSyntax(s, input);
++            const sourceType = source_1.Source.runSyntax(s, input);
++            if (byteMode && sourceType !== undefined && this.isByteLike(sourceType, utils) === false) {
++                const message = "Incompatible, source not byte like";
++                input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), message));
++                return;
++            }
+         }
+     }
++    isByteLike(type, utils) {
++        // the actual type behind "data" and "simple" is only known at runtime
++        return utils.isHexLike(type) || type instanceof basic_1.DataType || type instanceof basic_1.SimpleType;
++    }
+ }
+ exports.Split = Split;
+ //# sourceMappingURL=split.js.map
+\ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
 index 5d1d028..84239ea 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
@@ -1495,19 +1574,159 @@ index 4fd155b..dc1f2e2 100644
 +}
  //# sourceMappingURL=rename_icf_service.js.map
 \ No newline at end of file
+diff --git a/node_modules/@abaplint/core/build/src/objects/rename/rename_urls.js b/node_modules/@abaplint/core/build/src/objects/rename/rename_urls.js
+new file mode 100644
+index 0000000..02fcc98
+--- /dev/null
++++ b/node_modules/@abaplint/core/build/src/objects/rename/rename_urls.js
+@@ -0,0 +1,63 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.RenameURLs = void 0;
++const vscode_languageserver_types_1 = require("vscode-languageserver-types");
++const bsp_application_1 = require("../bsp_application");
++/** Renames the URLs of renamed ICF nodes in the pages of the BSP applications, eg. a data source
++ *  in a manifest.json, "/sap/bc/zfoo" -> "/sap/bc/ns/foo". A BSP refers to an ICF node by its URL,
++ *  which no reference of the renamer knows. A URL is matched as a whole path, without its trailing
++ *  "/" and in any case: "/sap/bc/zfoo", "/sap/bc/zfoo/" and "/sap/bc/zfoo?x=1", not "/sap/bc/zfoo_bar".
++ *  The XML of the application, its attributes and the list of its pages, is not changed */
++class RenameURLs {
++    constructor(reg) {
++        this.reg = reg;
++    }
++    buildEdits(urls) {
++        var _a;
++        const documentChanges = [];
++        const map = new Map();
++        for (const u of urls) {
++            const oldPath = withoutSlash(u.oldURL).toLowerCase();
++            if (oldPath !== "") {
++                map.set(oldPath, withoutSlash(u.newURL).toLowerCase());
++            }
++        }
++        if (map.size === 0) {
++            return { documentChanges };
++        }
++        // longest first, one pass: a replaced URL is not matched again
++        const alternatives = Array.from(map.keys()).sort((a, b) => b.length - a.length).map(escape);
++        const regex = new RegExp("(" + alternatives.join("|") + ")(?![A-Za-z0-9_-])", "gi");
++        for (const obj of this.reg.getObjectsByType("WAPA")) {
++            if (!(obj instanceof bsp_application_1.BSPApplication) || this.reg.isDependency(obj)) {
++                continue;
++            }
++            const descriptor = (_a = obj.getXMLFile()) === null || _a === void 0 ? void 0 : _a.getFilename();
++            for (const file of obj.getFiles()) {
++                if (file.getFilename() === descriptor) {
++                    continue;
++                }
++                const edits = [];
++                const rows = file.getRawRows();
++                for (let i = 0; i < rows.length; i++) {
++                    const replaced = rows[i].replace(regex, found => { var _a; return (_a = map.get(found.toLowerCase())) !== null && _a !== void 0 ? _a : found; });
++                    if (replaced !== rows[i]) {
++                        edits.push(vscode_languageserver_types_1.TextEdit.replace(vscode_languageserver_types_1.Range.create(i, 0, i, rows[i].length), replaced));
++                    }
++                }
++                if (edits.length > 0) {
++                    documentChanges.push(vscode_languageserver_types_1.TextDocumentEdit.create({ uri: file.getFilename(), version: 1 }, edits));
++                }
++            }
++        }
++        return { documentChanges };
++    }
++}
++exports.RenameURLs = RenameURLs;
++function withoutSlash(url) {
++    return url.endsWith("/") ? url.substring(0, url.length - 1) : url;
++}
++function escape(s) {
++    return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
++}
++//# sourceMappingURL=rename_urls.js.map
+\ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/objects/rename/renamer.js b/node_modules/@abaplint/core/build/src/objects/rename/renamer.js
-index 880fc48..77d5110 100644
+index 880fc48..099f5d7 100644
 --- a/node_modules/@abaplint/core/build/src/objects/rename/renamer.js
 +++ b/node_modules/@abaplint/core/build/src/objects/rename/renamer.js
-@@ -12,6 +12,7 @@ const rename_table_1 = require("./rename_table");
+@@ -12,13 +12,18 @@ const rename_table_1 = require("./rename_table");
  const rename_table_type_1 = require("./rename_table_type");
  const rename_message_class_1 = require("./rename_message_class");
  const rename_icf_service_1 = require("./rename_icf_service");
++const rename_urls_1 = require("./rename_urls");
++const icf_service_1 = require("../icf_service");
 +const rename_bsp_application_1 = require("./rename_bsp_application");
  class Renamer {
      constructor(reg) {
++        this.renamedURLs = [];
          this.reg = reg;
-@@ -68,6 +69,8 @@ class Renamer {
+     }
+     /** Applies the renaming to the objects and files in the registry,
+      *  after renaming the registry is not parsed */
+     rename(type, oldName, newName) {
++        var _a;
+         const edits = this.buildEdits(type, oldName, newName);
+         if (edits === undefined) {
+             throw new Error("no changes could be determined");
+@@ -26,17 +31,28 @@ class Renamer {
+         else if (edits.changes) {
+             throw new Error("only documentChanges expected");
+         }
++        const before = type === "SICF" ? this.findObject(type, oldName) : undefined;
++        const oldURL = before instanceof icf_service_1.ICFService ? before.getURL() : undefined;
++        const oldXML = (_a = before === null || before === void 0 ? void 0 : before.getXMLFile()) === null || _a === void 0 ? void 0 : _a.getFilename();
+         const result = this.apply(edits);
+         this.reg.findIssues(); // hmm, this builds the ddic references
++        if (oldURL !== undefined && oldXML !== undefined) {
++            this.rememberURL(edits, oldURL, oldXML);
++        }
++        return result;
++    }
++    /** Renames the old URLs of the ICF nodes renamed by this renamer in the pages of the BSP
++     *  applications, see RenameURLs */
++    renameURLs() {
++        this.reg.parse();
++        const result = this.apply(new rename_urls_1.RenameURLs(this.reg).buildEdits(this.renamedURLs));
++        this.reg.parse();
+         return result;
+     }
+     /** Builds edits, but does not apply to registry, used by LSP */
+     buildEdits(type, oldName, newName) {
+         this.reg.parse(); // the registry must be parsed to dermine references
+-        let obj = this.reg.getObject(type, oldName);
+-        if (obj === undefined && type === "SICF") {
+-            obj = Array.from(this.reg.getObjects()).find(o => o.getType() === "SICF" && o.getName().toUpperCase().startsWith(oldName.toUpperCase() + " "));
+-        }
++        const obj = this.findObject(type, oldName);
+         if (obj === undefined) {
+             throw new Error("rename, object not found");
+         }
+@@ -48,6 +64,25 @@ class Renamer {
+         return r.buildEdits(obj, oldName.toUpperCase(), newName);
+     }
+     //////////////////
++    findObject(type, name) {
++        let obj = this.reg.getObject(type, name);
++        if (obj === undefined && type === "SICF") {
++            obj = Array.from(this.reg.getObjects()).find(o => o.getType() === "SICF" && o.getName().toUpperCase().startsWith(name.toUpperCase() + " "));
++        }
++        return obj;
++    }
++    /** the new URL is the one in the XML file the old XML file was renamed to */
++    rememberURL(edits, oldURL, oldXML) {
++        var _a, _b;
++        for (const dc of edits.documentChanges || []) {
++            if (vscode_languageserver_types_1.RenameFile.is(dc) && dc.oldUri === oldXML) {
++                const newURL = (_b = (_a = this.reg.getFileByName(dc.newUri)) === null || _a === void 0 ? void 0 : _a.getRaw().match(/<URL>([^<]*)<\/URL>/)) === null || _b === void 0 ? void 0 : _b[1];
++                if (newURL !== undefined && newURL.toLowerCase() !== oldURL.toLowerCase()) {
++                    this.renamedURLs.push({ oldURL, newURL });
++                }
++            }
++        }
++    }
+     factory(type) {
+         switch (type) {
+             case "CLAS":
+@@ -68,6 +103,8 @@ class Renamer {
                  return new rename_message_class_1.RenameMessageClass(this.reg);
              case "SICF":
                  return new rename_icf_service_1.RenameICFService(this.reg);
@@ -1516,7 +1735,7 @@ index 880fc48..77d5110 100644
              default:
                  throw new Error("Renaming of " + type + " not yet supported");
          }
-@@ -79,11 +82,21 @@ class Renamer {
+@@ -79,11 +116,21 @@ class Renamer {
              deletedFiles: new Set(),
              updatedFiles: new Set(),
          };
@@ -1602,7 +1821,7 @@ index 0d2141e..96bbad3 100644
              || !(rest[1].get() instanceof Expressions.CompareOperator)) {
              return undefined;
 diff --git a/node_modules/@abaplint/core/build/src/rules/downport.js b/node_modules/@abaplint/core/build/src/rules/downport.js
-index 46ce2f9..382359e 100644
+index 46ce2f9..a8e5132 100644
 --- a/node_modules/@abaplint/core/build/src/rules/downport.js
 +++ b/node_modules/@abaplint/core/build/src/rules/downport.js
 @@ -183,6 +183,7 @@ Current rules:
@@ -1656,7 +1875,112 @@ index 46ce2f9..382359e 100644
          const highObj = this.highReg.getObject(lowObj.getType(), lowObj.getName());
          if (highObj === undefined || !(highObj instanceof _abap_object_1.ABAPObject)) {
              return ret;
-@@ -1165,7 +1195,7 @@ ${indentation}`);
+@@ -720,11 +750,18 @@ Make sure to test the downported code, it might not always be completely correct
+             && !(high.get() instanceof Statements.SelectLoop)) {
+             return undefined;
+         }
+-        // note: SQLCond is also used in JOIN(FROM) conditions
+-        const where = (_a = high.findFirstExpression(Expressions.Select)) === null || _a === void 0 ? void 0 : _a.findDirectExpression(Expressions.SQLCond);
+-        if (where === undefined) {
++        // note: SQLCond is also used in JOIN(FROM) conditions. INTO after any of WHERE, GROUP BY,
++        // HAVING or ORDER BY is strict syntax, the first of them is where INTO has to be in front of
++        const clauses = [
++            (_a = high.findFirstExpression(Expressions.Select)) === null || _a === void 0 ? void 0 : _a.findDirectExpression(Expressions.SQLCond),
++            high.findFirstExpression(Expressions.SQLGroupBy),
++            high.findFirstExpression(Expressions.SQLHaving),
++            high.findFirstExpression(Expressions.SQLOrderBy),
++        ].filter(c => c !== undefined);
++        if (clauses.length === 0) {
+             return undefined;
+         }
++        const first = clauses.reduce((a, b) => b.getFirstToken().getStart().isBefore(a.getFirstToken().getStart()) ? b : a);
+         // the FIELDS list sits between FROM and WHERE, wait for it to be removed first
+         if (high.findFirstExpression(Expressions.SQLFields) !== undefined) {
+             return undefined;
+@@ -739,21 +776,26 @@ Make sure to test the downported code, it might not always be completely correct
+         if (into === undefined) {
+             return undefined;
+         }
+-        if (where.getLastToken().getEnd().isBefore(into.getFirstToken().getStart()) === false) {
++        if (first.getFirstToken().getStart().isBefore(into.getFirstToken().getStart()) === false) {
+             return undefined;
+         }
+         const from = high.findFirstExpression(Expressions.SQLFrom);
+         if (from === undefined) {
+             return undefined;
+         }
+-        // UP TO after INTO is not valid behind WHERE or ORDER BY, move it along in front of INTO
++        // UP TO and BYPASSING BUFFER after INTO are not valid behind WHERE or ORDER BY, they belong to
++        // FROM in the old syntax: move them along in front of INTO, FROM ... BYPASSING BUFFER UP TO n ROWS INTO
+         let move = into.concatTokens();
+         const fixes = [];
+-        const upTo = high.findFirstExpression(Expressions.SQLUpTo);
+-        if (upTo !== undefined
+-            && into.getLastToken().getEnd().isBefore(upTo.getFirstToken().getStart())) {
+-            move = upTo.concatTokens() + ` ` + move;
+-            fixes.push(edit_helper_1.EditHelper.deleteRange(lowFile, upTo.getFirstToken().getStart(), upTo.getLastToken().getEnd()));
++        const along = [high.findFirstExpression(Expressions.SQLUpTo), high.findFirstExpression(Expressions.SQLBypassingBuffer)]
++            .filter(e => e !== undefined && into.getLastToken().getEnd().isBefore(e.getFirstToken().getStart()));
++        for (const e of along) {
++            move = e.concatTokens() + ` ` + move;
++        }
++        // edits are applied in sequence, so delete the later one first
++        along.sort((a, b) => b.getFirstToken().getStart().isBefore(a.getFirstToken().getStart()) ? -1 : 1);
++        for (const e of along) {
++            fixes.push(edit_helper_1.EditHelper.deleteRange(lowFile, e.getFirstToken().getStart(), e.getLastToken().getEnd()));
+         }
+         // edits are applied in sequence, so work from the end of the statement towards the start
+         fixes.push(edit_helper_1.EditHelper.deleteRange(lowFile, into.getFirstToken().getStart(), into.getLastToken().getEnd()));
+@@ -800,15 +842,11 @@ Make sure to test the downported code, it might not always be completely correct
+             && !(high.get() instanceof Statements.CloseCursor)) {
+             return undefined;
+         }
+-        let fix = undefined;
++        // the edits of a fix are applied one after the other, a deletion moves what follows it in the
++        // same row: collect the tokens and delete from the end of the statement towards its start
++        const toDelete = [];
+         const addFix = (token) => {
+-            const add = edit_helper_1.EditHelper.deleteToken(lowFile, token);
+-            if (fix === undefined) {
+-                fix = add;
+-            }
+-            else {
+-                fix = edit_helper_1.EditHelper.merge(fix, add);
+-            }
++            toDelete.push(token);
+         };
+         const candidates = [high.findAllExpressionsRecursive(Expressions.SQLTarget),
+             high.findAllExpressionsRecursive(Expressions.SQLSource),
+@@ -847,14 +885,17 @@ ${indentation}${uniqueName} = ${source === null || source === void 0 ? void 0 :
+                 }
+             }
+         }
+-        for (const fieldList of high.findAllExpressionsMulti([Expressions.SQLFieldList, Expressions.SQLFieldListLoop, Expressions.SQLOrderBy], true)) {
++        for (const fieldList of high.findAllExpressionsMulti([Expressions.SQLFieldList, Expressions.SQLFieldListLoop, Expressions.SQLOrderBy,
++            Expressions.SQLGroupBy], true)) {
+             for (const token of fieldList.getDirectTokens()) {
+                 if (token.getStr() === ",") {
+                     addFix(token);
+                 }
+             }
+         }
+-        if (fix !== undefined) {
++        if (toDelete.length > 0) {
++            toDelete.sort((a, b) => b.getStart().isBefore(a.getStart()) ? -1 : 1);
++            const fix = edit_helper_1.EditHelper.mergeList(toDelete.map(t => edit_helper_1.EditHelper.deleteToken(lowFile, t)));
+             return issue_1.Issue.atToken(lowFile, low.getFirstToken(), "SQL, remove @ and ,", this.getMetadata().key, this.conf.severity, fix);
+         }
+         for (const c of high.findAllExpressionsRecursive(Expressions.SQLIn)) {
+@@ -871,7 +912,7 @@ ${indentation}${uniqueName} = ${source === null || source === void 0 ? void 0 :
+                 const lastStart = last.getFirstToken().getStart();
+                 const startDelete = new position_1.Position(lastStart.getRow(), lastStart.getCol() - 1);
+                 const fix2 = edit_helper_1.EditHelper.deleteRange(lowFile, startDelete, lastStart);
+-                fix = edit_helper_1.EditHelper.merge(fix2, fix1);
++                const fix = edit_helper_1.EditHelper.merge(fix2, fix1);
+                 return issue_1.Issue.atToken(lowFile, low.getFirstToken(), "SQL, remove spaces", this.getMetadata().key, this.conf.severity, fix);
+             }
+         }
+@@ -1165,7 +1206,7 @@ ${indentation}`);
              const indentation = " ".repeat(high.getFirstToken().getStart().getCol() - 1);
              const firstToken = high.getFirstToken();
              const fix1 = edit_helper_1.EditHelper.insertAt(lowFile, firstToken.getStart(), `DATA ${uniqueName} LIKE LINE OF ${target === null || target === void 0 ? void 0 : target.concatTokens()}.
@@ -1665,7 +1989,7 @@ index 46ce2f9..382359e 100644
              const fix2 = edit_helper_1.EditHelper.replaceRange(lowFile, source.getFirstToken().getStart(), source.getLastToken().getEnd(), uniqueName);
              const fix = edit_helper_1.EditHelper.merge(fix2, fix1);
              return issue_1.Issue.atToken(lowFile, high.getFirstToken(), "Outline APPEND source expression", this.getMetadata().key, this.conf.severity, fix);
-@@ -1221,7 +1251,7 @@ ${indentation}${uniqueName} = ${source.concatTokens()}.\n${indentation}`);
+@@ -1221,7 +1262,7 @@ ${indentation}${uniqueName} = ${source.concatTokens()}.\n${indentation}`);
              const indentation = " ".repeat(high.getFirstToken().getStart().getCol() - 1);
              const firstToken = high.getFirstToken();
              const fix1 = edit_helper_1.EditHelper.insertAt(lowFile, firstToken.getStart(), `DATA ${uniqueName} LIKE LINE OF ${target === null || target === void 0 ? void 0 : target.concatTokens()}.
@@ -1674,7 +1998,43 @@ index 46ce2f9..382359e 100644
              const fix2 = edit_helper_1.EditHelper.replaceRange(lowFile, source.getFirstToken().getStart(), source.getLastToken().getEnd(), uniqueName);
              const fix = edit_helper_1.EditHelper.merge(fix2, fix1);
              return issue_1.Issue.atToken(lowFile, high.getFirstToken(), "Outline INSERT source expression", this.getMetadata().key, this.conf.severity, fix);
-@@ -2903,11 +2933,11 @@ ${indentation}    output = ${uniqueName}.\n`;
+@@ -1287,7 +1328,7 @@ ENDIF.`;
+ ${read.replace(/^/gm, "  ")}
+ ENDIF.`;
+             }
+-            const fix1 = edit_helper_1.EditHelper.insertAt(lowFile, firstToken.getStart(), `FIELD-SYMBOLS ${uniqueName} LIKE LINE OF ${pre}.
++            const fix1 = edit_helper_1.EditHelper.insertAt(lowFile, firstToken.getStart(), `FIELD-SYMBOLS ${uniqueName} ${this.rowOf(pre, high, lowFile, highSyntax)}.
+ ${indentation}DATA ${tabixBackup} LIKE sy-tabix.
+ ${read.replace(/\n/g, "\n" + indentation).replace(/^/, indentation)}
+ ${indentation}`);
+@@ -2207,6 +2248,17 @@ CONSTANTS: BEGIN OF ${structureName},\n`;
+         const fix = edit_helper_1.EditHelper.replaceRange(lowFile, start, end, code);
+         return issue_1.Issue.atToken(lowFile, high.getFirstToken(), "Downport ENUM", this.getMetadata().key, this.conf.severity, fix);
+     }
++    /** the type of a field symbol for a row of the table, LIKE LINE OF a generically typed table is
++     *  refused by the system, "<TAB> is a generic type" - the field symbol is then TYPE any */
++    rowOf(table, high, lowFile, highSyntax) {
++        var _a;
++        const spag = highSyntax.spaghetti.lookupPosition(high.getFirstToken().getStart(), lowFile.getFilename());
++        const type = (_a = spag === null || spag === void 0 ? void 0 : spag.findVariable(table)) === null || _a === void 0 ? void 0 : _a.getType();
++        if (type instanceof basic_1.TableType && type.isGeneric() === true) {
++            return "TYPE any";
++        }
++        return "LIKE LINE OF " + table;
++    }
+     moveWithTableTarget(low, high, lowFile, highSyntax) {
+         var _a;
+         if (!(low.get() instanceof _statement_1.Unknown)) {
+@@ -2241,7 +2293,7 @@ CONSTANTS: BEGIN OF ${structureName},\n`;
+         const tabixBackup = this.uniqueName(high.getFirstToken().getStart(), lowFile.getFilename(), highSyntax);
+         const indentation = " ".repeat(high.getFirstToken().getStart().getCol() - 1);
+         // restore tabix before exeption
+-        const code = `FIELD-SYMBOLS ${uniqueName} LIKE LINE OF ${tName}.
++        const code = `FIELD-SYMBOLS ${uniqueName} ${this.rowOf(tName, high, lowFile, highSyntax)}.
+ ${indentation}DATA ${tabixBackup} LIKE sy-tabix.
+ ${indentation}${tabixBackup} = sy-tabix.
+ ${indentation}READ TABLE ${tName} ${condition}ASSIGNING ${uniqueName}.
+@@ -2903,11 +2955,11 @@ ${indentation}    output = ${uniqueName}.\n`;
                          }
                          else if (b.get() instanceof Expressions.Source) {
                              // note: it wont work with APPEND for Hashed/Sorted Tables, so use INSERT,
