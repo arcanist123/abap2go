@@ -62,30 +62,37 @@ export class BlockLowerer {
       return lowerMove(statement, this.variables, where);
     } else if (kind instanceof Statements.Assert) {
       return lowerAssert(statement, this.variables, where);
-    } else if (kind instanceof Statements.Exit || kind instanceof Statements.Continue || kind instanceof Statements.Check) {
-      return this.loopStatement(statement, where);
+    } else if (kind instanceof Statements.Exit || kind instanceof Statements.Continue || kind instanceof Statements.Check
+        || kind instanceof Statements.Return) {
+      return this.leaveStatement(statement, where);
     }
     return this.leaf(statement, where);
   }
 
-  /** EXIT, CONTINUE and CHECK in a loop. Outside a loop they leave the processing block, which is not supported yet. */
-  private loopStatement(statement: abaplint.Nodes.StatementNode, where: Where): IRStatement {
+  /**
+   * RETURN, EXIT, CONTINUE and CHECK. In a loop, the last three refer to the innermost one. Outside a loop, EXIT and
+   * CHECK leave the processing block, as RETURN does everywhere.
+   */
+  private leaveStatement(statement: abaplint.Nodes.StatementNode, where: Where): IRStatement {
     const kind = statement.get();
-    const name = statement.getFirstToken().getStr().toUpperCase();
-    if (this.loops === 0) {
-      throw new BuildError(`${name} outside a loop is not supported yet`, where);
-    }
     if (kind instanceof Statements.Check) {
       const cond = statement.findDirectExpression(Expressions.Cond);
       if (cond === undefined) {
         throw new BuildError(`${statement.concatTokens()}: only CHECK <condition>. is supported yet`, where);
       }
-      return { kind: "check", condition: lowerCondition(cond, this.variables, where) };
+      const leaves = this.loops === 0 ? "block" : "pass";
+      return { kind: "check", condition: lowerCondition(cond, this.variables, where), leaves };
     }
     if (statement.getChildren().length !== 2) {
       throw new BuildError(`${statement.concatTokens()}: no additions are supported yet`, where);
     }
-    return kind instanceof Statements.Exit ? { kind: "exit" } : { kind: "continue" };
+    if (kind instanceof Statements.Continue) {
+      if (this.loops === 0) {
+        throw new BuildError("CONTINUE is only possible in a loop", where);
+      }
+      return { kind: "continue" };
+    }
+    return kind instanceof Statements.Exit && this.loops > 0 ? { kind: "exit" } : { kind: "return" };
   }
 
   /** IF cond. ... [ELSEIF cond. ...]* [ELSE. ...] ENDIF. */

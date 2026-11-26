@@ -30,7 +30,7 @@ Priority, when choosing what to pick up next:
 
 This file is the source of status for abap2go and the work it needs in other repositories.
 
-## The compiler (status 2026-11-25)
+## The compiler (status 2026-11-26)
 
 TypeScript on `@abaplint/core`, emitting Go (`src/`, runtime in `runtime/go`); `npm test` builds and runs small
 programs end to end and runs the Go runtime's tests. No CI yet.
@@ -122,11 +122,11 @@ Done:
   - `NOT` repeated any number of times (2026-11-25, abaplint #4714, in the abaplint patch): an even number cancels out
   - `DATA` is not executable: every variable of a processing block exists from its start with its start value, also
     one declared in a loop or a branch
-  - refused: `EXIT`, `CONTINUE` and `CHECK` outside a loop (they leave the processing block), `DO … VARYING`,
-    `WHILE … VARY`, an arithmetic expression as the operand of `CASE`, `WHEN` or `DO … TIMES`, `CASE` without
-    `WHEN`, a lone built-in function as a comparison operand, comparisons of kinds without a comparison type (`d` with
-    `t`, `utclong` with anything but `c`, `string` and `utclong`), a non-numeric single operand against an arithmetic
-    expression, the other predicates (`IS`, `IN`, `CO`, …), `WRITE sy-index` (the output length of its data element)
+  - refused: `DO … VARYING`, `WHILE … VARY`, an arithmetic expression as the operand of `CASE`, `WHEN` or
+    `DO … TIMES`, `CASE` without `WHEN`, a lone built-in function as a comparison operand, comparisons of kinds
+    without a comparison type (`d` with `t`, `utclong` with anything but `c`, `string` and `utclong`), a non-numeric
+    single operand against an arithmetic expression, the other predicates (`IS`, `IN`, `CO`, …), `WRITE sy-index`
+    (the output length of its data element)
 - the arithmetic tests of abaplint/transpiler as end-to-end fixtures (2026-11-25, `test/transpiler/*.txt`, run by
   `test/transpiler.test.ts`, MIT, see `NOTICE`): the 157 ABAP snippets of `test/operators/arithmetics*.ts`,
   `mod.ts`, `test/types/*_operations.ts`, `integer8_calculation_type.ts` and `conversion_no_number.ts`, one
@@ -144,12 +144,22 @@ Done:
     internal tables 11, `ADD`/`SUBTRACT`/`MULTIPLY`/`DIVIDE` 6, `sign( )` and `exp( )` 6, `CONSTANTS` 3, field
     symbols 1, `CO` 1, the build-time check of literals 6. A waiting case runs as a todo, so it shows once it passes
   - no compiled snippet gave a value other than the expected one
+- leaving the processing block (2026-11-26, `src/lower_block.ts`, `test/control_flow.test.ts`): `RETURN` anywhere,
+  and outside a loop `EXIT` and `CHECK <condition>`. In a method the method ends; in a report the list is still
+  written
+  - a report can have several `START-OF-SELECTION` blocks, the statements before the first one being a block of
+    their own. They run in order and each starts a new line of the list (before, they ran as one block, without that
+    line break). A `CHECK` outside a loop whose condition is false leaves its block only, so the next one runs;
+    `RETURN` and `EXIT` skip the blocks still to run. The same difference is expected to matter for
+    `END-OF-SELECTION` once it is compiled: per the keyword documentation, no further reporting event is raised
+    after `RETURN` or `EXIT`, while `CHECK` ends the block in the regular way
+  - refused: `CONTINUE` outside a loop (a syntax error), `RETURN` with an operand (functional methods are not
+    compiled), `EXIT` with an addition, `CHECK` without a condition
 
 Next:
-- [ ] control flow, the rest: `EXIT`, `CHECK` and `RETURN` outside loops (leaving the processing block), `IS
-  INITIAL` and the other predicates once the comparison table has them, built-in functions and `CONV` as single
-  comparison operands (operands with the type of their result), `CASE` and `DO … TIMES` with expressions,
-  `WRITE sy-index` with the output length of its data element
+- [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them, built-in
+  functions and `CONV` as single comparison operands (operands with the type of their result), `CASE` and
+  `DO … TIMES` with expressions, `WRITE sy-index` with the output length of its data element
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
