@@ -61,6 +61,12 @@ const outOfBounds: [string, string][] = [
   ["a negative length", "len = -1. r = s(len)."],
   ["beyond the end of a string", "off = 7. r = s+off."],
   ["a target beyond the end", "off = 4. len = 2. c5+off(len) = 'zz'."],
+  ["a static offset at the end of a flat field, with a variable length of 0", "len = 0. r = c5+5(len)."],
+  ["a static offset at the end of a flat field, with a variable length", "len = 1. r = c5+5(len)."],
+  ["a static offset beyond a flat field, with a variable length", "len = 1. r = c5+6(len)."],
+  ["a static offset at the end of an x, with a variable length", "len = 1. r = x4+4(len)."],
+  ["a target at a static offset at the end, with a variable length", "len = 1. c5+5(len) = 'z'."],
+  ["a static length beyond a flat field, with a variable offset", "off = 0. r = c5+off(6)."],
 ];
 for (const [name, body] of outOfBounds) {
   test(`substring out of bounds: ${name}`, () => {
@@ -78,6 +84,8 @@ test("substring: WRITE of subfields has their length", () => {
 // What ABAP rejects as a syntax error is refused at build time, whether abaplint reports it or the compiler does.
 const refusals: [string, string, RegExp][] = [
   ["a static offset at the end of a flat field", "r = c5+5.", /offset 5 is not within|syntax check/],
+  ["a static offset beyond a flat field", "r = c5+6.", /offset 6 is not within|syntax check/],
+  ["a static offset at the end with a static length", "r = c5+5(1).", /offset 5 is not within|syntax check/],
   ["static bounds beyond a flat field", "r = c5+4(2).", /exceed the length 5|syntax check/],
   ["a static length of 0", "r = c5+1(0).", /greater than 0|syntax check/],
   ["a subfield of an i", "r = i+1(2).", /does not permit subfields|syntax check/],
