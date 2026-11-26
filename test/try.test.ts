@@ -422,14 +422,14 @@ ENDTRY.`), /RETRY is only allowed in a CATCH block/);
         RETRY.
     ENDTRY.
 ENDTRY.`), /RETRY is only allowed in a CATCH block/);
-  for (const leave of ["EXIT.", "CONTINUE.", "CHECK n = 1."]) {
+  for (const leave of ["RETURN.", "EXIT.", "CONTINUE.", "CHECK n = 1."]) {
     assert.match(refused(`DO 2 TIMES.
   TRY.
       n = 1.
     CLEANUP.
       ${leave}
   ENDTRY.
-ENDDO.`), /cannot leave a CLEANUP block/);
+ENDDO.`), /do not pass the syntax check/);
   }
   assert.match(refused(`TRY.
     n = 1.

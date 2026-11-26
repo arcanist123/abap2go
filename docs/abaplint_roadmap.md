@@ -39,8 +39,12 @@ argument otherwise).
 
 ## Now: what abap2go has run into
 
-Valid code rejected: nothing open. The last case,
-[#4726](https://github.com/abaplint/abaplint/issues/4726), is fixed by
+Valid code rejected:
+- [ ] a static offset or length beyond a flat field while the other one is a variable (`c+5(off)`, `c+off(6)` with
+  `c TYPE c LENGTH 5`): ABAP is expected to accept it and to decide at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`). The
+  compiler's own check refuses `c+5(off)` too (`src/lower_common.ts`). Not raised
+
+[#4726](https://github.com/abaplint/abaplint/issues/4726) is fixed by
 [PR #4727](https://github.com/abaplint/abaplint/pull/4727), in the patch.
 
 Valid code mistyped:
@@ -59,12 +63,15 @@ these.
   refuses them, as operands it does not compile
 - [ ] `CASE ( a ).`, parentheses around a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), is
   accepted and compiled as without them, while ABAP is expected to reject it. `CASE ( a + 1 ).` is valid
+- [ ] parentheses around a single operand as the argument of a built-in function (`abs( ( i ) )`,
+  `strlen( ( c ) )`) are accepted, while ABAP is expected to reject them
 
 ### Syntax checks to move out of the compiler
 
 The compiler still has syntax checks of its own, from before the decision that it does not reimplement the syntax
-check. Each one goes once abaplint reports the case. Compared on 2026-11-26 with 2.120.120 and the patch, one or a
-few snippets per case.
+check. Each one goes once abaplint reports the case in every form. Compared on 2026-11-26 with 2.120.120 and the
+patch. Removed that day, since abaplint reports them: `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP`
+block, a subfield of a string as a target, and `strlen( )` of an argument that is not character-like.
 
 abaplint accepts these, so the fix goes into abaplint:
 - [ ] [#4723](https://github.com/abaplint/abaplint/issues/4723) `RETRY` outside a `CATCH` block (`src/lower_block.ts`)
@@ -84,18 +91,19 @@ abaplint accepts these, so the fix goes into abaplint:
 - [ ] a number literal of more than 31 digits (`src/lower_common.ts`): ABAP is expected to give a syntax error, and
   31 digits are fine, as the compiler has it. Still to work out: whether leading zeros count. With the typing of
   number literals above
-- [ ] expected behaviour to work out first: `CASE` without any `WHEN` (`src/lower_block.ts`)
+- [ ] `CASE` without any `WHEN` (`src/lower_block.ts`): ABAP is expected to give a syntax error. Not raised
+- [ ] a subfield of a `utclong` in a reading position, `s = u+1(1)` (`src/lower_common.ts`); abaplint reports
+  subfields of the numeric types. Not raised
+- [ ] static bounds outside a flat field of type `n`, `d` or `t`, `d+8`, `n(5)` (`src/lower_common.ts`); abaplint
+  checks `c` and `x`. Not raised
+- [ ] a non-numeric operand against `ipow( )` or a function of an expression, `c = abs( i + 1 )`, and against an
+  arithmetic expression elsewhere in a `BETWEEN`, `1 BETWEEN c AND i + 1` (`src/lower_cond.ts`); abaplint reports
+  it for operators and signs, between the two sides of a comparison and between the operand of a `BETWEEN` and each
+  bound. Not raised
 
 Out of this list: statements between `CASE` and the first `WHEN`. ABAP is expected to give only a warning, so the
 code is valid and abaplint is right to accept it. The compiler refuses it as not supported yet, a gap of the compiler
 ([roadmap.md](roadmap.md), "Next").
-
-abaplint reports these, so the compiler's check can be removed:
-- [ ] `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block (`src/lower_block.ts`)
-- [ ] subfields of a type without them, a subfield of a string as a target, static bounds outside a flat field
-  (`src/lower_common.ts`)
-- [ ] `strlen( )` of an argument that is not character-like (`src/lower_arith.ts`)
-- [ ] `c`, `d`, `t`, `x` or `string` compared with an arithmetic expression (`src/lower_cond.ts`; `utclong` is above)
 
 ## Later: with the compiler step that needs it
 

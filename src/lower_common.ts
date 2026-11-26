@@ -1,7 +1,7 @@
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
 import { IRCalculate, IRData, IRLiteral, IRMove, IRSource, IRSubstring, IRSystemField, IRTarget, IRType, IRVariable } from "./ir";
-import { isArithmetic, lowerCalculate } from "./lower_arith";
+import { isArithmetic, lowerCalculate, unparenthesized } from "./lower_arith";
 
 const { Expressions, BasicTypes } = abaplint;
 
@@ -195,8 +195,9 @@ export function irType(type: abaplint.AbstractType, name: string, where: Where):
 
 const SIMPLE_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
-/** A Source that is a literal, a variable or a subfield of a variable, or a build error. */
-export function lowerSource(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where, what: string): IRSource {
+/** A Source that is a literal, a variable or a subfield of a variable, perhaps in parentheses, or a build error. */
+export function lowerSource(node: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where, what: string): IRSource {
+  const source = unparenthesized(node);
   const constant = source.getChildren().length === 1 ? source.findDirectExpression(Expressions.Constant) : undefined;
   if (constant !== undefined) {
     return lowerConstant(constant, where);
@@ -229,7 +230,7 @@ export function lowerFieldChain(chain: abaplint.Nodes.ExpressionNode, variables:
     return undefined;
   }
   const base = variables.find(field.concatTokens(), field, where);
-  return rest.length === 0 ? base : lowerSubstring(base, rest, variables, where, false);
+  return rest.length === 0 ? base : lowerSubstring(base, rest, variables, where);
 }
 
 function isOffsetOrLength(node: abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode): boolean {
@@ -245,17 +246,17 @@ export function lowerTarget(target: abaplint.Nodes.ExpressionNode, variables: Va
     throw new BuildError(`${target.concatTokens()}: only a variable or a subfield is supported as target yet`, where);
   }
   const base = variables.find(field.concatTokens(), field, where);
-  return rest.length === 0 ? base : lowerSubstring(base, rest, variables, where, true);
+  return rest.length === 0 ? base : lowerSubstring(base, rest, variables, where);
 }
 
 const SUBFIELD_KINDS = new Set(["c", "n", "d", "t", "string", "x", "xstring"]);
 
 /**
- * The subfield of base given by its FieldOffset and FieldLength nodes. What ABAP rejects as a syntax error is a build
- * error: a type without subfields, a subfield of a string as a target, static bounds outside a flat field.
+ * The subfield of base given by its FieldOffset and FieldLength nodes. These ABAP syntax errors, which abaplint does
+ * not report in every case yet, are build errors: a type without subfields, static bounds outside a flat field.
  */
 function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode)[],
-    variables: Variables, where: Where, isTarget: boolean): IRSubstring {
+    variables: Variables, where: Where): IRSubstring {
   const offsetNode = nodes.find(n => n instanceof abaplint.Nodes.ExpressionNode && n.get() instanceof Expressions.FieldOffset);
   const lengthNode = nodes.find(n => n instanceof abaplint.Nodes.ExpressionNode && n.get() instanceof Expressions.FieldLength);
   const text = `${base.name}${nodes.map(n => n.concatTokens()).join("")}`;
@@ -263,9 +264,6 @@ function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode 
     throw new BuildError(`${text}: type ${base.type.kind} does not permit subfields`, where);
   }
   const flat = base.type.kind !== "string" && base.type.kind !== "xstring";
-  if (isTarget && !flat) {
-    throw new BuildError(`${text}: a subfield of a ${base.type.kind} cannot be written to`, where);
-  }
 
   // the offset or length: an integer or a variable
   const position = (node: abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode | undefined): IRLiteral | IRVariable | undefined => {

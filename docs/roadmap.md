@@ -171,10 +171,10 @@ Done:
     `decfloat16` field, is a runtime error naming the gap when a `TRY` could read the field (an exception to the
     guiding principle, see [aot_for_abap.md](aot_for_abap.md)); uncaught, it ends the program as the exception does
   - refused: `CATCH … INTO` and `CLEANUP INTO` (object references are not compiled), `CATCH BEFORE UNWIND`, and,
-    as ABAP syntax errors, `RETRY` outside a `CATCH` block, `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block,
-    a `TRY` without `CATCH` or `CLEANUP`, a `CATCH` of a class not derived from `CX_ROOT` (abaplint does not report
-    the last three yet: abaplint#4723, abaplint#4724, abaplint#4725); constants and built-in
-    data objects (`abap_true`) as operands
+    as ABAP syntax errors, `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block, `RETRY` outside a
+    `CATCH` block, a `TRY` without `CATCH` or `CLEANUP`, a `CATCH` of a class not derived from `CX_ROOT` (the compiler
+    checks the last three itself, as abaplint does not report them yet: abaplint#4723, abaplint#4724, abaplint#4725);
+    constants and built-in data objects (`abap_true`) as operands
 - built-in functions as comparison operands (2026-11-26, `src/lower_cond.ts`, `runtime/go/abap/function.go`,
   `test/function_operand.test.ts`): `abs( )`, `sqrt( )` and `strlen( )` of a single data object are values with the
   type of their result, compared as data objects are
@@ -197,6 +197,11 @@ Done:
 - `WRITE sy-index` (2026-11-26, `src/lower_report.ts`, `test/control_flow.test.ts`): its data element,
   `SYST_INDEX`, is expected to have the output length of `i` and no conversion exit, so it is written as an `i` (see
   "Output length" in [spec/write.md](spec/write.md))
+- syntax checks removed from the compiler (2026-11-26) where abaplint reports the case; the others are listed in
+  [abaplint_roadmap.md](abaplint_roadmap.md), "Syntax checks to move out of the compiler"
+- parentheses around a single data object (2026-11-26): `( c )` is the data object `c`, not an arithmetic
+  expression, in moves and comparisons. Before, it was calculated, so `n = ( c )` and `( c ) = i` could give another
+  result, and `( c ) = c2` was refused
 
 Next:
 - [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,

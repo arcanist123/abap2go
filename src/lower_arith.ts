@@ -11,8 +11,30 @@ const OPERATORS: Record<string, IRArithOp> = {
 
 const FUNCTIONS = new Set(["abs", "sqrt", "ipow", "strlen"]);
 
-/** A Source that is an arithmetic expression: it has an operator, a sign, parentheses or a built-in function. */
+/**
+ * source without the parentheses around a single data object, which are expected to change nothing: ( c ) is the data
+ * object c, not an arithmetic expression. Any other source as it is.
+ */
+export function unparenthesized(source: abaplint.Nodes.ExpressionNode): abaplint.Nodes.ExpressionNode {
+  const [open, inner, close, ...rest] = source.getChildren();
+  if (open?.concatTokens() === "(" && close?.concatTokens() === ")" && rest.length === 0
+      && inner instanceof abaplint.Nodes.ExpressionNode && inner.get() instanceof Expressions.Source) {
+    const operand = unparenthesized(inner);
+    if (!isArithmetic(operand)) {
+      return operand;
+    }
+  }
+  return source;
+}
+
+/**
+ * A Source that is an arithmetic expression: it has an operator, a sign, a built-in function or parentheses around
+ * one of these.
+ */
 export function isArithmetic(source: abaplint.Nodes.ExpressionNode): boolean {
+  if (unparenthesized(source) !== source) {
+    return false;
+  }
   const children = source.getChildren();
   if (children.length > 1) {
     return source.findDirectExpression(Expressions.ArithOperator) !== undefined
@@ -273,11 +295,7 @@ function lowerFunction(node: abaplint.Nodes.ExpressionNode, variables: Variables
     if (source === undefined || args.size !== 1) {
       throw new BuildError(`${node.concatTokens()}: strlen( ) takes one argument`, where);
     }
-    const arg = lowerSource(source, variables, where, "strlen( ) of");
-    if (!["c", "n", "d", "t", "string"].includes(arg.type.kind)) {
-      throw new BuildError(`${node.concatTokens()}: the argument of strlen( ) must be character-like (c, n, d, t or string)`, where);
-    }
-    return { kind: "strlen", arg };
+    return { kind: "strlen", arg: lowerSource(source, variables, where, "strlen( ) of") };
   }
   if (name === "ipow") {
     if (args.size !== 2) {
