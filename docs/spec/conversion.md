@@ -255,7 +255,12 @@ calculation itself, and every exception under `EXACT`, keeps the result field (s
 - **Special values after an exception.** An f target can be left holding `+Inf`, `-Inf` or NaN and a decfloat16
   target `+Infinity` or `-Infinity` (see *The target after an exception*). The runtime holds the f values, but what
   `WRITE`, the conversions, comparisons and arithmetic do with them is not specified yet; it keeps a decfloat16
-  target instead of storing an infinity, which has no representation in its decfloat value yet.
+  target instead of storing an infinity, which has no representation in its decfloat value yet. This stand-in is
+  not observable only because `TRY` is not compiled (next point): an exception ends the program before anything
+  can read the target. Once a `CATCH` can read it, a kept target would be a silently different result, so the gap
+  has to be closed before `TRY` is compiled. Closing it means a decfloat value that holds an infinity and specified
+  behaviour for `+Inf`, `-Inf` and NaN. If `TRY` has to come first, the stand-in becomes a run-time error naming
+  the gap, listed as an exception to the guiding principle.
 - The compiler cannot catch exceptions yet (`TRY` is not compiled), so a value left in a target cannot be seen
   by a program: an uncaught exception ends it. `abap.Convert` and `abap.Calculate` return the value with the
   exception, for the generated code to write once `TRY` is compiled.
