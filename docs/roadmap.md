@@ -122,10 +122,10 @@ Done:
   - `NOT` repeated any number of times (2026-11-25, abaplint #4714, in the abaplint patch): an even number cancels out
   - `DATA` is not executable: every variable of a processing block exists from its start with its start value, also
     one declared in a loop or a branch
-  - refused: `DO … VARYING`, `WHILE … VARY`, an arithmetic expression or a built-in function as the operand of
-    `CASE`, `WHEN` or `DO … TIMES`, `CASE` without `WHEN`, comparisons of kinds without a comparison type (`d` with
-    `t`, `utclong` with anything but `c`, `string` and `utclong`), a non-numeric single operand against an arithmetic
-    expression, the other predicates (`IS`, `IN`, `CO`, …), `WRITE sy-index` (the output length of its data element)
+  - refused: `DO … VARYING`, `WHILE … VARY`, `CASE` without `WHEN`, comparisons of kinds without a comparison type
+    (`d` with `t`, `utclong` with anything but `c`, `string` and `utclong`), a non-numeric single operand against an
+    arithmetic expression, the other predicates (`IS`, `IN`, `CO`, …), `WRITE sy-index` (the output length of its
+    data element)
 - the arithmetic tests of abaplint/transpiler as end-to-end fixtures (2026-11-25, `test/transpiler/*.txt`, run by
   `test/transpiler.test.ts`, MIT, see `NOTICE`): the 157 ABAP snippets of `test/operators/arithmetics*.ts`,
   `mod.ts`, `test/types/*_operations.ts`, `integer8_calculation_type.ts` and `conversion_no_number.ts`, one
@@ -186,11 +186,22 @@ Done:
   on the other side are calculated with the comparison
   - abaplint 2.120.120 rejects a `d` compared by `=` or `<>` with `abs( )` or `strlen( )` (`abs( d ) = d`), which
     ABAP is expected to accept, so the build refuses it (work item below)
+- `CASE` and `DO … TIMES` with expressions and built-in functions (2026-11-26, `src/lower_cond.ts`,
+  `src/lower_block.ts`, `test/case_do.test.ts`)
+  - `DO n TIMES` calculates an arithmetic expression or a built-in function once, as for an `i` result field, with the
+    exceptions of that assignment
+  - the operand of `CASE` is evaluated first, also when only `WHEN OTHERS` follows (before, a subfield was not
+    checked then). An arithmetic expression is calculated in the calculation type of its own operands
+    (`abap.CaseValue`) and compared as a data object ([spec/comparison.md](spec/comparison.md), "CASE")
+  - a `WHEN` value is a data object or `abs( )`, `sqrt( )` or `strlen( )` of one, evaluated only when it is compared
+  - a `p` result in a `string` whose rounding carries into one more digit now keeps 31 digits
+  - refused, as ABAP syntax errors: an arithmetic expression or `ipow( )` after `WHEN`, `CASE` with parentheses
+    around a single operand; also a `utclong` value against the number an expression gives
 
 Next:
 - [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,
-  `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as comparison operands; `CASE` and `DO … TIMES`
-  with expressions and built-in functions; `WRITE sy-index` with the output length of its data element
+  `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as operands of comparisons and `CASE`;
+  `WRITE sy-index` with the output length of its data element
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
@@ -322,6 +333,11 @@ first of this kind.
   programs that depend on it fail their tests
 - [ ] after the MVP: a build warning for `SORT … BY a` followed by `DELETE ADJACENT DUPLICATES … COMPARING a` when
   fields other than `a` are read afterwards
+- [ ] `DO n TIMES` with a data object beyond the range of `i`: the build converts it as in an assignment, which
+  raises the catchable `CX_SY_CONVERSION_OVERFLOW` (`CX_SY_CONVERSION_NO_NUMBER` for text that is no number). ABAP is
+  expected to differ by type: a runtime error for `int8`, `p` and text, while an `f` or a decimal floating point
+  number raises nothing and the passes do not follow from the value. To be specified, then made a runtime error or
+  matched; offsets and lengths of subfields, which are converted the same way, need the same look
 - [ ] `READ TABLE … BINARY SEARCH` on a table not sorted by the search key: decided by the same rule when it is
   compiled. With duplicates in a correctly sorted table the keyword documentation specifies the first hit (lowest
   line number), so that case is exact, not open

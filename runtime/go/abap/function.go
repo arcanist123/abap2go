@@ -2,9 +2,9 @@ package abap
 
 import "fmt"
 
-// Built-in functions as operands of a comparison of data objects (docs/spec/comparison.md, "Built-in functions as
-// operands"): a function of a single data object, outside an arithmetic expression, is a value of the type of its
-// result, which the argument decides.
+// Values calculated for a comparison of data objects. A built-in function of a single data object, outside an
+// arithmetic expression, is a value of the type of its result, which the argument decides (docs/spec/comparison.md,
+// "Built-in functions as operands"). An arithmetic expression after CASE is calculated on its own (there, "CASE").
 
 // ValueOf is the type and value of f: abs( x ) or sqrt( x ) of a data object x, calculated in the calculation type
 // of x alone, or strlen( x ) as Strlen gives it. The error is an *Exception or a *RuntimeError.
@@ -18,6 +18,44 @@ func ValueOf(f Expr) (Type, any, error) {
 	if err != nil {
 		return Type{}, nil, err
 	}
+	if ct == CalcP {
+		return packedValue(arg.t, n.d)
+	}
+	return valueOfType(ct, n)
+}
+
+// CaseValue is the type and value of e, an arithmetic expression as the operand of CASE, calculated in the
+// calculation type of its own operands. A p has the decimals the result would have in a string. The error is an
+// *Exception.
+func CaseValue(e Expr) (Type, any, error) {
+	ct := calculationTypeOf(e)
+	n, err := evaluate(e, ct, false)
+	if err != nil {
+		return Type{}, nil, err
+	}
+	if ct != CalcP {
+		return valueOfType(ct, n)
+	}
+	d, err := pRounded(n.d)
+	if err != nil {
+		return Type{}, nil, err
+	}
+	t := TypeP(16, max(0, -d.exp))
+	v, err := fromPacked(d, t)
+	return t, v, err
+}
+
+// MustCaseValue is CaseValue for generated code: an exception panics.
+func MustCaseValue(e Expr) (Type, any) {
+	t, v, err := CaseValue(e)
+	if err != nil {
+		panic(err)
+	}
+	return t, v
+}
+
+// valueOfType is a result of a calculation type other than p as a data object of that type.
+func valueOfType(ct CalcType, n num) (Type, any, error) {
 	switch ct {
 	case CalcI:
 		return TypeI, int32(n.i), nil
@@ -25,11 +63,9 @@ func ValueOf(f Expr) (Type, any, error) {
 		return TypeInt8, n.i, nil
 	case CalcF:
 		return TypeF, n.f, nil
-	case CalcDecfloat34:
-		v, err := fromDecfloat(n.d, TypeDecfloat34)
-		return TypeDecfloat34, v, err
 	}
-	return packedValue(arg.t, n.d)
+	v, err := fromDecfloat(n.d, TypeDecfloat34)
+	return TypeDecfloat34, v, err
 }
 
 // MustValueOf is ValueOf for generated code: an error panics.

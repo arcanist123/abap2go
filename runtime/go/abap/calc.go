@@ -810,18 +810,36 @@ func pTextLimit(d decimal) (int, error) {
 	return min(14, 31-n), nil
 }
 
-// pToString is a p result in a string: rounded to the decimals it keeps (losing the sign if that gives zero), with
-// its scale and the sign character after it.
-func pToString(d decimal) (any, error) {
+// pRounded is a p result with the decimals it keeps in a string or as the operand of CASE: at most 14, and at most
+// 31 digits in all, also when the rounding carries into one more digit. A value rounded to zero loses its sign. More
+// than 31 digits before the point overflow.
+func pRounded(d decimal) (decimal, error) {
 	limit, err := pTextLimit(d)
 	if err != nil {
-		return nil, err
+		return d, err
 	}
-	if -d.exp > limit {
-		d = d.roundAway(-limit)
-		if d.isZero() {
-			d.neg = false
+	if -d.exp <= limit {
+		return d, nil
+	}
+	d = d.roundAway(-limit)
+	if d.isZero() {
+		d.neg = false
+	}
+	if room := 31 - d.integerDigits(); -d.exp > room {
+		if room < 0 {
+			return d, errArithmeticOverflow
 		}
+		d = d.roundAway(-room)
+	}
+	return d, nil
+}
+
+// pToString is a p result in a string: rounded to the decimals it keeps, with its scale and the sign character after
+// it.
+func pToString(d decimal) (any, error) {
+	d, err := pRounded(d)
+	if err != nil {
+		return nil, err
 	}
 	return numberToString(d), nil
 }

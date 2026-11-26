@@ -42,8 +42,8 @@ export interface IRSystemField {
   type: IRType;
 }
 
-/** An operand of a comparison of data objects: a source, or a built-in function of one. */
-export type IRComparand = IRSource | IRFunction;
+/** An operand of a comparison of data objects: a source, a built-in function of one, or the result CASE compares. */
+export type IRComparand = IRSource | IRFunction | IRResult;
 
 /**
  * abs( ), sqrt( ) or strlen( ) of a single data object as an operand of a comparison of data objects: it is not an
@@ -56,6 +56,15 @@ export interface IRFunction {
   call: IRExpr;
   /** The type of the result. The p of abs( ) of a text gets its decimals at run time: they are 0 here. */
   type: IRType;
+}
+
+/**
+ * The operand of CASE that is an arithmetic expression: calculated once, in the calculation type of its own operands,
+ * and then compared as a data object of that type (abap.CaseValue). The decimals of a p are known at run time.
+ */
+export interface IRResult {
+  kind: "result";
+  expression: IRExpr;
 }
 
 /** What a value is written to: a variable or a subfield of a flat variable. */
@@ -94,7 +103,7 @@ export interface IRSubstring {
 }
 
 export type IRStatement = IRListWrite | IRConsoleWrite | IRData | IRMove | IRCalculate | IRAssert
-  | IRIf | IRDo | IRWhile | IRExit | IRContinue | IRCheck | IRReturn | IRTry | IRRetry;
+  | IRIf | IRCase | IRDo | IRWhile | IRExit | IRContinue | IRCheck | IRReturn | IRTry | IRRetry;
 
 /**
  * TRY. body CATCH ... [CLEANUP. ...] ENDTRY. An exception raised in the body (also in a procedure it calls) goes to
@@ -120,24 +129,35 @@ export interface IRRetry {
   kind: "retry";
 }
 
-/**
- * IF / ELSEIF / ELSE: the body of the first branch whose condition holds, else the ELSE body. CASE is lowered to
- * this as well: each WHEN is the comparison operand = value for each of its values, joined by OR.
- */
+/** IF / ELSEIF / ELSE: the body of the first branch whose condition holds, else the ELSE body. */
 export interface IRIf {
   kind: "if";
   branches: { condition: IRCondition; body: IRStatement[] }[];
-  /** ELSE or WHEN OTHERS; undefined without one. */
+  /** undefined without ELSE. */
   otherwise: IRStatement[] | undefined;
 }
 
 /**
- * DO [n TIMES]: n is converted to i once, before the first pass; no passes when it is 0 or less. sy-index is the
- * number of the pass in the body and is set back to its value before the loop when the loop ends.
+ * CASE: the operand is evaluated first, also when no WHEN compares it. Then the body of the first branch with a value
+ * equal to it runs, by the comparison operand = value; the values are evaluated in order, up to that one.
+ */
+export interface IRCase {
+  kind: "case";
+  operand: IRComparand;
+  /** The WHEN blocks in order; a value is never a result. */
+  branches: { values: IRComparand[]; body: IRStatement[] }[];
+  /** WHEN OTHERS; undefined without one. */
+  otherwise: IRStatement[] | undefined;
+}
+
+/**
+ * DO [n TIMES]: n is converted to i once, before the first pass; no passes when it is 0 or less. An arithmetic
+ * expression or a built-in function as n is calculated as for an i result field (into_i). sy-index is the number of
+ * the pass in the body and is set back to its value before the loop when the loop ends.
  */
 export interface IRDo {
   kind: "do";
-  times: IRSource | undefined;
+  times: IRSource | { kind: "into_i"; expression: IRExpr } | undefined;
   body: IRStatement[];
 }
 

@@ -144,6 +144,44 @@ export function lowerComparison(op: IRCompareOp, left: abaplint.Nodes.Expression
 }
 
 /**
+ * The operand of CASE: a data object or a built-in function of one, as in a comparison, or an arithmetic expression,
+ * calculated on its own before the comparisons.
+ */
+export function caseOperand(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRComparand {
+  if (!isCalculation(source)) {
+    return comparand(source, variables, where);
+  }
+  if (isParenthesizedOperand(source)) {
+    // an ABAP syntax error, unlike parentheses around a calculation
+    throw new BuildError(`CASE ${source.concatTokens()}: parentheses around a single operand are not possible here`, where);
+  }
+  return { kind: "result", expression: lowerArithmetic(source, variables, where) };
+}
+
+/** A value after WHEN, compared with operand: a data object or abs( ), sqrt( ) or strlen( ) of one. */
+export function caseValue(operand: IRComparand, source: abaplint.Nodes.ExpressionNode, variables: Variables,
+    where: Where): IRComparand {
+  if (isCalculation(source)) {
+    // an ABAP syntax error: WHEN is no position for expressions
+    throw new BuildError(`WHEN ${source.concatTokens()}: only a data object or abs( ), sqrt( ) or strlen( ) of one is possible after WHEN`, where);
+  }
+  const value = comparand(source, variables, where);
+  checkComparable(operand, value, where);
+  return value;
+}
+
+/** ( x ) and nothing else, where x has no operator and no sign. */
+function isParenthesizedOperand(source: abaplint.Nodes.ExpressionNode): boolean {
+  const children = source.getChildren();
+  const inner = children[1];
+  if (children.length !== 3 || children[0].concatTokens() !== "(" || !(inner instanceof abaplint.Nodes.ExpressionNode)) {
+    return false;
+  }
+  return inner.findDirectExpression(Expressions.ArithOperator) === undefined
+    && !["-", "+"].includes(inner.getChildren()[0].concatTokens());
+}
+
+/**
  * operand BETWEEN low AND high: operand >= low AND operand <= high, so high is not evaluated when operand is less
  * than low. With an arithmetic expression among them, the three share one calculation type.
  */
@@ -229,9 +267,13 @@ function calcOperand(source: abaplint.Nodes.ExpressionNode, variables: Variables
   return { kind: "operand", source: single };
 }
 
-/** Two kinds without a comparison type are a syntax error: d with t, utclong with anything but c, string, utclong. */
+/**
+ * Two kinds without a comparison type are a syntax error: d with t, utclong with anything but c, string, utclong. The
+ * result of an arithmetic expression is a number.
+ */
 function checkComparable(left: IRComparand, right: IRComparand, where: Where): void {
-  const [a, b] = [left.type.kind, right.type.kind];
+  const kind = (x: IRComparand) => x.kind === "result" ? "number" : x.type.kind;
+  const [a, b] = [kind(left), kind(right)];
   const dateTime = (a === "d" && b === "t") || (a === "t" && b === "d");
   const utclong = (x: string, y: string) => x === "utclong" && !["c", "string", "utclong"].includes(y);
   if (dateTime || utclong(a, b) || utclong(b, a)) {
