@@ -289,14 +289,17 @@ function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode 
     throw new BuildError(`${text}: the length of a subfield must be greater than 0`, where);
   }
   const size = flat ? flatLength(base.type) : undefined;
-  if (size !== undefined && staticOffset !== undefined && staticOffset >= size) {
+  // with a variable length, an offset outside the field is not a syntax error: the access raises at run time
+  if (size !== undefined && staticOffset !== undefined && staticOffset >= size && length?.kind !== "variable") {
     throw new BuildError(`${text}: the offset ${staticOffset} is not within the length ${size}`, where);
   }
   if (size !== undefined && staticOffset !== undefined && staticLength !== undefined && staticOffset + staticLength > size) {
     throw new BuildError(`${text}: the offset ${staticOffset} and length ${staticLength} exceed the length ${size}`, where);
   }
 
-  const subLength = staticLength ?? (size !== undefined && staticOffset !== undefined ? size - staticOffset : size);
+  // only the rest of a field from a static offset has a length of its own that is known here
+  const rest = size !== undefined && length === undefined && staticOffset !== undefined;
+  const subLength = staticLength ?? (rest ? size - staticOffset : size);
   let type: IRType;
   switch (base.type.kind) {
     case "c": type = { kind: "c", length: subLength ?? 0 }; break;

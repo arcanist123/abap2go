@@ -103,6 +103,9 @@ Done:
     xstring lies within its current length and may be empty; otherwise `CX_SY_RANGE_OUT_OF_BOUNDS`. Static bounds
     outside a flat field, subfields of other types and subfields of strings as targets are syntax errors and are
     refused at build time
+  - with a variable length, a static offset at or beyond the end of a flat field (`c+5(len)` of a c of length 5) is
+    expected to be valid code, so it compiles and raises when it runs (2026-11-26, before it was refused; abaplint
+    accepts it since 2.120.121, abaplint#4742)
 - the input is checked with abaplint's rules that stand in for ABAP syntax errors (`src/validation.ts`,
   `errorNamespace: "."`): an unknown type is an error (`unknown_types`), not a void type, and so are a method not
   implemented, mismatched END OF names and the other rules that stand in for ABAP syntax errors
@@ -211,9 +214,6 @@ Done:
 
 Next, first what is refused or mistyped although it is valid ABAP and within the compiled scope (2026-11-26; none of
 it waits for abaplint, see [abaplint_roadmap.md](abaplint_roadmap.md), "Now"):
-- [ ] `c+5(off)` with `c TYPE c LENGTH 5`: `lowerSubstring` (`src/lower_common.ts`) refuses a static offset equal to
-  the length also when the length is a variable. ABAP is expected to accept it and to decide at run time
-  (`CX_SY_RANGE_OUT_OF_BOUNDS`); abaplint accepts it since 2.120.121 (abaplint#4742)
 - [ ] number literals beyond `i`: `integerLiteral` (`src/lower_common.ts`) types each one `p` of length 16, while it
   is expected to have length 8 for up to 15 digits, leading zeros not counted, and length 16 above (abaplint#4736).
   Test what depends on the length
