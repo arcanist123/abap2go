@@ -38,7 +38,12 @@ but unreleased (listed in `patches/abaplint-prs.txt`). Each PR drops out once a 
 3. Open the PR upstream; it says `closes #N` for the issues it fixes.
 4. Regenerate the patch with `scripts/abaplint-patch.sh` and run `npm test` here.
 
-PRs that change the same code are stacked, since the script stops on a merge conflict.
+No stacked PRs: the maintainer does not take a PR whose branch builds on another open one, and sets it to draft. Each
+PR is branched from upstream `main` and stays small, one issue or a few close ones. A fix that needs the code of an
+open PR (the same file, or its helpers) is still written right away, on a branch of its own on top of that PR's
+branch, and pushed to the fork without a PR. It waits in "Waiting branches" below until the PR under it is merged; then
+it is rebased onto `main`, its tests run again, and its PR is opened. One waiting branch at a time goes up, in the
+order listed. A waiting branch is not in the patch.
 
 Working with upstream: the maintainer (larshp) reviews and merges. Do not merge `main` into an open PR or press
 "Update branch" unless GitHub shows a conflict or the maintainer asks: an out-of-date branch is fine, and an update
@@ -81,9 +86,9 @@ Found 2026-11-26, with 2.120.120 and the patch.
 - [ ] [#4747](https://github.com/abaplint/abaplint/issues/4747) an arithmetic expression after `WHEN` (`WHEN a + 1`,
   `WHEN ipow( base = a exp = 2 )`, `WHEN abs( a + 0 )`) is accepted, while ABAP is expected to allow only a data
   object or a built-in function of one there. The build still refuses them, as operands it does not compile. Fix in
-  [PR #4761](https://github.com/abaplint/abaplint/pull/4761), open, stacked on
-  [PR #4741](https://github.com/abaplint/abaplint/pull/4741); the patch file does not contain it yet. It also rejects
-  `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 and #4750 stays
+  [PR #4761](https://github.com/abaplint/abaplint/pull/4761), set to draft by the maintainer since it was stacked on
+  [PR #4741](https://github.com/abaplint/abaplint/pull/4741) (see "Waiting branches"); the patch file does not contain
+  it. It also rejects `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 and #4750 stays
 - [ ] [#4748](https://github.com/abaplint/abaplint/issues/4748) `CASE ( a ).` and `WHEN ( b ).`, parentheses around
   a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), are accepted, while ABAP is expected to reject
   them; the compiler compiles `CASE ( a ).` as without them. `CASE ( a + 1 ).` is valid
@@ -96,8 +101,20 @@ Found 2026-11-26, with 2.120.120 and the patch.
   functions with a character-like result (`condense( )`, `to_upper( )`, `substring( )`, `boolc( )`, `xsdbool( )`),
   bit expressions and table expressions (`tab[ 1 ]`) are accepted, while ABAP is expected to reject them. The same
   forms after `CASE`, `'a' & 'b'` and an expression inside a constructor expression are valid. PR #4761 does not cover
-  them. Same code (`when.ts`): while PR #4761 is open, stack on its branch `case-when-arithmetic-4747`, as for the
+  them. Same code (`when.ts`) as PR #4761: a waiting branch on top of `case-when-arithmetic-4747`, as for the
   `WHEN ( b ).` part of #4748
+
+### Waiting branches
+
+Fixes written on top of an open PR's branch, pushed to the fork without a PR (see "How a fix gets in"). In order;
+each one is rebased onto `main` and opened once the branch under it is merged.
+
+| Branch | Fixes | Waits for |
+|---|---|---|
+| `case-when-arithmetic-4747` | [#4747](https://github.com/abaplint/abaplint/issues/4747), already [PR #4761](https://github.com/abaplint/abaplint/pull/4761) (draft): rebase onto `main`, drop the #4741 commits, mark it ready | [PR #4741](https://github.com/abaplint/abaplint/pull/4741) |
+
+Next on top of `case-when-arithmetic-4747`: [#4748](https://github.com/abaplint/abaplint/issues/4748), then
+[#4762](https://github.com/abaplint/abaplint/issues/4762), each on a branch of its own.
 
 ### Syntax checks to move out of the compiler
 
@@ -205,7 +222,7 @@ PRs the pinned release does not contain, as of 2026-11-26. The patch file was la
 | [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
 | [#4758](https://github.com/abaplint/abaplint/pull/4758) | `SPLIT ... IN BYTE MODE` takes byte-like operands, and its inline targets are `xstring` ([#4757](https://github.com/abaplint/abaplint/issues/4757)) | merged, not released |
 | [#4759](https://github.com/abaplint/abaplint/pull/4759) | a static offset or length beyond a `c` or `x` field is rejected although the other one is a variable ([#4742](https://github.com/abaplint/abaplint/issues/4742)) | merged, not released |
-| [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | open, listed, not yet in the patch file |
+| [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | draft, waits for #4741; listed, not in the patch file |
 
 Released and out of the patch: `WRITE` of a utclong ([#4700](https://github.com/abaplint/abaplint/issues/4700),
 [PR #4701](https://github.com/abaplint/abaplint/pull/4701), in 2.120.119), which the compiler now compiles.
