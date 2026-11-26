@@ -1,0 +1,2 @@
+# Waiting branches of the abaplint fork (arcanist123/abaplint), merged into the patch after the PRs, in order.
+# One branch name per line; a branch leaves this list when its PR is opened. See docs/abaplint_roadmap.md.
