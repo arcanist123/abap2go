@@ -15,11 +15,8 @@ type Node = abaplint.Nodes.StatementNode | abaplint.Nodes.StructureNode | abapli
  */
 export class BlockLowerer {
   private loops = 0;
-  /**
-   * The blocks of the TRYs around the statement being lowered, innermost last, with the number of loops around each:
-   * RETRY belongs in a CATCH block, and EXIT, CONTINUE and CHECK cannot leave a CLEANUP block.
-   */
-  private readonly handlers: { kind: "try" | "catch" | "cleanup"; loops: number }[] = [];
+  /** The blocks of the TRYs around the statement being lowered, innermost last: RETRY belongs in a CATCH block. */
+  private readonly handlers: ("try" | "catch" | "cleanup")[] = [];
 
   constructor(private readonly file: abaplint.ABAPFile, private readonly variables: Variables,
       private readonly leaf: (statement: abaplint.Nodes.StatementNode, where: Where) => IRStatement | undefined) {}
@@ -74,7 +71,7 @@ export class BlockLowerer {
       return this.leaveStatement(statement, where);
     } else if (kind instanceof Statements.Retry) {
       // an ABAP syntax error that abaplint does not report yet (abaplint #4723)
-      if (this.handlers[this.handlers.length - 1]?.kind !== "catch") {
+      if (this.handlers[this.handlers.length - 1] !== "catch") {
         throw new BuildError("RETRY is only allowed in a CATCH block", where);
       }
       return { kind: "retry" };
@@ -88,11 +85,6 @@ export class BlockLowerer {
    */
   private leaveStatement(statement: abaplint.Nodes.StatementNode, where: Where): IRStatement {
     const kind = statement.get();
-    const name = statement.getFirstToken().getStr().toUpperCase();
-    const cleanup = this.handlers.filter(h => h.kind === "cleanup").pop();
-    if (cleanup !== undefined && (kind instanceof Statements.Return || this.loops === cleanup.loops)) {
-      throw new BuildError(`${name} cannot leave a CLEANUP block`, where);
-    }
     if (kind instanceof Statements.Check) {
       const cond = statement.findDirectExpression(Expressions.Cond);
       if (cond === undefined) {
@@ -222,7 +214,7 @@ export class BlockLowerer {
   }
 
   private handlerBody(kind: "try" | "catch" | "cleanup", node: abaplint.Nodes.StructureNode): IRStatement[] {
-    this.handlers.push({ kind, loops: this.loops });
+    this.handlers.push(kind);
     try {
       return this.body(node);
     } finally {

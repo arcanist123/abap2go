@@ -154,6 +154,10 @@ the calculation type: `int8_7 / 2 = + '3.5'` is true (calculation type `p`), `+ 
 A `utclong` cannot be an operand of an arithmetic expression at all (`+ u` is a syntax error). An arithmetic
 expression cannot be the operand of a predicate expression (`i + 0 IS INITIAL` is a syntax error).
 
+**Parentheses around a single data object** are expected to change nothing: they do not make an arithmetic
+expression, so `( c ) = c2` compares two `c` as text and `( c ) = i` follows the rules of two data objects. The same
+holds for an assignment, `n = ( c ).`.
+
 **Exceptions.** In an arithmetic expression, a conversion error is the catchable exception of the calculation, not a
 runtime error: `+ c_'abc' = 0` raises `CX_SY_CONVERSION_NO_NUMBER`, and so does `+ c_'1E1' = 10` (a `p` calculation
 reads text without an exponent), while `+ c_'1E1' = CONV f( 10 )` is true (an `f` calculation reads it). Overflow

@@ -81,9 +81,9 @@ const refusals: [string, string, RegExp][] = [
   ["static bounds beyond a flat field", "r = c5+4(2).", /exceed the length 5|syntax check/],
   ["a static length of 0", "r = c5+1(0).", /greater than 0|syntax check/],
   ["a subfield of an i", "r = i+1(2).", /does not permit subfields|syntax check/],
-  ["writing a subfield of a string", "s+1(1) = r.", /cannot be written to|syntax check/],
-  ["strlen( ) of an i", "i = strlen( i ).", /must be character-like|syntax check/],
-  ["strlen( ) of an x", "i = strlen( x4 ).", /must be character-like|syntax check/],
+  ["writing a subfield of a string", "s+1(1) = r.", /syntax check/],
+  ["strlen( ) of an i", "i = strlen( i ).", /syntax check/],
+  ["strlen( ) of an x", "i = strlen( x4 ).", /syntax check/],
 ];
 for (const [name, body, refused] of refusals) {
   test(`substring refused: ${name}`, () => {

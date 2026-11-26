@@ -85,7 +85,9 @@ function lowerWrite(statement: abaplint.Nodes.StatementNode, variables: Variable
   }
 
   const source = children[index];
-  if (!(source instanceof abaplint.Nodes.ExpressionNode) || !(source.get() instanceof Expressions.Source) || index + 2 !== children.length) {
+  // WRITE ( x ) is not taken as WRITE x: it is not compiled
+  if (!(source instanceof abaplint.Nodes.ExpressionNode) || !(source.get() instanceof Expressions.Source) || index + 2 !== children.length
+      || source.getFirstToken().getStr() === "(") {
     throw new BuildError("only WRITE [/] <literal or variable>. is supported yet, no additions", where);
   }
   const value = lowerSource(source, variables, where, "WRITE of");

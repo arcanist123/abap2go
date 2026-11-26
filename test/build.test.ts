@@ -144,6 +144,15 @@ const calculations: [string, string, string][] = [
   ["abs, ipow, sqrt", "DATA a TYPE i VALUE -3.\nDATA r TYPE i.\nDATA f TYPE f.\nr = ipow( base = 2 exp = 10 ) + abs( a ). out->write( r ).\nf = sqrt( 16 ). out->write( f ).", "1027 \n4.0000000000000000E+00\n"],
   ["a number literal beyond i is a p", "DATA r TYPE int8.\nr = 3000000000 + 1. out->write( r ).", "3000000001 \n"],
   ["a lone + makes an arithmetic expression", "DATA t TYPE c LENGTH 6 VALUE '1.25'.\nDATA n TYPE n LENGTH 4.\nn = t. out->write( n ).\nn = + t. out->write( n ).", "0125\n0001\n"],
+  ["parentheses around a data object do not make an arithmetic expression", "DATA t TYPE c LENGTH 6 VALUE '1.25'.\nDATA n TYPE n LENGTH 4.\nn = ( t ). out->write( n ).\nn = ( ( t ) ). out->write( n ).\nn = + ( t ). out->write( n ).", "0125\n0125\n0001\n"],
+  // as data objects, '01' differs from '1' as text and '1.4' is rounded to the i it is compared with
+  ["parentheses around a data object in a comparison", `DATA a TYPE c LENGTH 5 VALUE '01'.
+DATA b TYPE c LENGTH 5 VALUE '1'.
+DATA t TYPE c LENGTH 5 VALUE '1.4'.
+DATA i TYPE i VALUE 1.
+IF ( a ) = b OR a = ( b ). out->write( 'equal' ). ELSE. out->write( 'differs' ). ENDIF.
+IF ( t ) = i AND i = ( ( t ) ) AND ( t ) BETWEEN i AND i. out->write( 'equal' ). ELSE. out->write( 'differs' ). ENDIF.
+IF + t = i. out->write( 'equal' ). ELSE. out->write( 'differs' ). ENDIF.`, "differs\nequal\ndiffers\n"],
   ["a sign applies to the power, a negative literal is one operand", "DATA r TYPE i.\nr = - 7 ** 2. out->write( r ).\nr = -7 ** 2. out->write( r ).\nr = 2 * - 7 ** 2. out->write( r ).", "49-\n49 \n98-\n"],
   ["MOD and DIV are Euclidean", "DATA a TYPE i VALUE -7.\nDATA r TYPE i.\nr = a MOD 3. out->write( r ).\nr = a DIV 3. out->write( r ).", "2 \n3-\n"],
 ];
