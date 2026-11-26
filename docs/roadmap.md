@@ -120,7 +120,8 @@ Done:
   - `DATA` is not executable: every variable of a processing block exists from its start with its start value, also
     one declared in a loop or a branch
   - refused: `DO … VARYING`, `WHILE … VARY`, an arithmetic expression or a built-in function as the operand of
-    `CASE`, `WHEN` or `DO … TIMES`, `CASE` without `WHEN`, comparisons of kinds without a comparison type (`d` with
+    `CASE`, `WHEN` or `DO … TIMES`, `CASE` without `WHEN`, statements between `CASE` and the first `WHEN` (valid
+    ABAP, see "Next"), comparisons of kinds without a comparison type (`d` with
     `t`, `utclong` with anything but `c`, `string` and `utclong`), a non-numeric single operand against an arithmetic
     expression, the other predicates (`IS`, `IN`, `CO`, …), `WRITE sy-index` (the output length of its data element)
 - the arithmetic tests of abaplint/transpiler as end-to-end fixtures (2026-11-25, `test/transpiler/*.txt`, run by
@@ -188,6 +189,8 @@ Next:
 - [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,
   `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as comparison operands; `CASE` and `DO … TIMES`
   with expressions and built-in functions; `WRITE sy-index` with the output length of its data element
+  - statements between `CASE` and the first `WHEN`: ABAP is expected to give only a warning, so the code is valid
+    and is to be compiled, not refused (`src/lower_block.ts`). Work out first whether these statements run
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the

@@ -43,6 +43,12 @@ Valid code rejected: nothing open. The last case,
 [#4726](https://github.com/abaplint/abaplint/issues/4726), is fixed by
 [PR #4727](https://github.com/abaplint/abaplint/pull/4727), in the patch.
 
+Valid code mistyped:
+- [ ] a number literal beyond the range of `i` is typed `i` (`DATA(y) = 1234567890123456789012345678901.`); ABAP
+  makes it a `p`. Not run into yet, since the compiler types number literals itself (`integerLiteral` in
+  `src/lower_common.ts`), but it goes before the syntax checks below, together with the 31-digit limit. No issue
+  raised yet; work out the length of the `p` first
+
 ### Syntax checks to move out of the compiler
 
 The compiler still has syntax checks of its own, from before the decision that it does not reimplement the syntax
@@ -56,15 +62,22 @@ abaplint accepts these, so the fix goes into abaplint:
 - [ ] [#4725](https://github.com/abaplint/abaplint/issues/4725) `CATCH` of an interface or of a class not derived from
   `CX_ROOT` (`src/lower_block.ts`)
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
-  with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open
+  with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-26). Review
+  it rather than write our own; not ours, so not in the patch, and the compiler's check stays until a release has it
 - [ ] [#4728](https://github.com/abaplint/abaplint/issues/4728) a comparison of kinds without a comparison type,
   `d = t` or `utclong = i` (`src/lower_cond.ts`)
 - [ ] [#4729](https://github.com/abaplint/abaplint/issues/4729) `utclong` in or against an arithmetic expression,
   `u + 1` or `u = i + 1` (`src/lower_arith.ts`, `src/lower_cond.ts`)
 - [ ] [#4730](https://github.com/abaplint/abaplint/issues/4730) a subfield of length 0 of a flat field, `c+1(0)`
   (`src/lower_common.ts`)
-- [ ] expected behaviour to work out first: a number literal of more than 31 digits (`src/lower_common.ts`), and
-  statements between `CASE` and the first `WHEN` (`src/lower_block.ts`)
+- [ ] a number literal of more than 31 digits (`src/lower_common.ts`): ABAP is expected to give a syntax error, and
+  31 digits are fine, as the compiler has it. Still to work out: whether leading zeros count. With the typing of
+  number literals above
+- [ ] expected behaviour to work out first: `CASE` without any `WHEN` (`src/lower_block.ts`)
+
+Out of this list: statements between `CASE` and the first `WHEN`. ABAP is expected to give only a warning, so the
+code is valid and abaplint is right to accept it. The compiler refuses it as not supported yet, a gap of the compiler
+([roadmap.md](roadmap.md), "Next").
 
 abaplint reports these, so the compiler's check can be removed:
 - [ ] `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block (`src/lower_block.ts`)
