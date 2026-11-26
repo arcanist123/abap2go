@@ -192,8 +192,9 @@ is not evaluated (`5 BETWEEN 6 AND c_'abc'` is false, without `CONVT_NO_NUMBER`)
 ## Literals and constructor expressions
 
 Literals are operands with their own type: a text literal `'…'` is a `c` of its length, a string literal `` `…` ``
-a `string`, a number literal an `i`, or a `p` if it is beyond the range of `i` (`int8_max < 18446744073709551615` is
-true, compared in `p`; `i_max < 3000000000` is true). A negative number literal (`-1`) is a number, so `-1 = '1-'` is
+a `string`, a number literal an `i`, or a `p` without decimals if it is beyond the range of `i`: `p LENGTH 8` for up
+to 15 digits (leading zeros not counted), `p LENGTH 16` for up to 31 (`int8_max < 18446744073709551615` is true,
+compared in `p`; `i_max < 3000000000` is true). A negative number literal (`-1`) is a number, so `-1 = '1-'` is
 true (comparison type `i`, the text `1-` is -1) while `'-1' <> '1-'` is true (comparison type `c`). Built-in
 functions and constructor expressions are operands with the type of their result: `boolc( 1 = 2 ) = abap_false` is
 false (a `string` holding a blank against a `c` that becomes the empty string), `xsdbool( 1 = 2 ) = abap_false` is

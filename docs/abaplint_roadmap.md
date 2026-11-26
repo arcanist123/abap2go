@@ -154,7 +154,7 @@ Valid code mistyped: nothing open. The last case, a number literal beyond the ra
 ([#4736](https://github.com/abaplint/abaplint/issues/4736)), is fixed by
 [PR #4737](https://github.com/abaplint/abaplint/pull/4737), in 2.120.121: such a literal is expected to be a `p`
 without decimals, of length 8 for up to 15 digits (leading zeros not counted) and length 16 above. The compiler types
-number literals itself and takes length 16 for every such `p`, a follow-up in [roadmap.md](roadmap.md), "Next".
+number literals itself, with the same lengths.
 
 ### Invalid syntax to fix, without a check in the compiler
 

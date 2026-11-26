@@ -31,6 +31,16 @@ const US = { users: [{ user: "alice", decimalNotation: "X", dateFormat: "2" }] }
 const writes: [string, string, string, object?][] = [
   ["i in 11 columns, right-aligned", "DATA i TYPE i VALUE 6.\nWRITE i.", "         6\n"],
   ["a number literal is an i", "WRITE 1000. WRITE -5.", "     1.000           5-\n"],
+  // p LENGTH 8 takes 16 columns, p LENGTH 16 takes 32; no WRITE / before a number, which would be a position
+  ["a number literal beyond i is a p of length 8 for up to 15 digits", `WRITE / '|'. WRITE 3000000000. WRITE '|'.
+WRITE / '|'. WRITE -2147483649. WRITE '|'.
+WRITE / '|'. WRITE 000000000000002147483648. WRITE '|'.
+WRITE / '|'. WRITE -999999999999999. WRITE '|'.`,
+    "|   3.000.000.000  |\n|   2.147.483.649- |\n|   2.147.483.648  |\n| 999999999999999- |\n"],
+  ["a number literal of 16 to 31 digits is a p of length 16", `WRITE / '|'. WRITE 1000000000000000. WRITE '|'.
+WRITE / '|'. WRITE -1000000000000000. WRITE '|'.
+WRITE / '|'. WRITE 1234567890123456789012345678901. WRITE '|'.`,
+    "|           1.000.000.000.000.000  |\n|           1.000.000.000.000.000- |\n| 1234567890123456789012345678901  |\n"],
   ["p with separators, d in the date format", "DATA p TYPE p LENGTH 8 DECIMALS 2 VALUE '-1234.5'.\nDATA d TYPE d VALUE '20240229'.\nWRITE: p, d.",
     "        1.234,50- 29022024\n"],
   ["f in scientific notation, decfloat without its scale", "DATA f TYPE f VALUE '0.1'.\nDATA x TYPE decfloat34 VALUE '-1.50'.\nWRITE / f. WRITE / x.",

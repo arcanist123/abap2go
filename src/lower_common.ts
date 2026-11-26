@@ -320,16 +320,20 @@ function flatLength(t: IRType): number | undefined {
   return undefined;
 }
 
-/** A number literal: type i within its range, beyond it type p (length 16, no decimals) of up to 31 digits. */
+/**
+ * A number literal: type i within its range, beyond it type p without decimals, of length 8 for up to 15 digits and
+ * length 16 for up to 31. Leading zeros and the sign do not count.
+ */
 export function integerLiteral(digits: string, where: Where): IRLiteral {
   const value = BigInt(digits);
   if (value >= -(2n ** 31n) && value < 2n ** 31n) {
     return { kind: "literal", type: { kind: "i" }, value: value.toString() };
   }
-  if (digits.replace(/^[-+]/, "").replace(/^0+/, "").length > 31) {
+  const count = (value < 0n ? -value : value).toString().length;
+  if (count > 31) {
     throw new BuildError(`${digits}: more than 31 digits`, where);
   }
-  return { kind: "literal", type: { kind: "p", length: 16, decimals: 0 }, value: value.toString() };
+  return { kind: "literal", type: { kind: "p", length: count <= 15 ? 8 : 16, decimals: 0 }, value: value.toString() };
 }
 
 /** A Constant: a text field literal, a string literal (no & chains) or a number literal (i, or p beyond i). */
