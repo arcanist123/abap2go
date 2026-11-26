@@ -25,6 +25,9 @@ Priority, when choosing what to pick up next:
   upstream as a PR. It goes before the other work items of that repository
 - out of scope: the transpiler's JS runtime. Its issues matter as cells of the specification (a snippet with
   ABAP's expected behaviour), not as JS fixes, which are tracked with the transpiler, not here
+- of the list processor's statements only `WRITE` is in scope (2026-11-26): `ULINE`, `SKIP`, `NEW-LINE`,
+  `NEW-PAGE`, `FORMAT`, `POSITION`, `BACK`, `RESERVE`, `TOP-OF-PAGE`, `END-OF-PAGE` and the interactive list events
+  are not compiled, and their abaplint issues are not picked up
 - upstream PRs follow the working rules in [abaplint_roadmap.md](abaplint_roadmap.md), "How a fix gets in": the
   maintainer merges, no update of an open PR without a conflict, other people's issues are not closed by hand
 
@@ -249,9 +252,11 @@ Then:
   "Conversion exits: static, plus a manifest per root"): its format and where the root declares it, the listed
   exits compiled with their closure, an entry outside the world refused at build time, and the run-time error for
   an exit on an unbounded operand that was neither reached nor listed
-- [ ] port the rest of the list processor as the compiler needs it: positions and lengths, `NO-GAP`,
-  justification, `ULINE`, `SKIP`, `NEW-LINE`, then `TOP-OF-PAGE`; open-steamgate's `tools/gogen/testdata-list`
-  and its ANORMALIES list entries are the test cases
+- [ ] the rest of `WRITE` in the list processor, as the compiler needs it: positions and lengths (`/pos(len)`,
+  `AT`), `NO-GAP`, justification; only `WRITE` is in scope, not the list processor's other statements (see
+  "Purpose"). open-steamgate's `tools/gogen/testdata-list` and its ANORMALIES list entries are the test cases, as
+  far as they use `WRITE` only. abaplint accepts a blank between `/` and a position or length
+  (abaplint#4783)
 - [ ] `out->write( )` of structures and tables (open-steamgate's format: a structure as one
   `field: value, field: value` line, a table as a header row and tab-separated rows)
 - [ ] the cells of `conversion_target.tsv` and `conversion_edges.tsv` end to end through `TRY … CATCH`, as the

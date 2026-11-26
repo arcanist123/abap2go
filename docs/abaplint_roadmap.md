@@ -19,6 +19,9 @@ file records their priority and what they mean for abap2go, not a copy of their 
   ABAP? If not, skip it
 - also out of scope: releases below 7.40, refactoring, feature requests, and issues that need the reporter's
   private dependencies
+- of the list processor's statements only `WRITE` is in scope, as in the compiler ([roadmap.md](roadmap.md),
+  "Purpose"): issues about `ULINE`, `SKIP`, `NEW-LINE`, `FORMAT`, `TOP-OF-PAGE` and the others are not picked up or
+  raised
 - **abap2go does not reimplement the syntax check** ([aot_for_abap.md](aot_for_abap.md), "No syntax check of its
   own"): the compiler's code assumes valid ABAP, and invalid syntax that abap2go identifies is fixed here, never
   checked in the compiler instead
@@ -303,6 +306,7 @@ Invalid ABAP that abaplint accepts:
 | [#4780](https://github.com/abaplint/abaplint/issues/4780) | a built-in function as the work area of `COLLECT`, `READ TABLE` and `DELETE TABLE` | internal tables |
 | [#4777](https://github.com/abaplint/abaplint/issues/4777) | parentheses around a single operand as the whole source of an inline declaration | inline declarations |
 | [#4778](https://github.com/abaplint/abaplint/issues/4778) | parentheses around a string expression or a string template | `&&` and string templates |
+| [#4783](https://github.com/abaplint/abaplint/issues/4783) | `WRITE` with a blank between `/` and a number or `(length)` (`WRITE / 5.`, `WRITE / (10) moo.`). Expected to be an error: `/`, position and length are one word. A text literal or data object after `/ ` is the field to write, valid. Two tests in `test/abap/statements/write.ts` expect `WRITE / (10) moo.` to parse and have to change. `ULINE / (5).` is accepted too, but `ULINE` is out of scope | `WRITE` positions and lengths |
 
 ## Parked
 
