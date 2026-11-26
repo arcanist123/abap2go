@@ -25,7 +25,7 @@ Priority, when choosing what to pick up next:
 - nothing that would stop ABAP from compiling ahead of time: nothing that needs a JS host or a compiler at run time
 - lint rules are out of scope: only the parser and check_syntax count
 - a gap in abaplint or open-abap-core that the compiler runs into, within the scope it compiles, is fixed right
-  away: on the fork's `abap2go` branch (vendored), and offered upstream as a PR. It goes before the other work items
+  away: offered upstream as a PR, and carried in `patches/` until an abaplint release has it. It goes before the other work items
   of that repository
 
 This file is the source of status for abap2go and the work it needs in other repositories.
@@ -61,10 +61,13 @@ Done:
   - `WRITE` of a variable typed with a data element formats it as its built-in type when the data element (or its
     domain) has the built-in output length and no conversion exit; any other dictionary or local type (`sy-datum`,
     `LIKE`, `TYPES`, table fields) is refused for `WRITE`, since its own output length changes the output
-- the compiler runs on the abaplint fork (2026-11-24): `@abaplint/core` is built from the `abap2go` branch of
-  arcanist123/abaplint (upstream main plus the fixes abap2go needs, each also sent upstream) and vendored as
-  `vendor/abaplint-core-<version>.tgz` (`scripts/vendor-abaplint.sh` rebuilds it). On it now:
-  - `WRITE` of a utclong (abaplint#4700, PR abaplint#4701), which now compiles
+- the compiler runs on an abaplint release plus a patch (2026-11-26, before that a vendored fork build since
+  2026-11-24): `@abaplint/core` is pinned to an upstream release, and `patch-package` applies
+  `patches/@abaplint+core+<version>.patch` on `npm install`. The patch holds the abap2go PRs to abaplint that the
+  release does not contain yet, open or merged but unreleased (listed in `patches/abaplint-prs.txt`);
+  `scripts/abaplint-patch.sh` regenerates it, and each PR drops out once a release has it. Fixes carried this way:
+  - `WRITE` of a utclong (abaplint#4700, PR abaplint#4701), which now compiles; released in 2.120.119, so no
+    longer in the patch
   - INT1 and INT2 keep their size (abaplint#4630, PR abaplint#4631): `b` and `s` are declared through data
     elements, and moves, `WRITE` and `out->write( )` follow their rules
 - arithmetic (2026-11-24): the calculation type table in the runtime (`abap.Calculate`, `calc.go`): the calculation
@@ -116,7 +119,7 @@ Done:
     and short-circuit evaluation (a subfield is computed only when its comparison is evaluated). 338 of the 404 cells
     of `comparison_expr.tsv` run end to end (`test/comparison_expr.test.ts`); the others wait for `IS INITIAL`,
     `CONV` and built-in functions as single operands
-  - `NOT` repeated any number of times (2026-11-25, abaplint #4714 on the vendored fork): an even number cancels out
+  - `NOT` repeated any number of times (2026-11-25, abaplint #4714, in the abaplint patch): an even number cancels out
   - `DATA` is not executable: every variable of a processing block exists from its start with its start value, also
     one declared in a loop or a branch
   - refused: `EXIT`, `CONTINUE` and `CHECK` outside a loop (they leave the processing block), `DO … VARYING`,
@@ -338,11 +341,11 @@ All 380 open issues were read; the parser / check_syntax ones run through abapli
   (inline declarations not handled): valid code fails to parse or is mistyped
 
 - in flight: #4329 (`|` and `}` in EXEC SQL or an AMDP body taken as a string template, valid code mis-lexed) is
-  in PR abaplint#4684
-- in flight: #4700 (`WRITE` of a utclong gives "Source not character like", valid code rejected) is in PR
-  abaplint#4701; already on the fork's `abap2go` branch
+  in PR abaplint#4684; in the abaplint patch
+- done: #4700 (`WRITE` of a utclong gives "Source not character like", valid code rejected), PR abaplint#4701,
+  released in abaplint 2.120.119
 - in flight: #4714 (`NOT NOT a = 1` does not parse, valid code rejected; also in `LOOP`, `DELETE` and `MODIFY …
-  WHERE`) is in PR abaplint#4716; on the fork's `abap2go` branch and vendored as `2.120.117-abap2go.3`
+  WHERE`): PR abaplint#4716 is merged, not released yet; in the abaplint patch
 
 Suggested order: #1809, then the dataset pair; `INSERT itab.` after asking the abaplint
 maintainer.
