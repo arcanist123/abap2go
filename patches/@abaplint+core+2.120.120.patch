@@ -1259,10 +1259,10 @@ index 2964ea7..dac7539 100644
  //# sourceMappingURL=split.js.map
 \ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
-index 5d1d028..8b7ab64 100644
+index 5d1d028..8645788 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
-@@ -35,17 +35,62 @@ var __importStar = (this && this.__importStar) || (function () {
+@@ -35,17 +35,83 @@ var __importStar = (this && this.__importStar) || (function () {
  Object.defineProperty(exports, "__esModule", { value: true });
  exports.When = void 0;
  const Expressions = __importStar(require("../../2_statements/expressions"));
@@ -1304,21 +1304,42 @@ index 5d1d028..8b7ab64 100644
 +            }
          }
      }
-+    // a value after WHEN cannot be calculated, unlike the operand of CASE: no arithmetic expression, no
-+    // parentheses, and of the numeric built-in functions only those with one unnamed argument, which is a data object
++    // a value after WHEN cannot be calculated, unlike the operand of CASE: no arithmetic, string or bit expression, no
++    // parentheses, no table expression, and of the built-in functions only numeric ones with one unnamed argument,
++    // which is a data object. A literal joined with "&" is a single literal, "'a' & 'b'"
 +    checkCalculation(source, input) {
 +        if (compare_1.Compare.isArithmetic(source, input)) {
 +            return "Arithmetic expression not allowed after WHEN";
 +        }
-+        const first = source.getChildren()[0];
++        const children = source.getChildren();
++        const first = children[0];
 +        if (first instanceof nodes_1.TokenNode && first.getFirstToken().getStr() === "(") {
 +            return "Parentheses not allowed after WHEN";
 +        }
++        else if (children.some(c => c instanceof nodes_1.TokenNode && c.getFirstToken().getStr() === "&&")
++            || (first === null || first === void 0 ? void 0 : first.get()) instanceof Expressions.StringTemplate) {
++            return "String expression not allowed after WHEN";
++        }
++        else if (/^BIT-NOT /i.test(source.concatTokens())
++            || children.some(c => c.get() instanceof Expressions.ArithOperator)) {
++            // the lexer splits BIT-NOT into three tokens, the arithmetic operators are reported above
++            return "Bit expression not allowed after WHEN";
++        }
++        else if (children.some(c => (c.get() instanceof Expressions.FieldChain || c.get() instanceof Expressions.MethodCallChain)
++            && c instanceof nodes_1.ExpressionNode && c.findDirectExpression(Expressions.TableExpression) !== undefined)) {
++            return "Table expression not allowed after WHEN";
++        }
++        else if (first instanceof nodes_1.TokenNode && /^(BOOLC|XSDBOOL)$/i.test(first.getFirstToken().getStr())) {
++            return `Built-in function "${first.getFirstToken().getStr()}" not allowed after WHEN, only a numeric function`;
++        }
 +        const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
-+        if (call === undefined || _builtin_call_1.BuiltInCall.isNumeric(call) === false) {
++        if (call === undefined) {
 +            return undefined;
 +        }
 +        const name = _builtin_call_1.BuiltInCall.callName(call);
++        if (_builtin_call_1.BuiltInCall.isNumeric(call) === false) {
++            return `Built-in function "${name}" not allowed after WHEN, only a numeric function`;
++        }
 +        if (_builtin_1.BuiltIn.hasUnnamedArgument(name) && _builtin_call_1.BuiltInCall.hasDataObjectArgument(call)) {
 +            return undefined;
 +        }

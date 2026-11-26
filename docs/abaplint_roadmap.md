@@ -175,9 +175,10 @@ Found 2026-11-26, with 2.120.120 and the patch.
 - [ ] [#4762](https://github.com/abaplint/abaplint/issues/4762) after `WHEN`, `&&`, string templates, built-in
   functions with a character-like result (`condense( )`, `to_upper( )`, `substring( )`, `boolc( )`, `xsdbool( )`),
   bit expressions and table expressions (`tab[ 1 ]`) are accepted, while ABAP is expected to reject them. The same
-  forms after `CASE`, `'a' & 'b'` and an expression inside a constructor expression are valid. PR #4761 does not cover
-  them. Same code (`when.ts`) as #4761 and #4748: a waiting PR on top of
-  `case-parentheses-4748`
+  forms after `CASE`, `'a' & 'b'` and an expression inside a constructor expression are valid. Fixed in waiting PR
+  [arcanist123/abaplint#2](https://github.com/arcanist123/abaplint/pull/2), on top of `case-parentheses-4748`, in the
+  patch: after `WHEN` no string, bit or table expression, and no built-in function with a non-numeric result. Not
+  covered: `bit-set( )` and `boolx( )`, which do not parse at all ([#4764](https://github.com/abaplint/abaplint/issues/4764))
 
 ### Waiting PRs on the fork
 
@@ -191,11 +192,11 @@ Chain on `when.ts`, which starts going up once [PR #4741](https://github.com/aba
 |---|---|---|---|---|
 | 1 | [abaplint#4761](https://github.com/abaplint/abaplint/pull/4761) (upstream, draft) | `case-when-arithmetic-4747` | upstream `main`, still with the #4741 commits | [#4747](https://github.com/abaplint/abaplint/issues/4747) |
 | 2 | [arcanist123/abaplint#1](https://github.com/arcanist123/abaplint/pull/1) | `case-parentheses-4748` | `case-when-arithmetic-4747` | [#4748](https://github.com/abaplint/abaplint/issues/4748) |
+| 3 | [arcanist123/abaplint#2](https://github.com/arcanist123/abaplint/pull/2) | `when-string-bit-table-4762` | `case-parentheses-4748` | [#4762](https://github.com/abaplint/abaplint/issues/4762) |
 
 #4761 was opened stacked before this rule, so it stays the upstream draft rather than move to the fork: once #4741 is
 merged, rebase it onto `main` (which drops the #4741 commit) and mark it ready. Once #4761 is merged, #1 goes up as in
-"When a waiting PR goes up". Next in this chain: [#4762](https://github.com/abaplint/abaplint/issues/4762), on top of
-`case-parentheses-4748`.
+"When a waiting PR goes up", and #2 once #1 is merged.
 
 ### Syntax checks to move out of the compiler
 
@@ -287,8 +288,8 @@ HTML tag in ABAP Doc is expected to give warnings only ([#4655](https://github.c
 
 ## In the patch
 
-PRs the pinned release does not contain, as of 2026-11-26. The patch file was last generated with PR #4761 and waiting PR arcanist123/abaplint#1, which is not in this table
-(see "Waiting PRs on the fork").
+PRs the pinned release does not contain, as of 2026-11-26. The patch file was last generated with PR #4761 and waiting PRs arcanist123/abaplint#1 and #2, which are not in this
+table (see "Waiting PRs on the fork").
 
 | PR | What | State |
 |---|---|---|
@@ -327,8 +328,12 @@ abaplint (main `af7440a`, default config, `v757`).
   Valid code gets the wrong statement
 - [ ] [#4754](https://github.com/abaplint/abaplint/issues/4754) `NEW lcl( )->attr = 1.` gives "Not an object
   reference, target" for any attribute
+- [ ] [#4764](https://github.com/abaplint/abaplint/issues/4764) `bit-set( 1 )` and `boolx( bool = i = 1 )` do not
+  parse: `bit-set` is lexed as `bit`, `-`, `set`, and the logical expression of `boolx( )` is not handled the way
+  `boolc( )` and `xsdbool( )` are in `Source`. Found 2026-11-26 while fixing #4762; valid code that fails to parse
 
-Suggested order: [#1809](https://github.com/abaplint/abaplint/issues/1809) first;
+Suggested order: [#1809](https://github.com/abaplint/abaplint/issues/1809) and
+[#4764](https://github.com/abaplint/abaplint/issues/4764) first;
 [#4755](https://github.com/abaplint/abaplint/issues/4755) after the maintainer's view on the shape.
 
 ### Invalid ABAP accepted
