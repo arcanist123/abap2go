@@ -143,16 +143,16 @@ ENDTRY.`;
 
 const refusals: [string, RegExp][] = [
   // an arithmetic expression cannot be compared with a non-numeric operand
-  ["abs( i ) + 0 = bad", /cannot be compared with|syntax check/],
-  ["abs( i + 0 ) = bad", /cannot be compared with|syntax check/],
-  ["bad = abs( - i )", /cannot be compared with|syntax check/],
-  ["abs( strlen( s ) ) = bad", /cannot be compared with|syntax check/],
-  ["ipow( base = two exp = 2 ) = bad", /cannot be compared with|syntax check/],
-  ["bad BETWEEN abs( i ) AND abs( i + 0 )", /cannot be compared with|syntax check/],
+  ["abs( i ) + 0 = bad", /syntax check/],
+  ["abs( i + 0 ) = bad", /syntax check/],
+  ["bad = abs( - i )", /syntax check/],
+  ["abs( strlen( s ) ) = bad", /syntax check/],
+  ["ipow( base = two exp = 2 ) = bad", /syntax check/],
+  ["bad BETWEEN abs( i ) AND abs( i + 0 )", /syntax check/],
   ["abs( u ) = 1", /utclong|syntax check/],
   ["sqrt( u ) = 1", /utclong|syntax check/],
-  ["strlen( s ) = u", /no comparison type|syntax check/],
-  ["abs( i ) = u", /no comparison type|syntax check/],
+  ["strlen( s ) = u", /syntax check/],
+  ["abs( i ) = u", /syntax check/],
   // not compiled yet
   ["boolc( two = 2 ) = 'X'", /only a literal, a variable or a subfield|syntax check/],
   ["xsdbool( two = 2 ) = 'X'", /only a literal, a variable or a subfield|syntax check/],
