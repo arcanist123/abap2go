@@ -38,12 +38,26 @@ but unreleased (listed in `patches/abaplint-prs.txt`). Each PR drops out once a 
 3. Open the PR upstream; it says `closes #N` for the issues it fixes.
 4. Regenerate the patch with `scripts/abaplint-patch.sh` and run `npm test` here.
 
+abap2go's own development comes first, upstream PRs are a bonus: a fix goes into the patch the day it is written,
+whether upstream has taken it or not. Upstream gets it as a queue of small PRs, at its own pace.
+
 No stacked PRs: the maintainer does not take a PR whose branch builds on another open one, and sets it to draft. Each
 PR is branched from upstream `main` and stays small, one issue or a few close ones. A fix that needs the code of an
 open PR (the same file, or its helpers) is still written right away, on a branch of its own on top of that PR's
-branch, and pushed to the fork without a PR. It waits in "Waiting branches" below until the PR under it is merged; then
-it is rebased onto `main`, its tests run again, and its PR is opened. One waiting branch at a time goes up, in the
-order listed. A waiting branch is not in the patch.
+branch, and pushed to the fork without a PR. It goes into `patches/abaplint-branches.txt`, which the script merges
+after the PRs (a branch on top of another merges cleanly, as it contains it), and into "Waiting branches" below. Once
+the PR under it is merged, it is rebased onto `main`, its tests run again, its PR is opened and it leaves
+`abaplint-branches.txt`, since the script now takes it from the PR list. One waiting branch at a time goes up, in the
+order listed. Stacking stays a local habit that upstream never sees.
+
+When upstream changes or rejects a PR:
+- changed in review: the patch is regenerated, which takes the PR's new head
+- rejected (closed without a merge, which the script skips): its branch goes back into `abaplint-branches.txt` and
+  stays part of abap2go's abaplint
+- fixed upstream another way: the conflict shows when abap2go moves to a newer release, and our version is dropped
+  then
+
+Upstream's own improvements arrive with a newer release: abap2go pins one, so moving the pin is where they come in.
 
 Working with upstream: the maintainer (larshp) reviews and merges. Do not merge `main` into an open PR or press
 "Update branch" unless GitHub shows a conflict or the maintainer asks: an out-of-date branch is fine, and an update
@@ -87,8 +101,8 @@ Found 2026-11-26, with 2.120.120 and the patch.
   `WHEN ipow( base = a exp = 2 )`, `WHEN abs( a + 0 )`) is accepted, while ABAP is expected to allow only a data
   object or a built-in function of one there. The build still refuses them, as operands it does not compile. Fix in
   [PR #4761](https://github.com/abaplint/abaplint/pull/4761), set to draft by the maintainer since it was stacked on
-  [PR #4741](https://github.com/abaplint/abaplint/pull/4741) (see "Waiting branches"); the patch file does not contain
-  it. It also rejects `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 and #4750 stays
+  [PR #4741](https://github.com/abaplint/abaplint/pull/4741) (see "Waiting branches"); listed for the patch, the
+  patch file was generated before it. It also rejects `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 and #4750 stays
 - [ ] [#4748](https://github.com/abaplint/abaplint/issues/4748) `CASE ( a ).` and `WHEN ( b ).`, parentheses around
   a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), are accepted, while ABAP is expected to reject
   them; the compiler compiles `CASE ( a ).` as without them. `CASE ( a + 1 ).` is valid
@@ -106,8 +120,10 @@ Found 2026-11-26, with 2.120.120 and the patch.
 
 ### Waiting branches
 
-Fixes written on top of an open PR's branch, pushed to the fork without a PR (see "How a fix gets in"). In order;
-each one is rebased onto `main` and opened once the branch under it is merged.
+Fixes written on top of an open PR's branch, pushed to the fork without a PR and listed in
+`patches/abaplint-branches.txt`, so they are in the patch (see "How a fix gets in"). In order; each one is rebased
+onto `main` and opened once the branch under it is merged. #4761 is already a PR (a draft), so the script takes it
+from the PR list, not from the branch file.
 
 | Branch | Fixes | Waits for |
 |---|---|---|
@@ -222,7 +238,7 @@ PRs the pinned release does not contain, as of 2026-11-26. The patch file was la
 | [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
 | [#4758](https://github.com/abaplint/abaplint/pull/4758) | `SPLIT ... IN BYTE MODE` takes byte-like operands, and its inline targets are `xstring` ([#4757](https://github.com/abaplint/abaplint/issues/4757)) | merged, not released |
 | [#4759](https://github.com/abaplint/abaplint/pull/4759) | a static offset or length beyond a `c` or `x` field is rejected although the other one is a variable ([#4742](https://github.com/abaplint/abaplint/issues/4742)) | merged, not released |
-| [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | draft, waits for #4741; listed, not in the patch file |
+| [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | draft, waits for #4741; listed, not yet in the patch file |
 
 Released and out of the patch: `WRITE` of a utclong ([#4700](https://github.com/abaplint/abaplint/issues/4700),
 [PR #4701](https://github.com/abaplint/abaplint/pull/4701), in 2.120.119), which the compiler now compiles.
