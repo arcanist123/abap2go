@@ -101,11 +101,13 @@ Found 2026-11-26, with 2.120.120 and the patch.
   `WHEN ipow( base = a exp = 2 )`, `WHEN abs( a + 0 )`) is accepted, while ABAP is expected to allow only a data
   object or a built-in function of one there. The build still refuses them, as operands it does not compile. Fix in
   [PR #4761](https://github.com/abaplint/abaplint/pull/4761), set to draft by the maintainer since it was stacked on
-  [PR #4741](https://github.com/abaplint/abaplint/pull/4741) (see "Waiting branches"); listed for the patch, the
-  patch file was generated before it. It also rejects `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 and #4750 stays
+  [PR #4741](https://github.com/abaplint/abaplint/pull/4741) (see "Waiting branches"); in the patch. It also rejects `abs( ( b ) )` and `abs( val = b )` after `WHEN`, the rest of #4749 and #4750 stays
 - [ ] [#4748](https://github.com/abaplint/abaplint/issues/4748) `CASE ( a ).` and `WHEN ( b ).`, parentheses around
   a single operand (also `( abs( a ) )`, `( ( a ) )`, `( sy-index )`), are accepted, while ABAP is expected to reject
-  them; the compiler compiles `CASE ( a ).` as without them. `CASE ( a + 1 ).` is valid
+  them; the compiler compiles `CASE ( a ).` as without them. `CASE ( a + 1 ).` is valid. Fixed on the waiting branch
+  `case-parentheses-4748`, in the patch: after `CASE` parentheses only around a calculation (an arithmetic or bit
+  expression, or a numeric built-in function of a calculated argument, `( abs( a + 1 ) )`), after `WHEN` none.
+  Not covered: parentheses inside a string expression after `CASE`, `( c ) && s`
 - [ ] [#4749](https://github.com/abaplint/abaplint/issues/4749) parentheses around a single operand as the argument
   of `strlen( )`, or of `abs( )` in a comparison, are accepted, while ABAP is expected to reject them
   (`i = abs( ( i ) ).` is valid)
@@ -128,9 +130,9 @@ from the PR list, not from the branch file.
 | Branch | Fixes | Waits for |
 |---|---|---|
 | `case-when-arithmetic-4747` | [#4747](https://github.com/abaplint/abaplint/issues/4747), already [PR #4761](https://github.com/abaplint/abaplint/pull/4761) (draft): rebase onto `main`, drop the #4741 commits, mark it ready | [PR #4741](https://github.com/abaplint/abaplint/pull/4741) |
+| `case-parentheses-4748` | [#4748](https://github.com/abaplint/abaplint/issues/4748) | `case-when-arithmetic-4747` |
 
-Next on top of `case-when-arithmetic-4747`: [#4748](https://github.com/abaplint/abaplint/issues/4748), then
-[#4762](https://github.com/abaplint/abaplint/issues/4762), each on a branch of its own.
+Next, on top of `case-parentheses-4748`: [#4762](https://github.com/abaplint/abaplint/issues/4762).
 
 ### Syntax checks to move out of the compiler
 
@@ -222,7 +224,7 @@ HTML tag in ABAP Doc is expected to give warnings only ([#4655](https://github.c
 
 ## In the patch
 
-PRs the pinned release does not contain, as of 2026-11-26. The patch file was last generated before PR #4761.
+PRs the pinned release does not contain, as of 2026-11-26. The patch file was last generated with PR #4761 and the waiting branch `case-parentheses-4748`.
 
 | PR | What | State |
 |---|---|---|
@@ -238,7 +240,7 @@ PRs the pinned release does not contain, as of 2026-11-26. The patch file was la
 | [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
 | [#4758](https://github.com/abaplint/abaplint/pull/4758) | `SPLIT ... IN BYTE MODE` takes byte-like operands, and its inline targets are `xstring` ([#4757](https://github.com/abaplint/abaplint/issues/4757)) | merged, not released |
 | [#4759](https://github.com/abaplint/abaplint/pull/4759) | a static offset or length beyond a `c` or `x` field is rejected although the other one is a variable ([#4742](https://github.com/abaplint/abaplint/issues/4742)) | merged, not released |
-| [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | draft, waits for #4741; listed, not yet in the patch file |
+| [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | draft, waits for #4741 |
 
 Released and out of the patch: `WRITE` of a utclong ([#4700](https://github.com/abaplint/abaplint/issues/4700),
 [PR #4701](https://github.com/abaplint/abaplint/pull/4701), in 2.120.119), which the compiler now compiles.

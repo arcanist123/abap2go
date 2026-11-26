@@ -18,7 +18,8 @@ version=${2:-$(cd "$root" && node -p "require('./package.json').dependencies['@a
 work=$(mktemp -d)
 trap 'git -C "$repo" worktree remove --force "$work/abl" 2>/dev/null; rm -rf "$work"' EXIT
 
-git -C "$repo" fetch -q origin --tags
+upstream=https://github.com/abaplint/abaplint.git
+git -C "$repo" fetch -q "$upstream" --tags
 git -C "$repo" worktree add -q --detach "$work/abl" "v$version"
 cd "$work/abl/packages/core"
 npm install --no-audit --no-fund -s >/dev/null
@@ -33,7 +34,7 @@ prs=$(gh pr list -R abaplint/abaplint --author "$author" --state all --limit 500
   done | sort -n)
 echo "PRs not in $version: $(echo $prs)"
 for n in $prs; do
-  git fetch -q origin "pull/$n/head:abap2go-pr$n"
+  git fetch -q "$upstream" "pull/$n/head:abap2go-pr$n"
   git -c user.name=abap2go -c user.email=abap2go@invalid merge -q --no-edit "abap2go-pr$n" ||
     { echo "PR $n does not merge cleanly onto $version"; exit 1; }
   git branch -q -D "abap2go-pr$n"
