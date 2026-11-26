@@ -1,0 +1,1200 @@
+diff --git a/node_modules/@abaplint/core/build/abaplint.d.ts b/node_modules/@abaplint/core/build/abaplint.d.ts
+index 893f5cb..9107469 100644
+--- a/node_modules/@abaplint/core/build/abaplint.d.ts
++++ b/node_modules/@abaplint/core/build/abaplint.d.ts
+@@ -432,6 +432,8 @@ declare class Attributes implements IAttributes {
+     /** does the component exist in the interface, or in one of its aliases or included interfaces? */
+     private existsInInterface;
+     private parseAttribute;
++    /** the meta of the attribute, plus ReadOnlyAttribute for the READ-ONLY addition */
++    private readOnlyMeta;
+ }
+ 
+ declare class AtUserCommand implements IStatement {
+@@ -524,6 +526,7 @@ declare namespace BasicTypes {
+         FloatingPointType,
+         GenericObjectReferenceType,
+         HexType,
++        IntegerBytes,
+         IntegerType,
+         Integer8Type,
+         NGenericType,
+@@ -1602,6 +1605,9 @@ export declare class CurrentScope {
+     /** row type of the members of a group, key is the identifier of the group variable,
+      *  a LOOP AT ... GROUP BY binds the group until its ENDLOOP */
+     private readonly groupMemberTypes;
++    /** set while a statement of a class or interface definition is checked that only sees
++     *  the types defined above it, the types of that scope node defined later are skipped */
++    private typesDefinedBefore;
+     static buildDefault(reg: IRegistry, obj: IObject): CurrentScope;
+     private static addBuiltIn;
+     private constructor();
+@@ -1646,6 +1652,9 @@ export declare class CurrentScope {
+     /** Lookup interface in local and global scope */
+     findInterfaceDefinition(name: string | undefined): IInterfaceDefinition | undefined;
+     findFormDefinition(name: string): IFormDefinition | undefined;
++    /** only the types of the current class or interface definition defined before the position are visible,
++     *  undefined makes all of them visible again */
++    setTypesDefinedBefore(position: Position | undefined, filename: string): void;
+     findType(name: string | undefined): TypedIdentifier | undefined;
+     findExtraLikeType(name: string | undefined): TypedIdentifier | undefined;
+     findVariable(name: string | undefined): TypedIdentifier | undefined;
+@@ -3601,7 +3610,9 @@ export declare const enum IdentifierMeta {
+     DDIC = "ddic",
+     Static = "static",
+     Enum = "enum",
+-    SelectionScreenTab = "selection_screen_tab"
++    SelectionScreenTab = "selection_screen_tab",
++    /** class or interface attribute declared READ-ONLY */
++    ReadOnlyAttribute = "read_only_attribute"
+ }
+ 
+ export declare interface IDependency {
+@@ -4077,17 +4088,23 @@ declare class Integer8Type extends AbstractType {
+     toCDS(): string;
+ }
+ 
++/** byte size of the integer: 1 for DDIC INT1 (internal type b), 2 for INT2 (s), 4 for INT4 and ABAP i */
++declare type IntegerBytes = 1 | 2 | 4;
++
+ declare class IntegerType extends AbstractType {
+     private static readonly singletons;
+-    static get(input?: AbstractTypeData): IntegerType;
++    private readonly bytes;
++    static get(input?: AbstractTypeData, bytes?: IntegerBytes): IntegerType;
+     private constructor();
++    /** 1 for DDIC INT1, 2 for INT2, 4 for INT4 and ABAP type i */
++    getBytes(): IntegerBytes;
+     /** fully qualified symbolic name of the type */
+     getQualifiedName(): string | undefined;
+-    toText(): string;
++    toText(): "```b```" | "```i```" | "```s```";
+     isGeneric(): boolean;
+     toABAP(): string;
+     containsVoid(): boolean;
+-    toCDS(): string;
++    toCDS(): "abap.int1" | "abap.int2" | "abap.int4";
+ }
+ 
+ declare class Interface extends ABAPObject {
+@@ -7912,6 +7929,11 @@ declare class SyntaxCheck implements IStatement {
+ 
+ declare type SyntaxInput = {
+     scope: CurrentScope;
++    /** of the innermost CASE around the statement, set by it: the type of its operand, which the values after WHEN
++     * are compared with. undefined for the result of an arithmetic expression */
++    caseOperand?: {
++        type?: AbstractType;
++    };
+     filename: string;
+     issues: Issue[];
+     /** checks which can only run once the full object has been traversed, eg. PERFORM parameters,
+@@ -7919,6 +7941,8 @@ declare type SyntaxInput = {
+     deferred: (() => void)[];
+     /** the statement is inside a LOOP structure */
+     inLoop?: boolean;
++    /** of the TRY, CATCH and CLEANUP blocks around the statement, the innermost one is a CATCH block */
++    inCatch?: boolean;
+ };
+ 
+ export declare class SyntaxLogic {
+@@ -7931,8 +7955,10 @@ export declare class SyntaxLogic {
+     private scope;
+     private loopTables;
+     private loopDepth;
++    private inCatch;
+     private currentMethod;
+     private sortedLines;
++    private readonly caseOperands;
+     private helpers;
+     constructor(reg: IRegistry, object: ABAPObject);
+     run(): ISyntaxResult;
+diff --git a/node_modules/@abaplint/core/build/src/abap/1_lexer/lexer.js b/node_modules/@abaplint/core/build/src/abap/1_lexer/lexer.js
+index 3d4907c..477949c 100644
+--- a/node_modules/@abaplint/core/build/src/abap/1_lexer/lexer.js
++++ b/node_modules/@abaplint/core/build/src/abap/1_lexer/lexer.js
+@@ -54,6 +54,9 @@ class Lexer {
+         this.virtual = virtual;
+         this.tokens = [];
+         this.m = ModeNormal;
++        this.native = false;
++        this.words = [];
++        this.colon = false;
+         this.process(file.getRaw());
+         return { file, tokens: this.tokens };
+     }
+@@ -255,9 +258,49 @@ class Lexer {
+                 tok = new tokens_1.Identifier(pos, s);
+             }
+             this.tokens.push(tok);
++            this.trackNative(tok, s);
+         }
+         this.buffer.clear();
+     }
++    /** follows the statements to know whether the next text is native SQL,
++     * mirrors the region handling of the statement parser */
++    trackNative(tok, s) {
++        if (tok instanceof tokens_1.Comment || tok instanceof tokens_1.Pragma) {
++            return;
++        }
++        else if (tok instanceof tokens_1.Punctuation && s === ".") {
++            this.native = this.nativeAfter();
++            this.words = [];
++            this.colon = false;
++        }
++        else if (s === ":" && this.native === false && tok instanceof tokens_1.Identifier) {
++            this.colon = true;
++        }
++        else {
++            this.words.push(s.toUpperCase());
++        }
++    }
++    nativeAfter() {
++        const words = this.words;
++        const last = words[words.length - 1];
++        if (last === "ENDEXEC" || last === "ENDMETHOD") {
++            return false;
++        }
++        else if (this.colon === true) {
++            // a fragment of a chain does not open a region
++            return this.native;
++        }
++        else if (words[0] === "EXEC" && words[1] === "SQL") {
++            return true;
++        }
++        else if (words[0] === "METHOD"
++            && words.includes("BY")
++            && words.includes("DATABASE")
++            && words.includes("LANGUAGE")) {
++            return true;
++        }
++        return this.native;
++    }
+     process(raw) {
+         const stream = new lexer_stream_1.LexerStream(raw.replace(/\r/g, ""));
+         this.stream = stream;
+@@ -276,7 +319,7 @@ class Lexer {
+                     this.add();
+                     this.m = ModeStr;
+                 }
+-                else if (ahead === CH_PIPE || ahead === CH_RBRACE) {
++                else if ((ahead === CH_PIPE || ahead === CH_RBRACE) && this.native === false) {
+                     // start template
+                     this.add();
+                     this.m = ModeTemplate;
+diff --git a/node_modules/@abaplint/core/build/src/abap/2_statements/expressions/source.js b/node_modules/@abaplint/core/build/src/abap/2_statements/expressions/source.js
+index 2394369..f4a6196 100644
+--- a/node_modules/@abaplint/core/build/src/abap/2_statements/expressions/source.js
++++ b/node_modules/@abaplint/core/build/src/abap/2_statements/expressions/source.js
+@@ -27,8 +27,14 @@ class Source extends combi_1.Expression {
+         const paren = (0, combi_1.seq)((0, combi_1.tok)(tokens_1.WParenLeftW), Source, rparen);
+         const after = (0, combi_1.seq)((0, combi_1.altPrio)("&", "&&", _1.ArithOperator), Source);
+         const bool = (0, combi_1.seq)((0, combi_1.altPrio)((0, combi_1.ver)(version_1.Release.v702, (0, combi_1.regex)(/^BOOLC$/i), { also: combi_1.AlsoIn.OpenABAP }), (0, combi_1.ver)(version_1.Release.v740sp08, (0, combi_1.regex)(/^XSDBOOL$/i), { also: combi_1.AlsoIn.OpenABAP })), (0, combi_1.tok)(tokens_1.ParenLeftW), _1.Cond, ")");
++        // the bool parameter of boolx( ) is a logical expression, the parameters can come in any order
++        const boolxBool = (0, combi_1.seq)("BOOL", "=", _1.Cond);
++        const boolxBit = (0, combi_1.seq)("BIT", "=", Source);
++        const boolx = (0, combi_1.ver)(version_1.Release.v702, (0, combi_1.seq)((0, combi_1.regex)(/^BOOLX$/i), (0, combi_1.tok)(tokens_1.ParenLeftW), (0, combi_1.altPrio)((0, combi_1.seq)(boolxBool, (0, combi_1.optPrio)(boolxBit)), (0, combi_1.seq)(boolxBit, boolxBool)), ")"));
++        // "bit-set" is lexed as three tokens, without space around the dash
++        const bitSet = (0, combi_1.ver)(version_1.Release.v702, (0, combi_1.seq)((0, combi_1.regex)(/^BIT$/i), (0, combi_1.tok)(tokens_1.Dash), (0, combi_1.regex)(/^SET$/i), (0, combi_1.tok)(tokens_1.ParenLeftW), (0, combi_1.optPrio)((0, combi_1.seq)("VAL", "=")), Source, ")"));
+         const prefix = (0, combi_1.altPrio)((0, combi_1.tok)(tokens_1.WPlus), "BIT-NOT");
+-        const old = (0, combi_1.seq)((0, combi_1.optPrio)(prefix), (0, combi_1.altPrio)(_1.Constant, _1.StringTemplate, text_element_1.TextElement, bool, castDeref, method, (0, combi_1.seq)(_1.FieldChain, deref), paren), (0, combi_1.optPrio)(after));
++        const old = (0, combi_1.seq)((0, combi_1.optPrio)(prefix), (0, combi_1.altPrio)(_1.Constant, _1.StringTemplate, text_element_1.TextElement, bool, boolx, bitSet, castDeref, method, (0, combi_1.seq)(_1.FieldChain, deref), paren), (0, combi_1.optPrio)(after));
+         const corr = (0, combi_1.ver)(version_1.Release.v740sp05, (0, combi_1.seq)("CORRESPONDING", _1.TypeNameOrInfer, (0, combi_1.tok)(tokens_1.ParenLeftW), _1.CorrespondingBody, rparen, (0, combi_1.optPrio)(after)), { also: combi_1.AlsoIn.OpenABAP });
+         const conv = (0, combi_1.ver)(version_1.Release.v740sp02, (0, combi_1.seq)("CONV", _1.TypeNameOrInfer, lparenNoSpace, _1.ConvBody, rparenNoSpace, (0, combi_1.optPrio)(after)), { also: combi_1.AlsoIn.OpenABAP });
+         const swit = (0, combi_1.ver)(version_1.Release.v740sp02, (0, combi_1.seq)("SWITCH", _1.TypeNameOrInfer, (0, combi_1.tok)(tokens_1.ParenLeftW), _1.SwitchBody, rparenNoSpace, (0, combi_1.optPrio)(after)), { also: combi_1.AlsoIn.OpenABAP });
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js
+index 449a5e8..484ac84 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_builtin_call.js
+@@ -80,7 +80,22 @@ class BuiltInCall {
+     // the call has a single argument, without a parameter name, that is a data object and not an expression
+     static hasDataObjectArgument(call) {
+         var _a;
+-        const argument = (_a = call.findDirectExpression(Expressions.MethodCallParam)) === null || _a === void 0 ? void 0 : _a.findDirectExpression(Expressions.Source);
++        return this.isDataObject((_a = call.findDirectExpression(Expressions.MethodCallParam)) === null || _a === void 0 ? void 0 : _a.findDirectExpression(Expressions.Source));
++    }
++    // the arguments of the call, unnamed or named, "abs( a )" or "ipow( base = a exp = 2 )"
++    static callArguments(call) {
++        var _a;
++        const param = call.findDirectExpression(Expressions.MethodCallParam);
++        const unnamed = param === null || param === void 0 ? void 0 : param.findDirectExpression(Expressions.Source);
++        if (unnamed !== undefined) {
++            return [unnamed];
++        }
++        return (((_a = param === null || param === void 0 ? void 0 : param.findDirectExpression(Expressions.ParameterListS)) === null || _a === void 0 ? void 0 : _a.findDirectExpressions(Expressions.ParameterS)) || [])
++            .map(p => p.findDirectExpression(Expressions.Source))
++            .filter((s) => s !== undefined);
++    }
++    // a data object and not an expression
++    static isDataObject(argument) {
+         const children = (argument === null || argument === void 0 ? void 0 : argument.getChildren()) || [];
+         // a literal or a text symbol, text-001
+         if (children.length === 1
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_current_scope.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_current_scope.js
+index 1c14059..5aaf579 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_current_scope.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_current_scope.js
+@@ -401,12 +401,38 @@ class CurrentScope {
+         var _a;
+         return (_a = this.current) === null || _a === void 0 ? void 0 : _a.findFormDefinition(name);
+     }
++    /** only the types of the current class or interface definition defined before the position are visible,
++     *  undefined makes all of them visible again */
++    setTypesDefinedBefore(position, filename) {
++        if (position === undefined || this.current === undefined) {
++            this.typesDefinedBefore = undefined;
++        }
++        else {
++            this.typesDefinedBefore = { node: this.current, filename, position };
++        }
++    }
+     findType(name) {
+         var _a;
+         if (name === undefined) {
+             return undefined;
+         }
+-        return (_a = this.current) === null || _a === void 0 ? void 0 : _a.findType(name);
++        const before = this.typesDefinedBefore;
++        if (before === undefined) {
++            return (_a = this.current) === null || _a === void 0 ? void 0 : _a.findType(name);
++        }
++        const upper = name.toUpperCase();
++        let search = this.current;
++        while (search !== undefined) {
++            const found = search.getData().types[upper];
++            if (found !== undefined
++                && !(search === before.node
++                    && found.getFilename() === before.filename
++                    && found.getStart().isAfter(before.position))) {
++                return found;
++            }
++            search = search.getParent();
++        }
++        return undefined;
+     }
+     findExtraLikeType(name) {
+         var _a;
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_object_oriented.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_object_oriented.js
+index 244b0b7..eb85e32 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_object_oriented.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_object_oriented.js
+@@ -218,6 +218,35 @@ class ObjectOriented {
+         }
+         return "private";
+     }
++    /** a READ-ONLY attribute can be changed through a reference or class name whose static type is the class
++     *  doing the change or one of its super classes, or a class it is a friend of; never through an interface */
++    readOnlyWriteAllowed(def, enclosing) {
++        var _a;
++        if (enclosing === undefined || !(def instanceof types_1.ClassDefinition)) {
++            return false;
++        }
++        const name = def.getName().toUpperCase();
++        const visited = [];
++        let current = enclosing;
++        while (current !== undefined && visited.includes(current.toUpperCase()) === false) {
++            if (current.toUpperCase() === name) {
++                return true;
++            }
++            visited.push(current.toUpperCase());
++            current = (_a = this.scope.findClassDefinition(current)) === null || _a === void 0 ? void 0 : _a.getSuperClass();
++        }
++        const friendsVisited = [];
++        let granting = def;
++        while (granting !== undefined && friendsVisited.includes(granting.getName().toUpperCase()) === false) {
++            friendsVisited.push(granting.getName().toUpperCase());
++            if (this.hasFriendship(granting, enclosing)) {
++                return true;
++            }
++            const sup = granting.getSuperClass();
++            granting = sup === undefined ? undefined : this.scope.findClassDefinition(sup);
++        }
++        return false;
++    }
+     // the fixture methods of a test class are called by ABAP Unit only, returns the message otherwise
+     checkSpecialTestMethodCall(method, foundDef) {
+         if (method === undefined
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
+index 5af7e91..c56c6fb 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
+@@ -48,6 +48,28 @@ class TypeUtils {
+     constructor(scope) {
+         this.scope = scope;
+     }
++    /** false for two elementary types which cannot be compared with each other: a date and a time, and a time stamp
++     * of type utclong with anything but another one or a text of type c or string */
++    hasComparisonType(type1, type2) {
++        if ((type1 instanceof basic_1.DateType && type2 instanceof basic_1.TimeType)
++            || (type1 instanceof basic_1.TimeType && type2 instanceof basic_1.DateType)) {
++            return false;
++        }
++        const other = type1 instanceof basic_1.UTCLongType ? type2 : type2 instanceof basic_1.UTCLongType ? type1 : undefined;
++        return !(other instanceof basic_1.IntegerType
++            || other instanceof basic_1.Integer8Type
++            || other instanceof basic_1.PackedType
++            || other instanceof basic_1.FloatType
++            || other instanceof basic_1.FloatingPointType
++            || other instanceof basic_1.DecFloat16Type
++            || other instanceof basic_1.DecFloat34Type
++            || other instanceof basic_1.DecFloatType
++            || (other instanceof basic_1.NumericType && !(other instanceof ngeneric_type_1.NGenericType))
++            || other instanceof basic_1.HexType
++            || other instanceof basic_1.XStringType
++            || other instanceof basic_1.DateType
++            || other instanceof basic_1.TimeType);
++    }
+     isCharLikeStrict(type) {
+         if (type === undefined) {
+             return false;
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
+index f17395d..74b4adf 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
+@@ -269,7 +269,7 @@ class BasicTypes {
+             type = new basic_1.CharacterType(type.getLength(), data);
+         }
+         else if (type instanceof Types.IntegerType) {
+-            type = Types.IntegerType.get(data);
++            type = Types.IntegerType.get(data, type.getBytes());
+         }
+         else if (type instanceof Types.StringType) {
+             type = Types.StringType.get(data);
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_database_work_area.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_database_work_area.js
+index 24beacc..f8979be 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_database_work_area.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_check_database_work_area.js
+@@ -40,7 +40,7 @@ const Basic = __importStar(require("../../types/basic"));
+ const objects_1 = require("../../../objects");
+ const _syntax_input_1 = require("../_syntax_input");
+ // byte length of a flat type in a unicode system, as a lower and an upper bound:
+-// IntegerType also stands for INT1 and INT2, and padding is left out of the lower bound
++// padding is left out of the lower bound
+ function bounds(type) {
+     if (type instanceof Basic.CharacterType || type instanceof Basic.NumericType) {
+         return { min: type.getLength() * 2, max: type.getLength() * 2, align: 2 };
+@@ -52,7 +52,8 @@ function bounds(type) {
+         return { min: 12, max: 12, align: 2 };
+     }
+     else if (type instanceof Basic.IntegerType) {
+-        return { min: 1, max: 4, align: 4 };
++        const bytes = type.getBytes();
++        return { min: bytes, max: bytes, align: bytes };
+     }
+     else if (type instanceof Basic.Integer8Type || type instanceof Basic.FloatType
+         || type instanceof Basic.DecFloat16Type || type instanceof Basic.UTCLongType) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
+index 8de6a4d..c5c2dae 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
+@@ -44,6 +44,12 @@ const basic_1 = require("../../types/basic");
+ const _type_utils_1 = require("../_type_utils");
+ const _builtin_1 = require("../_builtin");
+ const _builtin_call_1 = require("../_builtin_call");
++const COMPARISON_OPERATORS = ["=", "EQ", "<>", "NE", "><", "<", "LT", ">", "GT", "<=", "LE", "=<", ">=", "GE", "=>"];
++// built-in numeric functions of one argument, and those with further parameters
++const ONE_ARGUMENT_FUNCTIONS = ["abs", "sign", "ceil", "floor", "trunc", "frac", "acos", "asin", "atan", "cos",
++    "sin", "tan", "cosh", "sinh", "tanh", "exp", "log", "log10", "sqrt"];
++const SEVERAL_PARAMETER_FUNCTIONS = ["ipow", "nmax", "nmin", "round", "rescale"];
++const LENGTH_FUNCTIONS = ["strlen", "xstrlen", "numofchar"];
+ class Compare {
+     static runSyntax(node, input) {
+         var _a;
+@@ -69,14 +75,17 @@ class Compare {
+         if (operandMessage !== undefined) {
+             return;
+         }
+-        const arithmeticMessage = this.checkArithmeticOperands(node, sources, sourceTypes);
++        const arithmeticMessage = this.checkArithmeticOperands(node, sources, sourceTypes, input);
+         if (arithmeticMessage !== undefined) {
+             input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), arithmeticMessage));
+             return;
+         }
+         const typeUtils = new _type_utils_1.TypeUtils(input.scope);
+         const compareOperator = (_a = node.findDirectExpression(Expressions.CompareOperator)) === null || _a === void 0 ? void 0 : _a.concatTokens().toUpperCase();
+-        if (compareOperator === "CS"
++        if (this.lacksComparisonType(node, sourceTypes, typeUtils)) {
++            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), "Incompatible types for comparison"));
++        }
++        else if (compareOperator === "CS"
+             && sourceTypes.length === 2
+             && sourceTypes.some((type) => typeUtils.isCharLikeForCompare(type) === false)) {
+             const message = "CS operands must be character-like (data type C, N, D, T, or STRING)";
+@@ -133,31 +142,51 @@ class Compare {
+         const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
+         return call === undefined ? undefined : _builtin_call_1.BuiltInCall.callName(call);
+     }
+-    // an arithmetic expression can only be compared with a numeric operand or another arithmetic expression,
+-    // a character-like, byte-like, date, time or structured operand is expected to be a syntax error,
+-    // the operand can be made an arithmetic expression with a "+" in front, "+ lv_c"
+-    static checkArithmeticOperands(node, sources, types) {
++    // two operands without a comparison type, eg. a date and a time, also as operand and bound of BETWEEN. The
++    // operators for character-like and byte-like operands, like CS or O, have their own rules
++    static lacksComparisonType(node, types, typeUtils) {
++        var _a;
++        const operator = (_a = node.findDirectExpression(Expressions.CompareOperator)) === null || _a === void 0 ? void 0 : _a.concatTokens().toUpperCase();
+         let pairs = [];
+-        if (node.findDirectExpression(Expressions.CompareOperator) !== undefined && sources.length === 2) {
++        if (operator !== undefined && COMPARISON_OPERATORS.includes(operator) && types.length === 2) {
+             pairs = [[0, 1]];
+         }
+-        else if (node.findDirectTokenByText("BETWEEN") !== undefined && sources.length === 3) {
++        else if (node.findDirectTokenByText("BETWEEN") !== undefined && types.length === 3) {
+             pairs = [[0, 1], [0, 2]];
+         }
+-        for (const [a, b] of pairs) {
+-            for (const [arith, other] of [[a, b], [b, a]]) {
+-                if (this.isArithmetic(sources[arith]) === true
+-                    && this.isArithmetic(sources[other]) === false
+-                    && this.isNonNumeric(types[other]) === true) {
+-                    const operand = sources[other].concatTokens();
+-                    return `Arithmetic expression cannot be compared with non-numeric operand "${operand}", use "+ ${operand}"`;
+-                }
++        return pairs.some(([a, b]) => typeUtils.hasComparisonType(types[a], types[b]) === false);
++    }
++    // an arithmetic expression can only be compared with a numeric operand or another arithmetic expression,
++    // a character-like, byte-like, date, time or structured operand is expected to be a syntax error,
++    // the operand can be made an arithmetic expression with a "+" in front, "+ lv_c". The three operands of
++    // BETWEEN share one calculation, so an arithmetic expression among them applies to the two others
++    static checkArithmeticOperands(node, sources, types, input) {
++        const comparison = node.findDirectExpression(Expressions.CompareOperator) !== undefined && sources.length === 2;
++        const between = node.findDirectTokenByText("BETWEEN") !== undefined && sources.length === 3;
++        if (comparison === false && between === false) {
++            return undefined;
++        }
++        const arithmetic = sources.map(s => this.isArithmetic(s, input));
++        if (arithmetic.includes(true) === false) {
++            return undefined;
++        }
++        for (let i = 0; i < sources.length; i++) {
++            if (arithmetic[i] === true) {
++                continue;
++            }
++            else if (types[i] instanceof basic_1.UTCLongType) {
++                return `A time stamp of type utclong cannot be compared with an arithmetic expression`;
++            }
++            else if (this.isNonNumeric(types[i]) === true) {
++                const operand = sources[i].concatTokens();
++                return `Arithmetic expression cannot be compared with non-numeric operand "${operand}", use "+ ${operand}"`;
+             }
+         }
+         return undefined;
+     }
+-    // "a + b", "- a", "( a * b )", but not "( a )", "a && b" or "a BIT-AND b"
+-    static isArithmetic(source) {
++    // "a + b", "- a", "( a * b )", "ipow( base = a exp = b )" or "abs( a + b )",
++    // but not "( a )", "abs( a )", "a && b" or "a BIT-AND b"
++    static isArithmetic(source, input) {
+         const children = source.getChildren();
+         const first = children[0];
+         if (first instanceof nodes_1.TokenNode) {
+@@ -166,7 +195,7 @@ class Compare {
+                 return true;
+             }
+             else if (str === "(" && children.length === 3 && children[1] instanceof nodes_1.ExpressionNode) {
+-                return this.isArithmetic(children[1]);
++                return this.isArithmetic(children[1], input);
+             }
+         }
+         for (const child of children) {
+@@ -176,7 +205,30 @@ class Compare {
+                 return true;
+             }
+         }
+-        return false;
++        return this.isArithmeticFunction(source, input);
++    }
++    // a built-in numeric function is part of a calculation when it has several parameters, or when its argument
++    // is calculated itself, "abs( a + b )" or "abs( strlen( s ) )". Of a data object it is a value of its own
++    static isArithmeticFunction(source, input) {
++        var _a, _b, _c;
++        const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
++        const name = call === undefined ? undefined : (_a = _builtin_call_1.BuiltInCall.callName(call)) === null || _a === void 0 ? void 0 : _a.toLowerCase();
++        if (call === undefined || name === undefined) {
++            return false;
++        }
++        else if (SEVERAL_PARAMETER_FUNCTIONS.includes(name)) {
++            return true;
++        }
++        else if (ONE_ARGUMENT_FUNCTIONS.includes(name) === false) {
++            return false;
++        }
++        const argument = (_b = call.findDirectExpression(Expressions.MethodCallParam)) === null || _b === void 0 ? void 0 : _b.findDirectExpression(Expressions.Source);
++        if (argument === undefined) {
++            return false;
++        }
++        const inner = (_c = this.builtinCallName(argument, input)) === null || _c === void 0 ? void 0 : _c.toLowerCase();
++        return this.isArithmetic(argument, input)
++            || (inner !== undefined && (ONE_ARGUMENT_FUNCTIONS.includes(inner) || LENGTH_FUNCTIONS.includes(inner)));
+     }
+     static isNonNumeric(type) {
+         return type instanceof basic_1.CharacterType
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
+index ba69e57..64b87f8 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
+@@ -101,7 +101,7 @@ class InlineData {
+             return new basic_1.CharacterType(type.getLength(), rest);
+         }
+         else if (type instanceof basic_1.IntegerType) {
+-            return basic_1.IntegerType.get(rest);
++            return basic_1.IntegerType.get(rest, type.getBytes());
+         }
+         else if (type instanceof basic_1.StringType) {
+             return basic_1.StringType.get(rest);
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
+index ff132e0..4746582 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
+@@ -79,7 +79,7 @@ class Source {
+         this.logicalArguments.add(source);
+     }
+     static runSyntax(node, input, targetType, writeReference = false, allowGenericDeference = false, readReference = true) {
+-        var _a, _b;
++        var _a, _b, _c;
+         if (node === undefined) {
+             return undefined;
+         }
+@@ -87,6 +87,8 @@ class Source {
+         let first = children.shift();
+         // a leading sign makes the operand part of a calculation, "- foo"
+         let signed = false;
++        // the type of a built-in function call that the grammar parses as part of the source, "bit-set( 1 )"
++        let called = undefined;
+         if (first instanceof nodes_1.TokenNode) {
+             const token = first.getFirstToken();
+             const tok = token.getStr().toUpperCase();
+@@ -96,7 +98,16 @@ class Source {
+                     signed = true;
+                     break;
+                 case "(":
++                    break;
+                 case "BIT":
++                    if (((_a = children[1]) === null || _a === void 0 ? void 0 : _a.concatTokens().toUpperCase()) === "SET") {
++                        called = this.runBuiltinCall("BIT-SET", token, children, input);
++                        first = children.shift();
++                    }
++                    break;
++                case "BOOLX":
++                    called = this.runBuiltinCall(tok, token, children, input);
++                    first = children.shift();
+                     break;
+                 case "BOOLC":
+                     {
+@@ -162,7 +173,7 @@ class Source {
+                     {
+                         const foundType = this.determineType(node, input, targetType);
+                         const bodyType = conv_body_1.ConvBody.runSyntax(node.findDirectExpression(Expressions.ConvBody), input, foundType);
+-                        const inferred = (_a = node.findDirectExpression(Expressions.TypeNameOrInfer)) === null || _a === void 0 ? void 0 : _a.concatTokens();
++                        const inferred = (_b = node.findDirectExpression(Expressions.TypeNameOrInfer)) === null || _b === void 0 ? void 0 : _b.concatTokens();
+                         if (new _type_utils_1.TypeUtils(input.scope).isConvable(foundType, bodyType) === false) {
+                             const message = `CONV: Types not compatible, ${foundType === null || foundType === void 0 ? void 0 : foundType.constructor.name}, ${bodyType === null || bodyType === void 0 ? void 0 : bodyType.constructor.name}`;
+                             input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), message));
+@@ -238,7 +249,7 @@ class Source {
+                         const foundType = this.determineType(node, input, targetType);
+                         if ((foundType === null || foundType === void 0 ? void 0 : foundType.isGeneric()) === true
+                             && !(foundType instanceof basic_1.DataType)
+-                            && ((_b = node.findDirectExpression(Expressions.TypeNameOrInfer)) === null || _b === void 0 ? void 0 : _b.concatTokens()) === "#"
++                            && ((_c = node.findDirectExpression(Expressions.TypeNameOrInfer)) === null || _c === void 0 ? void 0 : _c.concatTokens()) === "#"
+                             && !(0, version_1.releaseAtLeast)(input.scope.getRelease(), version_1.Release.v756)
+                             && input.scope.getLanguageVersion() !== version_1.LanguageVersion.Cloud
+                             && !input.scope.getOpenABAP()) {
+@@ -276,7 +287,7 @@ class Source {
+         else if (first === undefined || !(first instanceof nodes_1.ExpressionNode)) {
+             return undefined;
+         }
+-        let context = new unknown_type_1.UnknownType("todo, Source type");
++        let context = called !== undefined ? called : new unknown_type_1.UnknownType("todo, Source type");
+         const type = [];
+         if (readReference) {
+             type.push(_reference_1.ReferenceType.DataReadReference);
+@@ -413,6 +424,26 @@ class Source {
+         return true;
+     }
+     ////////////////////////////////
++    // checks the arguments of a built-in function call parsed as part of the source, bit-set( ) or boolx( ),
++    // removes the call from the children and returns its type
++    static runBuiltinCall(name, token, children, input) {
++        var _a;
++        const method = _builtin_1.BuiltIn.searchBuiltin(name);
++        input.scope.addReference(token, method, _reference_1.ReferenceType.BuiltinMethodReference, input.filename);
++        while (children.length > 0) {
++            const child = children.shift();
++            if (child instanceof nodes_1.ExpressionNode && child.get() instanceof Expressions.Cond) {
++                cond_1.Cond.runSyntax(child, input);
++            }
++            else if (child instanceof nodes_1.ExpressionNode && child.get() instanceof Expressions.Source) {
++                Source.runSyntax(child, input, basic_1.IntegerType.get());
++            }
++            else if (child instanceof nodes_1.TokenNode && child.getFirstToken().getStr() === ")") {
++                break;
++            }
++        }
++        return (_a = method === null || method === void 0 ? void 0 : method.getParameters().getReturning()) === null || _a === void 0 ? void 0 : _a.getType();
++    }
+     static traverseRemainingChildren(children, input) {
+         const last = children[children.length - 1];
+         if (last && last.get() instanceof Expressions.Source) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
+index 89beb8d..2549c4b 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
+@@ -51,6 +51,8 @@ const source_field_1 = require("./source_field");
+ const _substring_1 = require("./_substring");
+ const _syntax_input_1 = require("../_syntax_input");
+ const version_1 = require("../../../version");
++const _object_oriented_1 = require("../_object_oriented");
++const class_definition_1 = require("../../types/class_definition");
+ class Target {
+     static runSyntax(node, input) {
+         var _a;
+@@ -76,6 +78,8 @@ class Target {
+         }
+         let currentIndex = 1;
+         let afterTableExpression = false;
++        // a READ-ONLY attribute written from outside, unless a reference in it is followed
++        let readOnly = undefined;
+         while (currentIndex <= children.length) {
+             const current = children[currentIndex];
+             if (current === undefined) {
+@@ -101,6 +105,7 @@ class Target {
+                 }
+             }
+             else if (current.get() instanceof tokens_1.InstanceArrow) {
++                readOnly = undefined;
+                 if (afterTableExpression && table_expression_1.TableExpression.checkArrowAfter(input, current.getFirstToken())) {
+                     return basic_1.VoidType.get(_syntax_input_1.CheckSyntaxKey);
+                 }
+@@ -117,6 +122,7 @@ class Target {
+                 }
+             }
+             else if (current.get() instanceof expressions_1.Dereference) {
++                readOnly = undefined;
+                 if (!(context instanceof basic_1.DataReference) && !(context instanceof basic_1.VoidType)) {
+                     const message = "Not an object reference, target";
+                     input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), message));
+@@ -163,9 +169,15 @@ class Target {
+             }
+             else if (current.get() instanceof Expressions.AttributeName) {
+                 const type = children.length === 0 ? _reference_1.ReferenceType.DataWriteReference : _reference_1.ReferenceType.DataReadReference;
++                const objectContext = context;
+                 context = attribute_name_1.AttributeName.runSyntax(context, current, input, type);
++                readOnly = this.readOnlyWrittenOutside(objectContext, current, input);
+             }
+         }
++        if (readOnly !== undefined) {
++            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), readOnly));
++            return basic_1.VoidType.get(_syntax_input_1.CheckSyntaxKey);
++        }
+         // the substring is checked, but the type of the whole field is returned
+         let substring = context;
+         const offset = node.findDirectExpression(Expressions.FieldOffset);
+@@ -198,6 +210,28 @@ class Target {
+         return context;
+     }
+     /////////////////////////////////
++    /** the message, when the attribute is READ-ONLY and the enclosing class may not change it */
++    static readOnlyWrittenOutside(context, node, input) {
++        if (!(context instanceof basic_1.ObjectReferenceType)) {
++            return undefined;
++        }
++        const def = input.scope.findObjectDefinition(context.getIdentifierName());
++        if (def === undefined) {
++            return undefined;
++        }
++        const name = node.getFirstToken().getStr();
++        const helper = new _object_oriented_1.ObjectOriented(input.scope);
++        const found = helper.searchAttributeName(def, name);
++        if (found === undefined
++            || found.getMeta().includes("read_only_attribute" /* IdentifierMeta.ReadOnlyAttribute */) === false
++            || helper.readOnlyWriteAllowed(def, input.scope.getEnclosingClassName())) {
++            return undefined;
++        }
++        if (def instanceof class_definition_1.ClassDefinition) {
++            return `READ-ONLY attribute "${name}" can only be changed in "${def.getName()}", its subclasses and friends`;
++        }
++        return `READ-ONLY attribute "${name}" cannot be changed through interface "${def.getName()}"`;
++    }
+     static findTop(node, input) {
+         if (node === undefined) {
+             return undefined;
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
+index d4e9ca9..11142bd 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/case.js
+@@ -34,9 +34,13 @@ var __importStar = (this && this.__importStar) || (function () {
+ })();
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.Case = void 0;
++exports.parenthesized = parenthesized;
+ exports.checkCaseOperand = checkCaseOperand;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
++const nodes_1 = require("../../nodes");
++const _builtin_call_1 = require("../_builtin_call");
+ const source_1 = require("../expressions/source");
++const compare_1 = require("../expressions/compare");
+ const _syntax_input_1 = require("../_syntax_input");
+ const _builtin_1 = require("../_builtin");
+ const _object_oriented_1 = require("../_object_oriented");
+@@ -44,14 +48,77 @@ const basic_1 = require("../../types/basic");
+ const version_1 = require("../../../version");
+ class Case {
+     runSyntax(node, input) {
+-        // just recurse
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
+-            source_1.Source.runSyntax(s, input);
++            const type = source_1.Source.runSyntax(s, input);
++            const inner = parenthesized(s);
++            if (inner !== undefined && isCalculation(inner, input) === false) {
++                const message = "Parentheses after CASE only around a calculation, not around a single operand";
++                input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), message));
++            }
+             checkCaseOperand(s, input);
++            // an arithmetic expression is calculated on its own, the values after WHEN are compared with its result
++            if (input.caseOperand && compare_1.Compare.isArithmetic(s, input) === false) {
++                input.caseOperand.type = type;
++            }
+         }
+     }
+ }
+ exports.Case = Case;
++// the source inside the parentheses when the source is exactly "( ... )"
++function parenthesized(source) {
++    const children = source.getChildren();
++    if (children.length === 3
++        && children[0] instanceof nodes_1.TokenNode && children[0].getFirstToken().getStr() === "("
++        && children[1] instanceof nodes_1.ExpressionNode && children[1].get() instanceof Expressions.Source) {
++        return children[1];
++    }
++    return undefined;
++}
++// "a + 1", "- a", "BIT-NOT x", "x BIT-AND y", or a built-in numeric function of a calculated argument,
++// "abs( a + 1 )", "strlen( lcl=>get( ) )", "ipow( base = abs( a ) exp = 2 )". Not a single operand: a data object,
++// a method call, a constructor or table expression, a built-in function of data objects only, or a string
++// expression, "( a )", "( lcl=>get( a + 1 ) )", "( CONV i( a + 1 ) )", "( strlen( s ) )" or "( c && s )"
++function isCalculation(source, input) {
++    const inner = parenthesized(source);
++    if (inner !== undefined) {
++        return isCalculation(inner, input);
++    }
++    const children = source.getChildren();
++    const first = children[0];
++    if (first instanceof nodes_1.TokenNode && ["+", "-"].includes(first.getFirstToken().getStr())) {
++        return true;
++    }
++    else if (first instanceof nodes_1.TokenNode && /^BIT-NOT /i.test(source.concatTokens())) {
++        // the lexer splits BIT-NOT into three tokens
++        return true;
++    }
++    else if (children.some(c => c.get() instanceof Expressions.ArithOperator)) {
++        return true;
++    }
++    const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
++    return call !== undefined
++        && _builtin_call_1.BuiltInCall.isNumeric(call)
++        && _builtin_call_1.BuiltInCall.callArguments(call).some(a => isCalculatedArgument(a, input));
++}
++// an argument that makes a built-in function a calculation: anything but a data object or a string expression
++function isCalculatedArgument(argument, input) {
++    var _a, _b;
++    const inner = parenthesized(argument);
++    if (inner !== undefined) {
++        return isCalculation(inner, input);
++    }
++    else if (_builtin_call_1.BuiltInCall.isDataObject(argument)) {
++        return false;
++    }
++    const children = argument.getChildren();
++    if (children.some(c => c instanceof nodes_1.TokenNode && ["&", "&&"].includes(c.getFirstToken().getStr()))
++        || ((_a = children[0]) === null || _a === void 0 ? void 0 : _a.get()) instanceof Expressions.StringTemplate
++        || ["BOOLC", "XSDBOOL"].includes((_b = children[0]) === null || _b === void 0 ? void 0 : _b.getFirstToken().getStr().toUpperCase())) {
++        return false;
++    }
++    const call = _builtin_call_1.BuiltInCall.fromSource(argument, input);
++    return call === undefined || _builtin_call_1.BuiltInCall.isNumeric(call);
++}
+ // Before 7.40 SP02 the operands of CASE and WHEN are enhanced functional operand positions: besides
+ // data objects and functional methods, only built-in functions with exactly one unnamed argument are allowed
+ function checkCaseOperand(source, input) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/retry.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/retry.js
+new file mode 100644
+index 0000000..96da2de
+--- /dev/null
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/retry.js
+@@ -0,0 +1,14 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.Retry = void 0;
++const _syntax_input_1 = require("../_syntax_input");
++// RETRY restarts the TRY block of the CATCH block it is in, so it is only possible in a CATCH block
++class Retry {
++    runSyntax(node, input) {
++        if (input.inCatch !== true) {
++            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), "RETRY is only allowed in a CATCH block"));
++        }
++    }
++}
++exports.Retry = Retry;
++//# sourceMappingURL=retry.js.map
+\ No newline at end of file
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
+index 5d1d028..8645788 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/statements/when.js
+@@ -35,17 +35,83 @@ var __importStar = (this && this.__importStar) || (function () {
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.When = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
++const nodes_1 = require("../../nodes");
+ const source_1 = require("../expressions/source");
++const compare_1 = require("../expressions/compare");
++const _syntax_input_1 = require("../_syntax_input");
++const _type_utils_1 = require("../_type_utils");
++const _builtin_1 = require("../_builtin");
++const _builtin_call_1 = require("../_builtin_call");
+ const case_1 = require("./case");
+ class When {
+     runSyntax(node, input) {
++        var _a;
++        // the values the CASE operand is compared with, "WHEN a OR b"
++        const values = [...node.findDirectExpressions(Expressions.Source),
++            ...node.findDirectExpressions(Expressions.Or).map(o => o.findDirectExpression(Expressions.Source))];
++        const typeUtils = new _type_utils_1.TypeUtils(input.scope);
++        const calculated = [];
+         for (const s of node.findAllExpressions(Expressions.Source)) {
+-            source_1.Source.runSyntax(s, input);
++            const type = source_1.Source.runSyntax(s, input);
++            if (values.includes(s) === false) {
++                continue;
++            }
++            const message = this.checkCalculation(s, input);
++            if (message !== undefined) {
++                calculated.push(s);
++                input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), message));
++            }
++            else if (typeUtils.hasComparisonType((_a = input.caseOperand) === null || _a === void 0 ? void 0 : _a.type, type) === false) {
++                input.issues.push((0, _syntax_input_1.syntaxIssue)(input, s.getFirstToken(), "Incompatible types for comparison"));
++            }
+         }
+         for (const s of node.findDirectExpressions(Expressions.Source)) {
+-            (0, case_1.checkCaseOperand)(s, input);
++            if (calculated.includes(s) === false) {
++                (0, case_1.checkCaseOperand)(s, input);
++            }
+         }
+     }
++    // a value after WHEN cannot be calculated, unlike the operand of CASE: no arithmetic, string or bit expression, no
++    // parentheses, no table expression, and of the built-in functions only numeric ones with one unnamed argument,
++    // which is a data object. A literal joined with "&" is a single literal, "'a' & 'b'"
++    checkCalculation(source, input) {
++        if (compare_1.Compare.isArithmetic(source, input)) {
++            return "Arithmetic expression not allowed after WHEN";
++        }
++        const children = source.getChildren();
++        const first = children[0];
++        if (first instanceof nodes_1.TokenNode && first.getFirstToken().getStr() === "(") {
++            return "Parentheses not allowed after WHEN";
++        }
++        else if (children.some(c => c instanceof nodes_1.TokenNode && c.getFirstToken().getStr() === "&&")
++            || (first === null || first === void 0 ? void 0 : first.get()) instanceof Expressions.StringTemplate) {
++            return "String expression not allowed after WHEN";
++        }
++        else if (/^BIT-NOT /i.test(source.concatTokens())
++            || children.some(c => c.get() instanceof Expressions.ArithOperator)) {
++            // the lexer splits BIT-NOT into three tokens, the arithmetic operators are reported above
++            return "Bit expression not allowed after WHEN";
++        }
++        else if (children.some(c => (c.get() instanceof Expressions.FieldChain || c.get() instanceof Expressions.MethodCallChain)
++            && c instanceof nodes_1.ExpressionNode && c.findDirectExpression(Expressions.TableExpression) !== undefined)) {
++            return "Table expression not allowed after WHEN";
++        }
++        else if (first instanceof nodes_1.TokenNode && /^(BOOLC|XSDBOOL)$/i.test(first.getFirstToken().getStr())) {
++            return `Built-in function "${first.getFirstToken().getStr()}" not allowed after WHEN, only a numeric function`;
++        }
++        const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
++        if (call === undefined) {
++            return undefined;
++        }
++        const name = _builtin_call_1.BuiltInCall.callName(call);
++        if (_builtin_call_1.BuiltInCall.isNumeric(call) === false) {
++            return `Built-in function "${name}" not allowed after WHEN, only a numeric function`;
++        }
++        if (_builtin_1.BuiltIn.hasUnnamedArgument(name) && _builtin_call_1.BuiltInCall.hasDataObjectArgument(call)) {
++            return undefined;
++        }
++        return `Built-in function "${name}" not allowed after WHEN, only a function of a data object`;
++    }
+ }
+ exports.When = When;
+ //# sourceMappingURL=when.js.map
+\ No newline at end of file
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
+index f848b28..f74d39e 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
+@@ -106,6 +106,7 @@ const call_function_1 = require("./statements/call_function");
+ const clear_1 = require("./statements/clear");
+ const refresh_1 = require("./statements/refresh");
+ const return_1 = require("./statements/return");
++const retry_1 = require("./statements/retry");
+ const free_1 = require("./statements/free");
+ const replace_1 = require("./statements/replace");
+ const get_bit_1 = require("./statements/get_bit");
+@@ -337,12 +338,15 @@ if (Object.keys(map).length === 0) {
+     addToMap(new field_group_1.FieldGroup());
+     addToMap(new editor_call_1.EditorCall());
+     addToMap(new delete_memory_1.DeleteMemory());
++    addToMap(new retry_1.Retry());
+ }
+ // -----------------------------------
+ class SyntaxLogic {
+     constructor(reg, object) {
+         // files the traversal walked into through INCLUDEs, outermost first
+         this.includeStack = [];
++        // the operands of the CASE structures around the statement being traversed, innermost last
++        this.caseOperands = [];
+         this.reg = reg;
+         this.issues = [];
+         this.deferred = [];
+@@ -362,6 +366,7 @@ class SyntaxLogic {
+         this.deferred = [];
+         this.loopTables = new _loop_table_change_1.LoopTableChange();
+         this.loopDepth = 0;
++        this.inCatch = false;
+         this.sortedLines = new _sorted_key_write_1.SortedKeyWrite();
+         this.reg.getDDICReferences().clear(this.object);
+         this.reg.getMSAGReferences().clear(this.object);
+@@ -428,6 +433,10 @@ class SyntaxLogic {
+         this.issues.push(issue);
+     }
+     traverse(node) {
++        const isCase = node instanceof nodes_1.StructureNode && node.get() instanceof Structures.Case;
++        if (isCase) {
++            this.caseOperands.push({});
++        }
+         const loop = node instanceof nodes_1.StructureNode
+             && node.get() instanceof Structures.Loop
+             && this.loopTables.push(node, this.scope);
+@@ -438,6 +447,13 @@ class SyntaxLogic {
+         if (node instanceof nodes_1.StructureNode) {
+             this.sortedLines.enter(node, this.currentFile.getFilename());
+         }
++        const wasInCatch = this.inCatch;
++        if (node.get() instanceof Structures.Catch) {
++            this.inCatch = true;
++        }
++        else if (node.get() instanceof Structures.Try || node.get() instanceof Structures.Cleanup) {
++            this.inCatch = false;
++        }
+         for (const child of node.getChildren()) {
+             const isStructure = child instanceof nodes_1.StructureNode;
+             const isStatement = child instanceof nodes_1.StatementNode;
+@@ -480,6 +496,7 @@ class SyntaxLogic {
+                 this.traverse(child);
+             }
+         }
++        this.inCatch = wasInCatch;
+         if (loop === true) {
+             this.loopTables.pop();
+         }
+@@ -495,6 +512,9 @@ class SyntaxLogic {
+         if (node instanceof nodes_1.StructureNode) {
+             this.sortedLines.leave(node);
+         }
++        if (isCase) {
++            this.caseOperands.pop();
++        }
+     }
+     /**
+      * if this returns true, then the traversal should continue with next child
+@@ -568,10 +588,12 @@ class SyntaxLogic {
+         this.updateSelectionEventScope(node);
+         const input = {
+             scope: this.scope,
++            caseOperand: this.caseOperands[this.caseOperands.length - 1],
+             filename,
+             issues: this.issues,
+             deferred: this.deferred,
+             inLoop: this.loopDepth > 0,
++            inCatch: this.inCatch,
+         };
+         // todo, refactor
+         if (s instanceof Statements.Type) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js b/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js
+index 5c04caf..8f428bd 100644
+--- a/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js
++++ b/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js
+@@ -3,17 +3,22 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.IntegerType = void 0;
+ const _abstract_type_1 = require("./_abstract_type");
+ class IntegerType extends _abstract_type_1.AbstractType {
+-    static get(input) {
+-        const key = JSON.stringify(input);
++    static get(input, bytes = 4) {
++        const key = JSON.stringify(input) + (bytes === 4 ? "" : "#" + bytes);
+         if (this.singletons.has(key)) {
+             return this.singletons.get(key);
+         }
+-        const ret = new IntegerType(input);
++        const ret = new IntegerType(input, bytes);
+         this.singletons.set(key, ret);
+         return ret;
+     }
+-    constructor(input) {
++    constructor(input, bytes = 4) {
+         super(input);
++        this.bytes = bytes;
++    }
++    /** 1 for DDIC INT1, 2 for INT2, 4 for INT4 and ABAP type i */
++    getBytes() {
++        return this.bytes;
+     }
+     /** fully qualified symbolic name of the type */
+     getQualifiedName() {
+@@ -25,11 +30,19 @@ class IntegerType extends _abstract_type_1.AbstractType {
+         return qual;
+     }
+     toText() {
+-        return "```i```";
++        switch (this.bytes) {
++            case 1:
++                return "```b```";
++            case 2:
++                return "```s```";
++            default:
++                return "```i```";
++        }
+     }
+     isGeneric() {
+         return false;
+     }
++    // b and s cannot be declared in ABAP source, i is the closest declarable type
+     toABAP() {
+         return "i";
+     }
+@@ -37,7 +50,14 @@ class IntegerType extends _abstract_type_1.AbstractType {
+         return false;
+     }
+     toCDS() {
+-        return "abap.int4";
++        switch (this.bytes) {
++            case 1:
++                return "abap.int1";
++            case 2:
++                return "abap.int2";
++            default:
++                return "abap.int4";
++        }
+     }
+ }
+ exports.IntegerType = IntegerType;
+diff --git a/node_modules/@abaplint/core/build/src/abap/types/class_attributes.js b/node_modules/@abaplint/core/build/src/abap/types/class_attributes.js
+index e762b38..5698d54 100644
+--- a/node_modules/@abaplint/core/build/src/abap/types/class_attributes.js
++++ b/node_modules/@abaplint/core/build/src/abap/types/class_attributes.js
+@@ -175,7 +175,7 @@ class Attributes {
+                 if (ctyp instanceof Structures.Data) {
+                     const found = data_2.Data.runSyntax(c, input);
+                     if (found !== undefined) {
+-                        const attr = new class_attribute_1.ClassAttribute(found, visibility, found.getMeta(), found.getValue());
++                        const attr = new class_attribute_1.ClassAttribute(found, visibility, this.readOnlyMeta(found, c.getFirstStatement()), found.getValue());
+                         this.instance.push(attr);
+                         input.scope.addIdentifier(attr);
+                     }
+@@ -183,7 +183,7 @@ class Attributes {
+                 else if (ctyp instanceof Structures.ClassData) {
+                     const found = new class_data_2.ClassData().runSyntax(c, input);
+                     if (found !== undefined) {
+-                        const attr = new class_attribute_1.ClassAttribute(found, visibility, found.getMeta(), found.getValue());
++                        const attr = new class_attribute_1.ClassAttribute(found, visibility, this.readOnlyMeta(found, c.getFirstStatement()), found.getValue());
+                         this.static.push(attr);
+                         input.scope.addIdentifier(attr);
+                     }
+@@ -333,7 +333,21 @@ class Attributes {
+             throw new Error("ClassAttribute, unexpected node, " + this.filename);
+         }
+         input.scope.addIdentifier(found);
+-        return new class_attribute_1.ClassAttribute(found, visibility, found.getMeta(), found.getValue());
++        return new class_attribute_1.ClassAttribute(found, visibility, this.readOnlyMeta(found, node), found.getValue());
++    }
++    /** the meta of the attribute, plus ReadOnlyAttribute for the READ-ONLY addition */
++    readOnlyMeta(found, statement) {
++        const meta = [...found.getMeta()];
++        if (statement === undefined) {
++            return meta;
++        }
++        const definition = statement.findDirectExpression(Expressions.DataDefinition);
++        const nodes = definition ? [definition, ...definition.findAllExpressions(Expressions.TypeTableKey)] : [statement];
++        // in these nodes, a direct READ token only occurs in the READ-ONLY addition
++        if (nodes.some(n => n.findDirectTokenByText("READ") !== undefined)) {
++            meta.push("read_only_attribute" /* IdentifierMeta.ReadOnlyAttribute */);
++        }
++        return meta;
+     }
+ }
+ exports.Attributes = Attributes;
+diff --git a/node_modules/@abaplint/core/build/src/abap/types/method_definitions.js b/node_modules/@abaplint/core/build/src/abap/types/method_definitions.js
+index 1d7500b..5700325 100644
+--- a/node_modules/@abaplint/core/build/src/abap/types/method_definitions.js
++++ b/node_modules/@abaplint/core/build/src/abap/types/method_definitions.js
+@@ -86,6 +86,8 @@ class MethodDefinitions {
+         }
+     }
+     add(def, visibility, input) {
++        // the parameters only see the types defined above the METHODS statement
++        input.scope.setTypesDefinedBefore(def.getStart(), input.filename);
+         try {
+             const m = new method_definition_1.MethodDefinition(def, visibility, input);
+             this.all[m.getName().toUpperCase()] = m;
+@@ -93,6 +95,9 @@ class MethodDefinitions {
+         catch (e) {
+             input.issues.push((0, _syntax_input_1.syntaxIssue)(input, def.getFirstToken(), e.message));
+         }
++        finally {
++            input.scope.setTypesDefinedBefore(undefined, input.filename);
++        }
+     }
+ }
+ exports.MethodDefinitions = MethodDefinitions;
+diff --git a/node_modules/@abaplint/core/build/src/ddic.js b/node_modules/@abaplint/core/build/src/ddic.js
+index 806fab4..23baef6 100644
+--- a/node_modules/@abaplint/core/build/src/ddic.js
++++ b/node_modules/@abaplint/core/build/src/ddic.js
+@@ -431,7 +431,9 @@ class DDIC {
+             case "DATS":
+                 return new Types.DateType(extra); //YYYYMMDD
+             case "INT1":
++                return Types.IntegerType.get(extra, 1);
+             case "INT2":
++                return Types.IntegerType.get(extra, 2);
+             case "INT4":
+                 return Types.IntegerType.get(extra);
+             case "INT8":
+diff --git a/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js b/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js
+index adc939f..d9efafc 100644
+--- a/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js
++++ b/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js
+@@ -890,6 +890,9 @@ function identicalTypes(first, second) {
+     if (isReferenceType(first)) {
+         return first.toABAP().toUpperCase() === second.toABAP().toUpperCase();
+     }
++    if (first instanceof basic_1.IntegerType && second instanceof basic_1.IntegerType) {
++        return first.getBytes() === second.getBytes();
++    }
+     return first.toABAP() === second.toABAP();
+ }
+ ////////////////////////////////////////
+diff --git a/node_modules/@abaplint/core/build/src/rules/redundant_conversion.js b/node_modules/@abaplint/core/build/src/rules/redundant_conversion.js
+index 68371c6..426039d 100644
+--- a/node_modules/@abaplint/core/build/src/rules/redundant_conversion.js
++++ b/node_modules/@abaplint/core/build/src/rules/redundant_conversion.js
+@@ -404,6 +404,9 @@ text = text.`,
+             const secondName = (_b = second.getQualifiedName()) === null || _b === void 0 ? void 0 : _b.toUpperCase();
+             return firstName !== undefined && firstName === secondName;
+         }
++        if (first instanceof basic_1.IntegerType && second instanceof basic_1.IntegerType) {
++            return first.getBytes() === second.getBytes();
++        }
+         return first.toABAP() === second.toABAP();
+     }
+ }
