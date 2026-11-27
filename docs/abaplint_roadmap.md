@@ -156,11 +156,31 @@ argument otherwise).
 ## Now: what abap2go has run into
 
 Reviewed 2026-11-26 against abaplint `main` `fc504b57`: every open issue in this file still behaves on `main` as it
-describes.
+describes. PRs and fork issues reviewed again on 2026-11-27.
 
-Nothing in abaplint blocks the compiler's current scope (2026-11-26), so the compiler's own work comes next
-([compiler_roadmap.md](compiler_roadmap.md), "Next"). Open abaplint issues beyond that scope wait for the compiler step
-that needs them (see "Later"). The first of those steps is next in line: before the compiler compiles `IS INITIAL`, `IN`
+**First: the compiler's last syntax checks** (priority set 2026-11-27). The compiler still refuses six cases as syntax
+errors of its own (see "Syntax checks to move out of the compiler"), against "No syntax check of its own" in
+[aot_for_abap.md](aot_for_abap.md). Taking them out comes before any other work here and before the compiler's next
+step, in this order:
+
+1. write the two missing PRs, from upstream `main`: [#4746](https://github.com/abaplint/abaplint/issues/4746) (static
+   bounds of `n`, `d`, `t`) and [#4743](https://github.com/abaplint/abaplint/issues/4743) (more than 31 digits)
+2. once a release contains [PR #4828](https://github.com/abaplint/abaplint/pull/4828): pin it and regenerate the patch
+   (see "In the patch"), so that it holds #4828, [PR #4829](https://github.com/abaplint/abaplint/pull/4829),
+   [PR #4830](https://github.com/abaplint/abaplint/pull/4830), waiting PR
+   [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) and the two new PRs
+3. remove the six checks, each with its cases in the patch: `CONTINUE` outside a loop, a `utclong` in a calculation, a
+   subfield of a `utclong`, a static length of 0, static bounds of `n`, `d`, `t`, more than 31 digits
+
+After that the compiler has no syntax check of its own; what it refuses beyond abaplint's findings is what it does not
+compile yet. With #4830 in the patch, `i+0`, `i(*)` and `i(4)` become valid and reach the compiler, which has to refuse
+a subfield of a numeric type as not supported yet (not as a syntax error) or compile it as the whole field; `p(5)`,
+which the release already accepts, needs the same look.
+
+Then valid code mistyped: [arcanist123/abaplint#16](https://github.com/arcanist123/abaplint/issues/16), a data element
+of data type `UTCL` typed `c LENGTH 27`, which the compiler would move, compare and write as text (see "Backlog").
+
+Open abaplint issues beyond the compiler's scope wait for the compiler step that needs them (see "Later"). The first of those steps is next in line: before the compiler compiles `IS INITIAL`, `IN`
 and the string, byte and bit operators, take their operand checks.
 [#4799](https://github.com/abaplint/abaplint/issues/4799), [#4800](https://github.com/abaplint/abaplint/issues/4800) and
 [#4802](https://github.com/abaplint/abaplint/issues/4802) are fixed and in the patch (2026-11-27, see below); left are
@@ -288,6 +308,19 @@ The fix for [#4801](https://github.com/abaplint/abaplint/issues/4801) changes `c
 is a waiting PR on the end of this chain, based on `string-expression-numeric-function-4799`, unless its code can be
 kept apart, as for #4802.
 
+Chain on the flags of `SyntaxInput` and `SyntaxLogic`, on [PR #4739](https://github.com/abaplint/abaplint/pull/4739):
+
+| Order | PR | Branch | Base | Fixes |
+|---|---|---|---|---|
+| 1 | [abaplint#4739](https://github.com/abaplint/abaplint/pull/4739) (upstream) | `retry-outside-catch-4723` | upstream `main` | [#4723](https://github.com/abaplint/abaplint/issues/4723) |
+| 2 | [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) | `continue-outside-loop` | `retry-outside-catch-4723` | [#3660](https://github.com/abaplint/abaplint/issues/3660) |
+
+#14 is of another kind (2026-11-27): a copy of an open upstream PR by another author,
+[PR #4653](https://github.com/abaplint/abaplint/pull/4653), taken at its head with the author's commits unchanged, so
+that the patch has it and the compiler's `CONTINUE` check can go. No upstream PR is opened from it. It follows #4653:
+take the author's new pushes, and close it once a release has #4653. If #4653 is merged before #4739, rebase #4739
+onto it.
+
 ### Syntax checks to move out of the compiler
 
 The compiler still has syntax checks of its own, from before the decision that it does not reimplement the syntax
@@ -323,10 +356,11 @@ Removed 2026-11-27, since abaplint reports them:
 abaplint accepts these, in every form or in some, or the release and the patch do not report them yet, so the fix goes
 into abaplint. #4746 changes the same file (`_substring.ts`) as the open
 [PR #4829](https://github.com/abaplint/abaplint/pull/4829) and [PR #4830](https://github.com/abaplint/abaplint/pull/4830),
-and still branches from upstream `main` (2026-11-27): no waiting PR for it.
+and still branches from upstream `main` (2026-11-27): no waiting PR for it. These six are the first priority (see "Now").
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
-  with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-27). Review
-  it rather than write our own; not ours, so not in the patch, and the compiler's check stays until a release has it
+  with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-27). Not ours,
+  so it is copied as waiting PR [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) (see "Waiting
+  PRs on the fork"), which brings it into the patch; the compiler's check goes once the patch contains it
 - [ ] [#4729](https://github.com/abaplint/abaplint/issues/4729) `utclong` in an arithmetic expression, `u + 1`
   (`src/lower_arith.ts`). Some forms were reported (`abs( u )`, `i += u`), `i = u + 1` was not. Fixed in
   [PR #4828](https://github.com/abaplint/abaplint/pull/4828), merged 2026-11-27, not in the release or the patch yet:
@@ -449,9 +483,11 @@ error ([#4745](https://github.com/abaplint/abaplint/issues/4745), part of
 
 Opened since the patch was generated, not in it yet:
 [PR #4829](https://github.com/abaplint/abaplint/pull/4829), a substring length of 0 on a flat field is an error
-([#4730](https://github.com/abaplint/abaplint/issues/4730)), and
+([#4730](https://github.com/abaplint/abaplint/issues/4730)),
 [PR #4830](https://github.com/abaplint/abaplint/pull/4830), an offset or length taking a whole numeric field is valid
-(arcanist123/abaplint#15).
+(arcanist123/abaplint#15), and waiting PR [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14),
+`CONTINUE` outside a loop is an error ([#3660](https://github.com/abaplint/abaplint/issues/3660), a copy of
+[PR #4653](https://github.com/abaplint/abaplint/pull/4653)).
 
 The script cannot regenerate the patch until a release contains #4828 (2026-11-27, 2.120.122 is the latest): #4829 and
 #4830 branch from a `main` with the squashed commit of #4828, and their merges conflict with its original commits, which
