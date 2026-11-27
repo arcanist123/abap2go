@@ -10,6 +10,11 @@ are dropped first, how decfloat rounds when it does not fit).
 `WRITE` formatting is not the conversion to text of [conversion.md](conversion.md): `out->write( )` and
 `string = x` use the conversion, `WRITE` uses these rules.
 
+**Out of scope since 2026-11-27:** `WRITE` takes strings only ([roadmap.md](../roadmap.md), "Purpose"), so the
+compiler will not use these rules for `WRITE`. The rules and their test cases stay as the reference for the string
+templates' format options that follow the user settings (`NUMBER`, `DATE`, `TIME` with `USER`), as far as those
+reuse them; what the templates do not reuse goes.
+
 **Status (2026-11-24): all 16 kinds are specified and implemented** in the Go runtime,
 [`runtime/go/abap/write.go`](../../runtime/go/abap/write.go) (`abap.Format`). The test cases are
 [`testdata/write.tsv`](../../runtime/go/abap/testdata/write.tsv) (916 cells: 229 values under four user settings)
@@ -155,7 +160,7 @@ code 2. With a database, its user master records will override the file (see
 
 ## Known gaps
 
-- Dictionary types with their own output length or a conversion exit are refused for `WRITE`.
 - The date formats `7`–`C` and the 12-hour time formats (which may affect utclong) are not supported.
-- Formatting additions (`DD/MM/YYYY`, `CURRENCY`, `DECIMALS`, `NO-GROUPING`, `LEFT-JUSTIFIED`, `USING EDIT MASK`,
-  …), `WRITE … TO`, and positions and lengths (`WRITE AT /10(5)`) are not specified yet.
+- Not specified, and out of scope since 2026-11-27: dictionary types with their own output length or a conversion
+  exit, the formatting additions (`DD/MM/YYYY`, `CURRENCY`, `DECIMALS`, `NO-GROUPING`, `LEFT-JUSTIFIED`,
+  `USING EDIT MASK`, …), `WRITE … TO`, and positions and lengths (`WRITE AT /10(5)`).

@@ -28,6 +28,14 @@ Priority, when choosing what to pick up next:
 - of the list processor's statements only `WRITE` is in scope (2026-11-26): `ULINE`, `SKIP`, `NEW-LINE`,
   `NEW-PAGE`, `FORMAT`, `POSITION`, `BACK`, `RESERVE`, `TOP-OF-PAGE`, `END-OF-PAGE` and the interactive list events
   are not compiled, and their abaplint issues are not picked up
+- **`WRITE` takes strings only (2026-11-27):** `WRITE [/] <operand>` with a text literal, a string template or a
+  variable of the built-in type `string`; nothing else is compiled. abap2go's list is stdout, not a report on a
+  screen, so the classic list formatting buys nothing. Out of scope: `WRITE` of any other type (numbers, `c`, `d`,
+  dictionary types), positions and lengths, `AT`, `NO-GAP`, justification, the formatting additions, `WRITE … TO`
+  and `DESCRIBE … OUTPUT-LENGTH`. Formatting is written out in a string template
+  (`WRITE |{ amount NUMBER = USER }|`, `|{ matnr ALPHA = OUT }|`), so no statement in scope calls a conversion
+  exit implicitly (see [aot_for_abap.md](aot_for_abap.md), "Conversion exits: only explicit calls"). The list
+  layout already ported stays: one blank between outputs, `/` starts a line, trailing blanks removed
 - upstream PRs follow the working rules in [abaplint_roadmap.md](abaplint_roadmap.md), "How a fix gets in": the
   maintainer merges, no update of an open PR without a conflict, other people's issues are not closed by hand
 
@@ -64,6 +72,8 @@ Done:
   - `WRITE` of a variable typed with a data element formats it as its built-in type when the data element (or its
     domain) has the built-in output length and no conversion exit; any other dictionary or local type (`sy-datum`,
     `LIKE`, `TYPES`, table fields) is refused for `WRITE`, since its own output length changes the output
+  - superseded on 2026-11-27 by "`WRITE` takes strings only" (see "Purpose"): this path is to be removed from the
+    compiler (see "Next")
 - the compiler runs on an abaplint release plus a patch (2026-11-26, before that a vendored fork build since
   2026-11-24): `@abaplint/core` is pinned to an upstream release, and `patch-package` applies
   `patches/@abaplint+core+<version>.patch` on `npm install`. The patch holds the abap2go PRs to abaplint that the
@@ -244,19 +254,17 @@ Then:
   `EXACT`, `ADD` and the others, the result field after an exception (with `TRY`). The expression parser of
   `calculation_test.go` still attaches a leading `-` to its operand; fix it if it is to run these cells too
 - [ ] arithmetic beyond `result = expression`: inline declarations (`DATA(r) = …`, the declared type of
-  [spec/calculation.md](spec/calculation.md)), `EXACT` and `CONV`, expressions as operands of `WRITE` and
-  `out->write( )`
-- [ ] `WRITE` of dictionary types with their own output length (`sy-datum` in 10 characters with separators),
-  conversion exits, table fields
-- [ ] the manifest of conversion exits per root (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md),
-  "Conversion exits: static, plus a manifest per root"): its format and where the root declares it, the listed
-  exits compiled with their closure, an entry outside the world refused at build time, and the run-time error for
-  an exit on an unbounded operand that was neither reached nor listed
-- [ ] the rest of `WRITE` in the list processor, as the compiler needs it: positions and lengths (`/pos(len)`,
-  `AT`), `NO-GAP`, justification; only `WRITE` is in scope, not the list processor's other statements (see
-  "Purpose"). open-steamgate's `tools/gogen/testdata-list` and its ANORMALIES list entries are the test cases, as
-  far as they use `WRITE` only. abaplint accepts a blank between `/` and a position or length
-  (abaplint#4783)
+  [spec/calculation.md](spec/calculation.md)), `EXACT` and `CONV`, expressions as operands of `out->write( )` and
+  embedded in string templates
+- [ ] string templates (`|…{ x }…|`) as a source of moves, `WRITE` and `out->write( )`, with the rules of the
+  output formatting table (under "Critical path"): the format options first that replace the `WRITE` formats
+  (`NUMBER`, `DATE`, `TIME` with `USER` and `ENVIRONMENT`, `ALPHA`, `DECIMALS`, `CURRENCY`, `WIDTH`, `ALIGN`)
+- [ ] `WRITE` of strings only (decided 2026-11-27, see "Purpose"), **after string templates**: `WRITE` of any
+  other operand is refused at build time (`src/lower_report.ts`), `checkWriteFormat` and the output lengths in
+  `src/lower_common.ts` and the `abap.Format` call in `src/emit_go.ts` go. The tests and examples that `WRITE`
+  other operands (`sy-index` and number literals included) are rewritten to `WRITE |{ x }|`, which changes their
+  expected output. `abap.Format` and [spec/write.md](spec/write.md) stay in the runtime only as far as the string
+  templates reuse them
 - [ ] `out->write( )` of structures and tables (open-steamgate's format: a structure as one
   `field: value, field: value` line, a table as a header row and tab-separated rows)
 - [ ] the cells of `conversion_target.tsv` and `conversion_edges.tsv` end to end through `TRY … CATCH`, as the
@@ -283,12 +291,13 @@ The tables, over the elementary kinds `c n d t x string xstring i int8 b s p f d
 | conversion (about 16 × 16) | `=`, `MOVE`, parameter passing, `MOVE-CORRESPONDING`, table keys |
 | comparison | `=`, `<`, `IS INITIAL`, `READ … WITH KEY`, `SORT` |
 | calculation type | arithmetic, `COLLECT`, `DIV` / `MOD` / `**`, overflow classes |
-| output formatting | `WRITE`, string templates, `DESCRIBE … OUTPUT-LENGTH` |
+| output formatting | string templates (`WRITE` takes strings only since 2026-11-27, see "Purpose") |
 
 Done:
 - `WRITE` of the output formatting table, [spec/write.md](spec/write.md) (2026-11-24): output length and rule per
   kind, the user settings it depends on (decimal notation, date format), and 916 test cases
-  (`runtime/go/abap/testdata/write.tsv`)
+  (`runtime/go/abap/testdata/write.tsv`). Out of scope since 2026-11-27 (`WRITE` takes strings only); kept as the
+  reference for the string templates' options that follow the user settings
 - the conversion table, [spec/conversion.md](spec/conversion.md): the 16 × 16 matrix, a rule per cell with its
   exceptions and its keyword documentation section, all kinds including c, string, x, xstring, d, t and utclong,
   and 11,716 test cases (`runtime/go/abap/testdata/conversion*.tsv`), each one a snippet
@@ -328,9 +337,9 @@ value and context), not one issue at a time; the snippets of those issues and PR
 whose expected behaviour contradicts a spec is reopened there.
 
 Next:
-- [ ] special values left after an exception: what `WRITE`, the conversions, comparisons and arithmetic do with
-  an f holding `+Inf`, `-Inf` or NaN and a decfloat16 holding an infinity; the runtime keeps a decfloat16 target
-  instead of storing an infinity until its decfloat value can hold one. `TRY` came first (2026-11-26), so where a
+- [ ] special values left after an exception: what string templates, the conversions, comparisons and arithmetic
+  do with an f holding `+Inf`, `-Inf` or NaN and a decfloat16 holding an infinity; the runtime keeps a decfloat16
+  target instead of storing an infinity until its decfloat value can hold one. `TRY` came first (2026-11-26), so where a
   `TRY` could read such a target the program ends with the run-time error `SPECIAL_VALUE_NOT_SUPPORTED`, listed
   as an exception in [aot_for_abap.md](aot_for_abap.md); closing this gap removes it
 - [ ] the rest of the comparison table: the string and byte operators (`CO`, `CN`, `CA`, `NA`, `CS`, `NS`, `CP`,
@@ -341,8 +350,8 @@ Next:
   non-matching fragment views are refused at build time for now (decision "Storage", 2026-11-25), like every
   operation that depends on ABAP's memory layout
 - [ ] the rest of the output formatting table: string templates (`|{ x }|`, with their own rules, including the
-  styles for decfloat), `DESCRIBE … OUTPUT-LENGTH`, then the `WRITE` additions (`DECIMALS`, `NO-GROUPING`, date
-  masks, `CURRENCY`, …) and `WRITE … TO`
+  styles for decfloat), with their format options. The `WRITE` additions (`DECIMALS`, `NO-GROUPING`, date masks,
+  `CURRENCY`, …), `WRITE … TO` and `DESCRIBE … OUTPUT-LENGTH` are out of scope (2026-11-27, see "Purpose")
 - [ ] the rest of the calculation type table: `COLLECT`, arithmetic expressions as actual parameters, the other
   built-in numeric functions
 

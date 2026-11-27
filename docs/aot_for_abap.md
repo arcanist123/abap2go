@@ -20,14 +20,11 @@ decision below is judged against this rule.
 
 **Exceptions, each by decision.** Where a run-time error stands in for a build error, it is listed here. Each
 one fails loudly, naming what is missing, and is never a silently different result:
-1. *Conversion exits on dynamically typed operands (2026-11-25):* an exit the build could not bound and the root
-   did not list in its manifest ends the program with a run-time error naming that exit (see "Conversion exits:
-   static, plus a manifest per root" in Decisions).
-2. *User settings the runtime does not support yet (2026-11-25):* a user whose date format is `7`–`C` or whose
+1. *User settings the runtime does not support yet (2026-11-25):* a user whose date format is `7`–`C` or whose
    time format is a 12-hour one ends the program before it runs (exit code 2, see [spec/write.md](spec/write.md)).
    The settings are run-time data, so this cannot be a build error; it stays an exception until the formats are
    implemented.
-3. *Special values left after a caught exception (2026-11-26):* an exception that leaves `+Inf`, `-Inf` or NaN in
+2. *Special values left after a caught exception (2026-11-26):* an exception that leaves `+Inf`, `-Inf` or NaN in
    an `f` field, or an infinity in a `decfloat16` field, ends the program with the run-time error
    `SPECIAL_VALUE_NOT_SUPPORTED` when a `TRY` catches it (or a `CLEANUP` block would run), since the runtime does
    not specify what statements do with such values yet (see "Known gaps" in
@@ -293,35 +290,26 @@ from the program.
   still bounded by the system definition (the packages), as on SAP.
 - *Why the split:* a data type needs no code, so being open costs only metadata; a class needs compiled code, so
   it has to be closed.
-- *Where they touch:* code that data triggers (conversion exits). Data types are open; the code a type can
-  trigger is compiled statically: what the root reaches plus what its manifest lists (decision below).
+- *Where they touch:* code that data triggers (conversion exits). Data types are open, but no statement in scope
+  runs code because of a type: exits run only when the source calls them (decision below).
 
-- **Conversion exits: static, plus a manifest per root (revised 2026-11-25).** A conversion exit is code named by
-  a domain, and the kernel calls it implicitly (`WRITE`, `WRITE TO`). Every exit a binary can run is compiled
-  into it at build time; none is loaded or generated at run time.
-  1. *Static operand:* the domain is known at build time, so exactly its exit is compiled.
-  2. *Finite set:* the operand's type comes from a finite set of DDIC names (`CREATE DATA … TYPE (n)` with `n`
-     assigned from literals), so exactly their exits are compiled.
-  3. *Manifest:* a root may declare a manifest, a list of conversion exits compiled into its binary in addition
-     to those of rules 1 and 2, with what they reach. An entry naming an exit that is not in the world is a build
-     error.
-  4. *Unbounded, at run time:* a statement on an operand whose type came from an unbounded DDIC name compiles.
-     When it needs an exit at run time, the exit runs if it was compiled under rules 1–3; otherwise the program
-     ends with a **run-time error** naming the exit, so the fix (adding it to the manifest) is obvious.
-
-  *Why the revision:* rule 4 was a build error until 2026-11-25. That was too limiting: a root that formats
-  dynamically typed data could not compile at all, even when the exits it actually meets are a handful its
-  author knows. The manifest lets the author state them, and they are still compiled statically, with the same
-  closure and the same LUW as the rest of the root. What is given up is the guarantee for an exit nobody listed;
-  that is the one exception to the guiding principle, and it fails loudly, never with a different result.
-  *Why not all exits:* "every exit referenced by a domain in the packages" would put the conversion logic of a
-  whole ERP (20 GB of code) into a 1 MB service, each exit with its own closure. The service would no longer be
-  small, and that is the case AOT exists for. A fast service serializes to JSON or XML, which call no exits;
-  formatting dynamically typed data with `WRITE` is report territory. The OData gateway applies exits
-  generically, but with the framework generated per service its entity types are static, so rule 1 applies.
-  *Rejected:* all exits compiled once into a shared binary that services call. The exit would run in another
-  session with its own database connection and would not see the caller's uncommitted LUW, which is a behaviour
-  difference.
+- **Conversion exits: only explicit calls (revised 2026-11-27).** A conversion exit is code named by a domain.
+  As far as we know, the statements in which the kernel calls one implicitly are `WRITE` of a field whose type has
+  one and `WRITE … TO`; screens and ALV do too, and they are out of scope. Since `WRITE` takes strings only and
+  `WRITE … TO` is out of scope ([roadmap.md](roadmap.md), "Purpose"), no statement in scope calls an exit
+  implicitly. An exit runs where the source says so: a static call of `CONVERSION_EXIT_<x>_OUTPUT` or `_INPUT`,
+  compiled with its closure like any other call, or the `ALPHA` option of a string template. A call by a name
+  computed from the domain is dispatch by naming convention, refused as such ("Dynamic code").
+  *Why:* abap2go's list is stdout, not a report on a screen; the classic list formatting buys nothing there, and
+  formatting dynamically typed data with `WRITE` is report territory. Writing the format out in a string template
+  makes it visible in the source and keeps every exit a binary can run a static call.
+  *Superseded:* the decision of 2026-11-25 (revised that day): exits compiled for static operands and finite sets
+  of DDIC names, a manifest per root listing more, and a run-time error for an exit on an unbounded operand that
+  nobody listed. That run-time error was the one exception to the guiding principle in this area, and the manifest
+  the only code a root named outside its source; both are gone. Before the manifest, an exit on an unbounded
+  operand was a build error, which left a root that formats dynamically typed data uncompilable. Compiling every
+  exit referenced by a domain in the packages was rejected then and stays rejected: it would put the conversion
+  logic of a whole ERP into a small service.
 
 - **Vehicle: an own project, a new compiler on abaplint, output in Go, the environment borrowed from
   open-steamgate.**
@@ -423,9 +411,9 @@ from the program.
     cost of packed `p` arithmetic against the fixed-point integers.
 - **One root per compilation.** The compiler is invoked for one root (an entry point: an ICF handler, an RFC
   module, a report, …), not for a whole package set, and compiles what that root reaches: one binary per root.
-  Everything a root needs follows from its source, with one addition: the manifest of conversion exits (decision
-  above), the only code a root names outside its source. Code named by statements needs no manifest: with only
-  static names and finite sets (decision below), nothing unbounded is left for one to supply.
+  Everything a root needs follows from its source: with only static names and finite sets (decision below), and
+  no conversion exit called implicitly (decision above), nothing is left that the root would have to list
+  elsewhere.
   - *Why the costs do not matter:* builds happen on import, automated from the SAP system, so compiling shared code
     once per root is invisible. Disk space is no concern. Memory is not either: SAP also generates a load per
     program and keeps it in memory, and an optimised native binary is a better form of it than unoptimised
@@ -483,8 +471,9 @@ from the program.
     and tables follow component rules (fragment views for flat structures). "Complete" means three finite tables:
     conversion (about 16 × 16 cells: `=`, `MOVE`, parameter passing, `MOVE-CORRESPONDING`, table keys),
     comparison (`=`, `<`, `IS INITIAL`, generic `READ … WITH KEY (name)`, `SORT`) and calculation type
-    (arithmetic, `COLLECT`, `DIV` / `MOD` / `**`), plus a smaller output-formatting table per kind (`WRITE`,
-    string templates). Every cell includes its exception (`CX_SY_CONVERSION_NO_NUMBER`, `…_OVERFLOW`, …), and
+    (arithmetic, `COLLECT`, `DIV` / `MOD` / `**`), plus a smaller output-formatting table per kind (string
+    templates; `WRITE` takes strings only). Every cell includes its exception (`CX_SY_CONVERSION_NO_NUMBER`,
+    `…_OVERFLOW`, …), and
     pairs that are a syntax error with static types are a run-time error with generic ones, as on SAP.
   - *No staging:* the tables are complete before the generic path ships. Growing them kind by kind is not an
     option: dynamic SQL can bring any table's types into any root with a generic operation, and a large system
@@ -548,7 +537,8 @@ from the program.
   and HTTP) is reused; its compiler (frontend, IR, emitter, value model) is ported construct by construct under the
   reuse decision above. Decided 2026-11-24 with the first hello world:
   - *Reports* run their basic list through open-abap-gui's classic list processor (`ZCL_GG_HOST_LIST`, MIT),
-    ported to the Go runtime: one blank between outputs, `WRITE /` starts a line, no wrap at the list width
+    ported to the Go runtime, as far as `WRITE` of strings needs it (2026-11-27, see "Conversion exits: only
+    explicit calls"): one blank between outputs, `WRITE /` starts a line, no wrap at the list width
     (default 132), lengths count characters, trailing blanks removed per line, the standard page header not
     written. *Reopened 2026-11-25:* as far as we know, list positions count display columns, in which East Asian
     full-width characters take two, so "lengths count characters" is a data-dependent difference (see
@@ -734,4 +724,5 @@ Unspecified but deterministic behaviour was settled on 2026-11-25 (case by case,
 exact).
 
 Deferred items (computed variable names in `ASSIGN`, specialisation) are reopened only when a real case needs
-them. Dynamic exits on unbounded types were settled on 2026-11-25 by the manifest of conversion exits.
+them. Dynamic exits on unbounded types were settled on 2026-11-25 by a manifest of conversion exits, and on
+2026-11-27 made moot: no statement in scope calls an exit implicitly.
