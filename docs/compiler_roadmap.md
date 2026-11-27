@@ -134,10 +134,10 @@ Done:
   - `NOT` repeated any number of times (2026-11-25, abaplint #4714, in the abaplint patch): an even number cancels out
   - `DATA` is not executable: every variable of a processing block exists from its start with its start value, also
     one declared in a loop or a branch
-  - refused: `DO … VARYING`, `WHILE … VARY`, `CASE` without `WHEN`, statements between `CASE` and the first `WHEN`
-    (valid ABAP, see "Next"), comparisons of kinds without a comparison type (`d` with `t`, `utclong` with anything but
-    `c`, `string` and `utclong`), a non-numeric single operand against an arithmetic expression, the other predicates
-    (`IS`, `IN`, `CO`, …)
+  - refused: `DO … VARYING`, `WHILE … VARY`, in classes `CASE` without `WHEN` and statements between `CASE` and the
+    first `WHEN` (syntax errors there), comparisons of kinds without a comparison type (`d` with `t`, `utclong` with
+    anything but `c`, `string` and `utclong`), a non-numeric single operand against an arithmetic expression, the other
+    predicates (`IS`, `IN`, `CO`, …)
 - the arithmetic tests of abaplint/transpiler as end-to-end fixtures (2026-11-25, `test/transpiler/*.txt`, run by
   `test/transpiler.test.ts`, MIT, see `NOTICE`): the 157 ABAP snippets of `test/operators/arithmetics*.ts`,
   `mod.ts`, `test/types/*_operations.ts`, `integer8_calculation_type.ts` and `conversion_no_number.ts`, one
@@ -223,14 +223,13 @@ Done:
   15 digits, leading zeros not counted, and of length 16 above (abaplint#4736). Before, every one had length 16, so
   `WRITE` of such a literal of up to 15 digits took 32 characters instead of 16
 
-Next, first what is refused or mistyped although it is valid ABAP and within the compiled scope (2026-11-26; none of
-it waits for abaplint, see [abaplint_roadmap.md](abaplint_roadmap.md), "Now"):
-- [ ] `CASE` in a program outside classes without any `WHEN`, or with statements before the first one: ABAP is
-  expected to give only a warning, so the code is valid there and is to be compiled, not refused
-  (`src/lower_block.ts`); in classes it is a syntax error (abaplint#4744). Work out first whether these statements
-  run
+- `CASE` in a program outside classes without any `WHEN`, or with statements before the first one (2026-11-27,
+  `src/lower_block.ts`, `test/control_flow.test.ts`; before it was refused): ABAP is expected to give only a warning
+  there. The statements run after the operand is evaluated and before it is compared; what they can change in it is in
+  [spec/comparison.md](spec/comparison.md), "CASE". In classes both are syntax errors; the compiler keeps its own
+  check for them until abaplint has one (abaplint#4744)
 
-Then:
+Next:
 - [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,
   `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as operands of comparisons and `CASE`
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static

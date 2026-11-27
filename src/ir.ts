@@ -138,12 +138,17 @@ export interface IRIf {
 }
 
 /**
- * CASE: the operand is evaluated first, also when no WHEN compares it. Then the body of the first branch with a value
- * equal to it runs, by the comparison operand = value; the values are evaluated in order, up to that one.
+ * CASE: the operand is evaluated first, also when no WHEN compares it. Then the statements before the first WHEN run,
+ * and then the body of the first branch with a value equal to the operand, by the comparison operand = value; the
+ * values are evaluated in order, up to that one. A variable, and a subfield of a flat one, is compared with the content
+ * it has then (the offset and length of the subfield stay those it was evaluated with); a function, a result and a
+ * subfield of a string or xstring keep the value they were evaluated to.
  */
 export interface IRCase {
   kind: "case";
   operand: IRComparand;
+  /** The statements before the first WHEN, which only a program outside classes can have. */
+  first: IRStatement[];
   /** The WHEN blocks in order; a value is never a result. */
   branches: { values: IRComparand[]; body: IRStatement[] }[];
   /** WHEN OTHERS; undefined without one. */

@@ -80,7 +80,9 @@ function declarations(body: IRStatement[]): IRData[] {
   return body.flatMap((s): IRData[] => {
     switch (s.kind) {
       case "data": return [s];
-      case "if": case "case": return [...s.branches.flatMap(b => declarations(b.body)), ...declarations(s.otherwise ?? [])];
+      case "if": return [...s.branches.flatMap(b => declarations(b.body)), ...declarations(s.otherwise ?? [])];
+      case "case":
+        return [...declarations(s.first), ...s.branches.flatMap(b => declarations(b.body)), ...declarations(s.otherwise ?? [])];
       case "do": case "while": return declarations(s.body);
       case "try": return [...declarations(s.body), ...s.catches.flatMap(c => declarations(c.body)), ...declarations(s.cleanup ?? [])];
       default: return [];
@@ -116,11 +118,20 @@ function hoist(lines: string[], source: IRComparand | undefined): void {
   } else if (source?.kind === "substring" && !temporaries.has(source)) {
     const name = `sub${++temporaryCount}`;
     temporaries.set(source, name);
-    const off = source.offset === undefined ? "0" : convert(source.offset, { kind: "i" });
-    const len = source.length === undefined ? "0" : convert(source.length, { kind: "i" });
-    lines.push(`${name}T, ${name} := abap.Substring(${goTypeValue(source.base.type)}, ${goName(source.base)}, ${off}, ${len}, ${source.length !== undefined})`,
-      `_, _ = ${name}T, ${name}`);
+    const [off, len] = bounds(source);
+    lines.push(`${name}T, ${name} := ${substring(source, off, len)}`, `_, _ = ${name}T, ${name}`);
   }
+}
+
+/** The offset and length of a subfield as Go expressions, 0 for the one not given. */
+function bounds(source: IRSubstring): [string, string] {
+  const bound = (b: IRSubstring["offset"]) => b === undefined ? "0" : convert(b, { kind: "i" });
+  return [bound(source.offset), bound(source.length)];
+}
+
+/** The abap.Substring call that gives the type and the value of a subfield at offset off with length len. */
+function substring(source: IRSubstring, off: string, len: string): string {
+  return `abap.Substring(${goTypeValue(source.base.type)}, ${goName(source.base)}, ${off}, ${len}, ${source.length !== undefined})`;
 }
 
 function hoistExpr(lines: string[], e: IRExpr): void {
@@ -306,10 +317,7 @@ function statementOnly(s: IRStatement): string[] {
     case "if":
       return branches(s.branches.map(b => ({ condition: () => condition(b.condition), body: b.body })), s.otherwise);
     case "case":
-      return branches(s.branches.map(b => ({
-        condition: () => b.values.map(v => condition({ kind: "compare", op: "=", left: s.operand, right: v })).join(" || "),
-        body: b.body,
-      })), s.otherwise);
+      return caseStatement(s);
     case "do": {
       if (s.times === undefined) {
         return loop("pass := int32(1); ; pass++", [], [], s.body);
@@ -338,8 +346,29 @@ function statementOnly(s: IRStatement): string[] {
 }
 
 /**
+ * The statements before the first WHEN, then the branches. The operand has been computed (see hoist), which for a
+ * subfield of a flat variable is a copy: it is taken again after those statements, at the same offset and length.
+ */
+function caseStatement(s: IRStatement & { kind: "case" }): string[] {
+  const before: string[] = [];
+  const after: string[] = [];
+  const operand = s.operand;
+  if (s.first.length > 0 && operand.kind === "substring" && operand.base.type.kind !== "string"
+      && operand.base.type.kind !== "xstring") {
+    const name = temporary(operand);
+    const saved = bounds(operand).map(b => `int32(${b})`); // a bound not given is the constant 0
+    before.push(`${name}Off, ${name}Len := ${saved.join(", ")}`);
+    after.push(`${name}T, ${name} = ${substring(operand, `${name}Off`, `${name}Len`)}`);
+  }
+  return [...before, ...block(s.first), ...after, ...branches(s.branches.map(b => ({
+    condition: () => b.values.map(v => condition({ kind: "compare", op: "=", left: operand, right: v })).join(" || "),
+    body: b.body,
+  })), s.otherwise)];
+}
+
+/**
  * An if chain over the branches of IF or CASE, with the lines of otherwise as its else; without a branch (a CASE with
- * WHEN OTHERS only) just those lines.
+ * no WHEN but WHEN OTHERS, if any) just those lines.
  */
 function branches(list: { condition: () => string; body: IRStatement[] }[], otherwise: IRStatement[] | undefined): string[] {
   if (list.length === 0) {

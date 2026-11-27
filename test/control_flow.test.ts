@@ -70,6 +70,163 @@ ENDCASE.`);
   assert.deepEqual(run("clas", source), { stdout: lines("one or two", "one or two", "three", "four", "other", "blanks do not count", "only others") });
 });
 
+// In a program outside classes, statements before the first WHEN and a CASE without WHEN are expected to give only a
+// warning. In a class they are syntax errors (see the refusals below).
+const caseReport = (body: string) => `REPORT zprobe.
+DATA a TYPE i VALUE 1.
+DATA z TYPE i.
+DATA off TYPE i.
+DATA len TYPE i VALUE 1.
+DATA c TYPE c LENGTH 3 VALUE 'abc'.
+DATA x TYPE x LENGTH 2 VALUE '0102'.
+DATA s TYPE string VALUE \`abc\`.
+DATA xs TYPE xstring VALUE '0102'.
+${body}`;
+
+test("CASE in a program: the statements before the first WHEN run, then the comparisons", () => {
+  const source = caseReport(`CASE a.
+  WRITE / 'match'.
+  WHEN 1.
+    WRITE / 'one'.
+ENDCASE.
+CASE a.
+  WRITE / 'no match'.
+  WHEN 2.
+    WRITE / 'never'.
+ENDCASE.
+CASE a.
+  WRITE / 'before others'.
+  WHEN 2.
+    WRITE / 'never'.
+  WHEN OTHERS.
+    WRITE / 'others'.
+ENDCASE.
+CASE a.
+  WRITE / 'only others'.
+  WHEN OTHERS.
+    WRITE / 'others again'.
+ENDCASE.
+CASE a.
+  DATA k TYPE i VALUE 7.
+  IF k = 7.
+    WRITE / 'nested'.
+  ENDIF.
+  WHEN k.
+    WRITE / 'never'.
+  WHEN 1.
+    WRITE / k.
+ENDCASE.`);
+  assert.deepEqual(run("prog", source), {
+    stdout: lines("match", "one", "no match", "before others", "others", "only others", "others again", "nested", "         7"),
+  });
+});
+
+test("CASE in a program without WHEN: the statements run", () => {
+  const source = caseReport(`CASE a.
+ENDCASE.
+CASE c.
+  " a comment
+ENDCASE.
+CASE a.
+  WRITE / 'runs'.
+  a = 5.
+ENDCASE.
+IF a = 5.
+  WRITE / 'after'.
+ENDIF.`);
+  assert.deepEqual(run("prog", source), { stdout: lines("runs", "after") });
+});
+
+// [operand, statements before the first WHEN, one value of the operand, another one, which of the two it equals then]
+const changedOperands: [string, string, string, string, "had" | "after"][] = [
+  ["a", "a = 2.", "1", "2", "after"],
+  ["s", "s = `xyz`.", "'abc'", "'xyz'", "after"],
+  ["c+off(1)", "c = 'xyz'.", "'a'", "'x'", "after"],
+  ["c+off(1)", "off = 1.", "'a'", "'b'", "had"],
+  ["c+off(1)", "off = 7.", "'a'", "'b'", "had"],
+  ["c(len)", "len = 2.", "'a'", "'ab'", "had"],
+  ["c+off(len)", "len = 2. c = 'xyz'.", "'x'", "'xy'", "had"], // the new content at the old length: not 'a' either
+  ["x+off(1)", "x = 'AABB'.", "'01'", "'AA'", "after"],
+  ["s+off(1)", "s = `xyz`.", "'a'", "'x'", "had"],
+  ["s+off(1)", "s = ``.", "'a'", "' '", "had"],
+  ["xs+off(1)", "xs = 'AABB'.", "'01'", "'AA'", "had"],
+  ["a + 1", "a = 5.", "2", "6", "had"],
+  ["abs( a )", "a = 5.", "1", "5", "had"],
+  ["strlen( s )", "s = `abcde`.", "3", "5", "had"],
+];
+test("CASE in a program: what the statements before the first WHEN change in the operand", () => {
+  const source = changedOperands.map(([operand, statement, had, after]) => caseReport(`CASE ${operand}.
+  ${statement}
+  WHEN ${had}.
+    WRITE / 'had'.
+  WHEN ${after}.
+    WRITE / 'after'.
+  WHEN OTHERS.
+    WRITE / 'neither'.
+ENDCASE.`));
+  source.forEach((report, k) => {
+    const [operand, statement, , , compared] = changedOperands[k];
+    assert.deepEqual(run("prog", report), { stdout: lines(compared) }, `CASE ${operand}. ${statement}`);
+  });
+});
+
+test("CASE in a program: the operand is evaluated before the statements before the first WHEN", () => {
+  const source = caseReport(`off = 5.
+TRY.
+    CASE c+off(1).
+      WRITE / 'never'.
+    ENDCASE.
+  CATCH cx_sy_range_out_of_bounds.
+    WRITE / 'subfield'.
+ENDTRY.
+TRY.
+    CASE 1 / z.
+      WRITE / 'never'.
+      WHEN 1.
+    ENDCASE.
+  CATCH cx_sy_zerodivide.
+    WRITE / 'expression'.
+ENDTRY.`);
+  assert.deepEqual(run("prog", source), { stdout: lines("subfield", "expression") });
+});
+
+test("CASE in a program: EXIT, CONTINUE, CHECK and RETURN before the first WHEN", () => {
+  const source = caseReport(`DO 3 TIMES.
+  CASE a.
+    CHECK sy-index <> 2.
+    WRITE / sy-index.
+  ENDCASE.
+ENDDO.
+DO 3 TIMES.
+  CASE a.
+    IF sy-index = 1.
+      CONTINUE.
+    ENDIF.
+    EXIT.
+    WHEN 1.
+      WRITE / 'never'.
+  ENDCASE.
+  WRITE / 'never'.
+ENDDO.
+WRITE / 'after the loops'.
+CASE a.
+  RETURN.
+ENDCASE.
+WRITE / 'never'.`);
+  assert.deepEqual(run("prog", source), { stdout: lines("         1", "         3", "after the loops") });
+});
+
+test("CASE in a class: comments may stand before the first WHEN", () => {
+  const source = classrun(`DATA a TYPE i.
+CASE a.
+  " a comment
+* another one
+  WHEN 0.
+    out->write( 'zero' ).
+ENDCASE.`);
+  assert.deepEqual(run("clas", source), { stdout: lines("zero") });
+});
+
 test("CASE: a value that is no number in a numeric comparison is the runtime error CONVT_NO_NUMBER", () => {
   const result = run("clas", classrun(`DATA a TYPE i VALUE 1.
 DATA t TYPE c LENGTH 3 VALUE 'abc'.
@@ -431,7 +588,10 @@ const refusals: [string, string, RegExp][] = [
   ["CHECK without a condition", "CHECK sy-index.", /only CHECK <condition>/],
   ["DO VARYING", "DATA a TYPE i.\nDATA b TYPE i.\nDATA c TYPE i.\nDO 2 TIMES VARYING a FROM b NEXT c.\nENDDO.", /not VARYING/],
   ["WHILE VARY", "DATA a TYPE i.\nDATA b TYPE i.\nDATA c TYPE i.\nWHILE 1 = 0 VARY a FROM b NEXT c.\nENDWHILE.", /VARY is not supported/],
-  ["CASE without WHEN", "DATA a TYPE i.\nCASE a.\nENDCASE.", /CASE without WHEN/],
+  ["CASE without WHEN in a class", "DATA a TYPE i.\nCASE a.\nENDCASE.", /WHEN must be the first statement/],
+  ["CASE with only statements in a class", "DATA a TYPE i.\nCASE a.\na = 1.\nENDCASE.", /WHEN must be the first statement/],
+  ["a statement before the first WHEN in a class", "DATA a TYPE i.\nCASE a.\na = 1.\nWHEN 1.\nENDCASE.", /WHEN must be the first statement/],
+  ["a statement before WHEN OTHERS in a class", "DATA a TYPE i.\nCASE a.\na = 1.\nWHEN OTHERS.\nENDCASE.", /WHEN must be the first statement/],
   ["CASE of an arithmetic expression with a utclong value", "DATA a TYPE i.\nDATA u TYPE utclong.\nCASE a + 1.\nWHEN u.\nENDCASE.", /against an arithmetic expression is not supported/],
   ["CASE of a utclong with an i value", "DATA u TYPE utclong.\nCASE u.\nWHEN 1.\nENDCASE.", /syntax check/],
   ["DO u TIMES with a utclong", "DATA u TYPE utclong.\nDO u TIMES.\nENDDO.", /must be numeric/],

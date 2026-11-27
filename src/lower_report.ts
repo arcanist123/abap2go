@@ -24,7 +24,7 @@ export function lowerReport(registry: abaplint.IRegistry, obj: abaplint.Objects.
   if (structure === undefined) {
     throw new BuildError(`root ${obj.getName()}: the program does not parse`);
   }
-  const lowerer = new BlockLowerer(file, variables, (statement, where) => {
+  const lowerer = new BlockLowerer(file, variables, "program", (statement, where) => {
     const kind = statement.get();
     if (kind instanceof Statements.Report) {
       lineSize = lowerReportStatement(statement, where);

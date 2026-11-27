@@ -248,6 +248,20 @@ data objects (sections 1 to 4). The test cases are
 OTHERS` alone raises `CX_SY_ZERODIVIDE` for `z = 0`, and so does a subfield out of its bounds raise its exception.
 The values are then evaluated from top to bottom and from left to right, up to the first that equals the operand.
 
+**Statements before the first `WHEN`.** In a program outside classes, statements between `CASE` and the first `WHEN`,
+and a `CASE` without `WHEN`, are expected to give only a warning (in classes they are syntax errors). The statements
+run after the operand is evaluated and before the first value is compared. When they change what the operand was taken
+from, the comparisons see:
+
+| Operand | Compared with |
+|---|---|
+| a variable | its content after the statements |
+| a subfield of a `c`, `n`, `d`, `t` or `x` field | the content after the statements, at the offset and length evaluated before them |
+| a subfield of a `string` or `xstring` | the value before the statements |
+| a built-in function or an arithmetic expression | the value before the statements |
+
+An exception of the operand, such as a subfield out of its bounds, is raised before any of these statements runs.
+
 **The operand** is a general expression position:
 
 - a data object, or a built-in function of a single data object, which is a value as in *Built-in functions as
