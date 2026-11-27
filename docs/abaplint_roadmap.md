@@ -339,9 +339,10 @@ into abaplint. #4746 changes the same code (`_substring.ts`) as the open
   (`src/lower_common.ts`). Fixed in [PR #4829](https://github.com/abaplint/abaplint/pull/4829), open, not in the
   patch yet: a literal length of 0 on a `c`, `n`, `d`, `t` or `x` field, a structure, and the generic types `c`, `n`,
   `x`, `clike`, `csequence`, `xsequence` and `simple`. A `string`, an `xstring`, `any` and `data` stay valid, and so
-  are two positions: the source of `ASSIGN` (`ASSIGN c+1(0) TO <fs>.`) and the target of `WRITE … TO`. A refusal of these two
-  in the compiler is a form it does not compile, not a syntax check. Not covered: a constant of value 0 as the length
-  (see "Backlog"). The compiler's check of the invalid forms goes once the patch contains #4829
+  are two positions: the source of `ASSIGN` (`ASSIGN c+1(0) TO <fs>.`) and the target of `WRITE … TO`. A refusal of
+  these two in the compiler is a form it does not compile, not a syntax check. Not covered: a constant of value 0 as
+  the length (arcanist123/abaplint#18, see "Later"). The compiler's check of the invalid forms goes once the patch
+  contains #4829
 - [ ] [#4743](https://github.com/abaplint/abaplint/issues/4743) a number literal of more than 31 digits
   (`src/lower_common.ts`): leading zeros are expected to count and the sign not, while the compiler strips leading
   zeros before counting. Also in a `VALUE` addition, which `Constant.runSyntax` does not see
@@ -394,6 +395,12 @@ Invalid ABAP that abaplint accepts:
 | [arcanist123/abaplint#12](https://github.com/arcanist123/abaplint/issues/12) | a bit expression compared with an operand that is not byte-like (`x BIT-AND x = c`) is accepted; with a numeric operand `=`, `<>` and `<` are already reported next to `BIT-AND` | bit expressions |
 | [arcanist123/abaplint#13](https://github.com/arcanist123/abaplint/issues/13) | a bit expression used as a number (`i = BIT-NOT x.`, as the argument of a numeric function, as a numeric actual parameter) is accepted. `c` and `string` targets are expected to be valid | bit expressions |
 | [#4785](https://github.com/abaplint/abaplint/issues/4785) | in a class, `CASE TYPE OF` without any `WHEN`, or with `DATA` before the first one, is accepted; outside classes only a warning is expected. It builds on the check of [PR #4784](https://github.com/abaplint/abaplint/pull/4784), so a waiting PR on `case-without-when-4744` while that is open | objects and `CASE TYPE OF` |
+| [arcanist123/abaplint#18](https://github.com/arcanist123/abaplint/issues/18) | a constant as offset or length is not checked against the field: beyond it (`c+lc_off`, `c(lc_len)`) and a length of value 0 are accepted, also after [PR #4829](https://github.com/abaplint/abaplint/pull/4829). With a variable offset a constant length beyond the field is expected to be valid. [PR #4759](https://github.com/abaplint/abaplint/pull/4759) also accepts `c+5(ref->lc_len)`, a constant behind `->`, as if it were a variable, which the issue does not cover. The test "ok, offset given by a constant" expects no error | `CONSTANTS`, before a constant is an offset or length |
+| [arcanist123/abaplint#19](https://github.com/arcanist123/abaplint/issues/19) | an offset or length on the source of `ASSIGN` to an inline declared field symbol (`ASSIGN c+1(2) TO FIELD-SYMBOL(<fs>).`) is accepted. With a declared field symbol it is expected to be valid | field symbols and `ASSIGN` |
+| [arcanist123/abaplint#20](https://github.com/arcanist123/abaplint/issues/20) | `ASSIGN` of a data object with an offset but without a length (`ASSIGN c+2 TO <fs>.`) is accepted. With a length or `*`, and with a source which starts with a field symbol (`<c>+2`), it is expected to be valid | field symbols and `ASSIGN` |
+
+arcanist123/abaplint#18 to #20 change code which [PR #4829](https://github.com/abaplint/abaplint/pull/4829) changes
+(`_substring.ts`, `assign.ts`): while it is open, their fixes are waiting PRs on `substring-length-zero-4730`.
 
 ## Parked
 
@@ -531,11 +538,6 @@ No error from check_syntax where ABAP is expected to give one:
 - [ ] [#3041](https://github.com/abaplint/abaplint/issues/3041) `APPEND INITIAL LINE TO sorted_tab`: the docs suggest
   a runtime check (ITAB_ILLEGAL_SORT_ORDER); work out the expected behaviour before any PR, ask to close if runtime
   only
-- [ ] the value of a constant as offset or length is not evaluated: `c+lc_off` or `c+2(lc_len)` reaching beyond the
-  field is expected to be an error (not raised; the test "ok, offset given by a constant" expects none). With
-  [PR #4759](https://github.com/abaplint/abaplint/pull/4759), `c+5(ref->lc_len)`, a constant behind `->`, is
-  accepted too, as if it were a variable. Nor is a constant of value 0 reported as the length (`c(lc_zero)`), after
-  [PR #4829](https://github.com/abaplint/abaplint/pull/4829)
 - [ ] [arcanist123/abaplint#16](https://github.com/arcanist123/abaplint/issues/16) a dictionary type of data type
   `UTCL` is read as `c LENGTH 27` (`ddic.ts`) instead of `utclong`, so calculations, subfields, conversions and
   character statements on such a field, expected to be errors, are accepted. The type is wrong for valid code too
