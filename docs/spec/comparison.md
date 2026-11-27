@@ -1,7 +1,7 @@
 # Comparisons and logical expressions
 
-The comparison table of the rule-table specification ([roadmap.md](../roadmap.md), critical path): which
-*comparison type* two operands are compared in, how each comparison type compares, what happens when an operand
+The comparison table of the rule-table specification ([compiler_roadmap.md](../compiler_roadmap.md), critical path):
+which *comparison type* two operands are compared in, how each comparison type compares, what happens when an operand
 cannot be converted, how arithmetic expressions take part, and how relational expressions combine into logical
 expressions. The structure follows the ABAP keyword documentation, *rel_exp - Comparison Type of Elementary Data
 Objects* (and its pages per kind), *rel_exp - Comparison Rules for Comparison Types*, *rel_exp - Comparison Type of

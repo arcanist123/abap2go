@@ -1,10 +1,11 @@
 # abaplint roadmap
 
 The work abap2go does in [abaplint](https://github.com/abaplint/abaplint) (parser, check_syntax): a line of work of
-its own, next to the compiler's in [roadmap.md](roadmap.md). This file is the source of its status: what to pick up
-next, in order, and why. Issue and PR numbers belong to abaplint/abaplint and link there. Open issues and PRs are
-listed by `gh issue list -R abaplint/abaplint --author @me` and `gh pr list -R abaplint/abaplint --author @me`; this
-file records their priority and what they mean for abap2go, not a copy of their state.
+its own, next to the compiler's in [compiler_roadmap.md](compiler_roadmap.md). This file is the source of its status:
+what to pick up next, in order, and why. Issue and PR numbers belong to abaplint/abaplint and link there. Open issues
+and PRs are listed by `gh issue list -R abaplint/abaplint --author @me` and
+`gh pr list -R abaplint/abaplint --author @me`; this file records their priority and what they mean for abap2go, not a
+copy of their state.
 
 ## Rules
 
@@ -19,10 +20,11 @@ file records their priority and what they mean for abap2go, not a copy of their 
   ABAP? If not, skip it
 - also out of scope: releases below 7.40, refactoring, feature requests, and issues that need the reporter's
   private dependencies
-- of the list processor's statements only `WRITE` is in scope, as in the compiler ([roadmap.md](roadmap.md),
-  "Purpose"): issues about `ULINE`, `SKIP`, `NEW-LINE`, `FORMAT`, `TOP-OF-PAGE` and the others are not picked up or
-  raised. Of `WRITE`, only strings are (2026-11-27): issues about its positions and lengths, its formatting
-  additions, `WRITE … TO` and the output lengths of dictionary types are not picked up or raised either
+- of the list processor's statements only `WRITE` is in scope, as in the compiler
+  ([compiler_roadmap.md](compiler_roadmap.md), "Purpose"): issues about `ULINE`, `SKIP`, `NEW-LINE`, `FORMAT`,
+  `TOP-OF-PAGE` and the others are not picked up or raised. Of `WRITE`, only strings are (2026-11-27): issues about its
+  positions and lengths, its formatting additions, `WRITE … TO` and the output lengths of dictionary types are not
+  picked up or raised either
 - **abap2go does not reimplement the syntax check** ([aot_for_abap.md](aot_for_abap.md), "No syntax check of its
   own"): the compiler's code assumes valid ABAP, and invalid syntax that abap2go identifies is fixed here, never
   checked in the compiler instead
@@ -139,8 +141,8 @@ Reviewed 2026-11-26 against abaplint `main` `fc504b57`: every open issue in this
 describes.
 
 Nothing in abaplint blocks the compiler's current scope (2026-11-26), so the compiler's own work comes next
-([roadmap.md](roadmap.md), "Next"). Open abaplint issues beyond that scope wait for the compiler step that needs them
-(see "Later"). Alongside: keep the patch current, and send up the waiting PRs as
+([compiler_roadmap.md](compiler_roadmap.md), "Next"). Open abaplint issues beyond that scope wait for the compiler step
+that needs them (see "Later"). Alongside: keep the patch current, and send up the waiting PRs as
 [PR #4741](https://github.com/abaplint/abaplint/pull/4741), which four changes wait for, and then
 [PR #4761](https://github.com/abaplint/abaplint/pull/4761) are merged.
 
@@ -149,7 +151,7 @@ Valid code rejected: nothing open that abap2go has run into. The last case, a st
 [#4742](https://github.com/abaplint/abaplint/issues/4742)), is fixed by
 [PR #4759](https://github.com/abaplint/abaplint/pull/4759), in 2.120.121: ABAP is expected to accept it and to decide
 at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static. The compiler's own check still refuses
-`c+5(off)`, a follow-up in [roadmap.md](roadmap.md), "Next".
+`c+5(off)`, a follow-up in [compiler_roadmap.md](compiler_roadmap.md), "Next".
 
 [#4726](https://github.com/abaplint/abaplint/issues/4726) is fixed by
 [PR #4727](https://github.com/abaplint/abaplint/pull/4727), in 2.120.121.
@@ -278,11 +280,12 @@ has it.
 Statements between `CASE` and the first `WHEN` are part of
 [#4744](https://github.com/abaplint/abaplint/issues/4744) for classes. In a program outside classes ABAP is expected
 to give only a warning, so the code is valid there. The compiler refuses it as not supported yet, a gap of the
-compiler ([roadmap.md](roadmap.md), "Next").
+compiler ([compiler_roadmap.md](compiler_roadmap.md), "Next").
 
 ## Later: with the compiler step that needs it
 
-The compiler steps are in [roadmap.md](roadmap.md), "Next". When a step starts, its valid ABAP comes first.
+The compiler steps are in [compiler_roadmap.md](compiler_roadmap.md), "Next". When a step starts, its valid ABAP comes
+first.
 
 Valid ABAP that abaplint mistypes, fails to parse or rejects:
 
