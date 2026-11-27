@@ -321,8 +321,9 @@ Removed 2026-11-27, since abaplint reports them:
 - a missing, unknown or repeated argument of `abs( )`, `sqrt( )`, `ipow( )` or `strlen( )`
 
 abaplint accepts these, in every form or in some, or the release and the patch do not report them yet, so the fix goes
-into abaplint. #4730 and #4746 change the same code (`_substring.ts`) as the merged
-[PR #4828](https://github.com/abaplint/abaplint/pull/4828): branch from a `main` that has it.
+into abaplint. #4746 changes the same code (`_substring.ts`) as the open
+[PR #4829](https://github.com/abaplint/abaplint/pull/4829): while that is open, the fix is a waiting PR on
+`substring-length-zero-4730`.
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
   with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-27). Review
   it rather than write our own; not ours, so not in the patch, and the compiler's check stays until a release has it
@@ -335,7 +336,12 @@ into abaplint. #4730 and #4746 change the same code (`_substring.ts`) as the mer
   after a constructor expression (see "Backlog"). #4828 only says "part of #4729": close the issue once #4741 is
   merged too. The compiler's check goes once the patch contains #4828
 - [ ] [#4730](https://github.com/abaplint/abaplint/issues/4730) a subfield of length 0 of a flat field, `c+1(0)`
-  (`src/lower_common.ts`)
+  (`src/lower_common.ts`). Fixed in [PR #4829](https://github.com/abaplint/abaplint/pull/4829), open, not in the
+  patch yet: a literal length of 0 on a `c`, `n`, `d`, `t` or `x` field, a structure, and the generic types `c`, `n`,
+  `x`, `clike`, `csequence`, `xsequence` and `simple`. A `string`, an `xstring`, `any` and `data` stay valid, and so
+  are two positions: the source of `ASSIGN` (`ASSIGN c+1(0) TO <fs>.`) and the target of `WRITE … TO`. A refusal of these two
+  in the compiler is a form it does not compile, not a syntax check. Not covered: a constant of value 0 as the length
+  (see "Backlog"). The compiler's check of the invalid forms goes once the patch contains #4829
 - [ ] [#4743](https://github.com/abaplint/abaplint/issues/4743) a number literal of more than 31 digits
   (`src/lower_common.ts`): leading zeros are expected to count and the sign not, while the compiler strips leading
   zeros before counting. Also in a `VALUE` addition, which `Constant.runSyntax` does not see
@@ -434,6 +440,10 @@ Merged since the patch was generated and not in a release yet, in the patch from
 error ([#4745](https://github.com/abaplint/abaplint/issues/4745), part of
 [#4729](https://github.com/abaplint/abaplint/issues/4729)).
 
+Opened since the patch was generated, in the patch from the next run of the script on:
+[PR #4829](https://github.com/abaplint/abaplint/pull/4829), a substring length of 0 on a flat field is an error
+([#4730](https://github.com/abaplint/abaplint/issues/4730)).
+
 | PR | What | State |
 |---|---|---|
 | [#4631](https://github.com/abaplint/abaplint/pull/4631) | INT1 and INT2 keep their size ([#4630](https://github.com/abaplint/abaplint/issues/4630)); the compiler declares `b` and `s` through data elements | open |
@@ -492,8 +502,9 @@ abaplint (main `af7440a`, default config, `v757`).
 - [ ] [arcanist123/abaplint#15](https://github.com/arcanist123/abaplint/issues/15) an access which takes a whole
   numeric field, with the offset `0`, the length `*` or the field's length in bytes (`i+0`, `i(*)`, `i+0(4)`, `f(8)`,
   `p+0(5)`), is reported as a substring the type does not permit, while ABAP is expected to accept it; only `p(5)` is
-  accepted. Found 2026-11-27 while fixing #4745. The fix is in `_substring.ts`: branch from a `main` that has
-  [PR #4828](https://github.com/abaplint/abaplint/pull/4828)
+  accepted. Found 2026-11-27 while fixing #4745. The fix is in `_substring.ts`: while
+  [PR #4829](https://github.com/abaplint/abaplint/pull/4829) is open, a waiting PR on `substring-length-zero-4730`,
+  after the one for #4746 if that is open too
 
 ### Invalid ABAP accepted
 
@@ -523,7 +534,8 @@ No error from check_syntax where ABAP is expected to give one:
 - [ ] the value of a constant as offset or length is not evaluated: `c+lc_off` or `c+2(lc_len)` reaching beyond the
   field is expected to be an error (not raised; the test "ok, offset given by a constant" expects none). With
   [PR #4759](https://github.com/abaplint/abaplint/pull/4759), `c+5(ref->lc_len)`, a constant behind `->`, is
-  accepted too, as if it were a variable
+  accepted too, as if it were a variable. Nor is a constant of value 0 reported as the length (`c(lc_zero)`), after
+  [PR #4829](https://github.com/abaplint/abaplint/pull/4829)
 - [ ] [arcanist123/abaplint#16](https://github.com/arcanist123/abaplint/issues/16) a dictionary type of data type
   `UTCL` is read as `c LENGTH 27` (`ddic.ts`) instead of `utclong`, so calculations, subfields, conversions and
   character statements on such a field, expected to be errors, are accepted. The type is wrong for valid code too
