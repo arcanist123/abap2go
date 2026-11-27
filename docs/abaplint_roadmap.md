@@ -320,25 +320,36 @@ Removed 2026-11-27, since abaplint reports them:
 - static bounds outside a `c` or `x` field (`c+5`, `c+4(2)`); `n`, `d` and `t` are below
 - a missing, unknown or repeated argument of `abs( )`, `sqrt( )`, `ipow( )` or `strlen( )`
 
-abaplint accepts these, in every form or in some, so the fix goes into abaplint. #4730, #4745 and #4746 change the same
-code (`_substring.ts`) as the merged [PR #4759](https://github.com/abaplint/abaplint/pull/4759): branch from a `main`
-that has it.
+abaplint accepts these, in every form or in some, or the release and the patch do not report them yet, so the fix goes
+into abaplint. #4730 and #4746 change the same code (`_substring.ts`) as the merged
+[PR #4828](https://github.com/abaplint/abaplint/pull/4828): branch from a `main` that has it.
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
   with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-27). Review
   it rather than write our own; not ours, so not in the patch, and the compiler's check stays until a release has it
 - [ ] [#4729](https://github.com/abaplint/abaplint/issues/4729) `utclong` in an arithmetic expression, `u + 1`
-  (`src/lower_arith.ts`). Some forms are reported (`abs( u )`, `i += u`), `i = u + 1` is not
+  (`src/lower_arith.ts`). Some forms were reported (`abs( u )`, `i += u`), `i = u + 1` was not. Fixed in
+  [PR #4828](https://github.com/abaplint/abaplint/pull/4828), merged 2026-11-27, not in the release or the patch yet:
+  arithmetic expressions and signs, `+=`, `-=`, `*=` and `/=` (also after `NEXT`), `ADD`, `SUBTRACT`, `MULTIPLY`,
+  `DIVIDE`, `nmax( )` and `nmin( )`. The comparison `u = i + 1` is reported by
+  [PR #4741](https://github.com/abaplint/abaplint/pull/4741). Not covered: a dictionary type `UTCL`, and an operand
+  after a constructor expression (see "Backlog"). #4828 only says "part of #4729": close the issue once #4741 is
+  merged too. The compiler's check goes once the patch contains #4828
 - [ ] [#4730](https://github.com/abaplint/abaplint/issues/4730) a subfield of length 0 of a flat field, `c+1(0)`
   (`src/lower_common.ts`)
 - [ ] [#4743](https://github.com/abaplint/abaplint/issues/4743) a number literal of more than 31 digits
   (`src/lower_common.ts`): leading zeros are expected to count and the sign not, while the compiler strips leading
   zeros before counting. Also in a `VALUE` addition, which `Constant.runSyntax` does not see
 - [ ] [#4745](https://github.com/abaplint/abaplint/issues/4745) a subfield of a `utclong`, `s = u+1(1)`, `u(1) = s`
-  (`src/lower_common.ts`)
+  (`src/lower_common.ts`). Fixed in [PR #4828](https://github.com/abaplint/abaplint/pull/4828), merged 2026-11-27, not
+  in the release or the patch yet, also for a field symbol of type `utclong`. The offset `0` and the length `*` take
+  the whole field and stay valid (`u+0`, `u(*)`, `u+0(*)`). The compiler's check, which also refuses these valid
+  forms, goes once the patch contains #4828. Not covered: a dictionary type `UTCL` (see "Backlog")
 - [ ] [#4746](https://github.com/abaplint/abaplint/issues/4746) static bounds outside a flat field of type `n`, `d`
   or `t`, `d+8`, `n(6)` (`src/lower_common.ts`)
-- [ ] a `utclong` value after `WHEN` when the operand of `CASE` is an arithmetic expression, `CASE i + 1. WHEN u.`
-  (`src/lower_cond.ts`, not raised). `CASE i. WHEN u.` is reported
+
+Dropped 2026-11-27, since it is no syntax error: a `utclong` value after `WHEN` when the operand of `CASE` is an
+arithmetic expression, `CASE i + 1. WHEN u.`, is expected to be valid, unlike `CASE i. WHEN u.`, so abaplint is right
+to accept it. The refusal in `src/lower_cond.ts` is a form the compiler does not compile yet, not a syntax check.
 
 ## Later: with the compiler step that needs it
 
@@ -418,6 +429,11 @@ HTML tag in ABAP Doc is expected to give warnings only ([#4655](https://github.c
 PRs that the pinned release, 2.120.122, does not contain, as of 2026-11-27. The patch also holds waiting PRs
 arcanist123/abaplint#1 to #6, which are not in this table (see "Waiting PRs on the fork").
 
+Merged since the patch was generated and not in a release yet, in the patch from the next run of the script on:
+[#4828](https://github.com/abaplint/abaplint/pull/4828), a `utclong` in a calculation or with an offset or length is an
+error ([#4745](https://github.com/abaplint/abaplint/issues/4745), part of
+[#4729](https://github.com/abaplint/abaplint/issues/4729)).
+
 | PR | What | State |
 |---|---|---|
 | [#4631](https://github.com/abaplint/abaplint/pull/4631) | INT1 and INT2 keep their size ([#4630](https://github.com/abaplint/abaplint/issues/4630)); the compiler declares `b` and `s` through data elements | open |
@@ -473,6 +489,11 @@ abaplint (main `af7440a`, default config, `v757`).
   `boolc( )` and `xsdbool( )` are in `Source`. Found 2026-11-26 while fixing #4762; valid code that fails to parse.
   Fixed by [PR #4766](https://github.com/abaplint/abaplint/pull/4766), in 2.120.122: both are their own forms in
   `Source`, typed `xstring`. `boolx( bool = abap_true )`, no logical expression, still parses as a method call
+- [ ] [arcanist123/abaplint#15](https://github.com/arcanist123/abaplint/issues/15) an access which takes a whole
+  numeric field, with the offset `0`, the length `*` or the field's length in bytes (`i+0`, `i(*)`, `i+0(4)`, `f(8)`,
+  `p+0(5)`), is reported as a substring the type does not permit, while ABAP is expected to accept it; only `p(5)` is
+  accepted. Found 2026-11-27 while fixing #4745. The fix is in `_substring.ts`: branch from a `main` that has
+  [PR #4828](https://github.com/abaplint/abaplint/pull/4828)
 
 ### Invalid ABAP accepted
 
@@ -503,6 +524,15 @@ No error from check_syntax where ABAP is expected to give one:
   field is expected to be an error (not raised; the test "ok, offset given by a constant" expects none). With
   [PR #4759](https://github.com/abaplint/abaplint/pull/4759), `c+5(ref->lc_len)`, a constant behind `->`, is
   accepted too, as if it were a variable
+- [ ] [arcanist123/abaplint#16](https://github.com/arcanist123/abaplint/issues/16) a dictionary type of data type
+  `UTCL` is read as `c LENGTH 27` (`ddic.ts`) instead of `utclong`, so calculations, subfields, conversions and
+  character statements on such a field, expected to be errors, are accepted. The type is wrong for valid code too
+  (`DATA(x) = z.` gives a `c`), which the compiler takes over. Found 2026-11-27 while fixing #4729
+- [ ] [arcanist123/abaplint#17](https://github.com/arcanist123/abaplint/issues/17) in a calculation, the operand after
+  a constructor expression (`CONV`, `COND`, `SWITCH`, `VALUE`, `EXACT`, `REDUCE`) is not checked as an operand of it: a
+  reference or a `utclong` there is accepted, and after `SWITCH`, `VALUE` and `EXACT` an unknown field too. The type is
+  wrong for valid code (`DATA(x) = CONV i( 1 ) + p.` gives `i`, expected `p`), which the compiler takes over. Found
+  2026-11-27 while fixing #4729
 
 Expected behaviour not worked out yet: [#3398](https://github.com/abaplint/abaplint/issues/3398),
 [#1692](https://github.com/abaplint/abaplint/issues/1692). Dropped:
