@@ -230,8 +230,10 @@ Done:
   (abaplint#4744, in the abaplint patch)
 
 Next:
-- [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,
-  `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as operands of comparisons and `CASE`
+- [ ] control flow, the rest: `IS INITIAL`, `IN` and the string, byte and bit operators with `sy-fdpos`
+  ([spec/comparison.md](spec/comparison.md), "Predicate expressions and comparison operators"; `IN` once ranges
+  tables are compiled), their cells run by the tests; the other predicates once the comparison table has them;
+  `CONV`, `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true` as operands of comparisons and `CASE`
 - [ ] static operands resolved at build time (decided 2026-11-25, [aot_for_abap.md](aot_for_abap.md), "Static
   operands: the cell is chosen at build time, after control flow is compiled"), **after `ASSERT` and control flow
   above**: each conversion cell a Go function that `abap.Convert` dispatches to and the compiler calls directly; the
@@ -342,11 +344,18 @@ precedence 2). The tables are to settle such cases systematically, as grids of c
 value and context), not one issue at a time; the snippets of those issues and PRs are a source of cells, and a cell
 whose expected behaviour contradicts a spec is reopened there.
 
+- predicates and operators of the comparison table (2026-11-27), [spec/comparison.md](spec/comparison.md),
+  "Predicate expressions and comparison operators": `IS INITIAL`, the string operators with their `CP` patterns,
+  case mapping and `sy-fdpos`, the byte and bit operators, and `IN` with the order in which the rows of a ranges
+  table are evaluated; 1,703 cells (`comparison_predicate.tsv`), 596 of `IN` (`comparison_in.tsv`), 4,779 held-out
+  random cells, 114 logical expressions with static types and the case mapping (`case_upper.tsv`). Specified, not run
+  by the tests yet. Open: a `CP` pattern ending in a `#` that escapes nothing, a numeric built-in function as the
+  right operand of an operator
+
 Next:
-- [ ] the rest of the comparison table: the string and byte operators (`CO`, `CN`, `CA`, `NA`, `CS`, `NS`, `CP`,
-  `NP`, `BYTE-…`, `O`, `Z`, `M`), predicate expressions (`IS INITIAL`, `IS ASSIGNED`, `IN` ranges), structures,
-  internal tables and references, and the comparisons inside statements (`READ TABLE … WITH KEY`, table keys,
-  `SORT … AS TEXT`, `DELETE ADJACENT DUPLICATES`)
+- [ ] the rest of the comparison table: `IS ASSIGNED`, `IS BOUND`, `IS SUPPLIED`, `IS INSTANCE OF` and the predicate
+  functions, structures, internal tables and references, and the comparisons inside statements
+  (`READ TABLE … WITH KEY`, table keys, `SORT … AS TEXT`, `DELETE ADJACENT DUPLICATES`)
 - [ ] structure rules of the conversion table: `MOVE-CORRESPONDING`, `CORRESPONDING`; flat structures with
   non-matching fragment views are refused at build time for now (decision "Storage", 2026-11-25), like every
   operation that depends on ABAP's memory layout

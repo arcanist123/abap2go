@@ -2,14 +2,27 @@
 
 The comparison table of the rule-table specification ([compiler_roadmap.md](../compiler_roadmap.md), critical path):
 which *comparison type* two operands are compared in, how each comparison type compares, what happens when an operand
-cannot be converted, how arithmetic expressions take part, and how relational expressions combine into logical
-expressions. The structure follows the ABAP keyword documentation, *rel_exp - Comparison Type of Elementary Data
+cannot be converted, how arithmetic expressions take part, how relational expressions combine into logical
+expressions, and what the predicate expression `IS INITIAL`, the tabular operator `IN` and the string, byte and bit
+operators do. The structure follows the ABAP keyword documentation, *rel_exp - Comparison Type of Elementary Data
 Objects* (and its pages per kind), *rel_exp - Comparison Rules for Comparison Types*, *rel_exp - Comparison Type of
-Arithmetic Expressions* and *log_exp - Boolean Operators and Parentheses*; the details below go further than the
-documentation where it is silent (rounding of a text compared with an integer, which conversion errors end the
-program, length adjustments, short-circuit evaluation).
+Arithmetic Expressions*, *log_exp - Boolean Operators and Parentheses*, *rel_exp - IS INITIAL*, *rel_exp - Comparison
+Operators for Character-Like Data Types*, *… for Byte-Like Data Types*, *… for Bit Patterns* and *rel_exp - Tabular
+Comparison Operator IN*; the details below go further than the documentation where it is silent (rounding of a text
+compared with an integer, which conversion errors end the program, length adjustments, short-circuit evaluation,
+`CP` patterns, the order in which the rows of a ranges table are evaluated).
 
-**Status (2026-11-26): specified; the comparison of two data objects is implemented in the runtime**
+**Predicates and operators (2026-11-27): specified, not implemented yet** (the section *Predicate expressions and
+comparison operators*). Their test cases are
+[`testdata/comparison_predicate.tsv`](../../runtime/go/abap/testdata/comparison_predicate.tsv) (1,703 cells),
+[`testdata/comparison_in.tsv`](../../runtime/go/abap/testdata/comparison_in.tsv) (596 cells), 3,841 and 938 random
+cells held out while the rules were worked out
+([`comparison_predicate_random.tsv`](../../runtime/go/abap/testdata/comparison_predicate_random.tsv),
+[`comparison_in_random.tsv`](../../runtime/go/abap/testdata/comparison_in_random.tsv)), 114 logical expressions with
+static types ([`comparison_predicate_expr.tsv`](../../runtime/go/abap/testdata/comparison_predicate_expr.tsv)) and
+the case mapping ([`case_upper.tsv`](../../runtime/go/abap/testdata/case_upper.tsv)).
+
+**Comparisons (2026-11-26): specified; the comparison of two data objects is implemented in the runtime**
 (`abap.Compare`, `runtime/go/abap/compare.go`), which passes every cell. The test cases are
 [`testdata/comparison.tsv`](../../runtime/go/abap/testdata/comparison.tsv), every ordered pair of 162 values over all
 elementary kinds (26,244 cells), and
@@ -283,12 +296,158 @@ a text value is rounded: `p_3 * p_2` has one decimal, so it equals `'6.04'`, whi
 **The values** after `WHEN` are extended functional operand positions: a data object, or `abs( )`, `sqrt( )` or
 `strlen( )` of a single data object. An arithmetic expression there, `ipow( )` among them, is a syntax error.
 
+## Predicate expressions and comparison operators
+
+The comparison types of section 1 do **not** apply to the string, byte and bit operators: nothing is converted, the
+operands must be of the kinds the operator works on. `IN` compares by the rules of section 1.
+
+### IS INITIAL
+
+`a IS INITIAL` is true if `a` holds the initial value of its type, `a IS NOT INITIAL` and `NOT a IS INITIAL` if it
+does not.
+
+| Type | Initial value | Not initial, for example |
+|---|---|---|
+| `i`, `int8`, `b`, `s`, `p` | 0 | |
+| `f`, `decfloat16`, `decfloat34` | a zero of any sign and exponent (`-0`, `0.00`, `0E+100`) | the smallest value above 0; every special value ([special_values.md](special_values.md)) |
+| `c` | blanks only | |
+| `n`, `d`, `t` | zeros only | a field of blanks, a `0` followed by blanks |
+| `string` | length 0 | a string holding a blank |
+| `x` | bytes 00 only | |
+| `xstring` | length 0 | an `xstring` holding one byte 00 |
+| `utclong` | the initial value | `0001-01-01 00:00:00` |
+
+**The operand** is an extended functional operand position: a data object, a subfield, a literal, a built-in function
+such as `abs`, `sign`, `ceil`, `floor`, `trunc`, `frac`, `sqrt`, `exp`, `strlen`, `xstrlen`, `numofchar`, `lines`,
+`utclong_current` or `dbmaxlen` of a data object, a constructor expression such as `CONV` or `COND`, or a table
+expression. Syntax errors are an arithmetic expression (`- a`, `a + 0`, `ipow( )`, `nmax( )`, `abs( a + 0 )`), a
+string function (`to_upper( )`, `substring( )`, `condense( )`), `boolc( )`, `xsdbool( )`, a string or bit expression
+and a string template.
+
+### The operators for character-like operands
+
+`CO`, `CN`, `CA`, `NA`, `CS`, `NS`, `CP`, `NP` take operands of the types `c`, `n`, `d`, `t` and `string`, and flat
+structures with character-like components only. Anything else is a syntax error (`i CO c`, `5 CS c`); behind a
+generic operand it is the runtime error `UC_OBJECTS_NOT_CHARLIKE`. Data objects, literals, string expressions,
+string functions and a `CONV` to a character-like type can be operands, arithmetic expressions cannot.
+
+The operators work on UTF-16 code units, so two characters outside the Basic Multilingual Plane that share a
+surrogate share a code unit (`CA` finds it). Which trailing blanks take part:
+
+| Operators | Left operand | Right operand |
+|---|---|---|
+| `CO`, `CN`, `CA`, `NA` | all code units | all code units |
+| `CS`, `NS` | all code units | `c`, `n`, `d`, `t` without their trailing blanks; a `string` as it is |
+| `CP`, `NP` | see below | see below |
+
+- **`CO`** is true if every code unit of the left operand occurs in the right one, case counting. An empty left
+  operand gives true, also against an empty right one. `sy-fdpos` is the offset of the first code unit that does not
+  occur, or the length of the left operand. **`CN`** is its negation.
+- **`CA`** is true if some code unit of the left operand occurs in the right one, so an empty operand gives false.
+  `sy-fdpos` is the offset of the first one that occurs, or the length of the left operand. **`NA`** is its negation.
+- **`CS`** is true if the right operand occurs in the left one, ignoring case (below); an empty right operand occurs
+  at offset 0 in any left operand. `sy-fdpos` is the offset of the first occurrence, or the length of the left
+  operand. **`NS`** is its negation.
+- **`CP`** is true if the left operand as a whole matches the pattern in the right one; **`NP`** is its negation.
+
+These rules give the special cases the keyword documentation states for empty operands, with one difference for
+`CS`: a `c` on the left is searched with all its blanks, so `` c1 ' ' CS ` ` `` is true.
+
+**Patterns.** `*` stands for any sequence of code units, also none, `+` for exactly one code unit, and `#` makes the
+code unit behind it stand for itself, case counting. Every other code unit matches ignoring case, a blank among them.
+
+- A `string` pattern is taken as it is. A pattern of type `c`, `n`, `d` or `t` loses its trailing blanks, except one
+  that a `#` precedes; if it holds blanks only, it is a single blank.
+- A `string` on the left must be matched to its end. In a `c`, `n`, `d` or `t` on the left, blanks may remain behind
+  what the pattern matched: `c4 'ab'` matches `ab`, `ab+` and `ab++`, but not `ab+++`.
+- The empty pattern (only a `string` can be one) matches an empty left operand only.
+- An empty left operand matched against a pattern that starts with `*` and holds something else than `*` is matched
+  like a single blank: `` `` CP `*+` `` is true, `` `` CP `+` `` and `` `` CP `*a` `` are false.
+- `sy-fdpos` of a match is 0 if the pattern does not start with `*`, or consists of `*` only. Otherwise it is the
+  smallest offset at which the pattern without its leading `*` matches the rest of the left operand:
+  `` `abc` CP `*+` `` gives 2, `c5 'xabcx' CP '*+*'` gives 0. Without a match it is the length of the left operand.
+
+**Case.** `CS`, `NS`, `CP` and `NP` take two code units as equal if
+[`case_upper.tsv`](../../runtime/go/abap/testdata/case_upper.tsv) maps them to the same upper case: `σ`, `ς` and `Σ`
+are equal, and so are `i`, `I` and the dotless `ı`, but not the dotted `İ`. Surrogates have no mapping, so case
+counts outside the Basic Multilingual Plane.
+
+### The operators for byte-like operands
+
+`BYTE-CO`, `BYTE-CN`, `BYTE-CA`, `BYTE-NA`, `BYTE-CS`, `BYTE-NS` take operands of the types `x` and `xstring`, and
+work as `CO`, `CN`, `CA`, `NA`, `CS`, `NS` do, on whole bytes and without a case mapping: trailing bytes 00 count,
+and `x2 'A1B2'` does not contain the byte `1B`. `sy-fdpos` counts bytes. A text literal, a number literal or a
+structure as an operand is a syntax error; behind a generic operand a type that is not byte-like is the runtime error
+`OBJECTS_NOT_BYTELIKE`. Bit expressions can be operands.
+
+### The operators for bit patterns
+
+`a O b`, `a Z b` and `a M b` compare the bytes of `a` with the bit pattern `b`, both `x` or `xstring`. The bytes are
+aligned on the left; where `a` is shorter, its missing bytes count as 00, and bytes of `a` beyond the end of `b` do
+not matter. Of the bits that are 1 in `b`, `O` asks whether all are 1 in `a`, `Z` whether all are 0, and `M` whether
+at least one is 1 and one is 0. A pattern without a 1, an empty one among them, gives true for `O` and `Z` and false
+for `M`. `sy-fdpos` is not set. A text or number literal as an operand is a syntax error here too. Behind generic
+operands, a left operand that is not byte-like is the runtime error `OBJECTS_NOT_BYTELIKE`, a right one
+`BITS_WRONG_TYPE`.
+
+### IN
+
+`a IN r`, and `a NOT IN r` as its negation, check `a` against the rows of a ranges table.
+
+**The table** is an internal table of any kind whose line has four components, with any names: a `c LENGTH 1` (the
+sign), a `c LENGTH 2` (the option) and two of one type (low and high). Anything else is a syntax error. A table with
+a header line stands for its body.
+
+**The operand** is a general expression position, treated like the operand of `CASE`: an arithmetic expression is
+calculated in the calculation type of its own operands, without low and high, so with `i = 7`, `i / 2 IN r` is true
+for a row `I EQ 4` and false for `I EQ 3.5`, whatever their type. With a ranges table of a character-like low, an
+arithmetic operand is a syntax error. The operand is evaluated once, also when the table is empty (`1 / z IN r`
+raises `CX_SY_ZERODIVIDE` for `z = 0`).
+
+**An empty table** gives true for an operand of any type.
+
+**The rows are evaluated in the order of the table**, each as follows:
+
+1. A sign other than `I` or `E` ends the program with the runtime error `CHECK_SELOPT_ILLEGAL_SIGN`.
+2. A row with sign `I` is skipped if an earlier row with sign `I` was true: its option is not looked at and nothing is
+   converted.
+3. An option other than `EQ`, `NE`, `GT`, `GE`, `LT`, `LE`, `BT`, `NB`, `CP`, `NP`, in upper case, ends the program
+   with the runtime error `CHECK_SELOPT_ILLEGAL_OPTION`.
+4. The row's comparison is evaluated:
+   - `EQ` to `LE`: `a = low` and so on, by the rules of two data objects (sections 1 to 4); high is not used;
+   - `BT`: `a BETWEEN low AND high`, so high is not converted when `a` is below low; `NB` is its negation. With low
+     above high, `BT` is false for every value;
+   - `CP`, `NP`: the operators above, with the pattern below.
+5. A true row with sign `E` makes the expression false; no further row is looked at.
+
+If no `E` row was true, the expression is true if an `I` row was true or the table has no `I` row. The value is that
+of the keyword documentation's *(the `I` rows joined by `OR`) AND NOT (the `E` rows joined by `OR`)*, but the order of
+evaluation follows the table, which decides what is raised: with rows `E EQ 5`, `I EQ 'abc'` the number 5 gives false
+without an error, with the two rows swapped the program ends with `CONVT_NO_NUMBER`.
+
+**The pattern of `CP` and `NP`.** With low and high of type `c`, `n`, `d` or `t`, the pattern is low in its full length
+followed by high in its full length, and then treated as a pattern of that kind: the `c4` values `ab` and `*` give
+`ab  *`, and the initial high of a `d` adds its zeros. With low and high of type `string`, the pattern is low alone and
+high is not used. (The keyword documentation describes `low && high`.) The operand and low must be character-like,
+otherwise the program ends with `UC_OBJECTS_NOT_CHARLIKE`.
+
+A comparison that is not possible ends the program as it does between two generic operands (`COMPARE_NOT_SUPPORTED`,
+`CONVT_NO_NUMBER`, …).
+
+### sy-fdpos
+
+The string and byte operators set `sy-fdpos` each time they are evaluated, whatever their result, also under `NOT`;
+`IN` leaves the value of the last `CP` or `NP` row it evaluated. The other relational expressions, `O`, `Z`, `M` and
+an `IN` without such a row leave it unchanged. A relational expression that short-circuit evaluation skips does not
+set it.
+
 ## Syntax errors
 
 Besides the arithmetic cases above, a comparison of two operands whose kinds have no comparison type (the `-` cells
 of section 1: `d` with `t`, `utclong` with anything but `c`, `string` and `utclong`) is a syntax error when both
 types are known statically. With a generic operand the types are known at run time only, and the comparison ends
-the program with the runtime error `COMPARE_NOT_SUPPORTED`.
+the program with the runtime error `COMPARE_NOT_SUPPORTED`. The syntax errors of predicates and operators are in their
+section.
 
 ## Exceptions and runtime errors
 
@@ -299,6 +458,10 @@ the program with the runtime error `COMPARE_NOT_SUPPORTED`.
 | `SYSTEM_TYPE_NOT_ELEMENTARY` (runtime error) | `abs( )` of a text whose number needs more than 14 decimals, outside an arithmetic expression |
 | `CX_SY_CONVERSION_OVERFLOW` | `abs( )` of a text whose number has more than 31 digits before the point, outside an arithmetic expression |
 | `COMPARE_NOT_SUPPORTED` (runtime error) | operands of kinds without a comparison type, known at run time only |
+| `UC_OBJECTS_NOT_CHARLIKE` (runtime error) | an operand of a string operator, or of a `CP` or `NP` row of `IN`, that is not character-like, known at run time only |
+| `OBJECTS_NOT_BYTELIKE` (runtime error) | an operand of a byte operator, or the left operand of `O`, `Z` or `M`, that is not byte-like, known at run time only |
+| `BITS_WRONG_TYPE` (runtime error) | a bit pattern of `O`, `Z` or `M` that is not byte-like, known at run time only |
+| `CHECK_SELOPT_ILLEGAL_SIGN`, `CHECK_SELOPT_ILLEGAL_OPTION` (runtime errors) | a row of a ranges table with an invalid sign or option |
 | `CX_SY_CONVERSION_NO_NUMBER` | a text operand of an arithmetic expression that is not a number for its calculation type |
 | `CX_SY_ARITHMETIC_OVERFLOW`, `CX_SY_ZERODIVIDE`, … | an arithmetic expression, as in [calculation.md](calculation.md) |
 
@@ -307,10 +470,17 @@ program, while the same error in an arithmetic expression is a catchable excepti
 
 ## Open points
 
-- **Not covered yet**: the string comparison operators (`CO`, `CN`, `CA`, `NA`, `CS`, `NS`, `CP`, `NP`), the byte
-  operators (`BYTE-CO`, …, `O`, `Z`, `M`), the predicate expressions (`IS INITIAL`, `IS ASSIGNED`, `IS BOUND`,
-  `IS SUPPLIED`, `IN` with a ranges table), comparisons of string and bit expressions, enumerated types, structures
-  and internal tables, reference variables, and the places that compare without an `IF`: `READ TABLE … WITH KEY`,
-  table keys, `SORT` (with `AS TEXT`), `DELETE ADJACENT DUPLICATES`, `COLLECT`.
+- **Not covered yet**: the predicate expressions `IS ASSIGNED`, `IS BOUND`, `IS SUPPLIED` and `IS INSTANCE OF`, the
+  predicate functions, comparisons of string and bit expressions, enumerated types, structures (also as operands of
+  the string operators) and internal tables (also `IS INITIAL` of them), reference variables, and the places that
+  compare without an `IF`: `READ TABLE … WITH KEY`, table keys, `SORT` (with `AS TEXT`),
+  `DELETE ADJACENT DUPLICATES`, `COLLECT`.
+- **A `#` that escapes nothing**, at the very end of a `CP` pattern (of a `string`, or of a field that it fills to the
+  end): usually nothing matches such a pattern, but not always, depending on the types, and no rule is known that
+  gives the exceptions. Not specified, no cells. abap2go has to refuse such a literal pattern and to decide what a
+  computed one does.
+- **A numeric built-in function as the right operand** of a string, byte or bit operator (`c CS strlen( s )`) is
+  expected to pass the syntax check and then to behave like the numeric comparison `=` (`<>` for `CN`, `NA`, `NS`,
+  `NP`), without setting `sy-fdpos`. Not specified further, no cells; to be refused at build time.
 - **Values the grid has no cells for**: `c` with lengths beyond 40, `p` with more than 3 decimals against text, and
   `d`/`t` against `n` lengths other than 4, 6, 8 and 10 follow the rules above by construction, without cells.

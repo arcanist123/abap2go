@@ -1,0 +1,948 @@
+# Random cells of IN with a ranges table, held out: the rules were worked out before these cells were run.
+# Columns: type of a, value of a, type of low and high, the rows of the ranges table, expected result of "a IN table"
+# (T or F, or DUMP:<runtime error>), expected sy-fdpos afterwards (- if the expression does not set it).
+# The table has the components sign (c LENGTH 1), option (c LENGTH 2), low and high. A row is
+# sign|option|low|high, rows are separated by ";", [] is the empty table; an empty low or high is the initial value
+# of the type.
+# Operands are set as in comparison.tsv: a c, n, d or t holds exactly the characters given, padded with blanks; any
+# other type gets the given text converted to it (x and xstring as hex digits). The operands are data objects whose
+# type is known at run time only (generic parameters).
+# No cell has a CP or NP row whose pattern ends in a # that escapes nothing.
+i	[2]	i	[]	T	-
+string	[*Aa]	string	[I|CP|a|++ ;E|NB||Aa]	F	3
+i	[3]	string	[E|LE|3|;E|EQ|2|2]	F	-
+string	[Ab]	string	[]	T	-
+i	[4]	i	[]	T	-
+string	[+]	string	[E|E ||a;E|CP|* b|;I|CP|+#*|;I|EQ|*a|A#A;I|CP||*Aa]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[#+]	string	[I|CP|a|]	F	2
+string	[ab]	string	[]	T	-
+i	[2]	string	[E|EQ|1|0;I|NE|0|;E|BT|4|1]	T	-
+string	[AA]	string	[E|NE|a+#|;I|LE||# ;I|GT||a;E|GE||a*a;E|NE||a]	F	-
+string	[]	string	[I|CP|a+|;I|NE|+ |a*;E|EQ||]	F	0
+i	[-1]	i	[I|LT|3|-1;E|LE|4|1]	F	-
+c3	[*ba]	c3	[I|EQ| A|;E|EQ||  ]	F	-
+i	[0]	string	[I|NE|2|;E|NE|5|;E|BT|1|-1;I|E |2|3]	F	-
+i	[4]	i	[I|LT|1|;I|NE|5|3]	T	-
+string	[b]	string	[I|GT||]	T	-
+i	[4]	i	[E|LE|1|4;I|EQ|3|]	F	-
+i	[1]	string	[I|NE|5|;E|BT|1|]	T	-
+c3	[ b#]	c3	[I|GT|##|;I|BT||;E|NE|A*a|]	F	-
+i	[2]	i	[E|EQ|4|5;I|NE|5|;E|LT|2|]	T	-
+string	[a]	string	[E|NB||+]	F	-
+i	[2]	i	[I|LT|3|;I|EQ|0|0;I|NE|-1|0;E|BT|5|;E|GE|-1|1]	F	-
+i	[-1]	i	[I|EQ|3|0;E|EQ|1|4;E|GE|4|0;E|EQ|-1|0]	F	-
+i	[3]	i	[E|NE|1|1;I|BT|1|1;E|EQ|1|5;E|GT|3|;E|LE|3|1]	F	-
+c3	[a ]	c3	[E|BT|*+|;I|CP|#*|*bA;I|XX|#|;E|LE|*a+|;E|EQ|+|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[2]	i	[E|NE|2|3;E|GT|0|-1;I|GE|3|;E|GE|3|3;I|GE|2|4]	F	-
+c3	[aA ]	c3	[E|BT|*aa|;I|NB|AA+|;I|CP||;E|NE|A|]	F	-
+c3	[Aab]	c3	[I|EQ|+ba|+]	F	-
+string	[*aa]	string	[E|GT|a|]	T	-
+string	[]	string	[E|BT||+a;E|GE|b|#a;I|NE||]	F	-
+c3	[b#]	c3	[I|EQ|aaa|ab;I|CP|aa+|*;I|LE||;I|EQ|Aa|]	F	3
+i	[0]	string	[I|GE|-1|;I|NB|5|abc;E|LT|1|3;E|BT|5|0]	F	-
+c3	[a]	c3	[E|NB|*ab|]	F	-
+string	[]	string	[E|LE|+Ab|aa]	F	-
+string	[]	string	[E|CP|*|  ]	F	0
+string	[ +]	string	[I|LE||;I|CP|aa|*;I|LT|* |;I|LE|aab|bb+]	T	2
+i	[0]	i	[E|EQ|3|5]	T	-
+i	[5]	i	[I|NB|0|;I|BT|0|2;I|EQ|4|;I|GT|-1|3;E|EQ|5|]	F	-
+c3	[b]	c3	[I|BT|#|a;I|GE||*;E|GT|aa| ;E|CP||A;I|LT|aa|** ]	F	-
+string	[**A]	string	[E|BT|| *;I|EQ|b|;I|NB| | ;I|EQ|*|]	T	-
+i	[2]	i	[E|LT|5|;E|BT|4|5]	F	-
+c3	[aa#]	c3	[I|EQ|#|;I|GE|#|+]	T	-
+i	[3]	i	[E|NB|-1|;I|LE|3|;I|EQ|-1|]	F	-
+c3	[]	c3	[]	T	-
+i	[3]	i	[E|LT|3|;E|GE|0|-1]	F	-
+i	[-1]	i	[I|NE|2|2;I|NB|4|;I|NB|3|2;E|EQ|3|-1;E|NE|-1|-1]	T	-
+i	[1]	i	[I|GT|1|2;I|LE|3|5]	T	-
+i	[0]	i	[E|BT|1|1;I|GT|0|;I|BT|0|1;I|NB|4|]	T	-
+i	[3]	i	[E|EQ|3|0;I|EQ|5|3]	F	-
+c3	[*]	c3	[]	T	-
+string	[# *]	string	[]	T	-
+c3	[a#]	c3	[I|BT||;I|GT||* b;E|NP||a A;I|BT|a*|;I|GE|b| ]	F	3
+c3	[]	c3	[I|GT|*|#A;I|CP||;I|CP||;E|CP|#|+;I|BT|ba|a]	F	0
+c3	[a]	c3	[I|CP||a;E|BT|Aaa|]	F	3
+i	[-1]	i	[E|NB|5|2;E|NB|3|2]	F	-
+i	[3]	i	[I|LT|5|;I|GE|1|3]	T	-
+i	[3]	i	[E|LT|5|5]	F	-
+i	[5]	i	[]	T	-
+i	[0]	i	[I|GT|2|4;I|GT|5|2]	F	-
+c3	[a]	c3	[I|CP||;I|CP|a|;I|BT|+ |;E|EQ|A A|A*;E|BT||]	T	0
+i	[4]	string	[E|NE|abc|5;E|GE|1|;I|GT|4|2]	DUMP:CONVT_NO_NUMBER	-
+string	[a#*]	string	[I|BT|  a|A]	F	-
+string	[a]	string	[E|GT||;I|NB| |;I|EQ|| +;E|GT|*a|*#]	F	-
+string	[+]	string	[E|LE|a|+ ;E|CP||a+a;E|GE|aA+| ]	F	-
+i	[-1]	i	[I|NB|-1|1;E|GE|-1|]	F	-
+string	[#+]	string	[I|CP||;E|NE|a+b|;E|NB|A|+++]	F	2
+string	[]	string	[E|EQ|*+|;I|CP||;I|EQ||a]	T	0
+string	[ ]	string	[I|CP|a|b+a;I|CP|aa|;I|CP|+|]	T	0
+c3	[ab]	c3	[X|NB|+b|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+string	[**]	string	[E|CP|A|;I|EQ|+*|*;I|LT||aA;I|LE|*|;E|EQ|A*|]	F	2
+c3	[]	c3	[I|GT|#aA|b]	F	-
+i	[5]	string	[I|BT|4|abc;I|LE|3|5]	DUMP:CONVT_NO_NUMBER	-
+i	[4]	i	[E|NE|4|1;E|BT|0|4;E|EQ|4|1;E|BT|-1|;I|NE|0|5]	F	-
+i	[1]	i	[]	T	-
+string	[]	string	[I|GT||;I|LE|#a|;E|GE||#a]	F	-
+i	[0]	i	[E|NB|-1|4;E|BT|3|;I|LE|1|3]	T	-
+i	[3]	i	[I|EQ|0|1;I|EQ|3|3;I|BT|-1|3;E|LT|-1|1;E|BT|0|]	T	-
+string	[a#]	string	[]	T	-
+i	[-1]	i	[I|GE|3|;E|EQ|4|2;i|GT|1|4;E|EQ|2|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[-1]	string	[E|LE|2|;I|LE|0|2;i|NB|2|;I|NB|-1|abc;I|GT|4|5]	F	-
+i	[5]	string	[I|NE|3|]	T	-
+i	[0]	i	[I|BT|2|]	F	-
+c3	[A]	c3	[I|CP|  *|;E|LE||;I|EQ||]	F	3
+i	[2]	i	[I|GT|0|;I|BT|0|;E|NE|0|1;E|GE|1|3;I|LE|5|]	F	-
+string	[ba]	string	[I|NE||;I|NP|#*a|;I|BT||;I|NB|#ba|++#;E|LT|bb|]	F	-
+i	[1]	string	[E|NB|2|-1;E|LT|3|;I|LT|1|abc]	F	-
+c3	[#]	c3	[I|LT|a|a#]	T	-
+string	[ AA]	string	[I|CP|+|A+a;E|GT||]	F	3
+c3	[ #]	c3	[E|GE|#A|]	T	-
+i	[2]	i	[I|LT|0|2;E|EQ|0|5;I|BT|5|;I|BT|0|1]	F	-
+i	[5]	string	[I|EQ|3|;I|BT|-1|0;I|LE|1|3]	F	-
+string	[+*a]	string	[I|CP|a##|#;E|GE||+ a;I|CP|#Aa|;I|LE|a|#]	F	3
+i	[3]	i	[I|BT|-1|2;E|NE|0|;E|EQ|2|]	F	-
+i	[-1]	string	[I|BT|5|4]	F	-
+i	[-1]	i	[E|LT|2|1;I|BT|4|]	F	-
+i	[-1]	i	[E|EQ|0|5]	T	-
+i	[4]	string	[I|GE|3|1]	T	-
+i	[5]	string	[E|eq|2|;I|EQ|4|abc;I|LT|1|abc]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+c3	[AAa]	c3	[I|GE|a++|]	F	-
+i	[5]	i	[E|NB|2|;I|NE|2|3;E|LE|0|;I|NE|5|3;I|NB|2|]	F	-
+string	[ a]	string	[I|EQ||a;E|EQ|A| + ;I|CP| b|a#+;E|NP||a;I|EQ|b|]	F	2
+c3	[]	c3	[I|CP|b#|ba;I|LE|+#|;I|LE||Aa ]	T	3
+i	[-1]	string	[E|LT|5|5;E|LE|4|1;E|NE|-1|;I|GE|5|4;I|EQ|1|abc]	F	-
+i	[0]	string	[I|GT|-1|;I|LT|abc|3;E|NB|4|0;I|BT|3|4]	F	-
+c3	[A]	c3	[I|EQ|+A|A;E|CP|*|*]	F	1
+string	[+]	string	[E|CP|#*|]	T	1
+c3	[*+a]	c3	[E|BT|b|* ;I|EQ|ba|;I|CP|a+|b;E|NB|a|;E|BT||]	F	3
+i	[-1]	i	[E|BT|4|-1;E|GT|2|3;I|GE|2|]	F	-
+c3	[]	c3	[E|EQ||]	F	-
+c3	[+ba]	c3	[E|CP||;I|LT|AA|b;I|LE|#*a|]	T	3
+c3	[aA]	c3	[E|GT|Aa|b;I|EQ|**a|;E|GE|+|;I|CP| *|;E|CP|a|]	F	-
+c3	[]	c3	[I|EQ||;E|CP|#ba|A]	T	3
+i	[1]	i	[E|BT|4|-1;I|NE|1|2;E|BT|1|;I|LT|1|4;I|GT|4|3]	F	-
+i	[3]	i	[E|LE|3|3;E|NB|4|-1;I|LE|3|;E|GT|4|]	F	-
+c3	[]	c3	[I|BT| b*|;E|EQ|a a|]	F	-
+c3	[#]	c3	[E|CP||]	T	3
+i	[4]	i	[I|LE|3|0;E|EQ|5|]	F	-
+c3	[a]	c3	[E|CP||;E|NB|a|+*;E|BT|a|aA;I|CP|+A|]	F	3
+string	[a]	string	[E|BT|+*A|;I|CP|ba |;E|BT|A| ;E|LT| #|a;E|LT|b |]	F	1
+string	[#+]	string	[E|EQ||]	T	-
+string	[aA]	string	[I|GE|#|Ab#;I|LT|aba| ba;E|BT|A#|a#b]	T	-
+i	[0]	i	[E|BT|5|0]	T	-
+i	[5]	i	[I|NB|0|1]	T	-
+string	[]	string	[E|CP|#A|;E|EQ|*+|#*;E|GT|a|*a]	T	0
+string	[***]	string	[E|NB|baA|;E|EQ||;I|EQ| Ab| *;I|CP|| +]	F	-
+c3	[+]	c3	[E|CP|#a|a+]	T	3
+c3	[]	c3	[E|GT|b *| +*;I|EQ||+*+;E|GT|ba|A]	T	-
+string	[]	string	[I|EQ|a+b|;E|GE|+|+]	F	-
+i	[3]	i	[E|GE|2|2;I|BT|0|-1;I|BT|4|0]	F	-
+i	[3]	i	[E|GE|3|-1;I|GE|3|;E|GE|-1|1;I|LT|3|]	F	-
+i	[3]	string	[I|EQ|2|;I|BT|3|2;E|LT|3|2;I|BT|0|3]	T	-
+i	[2]	i	[E|BT|1|;I|GE|5|1]	F	-
+i	[0]	i	[E|BT|2|4;I|LE|3|2;E|BT|4|-1]	T	-
+i	[1]	i	[E|NB|0|1;E|eq|2|0]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+c3	[ ]	c3	[I|CP||A]	F	3
+i	[2]	i	[E|EQ|0|;E|GT|4|;I|eq|4|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[*aA]	string	[I|NE||a;I|GT||]	T	-
+string	[   ]	string	[I|NB| |]	T	-
+i	[4]	i	[I|EQ|1|0;I|BT|2|]	F	-
+string	[#ab]	string	[i|LT|a|A;E|CP|+#a|A;I|LT|a|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[3]	i	[I|LT|-1|4;I|GT|0|;I|GT|4|2;E|GE|3|]	F	-
+i	[1]	string	[I|GT|abc|2;I|BT|-1|2;E|LE|0|;E|EQ|1|abc]	DUMP:CONVT_NO_NUMBER	-
+i	[2]	i	[I|LT|4|4;E|NB|1|5;I|GE|0|]	T	-
+i	[-1]	string	[I|NB|4|2;I|GE|2|0;I|NB|3|;E|BT|abc|-1;E|BT|4|]	DUMP:CONVT_NO_NUMBER	-
+i	[2]	string	[I|BT|3|1;I|NB|5|5;I|GT|abc|]	T	-
+i	[0]	i	[E|LT|2|;I|GE|1|;I|NB|5|0]	F	-
+i	[0]	i	[I|EQ|5|;E|LT|3|0]	F	-
+c3	[+b]	c3	[I|CP|#|]	F	3
+i	[-1]	string	[I|GT|abc|-1;E|LT|4|;I|BT|3|-1]	DUMP:CONVT_NO_NUMBER	-
+string	[*A]	string	[I|GE|* | ba;E|CP||A +]	T	2
+string	[* ]	string	[I|BT||]	F	-
+string	[+AA]	string	[I|XX|+a |+;I|BT||]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[0]	i	[E|NE|0|1;E|EQ|3|;E|EQ|0|3]	F	-
+i	[5]	i	[I|EQ|2|;I|NB|4|1;E|GT|3|;E|NB|-1|;I|LE|3|5]	F	-
+string	[+ +]	string	[]	T	-
+i	[-1]	i	[I|GT|1|4]	F	-
+i	[3]	string	[I|BT|5|;E|GT|-1|;I|BT|4|]	F	-
+i	[1]	i	[I|NB|2|;I|NB|-1|-1;I|LE|-1|;E|LE|3|3]	F	-
+i	[0]	string	[I|EQ|1|;E|EQ|-1|-1]	F	-
+i	[3]	i	[]	T	-
+i	[2]	i	[E|BT|-1|;E|EQ|3|5;E|LE|3|-1]	F	-
+i	[2]	i	[I|GE|2|-1;I|LT|2|1]	T	-
+i	[3]	i	[I|NE|1|;I|BT|-1|;E|EQ|5|;I|EQ|1|]	T	-
+c3	[aa]	c3	[E|NP||;I|NB|+A|;I|GT|a#*|#a;I|CP|b|]	F	3
+i	[-1]	i	[E|BT|5|1;E|NB|1|;I|GE|3|0;I|BT|-1|0;I|GT|1|4]	F	-
+c3	[ ]	c3	[I|BT|A|a*;I|NP| ab|a;E|NE|a|a#;I|BT| a|;E|EQ|b|aab]	F	3
+string	[ ]	string	[E|EQ||;I|GT| |b;I|LT|#|+Ab;I|NB|Aa+|;I|EQ| aa|#A+]	T	-
+string	[]	string	[I|CP|A|;I|LT|#b|a*#]	T	0
+i	[5]	string	[I|NB|abc|0;E|LE|4|;I|BT|-1|5;I|GE|-1|1;E|BT|5|5]	DUMP:CONVT_NO_NUMBER	-
+i	[5]	i	[I|EQ|0|5;E|GE|5|2;E|LE|0|;I|GT|-1|3;E|EQ|-1|]	F	-
+c3	[]	c3	[I|EQ|A|]	F	-
+i	[-1]	i	[E|EQ|4|2;E|EQ|5|;I|NE|5|2;E|LE|-1|0;I|GE|2|]	F	-
+c3	[a#A]	c3	[I|CP|Ab |#;I|NP| #| #;I|NB|| Aa]	T	3
+i	[-1]	i	[I|EQ|1|-1;E|EQ|1|5;E|GE|5|]	F	-
+c3	[]	c3	[I|BT|#|]	F	-
+string	[]	string	[I|EQ| b | ;I|NB||;I|LE|a|;I|LT|a#|#bA;E|NE|#a*|]	F	-
+i	[-1]	i	[I|BT|5|1;E|LT|1|]	F	-
+string	[b]	string	[I|EQ|#A|;I|GT|#A|+A;E|NB|*#|*A;I|GE|#|ab ]	F	-
+i	[0]	string	[I|NB|1|;I|LT|4|;I|NE|5|5;I|EQ|3|2;E|EQ|5|5]	T	-
+i	[5]	i	[I|GE|5|;I|NE|2|]	T	-
+i	[3]	i	[I|LE|1|1;E|EQ|-1|0]	F	-
+c3	[Aa]	c3	[I|GE|+|;I|NE||A]	T	-
+i	[5]	i	[I|GT|1|;I|NE|3|4]	T	-
+c3	[#A ]	c3	[I|LT|a| a ]	T	-
+i	[4]	string	[I|NB|0|;E|GE|-1|1]	F	-
+c3	[A#a]	c3	[I|CP|A a|+]	F	3
+string	[a#]	string	[E|BT|**|;E|CP|++a|;I|BT|AA+|+#;I|LE|*a|;E|CP||]	F	2
+string	[aa]	string	[I|BT|a|;I|CP|a|;I|CP|#*|]	F	2
+i	[4]	string	[I|BT|5|0;I|LE|1|abc;I|NE|4|;I|NB|3|]	T	-
+i	[-1]	string	[I|GT|abc|4;I|NE|-1|;I|LE|3|5;I|EQ|abc|-1]	DUMP:CONVT_NO_NUMBER	-
+c3	[++]	c3	[I|NP|b|A]	T	3
+c3	[]	c3	[E|LT|*+|*a;I|GE||]	F	-
+i	[3]	string	[E|NE|0|5;E|NB|abc|-1]	F	-
+i	[0]	i	[I|BT|-1|-1]	F	-
+i	[4]	i	[E|EQ|3|4;I|GE|3|;E|LE|3|;I|BT|0|1;E|LE|-1|2]	T	-
+i	[2]	i	[I|BT|0|]	F	-
+string	[a b]	string	[]	T	-
+c3	[ab]	c3	[E|NP|b|;E|CP|*+|;E|LE|*a|a]	F	3
+i	[0]	string	[E|NE|2|2;I|NE|3|4;E|NB|5|3;I|LT|2|3]	F	-
+c3	[a ]	c3	[E|NE|#a|a*#;I|BT| |;I|NP|*|a  ;I|NE||a]	F	-
+i	[4]	string	[I|LE|2|2;I|LT|0|4;E|BT|0|0;I|NB|4|]	T	-
+i	[5]	i	[I|EQ|-1|4]	F	-
+i	[3]	i	[I|LT|5|0]	T	-
+i	[1]	i	[I|BT|-1|-1;E|BT|1|-1;I|BT|3|;E|NB|4|2;I|E |-1|]	F	-
+i	[-1]	i	[I|BT|0|1;I|BT|4|;i|BT|3|;I|NB|-1|2]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+c3	[]	c3	[I|CP|a|aa+;I|GE|#+|;I|CP|  *|ab;I|LT|b# |]	T	3
+i	[1]	i	[E|BT|0|;E|LE|2|;I|EQ|4|2;I|LE|2|5]	F	-
+c3	[#+#]	c3	[I|EQ|| ;I|GE|a|;E|NE|| ]	F	-
+c3	[b]	c3	[I|EQ|a##|;I|NP|a#|;I|LT||;E|CP||A;E|BT||aa*]	T	3
+i	[5]	i	[I|EQ|4|;E|GT|-1|5;E|EQ|-1|2;E|BT|3|;I|LE|3|5]	F	-
+string	[*+a]	string	[I|GT||]	T	-
+string	[]	string	[E|CP|aa|aab;E|NP| |;E|LE||;E|EQ|b+ |]	F	0
+i	[0]	i	[I|LT|5|;E|BT|1|4;E|GT|2|-1;I|LE|5|]	T	-
+i	[2]	i	[E|EQ|3|2;I|BT|1|;I|NE|4|3]	T	-
+i	[0]	i	[I|EQ|1|-1;I|NE|1|;i|GE|4|;I|LE|5|;E|EQ|4|5]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+string	[# #]	string	[I|BT|A|;I|NP||Abb;E|NB||;E|CP||]	F	3
+i	[1]	string	[E|BT|1|]	T	-
+c3	[#+]	c3	[E|EQ|+*|;I|LE|a a|;E|NB|A|;I|LT| A#|Aaa]	F	-
+c3	[#b]	c3	[E|GE|A#A|*+b;E|LE||aA]	T	-
+i	[5]	i	[E|LE|-1|3]	T	-
+c3	[+#b]	c3	[I|CP|A|]	F	3
+string	[b+*]	string	[I|LT|ba|;E|EQ||]	T	-
+i	[0]	string	[I|BT|2|-1;I|GT|3|2]	F	-
+c3	[a*]	c3	[I|EQ||]	F	-
+i	[1]	i	[I|LT|1|]	F	-
+c3	[aba]	c3	[I|NP||Ab]	T	3
+c3	[aaA]	c3	[I|GE|+|;I|GE|bb|  *;E|NP|#a|]	F	3
+c3	[A+ ]	c3	[I|NE|#a*|]	T	-
+string	[]	string	[E|LT|a*a|aA;E|EQ|Ab*|Aa;I|EQ|aA|+ ]	F	-
+i	[4]	string	[E|BT|0|5]	F	-
+c3	[]	c3	[I|CP|a|;I|GE| |b;I|GT|b|;E|CP|AA|]	T	3
+i	[3]	i	[I|NB|1|;I|EQ|5|-1]	T	-
+string	[#+A]	string	[I|NB|A|]	T	-
+i	[3]	i	[I|eq|1|4;I|LE|-1|;I|BT|3|4]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[3]	i	[E|LE|1|0;I|NE|3|1;I|BT|2|2;I|EQ|4|]	F	-
+i	[4]	i	[I|BT|-1|3;E|GE|5|;E|GT|3|;I|EQ|2|]	F	-
+i	[3]	i	[I|BT|4|;I|GT|0|5;E|EQ|-1|1;I|GT|1|]	T	-
+c3	[*a]	c3	[I|NP| |]	T	3
+i	[3]	i	[I|NE|4|4;I|EQ|4|5;E|LE|2|;I|BT|4|3]	T	-
+i	[-1]	i	[I|BT|2|0;I|NE|4|-1;E|EQ|3|;E|NB|5|]	F	-
+i	[4]	string	[I|BT|4|2;E|NB|2|4]	F	-
+i	[1]	string	[i|LE|-1|4;I|GT|5|0]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+string	[]	string	[E|BT||]	F	-
+i	[2]	i	[I|LE|1|]	F	-
+string	[+#]	string	[I|EQ|a |+#; |GT|a+a|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[3]	i	[E|GT|2|2;E|BT|4|1]	F	-
+i	[-1]	i	[i|GT|5|4;E|LE|-1|0;I|BT|3|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+c3	[Ab ]	c3	[I|BT| +#|+A;I|LE||]	F	-
+string	[ A]	string	[E|CP| ba|A;I|CP|##| aa;I|EQ||A ;I|LE||]	F	2
+c3	[a#]	c3	[E|LE|AA| ]	T	-
+i	[3]	i	[E|EQ|3|2;I|NB|0|0]	F	-
+i	[-1]	i	[]	T	-
+c3	[*]	c3	[E|GE|a#a|;I|NE|#|;I|NE|baa|;I|CP|+|a;I|GT|Ab+|]	T	-
+i	[4]	i	[I|BT|2|3]	F	-
+c3	[#]	c3	[E|GT|+a|;E|LT||;I|EQ||aa;I|BT|a|]	F	-
+string	[#]	string	[E|GE|a|  ;E|GT|+|#b#]	T	-
+i	[4]	i	[E|GE|3|4;I|GT|3|;I|GE|0|-1;I|GE|1|]	F	-
+i	[2]	string	[I|GE|2|]	T	-
+i	[4]	string	[I|EQ|1|4;I|BT|abc|0;I|NE|-1|;I|BT|1|5]	DUMP:CONVT_NO_NUMBER	-
+i	[0]	i	[I|GT|0|5;I|LT|4|]	T	-
+c3	[*]	c3	[I|NB| |a#;E|LT|+ab|]	F	-
+string	[A+*]	string	[]	T	-
+c3	[]	c3	[I|LE|| ;E|CP||*;I|CP||;I|CP||#]	F	0
+i	[3]	i	[E|LE|4|;E|GT|4|4;I|NB|1|2]	F	-
+string	[b+#]	string	[i|CP|b|b;I|NP|#+|;I|E |+|a;I|CP|a|;E|CP|b|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+c3	[A*]	c3	[E|GE||]	F	-
+c3	[a]	c3	[E|EQ|*aA|]	T	-
+i	[0]	i	[E|NB|0|;I|BT|2|4;E|LE|0|1;I|GE|3|;E|NB|2|5]	F	-
+i	[0]	i	[E|GT|0|;I|GT|4|-1]	F	-
+i	[1]	i	[I|LT|5|1;E|NE|5|-1;E|EQ|0|]	F	-
+c3	[]	c3	[E|EQ|*|a;E|EQ|* a|]	T	-
+string	[]	string	[X|EQ|+|a;I|NE|A*a|;I|CP|aa|;E|GE|+##|* ]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+c3	[ #]	c3	[I|BT|A  |ab;I|GT||b]	T	-
+c3	[*a#]	c3	[I|EQ||;I|CP|#|  b;I|LT|A|;I|BT|aA|]	T	3
+c3	[ Aa]	c3	[E|CP|A|+A;I|EQ|Aa|;I|NP||;I|CP|b|;I|GE|baa| a]	T	3
+i	[5]	i	[I|GE|2|;I|GT|5|4;E|BT|5|;I|LE|-1|0]	T	-
+i	[0]	i	[E|NB|3|;I|GE|0|;I|BT|0|]	F	-
+i	[2]	i	[E|BT|5|0]	T	-
+c3	[a ]	c3	[I|BT|+|a*]	T	-
+string	[#]	string	[E|BT|+#a|;I|NB||]	T	-
+c3	[a]	c3	[E|LE|ba|;E|EQ| b|A+;E|BT|b*|ab]	F	-
+string	[]	string	[E|CP| |#a;I|GE|*b|a]	F	0
+string	[]	string	[I|BT|a|;E|CP|aa|;E|GT|b  |]	F	0
+c3	[]	c3	[E|GT|A#|aA]	T	-
+string	[ab]	string	[E|EQ||;E|BT||;I|NB|*|+b]	T	-
+i	[0]	string	[I|GT|-1|4]	T	-
+i	[-1]	i	[E|BT|0|2;E|GE|5|-1]	T	-
+string	[ a#]	string	[I|CP||;E|LE||]	F	3
+i	[5]	i	[I|BT|2|;E|LT|5|5;I|LE|1|0;I|LT|0|4;E|LT|-1|3]	F	-
+i	[0]	i	[E|GT|0|5;I|NE|5|-1;I|GE|3|1;E|LT|5|5]	F	-
+i	[-1]	i	[E|BT|5|]	T	-
+c3	[ ]	c3	[E|NE|#a#|;I|BT||;I|CP||A+a]	F	-
+i	[4]	i	[I|BT|3|;I|NE|1|2]	T	-
+c3	[A+]	c3	[I|BT||aA;I|BT|A#a|aa;E|LT|b|;I|NP|+|abb;I|EQ|#|]	F	-
+string	[]	string	[I|NE|aa|;I|GE|aaa|;I|CP||A]	T	-
+c3	[*+a]	c3	[X|GE|ba#|*b ;I|LE|ba|;E|GE| A#|;E|NB|aa*|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[3]	string	[I|NE|4|abc;E|EQ|3|abc;E|GT|1|]	F	-
+i	[5]	i	[I|BT|-1|;I|EQ|0|;E|EQ|0|-1]	F	-
+i	[1]	i	[I|EQ|0|5;I|XX|-1|1;E|NE|3|0]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[]	string	[I|NE|Aa+|*a;I|NP|*|+;I|BT|ab+|;I|CP|a#a|]	T	-
+c3	[]	c3	[I|GE||+a;I|NE|aba|+*]	T	-
+c3	[*+]	c3	[I|NB|#|* +;E|NP|*aA|ab;I|CP|a#|b b;I|BT|b|ba*]	F	3
+string	[++]	string	[]	T	-
+i	[4]	string	[I|GT|4|abc;I|NE|-1|5;I|LT|4|0;I|GT|4|]	T	-
+i	[-1]	i	[X|LT|3|4;E|GT|0|3;I|EQ|0|3]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+string	[ ]	string	[E|EQ|a A|;I|BT||;I|LT|a#*| ;I|LE||ab ;I|NP|a | ]	T	-
+string	[]	string	[I|GT|a#A|;I|EQ||]	T	-
+i	[5]	string	[I|NE|abc|;E|GT|5|;E|LE|3|;I|NB|0|]	DUMP:CONVT_NO_NUMBER	-
+i	[4]	string	[I|EQ|4|]	T	-
+i	[3]	i	[I|NB|-1|0;I|BT|2|5;E|GT|4|0;I|NB|0|3]	T	-
+c3	[]	c3	[E|EQ|a*a|]	T	-
+c3	[*aa]	c3	[E|LT||b a]	T	-
+i	[2]	i	[I|LT|1|5;E|LT|4|5;I|NE|1|3;E|LE|0|-1;I|NE|1|]	F	-
+c3	[a]	c3	[I|BT||]	F	-
+string	[#]	string	[X|CP|+|;E|GE||;I|GT|#ab|+b+;E|GE|bAA|;E|CP|aA|#A]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[3]	i	[I|E |1|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[A *]	string	[I|CP|+bb|;I|NB| A|;I|CP|a|a +;I|CP|aa|aa]	T	3
+i	[2]	string	[E|NE|0|2]	F	-
+string	[##]	string	[E|EQ|a|;I|GT|a*|bb#]	F	-
+c3	[#aA]	c3	[I|LT||*;I|NB||b;I|CP| b+|]	F	3
+c3	[]	c3	[I|EQ|aaa|]	F	-
+i	[2]	string	[E|GT|4|5; |GT|1|-1;E|BT|abc|;I|LT|2|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+string	[]	string	[I|NP|++a|;I|CP|baa|# b]	T	0
+i	[3]	string	[I|GE|2|2;I|EQ|-1|3;I|LT|0|abc;I|LT|-1|abc]	T	-
+i	[-1]	string	[E|GT|5|2;I|EQ|abc|4]	DUMP:CONVT_NO_NUMBER	-
+i	[2]	string	[I|NB|-1|;I|BT|abc|0]	T	-
+c3	[##a]	c3	[]	T	-
+i	[3]	i	[I|GE|3|-1]	T	-
+string	[Aa]	string	[I|LT||a#a;I|BT|aba|]	F	-
+string	[]	string	[E|LT| +|;I|LT|b +|;E|GE||;I|GE|+++|]	F	-
+i	[4]	i	[E|GT|-1|4;E|LT|4|4]	F	-
+string	[a#]	string	[I|NP||;I|EQ|#|;I|GT|aaA|;E|GE|+| a ;I|NB|* b|]	F	2
+string	[##]	string	[I|EQ|A|;I|BT|A#|;I|CP|a|;I|BT|| ]	F	2
+c3	[+]	c3	[I|LT|# #|;I|NP||#+a]	T	3
+i	[3]	string	[E|NE|0|;I|GT|3|1]	F	-
+string	[]	string	[I|BT|A |;E|CP||#;E|LT||]	F	0
+string	[]	string	[I|NP||a;E|EQ|*  |a+a;E|BT||A;E|CP|aaa|]	F	0
+i	[-1]	i	[E|GE|5|;I|LE|1|4;E|LT|0|;E|BT|1|]	F	-
+i	[2]	i	[E|GE|2|2;I|NE|4|]	F	-
+string	[]	string	[I|GT||;I|NP||;I|GT|bb#|;I|EQ|b#|;E|NE|a#+|]	F	0
+i	[5]	i	[I|GT|0|1]	T	-
+i	[-1]	string	[I|LT|abc|3;E|BT|2|;I|LT|2|]	DUMP:CONVT_NO_NUMBER	-
+c3	[ +a]	c3	[E|BT|A a|b;I|EQ|#*a|#;I|LE|b|;E|EQ||*a+;I|EQ||b]	T	-
+c3	[#a*]	c3	[I|EQ|b**|#+;E|BT|A|;I|CP|* a|*A;I|NP|a*|A*]	T	3
+string	[b]	string	[E|BT|bA*|;I|GT||A*a;I|LE|+*#|;I|GT|a|;I|LT|b+A| ]	T	-
+c3	[]	c3	[I|EQ|bA|;I|EQ| |;I|BT||]	T	-
+c3	[**b]	c3	[I|E | |;E|LE|b|;I|LE|bA|a;I|BT|b|b*]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[a ]	string	[E|CP|# |+aA]	T	2
+i	[0]	string	[I|NB|5|abc]	T	-
+i	[-1]	string	[I|NE|0|]	T	-
+i	[1]	i	[E|GT|4|-1]	T	-
+string	[ a]	string	[I|LT|*|;E|NE| +|;E|CP|#a*|*b;I|LE||;I|LT|b+|a*]	F	-
+i	[0]	i	[E|BT|5|1]	T	-
+i	[-1]	string	[I|BT|1|0;I|LT|0|0;E|XX|abc|5]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[5]	i	[E|EQ|5|0;I|EQ|4|5]	F	-
+string	[b]	string	[I|EQ||;E|EQ|+aa|;E|NE|*b|a;E|NE|#+b|aAa;I|GT|  a|b]	F	-
+string	[aa]	string	[I|CP|+|b**;I|CP|+|;I|NP|aa |bA;E|BT|aa*|#a;E|LT|A|b]	T	2
+i	[0]	i	[E|EQ|4|1;I|BT|3|2;E|LE|2|-1]	F	-
+i	[2]	i	[I|NE|5|]	T	-
+i	[5]	i	[E|EQ|0|;I|GT|3|1;I|EQ|2|1]	T	-
+string	[]	string	[I|CP|+| a]	F	0
+i	[1]	i	[E|EQ|0|4;I|LE|-1|3;E|LE|1|5;I|NB|0|-1;I|NE|5|-1]	F	-
+i	[4]	string	[E|EQ|-1|5;i|NB|4|abc;E|NB|4|abc;I|NE|1|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[-1]	i	[I|LE|5|]	T	-
+i	[0]	string	[I|GE|-1|4;E|GE|5|abc]	T	-
+i	[1]	string	[I|GT|abc|;E|EQ|1|;I|NB|5|-1]	DUMP:CONVT_NO_NUMBER	-
+i	[1]	i	[E|BT|3|; |LT|0|5;I|GT|0|1;I|BT|-1|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+string	[+#a]	string	[E|EQ|*bA|  b;I|GE||;E|LT|b|aaA;I|NP|a|;I|BT|Aaa|]	F	-
+i	[3]	i	[E|BT|0|]	T	-
+i	[4]	i	[I|EQ|2|;E|BT|3|-1]	F	-
+string	[bb+]	string	[E|EQ|A|##]	T	-
+i	[4]	i	[E|GT|1|-1]	F	-
+i	[2]	i	[I|GT|5|4;E|GE|5|]	F	-
+c3	[b]	c3	[E|LT||;I|NP|*##|]	T	3
+i	[1]	i	[E|GE|5|2;I|BT|4|2;I|eq|4|;I|NB|-1|-1;I|LT|4|-1]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[aAb]	string	[I|CP|#A|;E|BT|+|;I|GE| a|a#;E|BT|a|+;I|GT||a A]	T	3
+c3	[]	c3	[E|NB|#|;I|BT||#;E|EQ||a;E|NP|| ;E|NE||]	F	-
+i	[-1]	i	[E|eq|4|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[A]	string	[E|GE|Aa|;I|LT|*bA|+#]	F	-
+string	[Aa]	string	[E|EQ|*aA|;I|CP|Aa+|+ ]	F	2
+i	[-1]	i	[I|EQ|3|0]	F	-
+i	[4]	string	[I|EQ|5|abc;I|LT|4|0]	F	-
+string	[b+]	string	[I|BT|a|;E|EQ||;I|BT|#|aaA;E|NB|A+a|;E|NP|+|]	F	-
+string	[]	string	[]	T	-
+i	[1]	string	[I|GT|5|;E|GT|0|-1;E|NB|abc|5;I|BT|0|1;I|NB|0|3]	F	-
+i	[0]	i	[I|EQ|5|-1;E|EQ|1|0;I|BT|1|;E|BT|5|;E|EQ|5|]	F	-
+c3	[a]	c3	[E|CP|+*|;I|GE||+;E|CP|A|]	F	0
+i	[1]	string	[E|EQ|2|abc;E|EQ|3|2;I|BT|2|;E|GE|abc|;E|EQ|2|0]	DUMP:CONVT_NO_NUMBER	-
+i	[5]	i	[E|GT|2|5;I|LT|1|1;I|LT|5|;I|GT|-1|2]	F	-
+string	[aA]	string	[I|CP||b  ;I|CP|aa*|b;I|EQ|*A|a*A;I|CP|bba|]	T	0
+c3	[]	c3	[E|LT| ab|b]	F	-
+i	[1]	i	[I|XX|3|2;E|NB|4|;I|NB|5|4;E|NB|5|;I|NE|3|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+c3	[+Aa]	c3	[E|EQ||;E|EQ||+aa;I|LT|*|;E|CP|b*|;I|LT|a|AA]	T	3
+string	[#]	string	[E|CP||A;I|EQ||+]	F	1
+c3	[a]	c3	[I|EQ|++|+b]	F	-
+i	[0]	i	[I|NE|0|5;E|EQ|2|-1;E|NE|2|;E|GT|1|;E|BT|1|]	F	-
+i	[1]	string	[I|LE|0|0;I|NE|1|-1;I|NB|0|2;E|LE|5|;E|BT|2|]	F	-
+string	[+]	string	[E|NP|a*a|b;E|CP||]	F	1
+i	[-1]	string	[E|LE|4|;I|EQ|5|]	F	-
+i	[0]	i	[I|BT|2|;I|NE|3|1;E|LT|2|5; |EQ|1|-1;E|EQ|5|-1]	F	-
+c3	[a]	c3	[]	T	-
+c3	[A]	c3	[E|EQ||;E|NP| |;I|NB|a|;I|CP||a;E|CP|+a+|ab]	F	3
+i	[5]	i	[I|EQ|0|0;I|GT|1|;E|EQ|3|;E|LE|4|]	T	-
+string	[b]	string	[E|GT| +|# ;I|NE||# A;I|BT||;E|EQ||;E|GE|a*+|]	F	-
+i	[5]	i	[E|GE|5|]	F	-
+i	[2]	string	[E|NE|1|3;E|NB|abc|4;I|GT|0|0;E|GT|3|]	F	-
+i	[4]	string	[I|EQ|1|;I|NB|4|;I|LT|-1|;I|BT|3|]	T	-
+i	[5]	i	[I|LE|3|1;E|BT|-1|5;I|EQ|3|5;I|NB|0|3]	F	-
+i	[0]	i	[I|GT|0|0;I|E |1|-1;E|EQ|5|0;I|NB|4|3]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[2]	string	[E|EQ|5|0;I|GT|abc|;I|GT|1|0; |EQ|3|3]	DUMP:CONVT_NO_NUMBER	-
+i	[5]	i	[I|BT|5|5;E|NB|-1|2;I|NE|4|]	F	-
+i	[-1]	string	[E|LE|abc|;I|NB|0|;E|LT|4|4;I|EQ|1|0;E|GE|4|]	DUMP:CONVT_NO_NUMBER	-
+i	[3]	i	[E|GE|-1|3;E|EQ|5|0;I|BT|1|5;E|GT|3|]	F	-
+c3	[]	c3	[I|GE|a |;E|CP||#;E|BT|A|]	F	3
+i	[4]	i	[I|LT|5|;I|GT|5|;I|LE|4|5;I|NB|2|5]	T	-
+string	[b+]	string	[I|CP| AA|;E|GT|*|;i|CP|a|+a;E|EQ||;I|CP|aa|a]	F	2
+i	[0]	i	[I|LT|3|0;I|BT|4|3;E|NB|5|2;I|BT|2|0]	F	-
+string	[bab]	string	[I|EQ|*a|b#;E|EQ||]	F	-
+string	[+]	string	[I|EQ||;E|NP| a|;E|EQ|ba|;I|CP|+|ba;E|LE|#|*aa]	F	1
+i	[5]	string	[I|GE|5|;I|EQ|1|;I|EQ|abc|]	T	-
+i	[4]	i	[E|GT|4|;I|EQ|3|1]	F	-
+string	[+b]	string	[E|LT|A|ab#;E|CP||]	F	-
+i	[4]	i	[E|EQ|1|;I|LE|5|;I|BT|5|3;I|GT|5|1]	T	-
+i	[2]	i	[I|eq|1|-1;I|NB|2|3;E|E |4|5]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+c3	[+#]	c3	[]	T	-
+i	[3]	i	[I|GE|2|]	T	-
+c3	[]	c3	[I|NP||A ]	T	3
+i	[2]	i	[E|NE|4|0;E|EQ|4|;E|BT|-1|0;I|EQ|1|2;I|LE|-1|1]	F	-
+i	[-1]	i	[I|NB|0|1;E|EQ|0|2;E|LE|-1|;I|BT|0|3;I|NB|3|2]	F	-
+i	[1]	string	[I|BT|abc|;I|GE|0|4;E|LE|0|abc]	DUMP:CONVT_NO_NUMBER	-
+i	[0]	i	[I|GT|2|2;I|BT|1|;E|NB|5|]	F	-
+i	[2]	i	[ |GT|4|1;I|GT|2|-1;E|BT|4|-1]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[3]	string	[I|LE|1|4;E|EQ|5|;I|GT|2|]	T	-
+string	[*#]	string	[I|LT||;I|CP|b |]	F	2
+string	[]	string	[I|GE|A*a|b;I|NB| |]	T	-
+i	[1]	i	[I|BT|4|1;I|EQ|0|]	F	-
+c3	[#+ ]	c3	[E|LE|+a+|;I|CP|#a |aa]	F	-
+i	[5]	i	[I|NE|3|1]	T	-
+i	[1]	string	[E|NB|4|2;E|BT|0|5;I|NE|3|1]	F	-
+string	[ba]	string	[I|NP||]	T	2
+c3	[]	c3	[I|LT|AA|;I|NE|# A| a;I|CP|aAa|aa ;E|CP| ba|;I|CP|b|]	T	3
+c3	[bb]	c3	[E|BT|b|;I|BT||;I|CP|#|;I|CP|aA+|;I|NP|b|]	T	3
+i	[5]	string	[I|NE|1|;E|LE|1|3;E|EQ|1|5]	T	-
+i	[-1]	i	[I|BT|5|1;I|NB|0|0]	T	-
+i	[5]	i	[E|EQ|2|0;I|EQ|1|0;I|GE|-1|3;I|NB|2|]	T	-
+c3	[#]	c3	[E|GE|A|a;E|BT||;E|EQ|+a|#;I|BT||+]	T	-
+i	[5]	i	[E|LE|0|;I|EQ|0|1]	F	-
+i	[4]	string	[E|LT|5|-1;I|GT|2|2;E|EQ|-1|;I|NB|5|1]	F	-
+string	[Aaa]	string	[I|BT|A#a|;I|BT|  *|;I|GE|aA|;I|CP||;I|EQ||+]	F	3
+i	[2]	string	[X|LE|5|0;i|LT|0|-1]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+c3	[+]	c3	[E|CP|#aa|]	T	3
+c3	[ Ab]	c3	[E|NE||;E|BT| b#|Aaa;E|CP||A;I|GE||;E|EQ|a a|]	F	-
+i	[1]	i	[I|NB|-1|;E|NE|-1|0;I|EQ|3|3;I|GE|4|]	F	-
+i	[2]	i	[I|EQ|0|1]	F	-
+string	[b]	string	[I|NE|b+a|;I|CP|*|;E|LE|Ab|aA;I|GT|a|**;E|NB||+]	F	-
+i	[4]	i	[E|LT|0|-1]	T	-
+i	[1]	i	[E|GE|4|;I|LE|1|1]	T	-
+c3	[*b]	c3	[I|CP|*a|+;I|LT|*| #;I|LE| * |]	F	3
+c3	[ba+]	c3	[I|NP|abb|;I|CP|a*a|aAA;I|EQ||#  ;E|NB||#+]	F	3
+c3	[]	c3	[I|BT|  |*;E|CP|ba|;E|CP|a|a* ]	T	3
+i	[-1]	i	[I|EQ|4|;I|GE|-1|2]	T	-
+string	[*b]	string	[E|LE|a|aa;I|CP|b |;I|NE||]	F	-
+i	[3]	string	[E|NB|1|-1;E|GT|2|3;E|NE|5|2]	F	-
+i	[3]	i	[E|EQ|5|2]	T	-
+i	[2]	i	[I|EQ|-1|3;I|LT|0|;I|BT|4|]	F	-
+i	[4]	i	[I|EQ|4|0;I|NE|5|1;E|NB|1|1;I|GE|0|;I|NB|4|]	F	-
+c3	[]	c3	[E|LE|##+|;E|LE|bA+|*]	F	-
+i	[2]	i	[E|NE|0|1;I|NB|2|0; |BT|1|0;E|NE|1|2;E|GT|0|3]	F	-
+string	[b#]	string	[I|NB|ab|* +]	T	-
+i	[5]	i	[E|LT|0|;I|EQ|5|0;I|NE|-1|;I|LT|2|]	T	-
+c3	[ ]	c3	[I|NP|b+a|;I|GE|AaA|;I|LE|#*a|a;I|EQ||]	T	3
+c3	[a]	c3	[E|BT|*|;E|EQ||;E|NE|*|a;I|GE|aa+|a* ;I|NB||]	F	-
+i	[0]	i	[]	T	-
+string	[A]	string	[E|NB||aAA]	T	-
+c3	[a# ]	c3	[I|NP| |bAa;E|GT|+a#|;E|CP||;E|CP||;E|BT|a+A|]	F	3
+i	[4]	i	[I|BT|2|4]	T	-
+c3	[a]	c3	[I|BT|*a|a a;I|BT|*a#|a*#;I|NB|b|;E|GT|**| b;I|CP|a|]	F	-
+i	[1]	string	[I|LT|5|4]	T	-
+c3	[b]	c3	[E|CP|Aa*|#ba]	T	3
+i	[1]	string	[I|EQ|4|]	F	-
+i	[5]	string	[E|LT|2|2;E|NE|4|]	F	-
+i	[-1]	i	[I|NE|5|4]	T	-
+i	[0]	string	[E|NE|4|2;E|NE|4|4]	F	-
+string	[AA ]	string	[E|GE| |]	F	-
+c3	[ A]	c3	[E|BT|*+A|;I|NE|#|#+b;E|GT| +#|]	F	-
+c3	[ +*]	c3	[I|EQ|b|;I|NP|a|]	T	3
+i	[1]	i	[I|NE|4|;E|EQ|2|;I|BT|4|3;E|EQ|1|]	F	-
+string	[]	string	[E|CP|#b|a*]	T	0
+i	[3]	i	[E|LE|-1|4;I|GT|1|;I|BT|2|4;I|EQ|-1|2;E|LT|2|]	T	-
+c3	[a]	c3	[I|GE| + |AAA]	T	-
+string	[]	string	[E|CP||+ *;E|LT|a+b|aa]	F	0
+c3	[a]	c3	[E|LE||;E|GE||A;I|BT|a#a|*Aa;E|GT|# |a]	F	-
+i	[4]	i	[I|BT|4|2;I|GE|5|2;E|BT|3|0]	F	-
+i	[5]	string	[E|BT|2|;I|LE|0|;I|BT|-1|;E|GT|2|;I|BT|2|-1]	F	-
+i	[1]	i	[I|NE|5|3;E|NE|-1|4;I|GE|0|5;I|NE|5|2;I|LE|3|3]	F	-
+c3	[]	c3	[I|CP|A#b|;E|GE||;I|BT|a+| ;I|CP|+ *|;I|CP|b|]	F	3
+i	[-1]	i	[I|LE|-1|2]	T	-
+i	[5]	string	[E|BT|-1|;I|NE|5|abc;I|NE|-1|;I|GT|5|]	T	-
+i	[0]	i	[I|NE|1|-1;I|LT|5|2;E|NB|-1|3]	T	-
+string	[+aA]	string	[I|GE|++#|;E|CP||;I|EQ|b*#|;E|NP|ba|;I|NE|ab|]	F	3
+string	[*#b]	string	[I|LT||;E|CP|#a |;I|LT|a|;I|NE||;E|EQ|A#|]	T	3
+i	[0]	string	[E|LT|3|;E|BT|abc|;I|NE|5|1;E|NE|0|]	F	-
+i	[1]	i	[I|LE|3|3]	T	-
+string	[b*]	string	[I|CP|a|;X|CP| A|a;E|EQ|| #;I|GE|A |]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[-1]	i	[I|NE|1|5;E|GT|4|;E|E |1|0]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[0]	i	[I|LT|2|2]	T	-
+i	[3]	i	[E|GT|0|;I|EQ|3|;I|NB|4|4;E|EQ|2|2;I|NE|1|0]	F	-
+i	[2]	string	[E|BT|1|;E|EQ|-1|5;E|EQ|4|;I|E |-1|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[3]	string	[I|BT|0|-1]	F	-
+c3	[Ab ]	c3	[E|GE|a|aA]	T	-
+c3	[Ab#]	c3	[E|BT||;I|CP||]	F	3
+c3	[Aa]	c3	[E|eq|a|;I|NP|b|;I|EQ|aa|;E|NB|a|b*]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[0]	i	[I|BT|3|]	F	-
+c3	[*#a]	c3	[I|GE||bA+;E|LT||;E|GT|aA|;I|LT|*A|;I|LE|A| aA]	T	-
+i	[5]	i	[E|LT|-1|5;I|LE|2|;I|LT|5|5;E|GE|5|3;I|eq|3|2]	F	-
+string	[]	string	[I|LE|*A|;I|GT|aab|;I|EQ||**a]	T	-
+i	[0]	i	[I|BT|1|0;I|NE|0|5;E|NE|0|1;E|LT|0|2]	F	-
+i	[2]	i	[E|GT|-1|2;I|LT|1|4;I|BT|2|2;I|EQ|2|]	F	-
+c3	[+]	c3	[E|GT|#+|;I|NP||;E|EQ|**|**]	F	-
+string	[a]	string	[I|NE|a*|;I|CP|*aA|;I|NE|#++|+aa;E|LE|a A|]	F	-
+c3	[a#]	c3	[E|EQ|ba|;I|NP|+|;I|EQ|+ab|b;I|GE|b*|*A]	T	3
+i	[1]	i	[E|GE|2|;E|E |0|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+c3	[A]	c3	[I|BT||]	F	-
+i	[5]	i	[E|BT|2|5]	F	-
+i	[0]	i	[I|LT|-1|2;I|GE|1|]	F	-
+i	[3]	string	[I|EQ|3|1;I|GT|0|]	T	-
+string	[a]	string	[E|GE||;I|CP|a|;I|LE|a|]	F	-
+i	[5]	string	[I|LE|3|0]	F	-
+c3	[*]	c3	[I|NE|+| ]	T	-
+c3	[]	c3	[I|EQ|+ A|;I|LE|AA#|;I|GE| +|;I|BT| |;I|LT||]	T	-
+i	[-1]	string	[E|GE|abc|5]	DUMP:CONVT_NO_NUMBER	-
+i	[3]	i	[I|BT|3|1]	F	-
+string	[#]	string	[]	T	-
+i	[1]	i	[I|EQ|0|0;I|BT|2|5;E|LT|1|3;E|GT|1|0;E|BT|5|0]	F	-
+i	[2]	string	[I|LT|abc|;I|EQ|-1|1]	DUMP:CONVT_NO_NUMBER	-
+c3	[]	c3	[I|GE|A# |]	F	-
+i	[2]	i	[E|LT|0|;E|LE|2|-1;I|LT|4|]	F	-
+i	[5]	string	[E|EQ|3|abc;E|EQ|2|2;I|LE|1|;I|BT|4|-1]	F	-
+c3	[#**]	c3	[I|CP||*b;E|NE|A b|a+#;E|NE||]	F	3
+i	[3]	i	[E|EQ|-1|;I|NB|2|1;E|GT|2|3;I|LE|-1|3]	F	-
+i	[1]	string	[I|LE|1|;I|GT|2|4;I|GE|0|5;I|E |0|5;E|EQ|4|]	T	-
+i	[3]	i	[E|BT|-1|;I|GT|4|;E|NB|1|2]	F	-
+string	[*a]	string	[E|BT|#|++;I|GT||;E|NB|*|;E|LT|A|]	F	-
+i	[2]	string	[]	T	-
+i	[-1]	string	[I|EQ|2|5;E|GT|1|;E|BT|4|;I|NE|abc|-1]	DUMP:CONVT_NO_NUMBER	-
+i	[4]	string	[E|BT|-1|-1;E|LT|5|0;E|NB|2|abc]	F	-
+i	[3]	string	[I|NE|3|]	F	-
+i	[2]	i	[I|NE|5|2;I|NB|3|4]	T	-
+c3	[bb]	c3	[E|CP|#|aaa]	T	3
+i	[5]	i	[E|NE|3|2;I|eq|0|0;E|GT|2|;I|BT|-1|;E|NE|0|]	F	-
+i	[1]	string	[E|NB|abc|;I|EQ|abc|3;I|EQ|2|3]	DUMP:CONVT_NO_NUMBER	-
+i	[-1]	i	[I|EQ|5|4;E|LT|0|4]	F	-
+c3	[A*]	c3	[I|BT|A*|;E|CP|b|;I|BT|*|b;I|BT|+#a|]	T	3
+i	[1]	i	[E|EQ|2|3]	T	-
+string	[a]	string	[I|LE||;I|GE|#aA|;I|BT|+ b|]	T	-
+i	[4]	i	[I|GT|5|;I|NB|2|5;E|GT|5|]	F	-
+i	[-1]	i	[I|LE|1|-1;I|BT|2|1;I|EQ|1|1;I|BT|2|;I|LE|4|]	T	-
+i	[3]	i	[I|GE|0|;E|NE|1|-1;I|EQ|5|1;I|NE|0|5]	F	-
+c3	[b#A]	c3	[I|GE||;I|CP|#|;I|CP|+A*|+aa;E|BT| a|]	T	-
+i	[3]	i	[E|NB|3|4;E|GE|0|4;I|GT|4|2]	F	-
+c3	[]	c3	[I|NB| bA|A]	T	-
+string	[ a]	string	[]	T	-
+c3	[ ]	c3	[E|EQ|b|;I|NB|+*|;E|EQ|bab|;E|GT|Aaa|;E|GT|b*|]	T	-
+i	[0]	i	[E|LT|0|0;E|EQ|4|-1;I|BT|3|0;I|LE|2|]	T	-
+string	[a]	string	[I|NP|aaa|;E|GE|+#|;E|NB|#b|*]	F	1
+c3	[+*]	c3	[I|NE|++a|+*;E|CP|* A|aA;E|BT|+a*|;E|EQ||;I|NE|+|]	T	3
+i	[3]	i	[E|LE|1|-1;I|BT|2|;E|EQ|1|;I|EQ|3|4]	T	-
+string	[]	string	[i|NE||;I|EQ||*;I|LE|A|;E|EQ| # |+a]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[0]	i	[E|LE|4|]	F	-
+i	[-1]	i	[E|LE|0|1]	F	-
+i	[5]	i	[I|LE|4|-1;E|EQ|1|5;I|GE|1|0;I|LT|5|;I|EQ|2|1]	T	-
+string	[ ##]	string	[E|LT|a+|;I|CP|abb|;I|BT|abA|*aa;I|CP||]	F	-
+i	[-1]	i	[E|GT|4|4;I|NB|0|]	T	-
+string	[]	string	[I|CP|+|]	F	0
+c3	[]	c3	[I|NP|  *|+ ;I|NE|aa|a;E|CP|A|;I|GT||a+#]	T	3
+string	[]	string	[I|GE|#|aA ]	F	-
+c3	[]	c3	[I|NB| a|;I|EQ|A|AAA;I|NP|a |+a]	T	-
+string	[a]	string	[I|BT|aa|;E|LT||;I|NE||]	T	-
+i	[-1]	i	[E|BT|3|5]	T	-
+c3	[a #]	c3	[E|EQ||ab;i|EQ||;I|CP|aA+|+;E|BT|A|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+c3	[b]	c3	[i|BT|a *|;I|NE|##| ]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[3]	i	[I|EQ|2|;I|LE|5|3;E|EQ|3|4]	F	-
+i	[3]	string	[E|GE|abc|;E|NB|0|;I|GE|abc|2;I|EQ|abc|2;E|NE|abc|3]	DUMP:CONVT_NO_NUMBER	-
+c3	[b+]	c3	[I|GT|+|;I|NP|A# |*]	T	-
+i	[2]	i	[I|EQ|-1|2]	F	-
+string	[]	string	[E|NE|ab|;I|EQ|b |+aA;I|GT|aA|a;E|LE|aa|;I|CP|aa+|]	F	-
+i	[4]	i	[I|E |4|2;I|EQ|1|;E|LE|4|;E|LE|5|0;I|NB|2|1]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[-1]	string	[]	T	-
+c3	[*aa]	c3	[E|BT|+b#|#]	T	-
+string	[+a ]	string	[E|LE|b|a+ ;I|LE|#a |+ba;I|NB| ++|*;E|E |Aa+|]	F	-
+string	[a]	string	[I|EQ||Ab;I|CP|aa|;E|NE|a|#a;E|CP||;I|GE|+|]	T	1
+c3	[###]	c3	[E|CP|b**|;E|CP|#a|b;I|GE||;I|EQ||;I|CP|+#|+aa]	T	3
+c3	[#ab]	c3	[E|EQ|aA |]	T	-
+i	[-1]	string	[I|LT|4|0;I|NB|2|;E|BT|3|]	T	-
+i	[5]	i	[E|GT|0|0;E|EQ|-1|2;I|LT|2|1]	F	-
+i	[1]	i	[I|NB|3|0;E|LE|3|;E|GE|0|]	F	-
+i	[0]	string	[E|NE|-1|]	F	-
+string	[b]	string	[I|LE|b|#A]	T	-
+i	[0]	i	[E|GT|1|5;I|GT|1|4;E|GE|4|;E|GE|0|1;I|LE|4|]	F	-
+c3	[A]	c3	[I|LT|a|* ; |CP|aA#|a]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[4]	i	[I|NB|5|;I|BT|5|1;I|EQ|5|2;E|LE|1|-1]	T	-
+c3	[+a]	c3	[E|EQ|Aa|]	T	-
+string	[a *]	string	[I|GT||a;E|CP||#a;E|BT|#A|]	T	3
+i	[3]	i	[E|NE|1|4]	F	-
+i	[4]	i	[I|GE|2|]	T	-
+string	[*a ]	string	[E|LT|*+|Aa]	T	-
+i	[0]	string	[]	T	-
+i	[0]	i	[I|GE|5|4;I|NE|3|4;I|GE|4|2;E|GT|4|3]	T	-
+c3	[aa]	c3	[E|NB| |;I|BT|a|+a]	F	-
+i	[0]	i	[I|LT|2|0;I|LT|2|1;E|LE|4|]	F	-
+c3	[b]	c3	[I|BT||;I|LT|*|;I|NB| a+|]	T	-
+i	[1]	i	[I|LE|4|1;I|BT|5|;I|LE|4|3;I|EQ|3|;I|BT|3|]	T	-
+string	[]	string	[E|EQ|A|**;E|GT|*|]	T	-
+c3	[]	c3	[I|NP|aa*|;E|LE|ab|;I|EQ|#b*| b*;I|CP|A|]	F	3
+i	[1]	i	[E|EQ|2|;I|EQ|2|;I|BT|4|5;I|XX|3|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[-1]	i	[I|BT|4|]	F	-
+i	[0]	i	[E|NB|5|0;E|BT|0|5;I|EQ|-1|1;I|GE|-1|]	F	-
+string	[##]	string	[I|NE||;E|BT|a+b|;E|GE|+#a|aa]	T	-
+i	[5]	string	[E|GT|-1|-1;I|GE|2|;I|BT|5|0;E|NE|1|;I|BT|0|]	F	-
+string	[]	string	[I|BT|*|;I|BT|*|;I|BT|aA|a ]	F	-
+c3	[b]	c3	[I|NP|a+a|;I|EQ|+|;I|CP| +|;I|BT|b|]	T	3
+i	[-1]	i	[I|GE|2|1;I|LE|0|]	T	-
+i	[1]	i	[I|EQ|-1|]	F	-
+string	[# ]	string	[E|EQ||;I|eq|Aa+|++#;I|CP|**b|a #;E|NP|a+b|b;E|NP|+|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[a+]	string	[]	T	-
+i	[4]	string	[I|GT|5|1;E|BT|abc|]	DUMP:CONVT_NO_NUMBER	-
+c3	[ #]	c3	[E|BT|#|;E|CP||]	T	3
+i	[3]	i	[E|EQ|0|;I|NB|3|3;E|GE|1|;E|GE|0|;E|GT|2|-1]	F	-
+i	[5]	string	[E|EQ|1|abc]	T	-
+i	[5]	i	[E|NE|1|4]	F	-
+c3	[]	c3	[E|LE|#|;E|BT| #|]	F	-
+i	[2]	i	[I|GE|4|]	F	-
+c3	[#]	c3	[I|CP|a#b|*;I|NB|a#|;I|EQ||]	T	3
+c3	[A]	c3	[E|NB| ba|;I|CP||ab;I|CP|  A|+#*;E|LT||]	F	-
+c3	[ A+]	c3	[I|NP||;I|CP|#|]	T	3
+i	[1]	i	[E|EQ|1|;I|GT|3|5;I|GE|4|1;E|GT|0|]	F	-
+c3	[#ba]	c3	[E|NB|baA|;E|LE|a|]	F	-
+i	[1]	string	[E|GE|5|-1;I|BT|-1|]	F	-
+i	[5]	i	[I|NB|1|2]	T	-
+i	[2]	i	[I|EQ|0|-1;E|LE|1|4]	F	-
+string	[ b]	string	[I|LT|A |;I|LE| |;E|LE|| a]	T	-
+i	[0]	string	[E|BT|5|2]	T	-
+i	[5]	string	[E|NE|1|;E|BT|-1|]	F	-
+string	[+A+]	string	[E|GT|aAb|;I|XX|+b+|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[##]	string	[E|LE|b+|;I|BT|#*|;I|GT||b*b;I|CP|*a+| #*]	F	-
+i	[1]	i	[I|NE|5|;E|GT|-1|;E|GE|3|2]	F	-
+string	[a ]	string	[E|NE||ba+;I|NP||;I|NB| | ;I|NE||]	F	-
+string	[#+]	string	[I|CP||;E|GE|a|b ;E|EQ|aa|AA]	F	2
+string	[A#]	string	[E|LT|+|;I|NP||;E|GE|b|]	T	2
+i	[-1]	i	[I|EQ|1|3;E|EQ|-1|5;I|GE|4|5]	F	-
+string	[abA]	string	[I|NE||]	T	-
+c3	[]	c3	[I|CP|A#|++ ;i|NP|A#+|ab;I|EQ||;I|CP||A+*;E|CP|#|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+string	[a ]	string	[E|BT|#AA|*;E|LE|AA*|;E|NE|abb|]	F	-
+i	[-1]	i	[I|EQ|1|;I|EQ|0|0;I|GT|4|]	F	-
+i	[3]	string	[I|NE|4|;I|GE|1|3;E|GT|3|;E|BT|1|abc]	DUMP:CONVT_NO_NUMBER	-
+i	[3]	i	[I|LT|-1|1;E|LE|1|3;I|EQ|2|1]	F	-
+i	[4]	i	[I|GT|1|;I|EQ|1|0;E|BT|4|4;I|BT|0|3;I|GT|3|2]	F	-
+i	[5]	i	[I|BT|-1|]	F	-
+i	[5]	i	[I|GT|1|;E|EQ|5|0]	F	-
+i	[-1]	i	[I|NB|1|1;I|EQ|1|]	T	-
+i	[2]	string	[I|LE|3|3;I|GE|-1|5;I|EQ|-1|abc;I|EQ|2|;I|BT|3|abc]	T	-
+c3	[]	c3	[E|EQ|a|;I|GE|*|;E|BT|+a|b+b;I|LE||;I|GT|a##|a*A]	T	-
+c3	[**]	c3	[I|EQ|b #|+#;I|LT||#;I|NP|a|+b]	T	3
+c3	[+a+]	c3	[I|LT||;E|CP|a+a|a*;E|EQ|*+*|aAa;E|NB| +|;I|GT|  |ba]	F	3
+c3	[Aaa]	c3	[I|CP|* |;I|NP||*+a;I|CP|aA|;E|BT|ba+|;E|GE||aA]	F	0
+string	[b]	string	[I|NB||;E|GE|*+|]	F	-
+string	[*]	string	[E|E |a*+|;E|GT||b#+;i|NE|#aa|Aab;I|NE|a|a#]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[4]	string	[I|EQ|-1|;E|LT|0|;I|LT|2|3;I|GT|1|0]	T	-
+c3	[#Ab]	c3	[I|EQ|a#*|]	F	-
+string	[aa]	string	[I|CP|*|;E|NP|*A*|a+;E|CP|Aab|;E|EQ|A+| Ab;E|LT|A*|a ]	T	2
+c3	[ ]	c3	[I|CP|#|Ab;E|EQ|bab|;X|NE|A|;E|NE|+*A|AA ]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[5]	string	[E|NE|0|4;E|NE|5|1]	F	-
+i	[1]	i	[I|EQ|-1|5;E|EQ|1|5;E|EQ|3|-1;I|LT|1|;E|LE|4|2]	F	-
+i	[4]	i	[I|EQ|3|0;E|LE|3|-1]	F	-
+i	[1]	string	[E|NE|3|;E|GE|3|;I|BT|0|;I|NE|3|;E|BT|2|4]	F	-
+string	[A+b]	string	[E|NB|b**|ba]	F	-
+c3	[AAa]	c3	[E|CP|a|Aba]	T	3
+i	[3]	string	[I|EQ|1|3]	F	-
+c3	[]	c3	[E|LE|+ba|]	F	-
+string	[a+A]	string	[]	T	-
+i	[2]	i	[E|EQ|-1|0;I|GT|-1|1;E|NB|-1|;E|GE|5|;I|LT|5|]	F	-
+i	[2]	i	[E|LE|5|5;I|NB|1|5;E|GE|1|2;I|BT|2|;E|GE|4|]	F	-
+i	[3]	i	[E|GE|0|2]	F	-
+i	[5]	i	[E|BT|5|;E|EQ|3|;I|NE|-1|]	T	-
+string	[#ab]	string	[I|LT|#ab|;E|BT|+*|A]	F	-
+c3	[ aA]	c3	[E|NP|+|;E|GT|#a*|a# ;E|BT|##A|;I|NE|#a| A]	F	3
+string	[  ]	string	[E|NE| |# ;E|NP|ba*|;I|CP||;I|EQ||;E|GT|A|]	F	-
+i	[4]	string	[I|BT|1|;E|BT|4|3]	F	-
+i	[0]	i	[I|LE|0|0;I|BT|2|1]	T	-
+i	[2]	i	[I|GE|4|2; |GE|2|;E|NE|1|1;I|BT|5|;E|LE|2|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+c3	[b]	c3	[I|NB|+b|]	T	-
+c3	[+]	c3	[E|LT||;I|GT||;I|GE|A#A|;I|CP| #|*aA]	T	-
+string	[]	string	[I|NE|*|;I|NP||;I|GT|*|]	T	-
+c3	[ bb]	c3	[I|BT||#b;I|CP||;I|EQ| ba|b+;I|EQ|AA|;E|LE|ba |]	F	-
+c3	[Ab*]	c3	[I|EQ||*;E|BT|ab|;I|GT|##|ba;I|EQ||]	T	-
+string	[]	string	[E|CP|aa|;I|GT|aA|+ b;E|LT||  +]	F	0
+c3	[a+a]	c3	[I|BT|b*|;I|GE|A+|;I|CP||;I|EQ|b#|]	T	-
+i	[1]	string	[E|LT|5|1;I|BT|5|1;I|NB|2|abc]	F	-
+c3	[+A]	c3	[I|BT||;I|EQ|A|  #;E|NP|ba|;E|NP| |;E|LT|a+|]	F	3
+string	[]	string	[E|GT|A*a|]	T	-
+string	[]	string	[E|CP|A|]	T	0
+i	[4]	string	[E|GT|3|-1;I|BT|0|;E|LE|5|;I|BT|4|4;E|LT|1|3]	F	-
+i	[2]	string	[I|EQ|2|4;I|EQ|3|;I|BT|2|;I|GE|-1|;E|LT|1|]	T	-
+string	[A ]	string	[I|CP|##|;E|EQ|+#a|;E|BT|#|;I|LE|#a |]	F	2
+i	[5]	i	[I|EQ|-1|5;I|GT|1|;I|LT|3|]	T	-
+i	[0]	i	[E|NE|4|0;I|EQ|4|;E|GE|4|5;E|EQ|4|1;I|NB|4|4]	F	-
+i	[-1]	i	[I|LT|4|;E|NB|3|]	F	-
+c3	[ba#]	c3	[X|BT| |#a;I|LE|#A |]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+string	[aAb]	string	[I|GE||bb;I|GT||aa;I|BT|b|A]	T	-
+i	[3]	i	[I|GE|3|]	T	-
+i	[2]	i	[I|LT|2|5;E|BT|3|;I|BT|2|;I|NE|4|5]	T	-
+i	[-1]	i	[I|LT|5|;I|LE|5|;I|BT|4|2;E|XX|4|3;I|BT|4|5]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[0]	i	[E|LE|0|-1;I|BT|3|2;E|GE|-1|2;I|LE|3|1]	F	-
+c3	[a+*]	c3	[I|EQ|A#a|;I|GT| AA|b]	T	-
+c3	[]	c3	[E|EQ||a; |LT|aA+|#]	F	-
+c3	[]	c3	[I|BT|*+|aab;I|EQ|b|;E|CP||;I|CP|b|;E|BT|bba|aa ]	F	0
+i	[2]	i	[I|NE|1|-1;E|NE|0|;E|NE|2|0;I|BT|2|2;I|EQ|1|2]	F	-
+string	[ b]	string	[E|GT|*|*a+;I|CP||;E|LE||;E|NE|ab| A]	F	2
+c3	[#a]	c3	[I|NE|aaa|;I|GE|a+a|]	T	-
+string	[aab]	string	[I|BT|AA|;I|CP|++|ba;I|NB|#|]	T	3
+string	[*a]	string	[]	T	-
+i	[3]	i	[I|NE|4|5]	T	-
+c3	[]	c3	[I|GT|+|a;I|GE||#aA]	T	-
+i	[1]	i	[I|NB|0|4]	F	-
+c3	[A#]	c3	[I|LT|+Ab|;E|BT|#ba|A;i|BT| #|  +;I|BT||*bb;X|LT|b*a|b]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+c3	[a ]	c3	[I|EQ|+|;E|EQ||]	F	-
+i	[2]	i	[I|BT|4|-1]	F	-
+i	[1]	i	[I|NB|-1|-1;I|EQ|2|5]	T	-
+i	[1]	i	[I|BT|3|3;I|GE|0|0]	T	-
+i	[2]	string	[I|NB|abc|2]	DUMP:CONVT_NO_NUMBER	-
+i	[0]	i	[E|GT|3|;I|GE|0|;E|NE|3|]	F	-
+i	[0]	i	[I|LT|0|2;I|GT|5|1;I|EQ|-1|3;E|eq|2|0;I|LE|0|5]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+c3	[]	c3	[E|NE||   ]	T	-
+i	[-1]	i	[E|GT|3|4]	T	-
+i	[3]	i	[I|EQ|5|;I|XX|4|3;I|GT|4|;E|BT|4|0]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[1]	i	[E|BT|5|0;I|NE|-1|-1;E|EQ|5|0]	T	-
+i	[-1]	i	[I|BT|-1|;E|GE|-1|]	F	-
+c3	[b]	c3	[I|LE|A*|AA+;E|EQ|a+|]	F	-
+i	[-1]	i	[E|NE|2|4;I|XX|4|0]	F	-
+i	[4]	string	[I|BT|3|2]	F	-
+i	[2]	i	[I|NB|1|]	T	-
+i	[4]	i	[E|BT|-1|;E|GE|-1|;E|BT|5|3;I|EQ|5|5]	F	-
+c3	[A+#]	c3	[E|LT|a A|;E|GE||#;I|BT| |a;I|CP||;I|BT||]	F	-
+c3	[]	c3	[I|GT|+  |a*+;I|NE||]	F	-
+i	[3]	i	[I|NE|3|;E|GT|5|;E|NE|2|5;I|GE|2|]	F	-
+string	[##a]	string	[I|GT|aa|;I|LE||;I|LE|#|;E|BT|a|;E|BT||]	F	-
+i	[-1]	i	[E|BT|5|;E|GE|2|-1;I|LT|0|0;E|EQ|2|1]	T	-
+string	[a]	string	[E|E |b|;E|CP|+b|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[ ]	string	[I|LE|b++|* *;I|LT|++*|;I|CP||]	T	-
+i	[4]	i	[E|LE|3|;E|EQ|1|;I|LE|-1|]	F	-
+i	[2]	string	[E|EQ|abc|;I|NB|4|]	DUMP:CONVT_NO_NUMBER	-
+i	[0]	string	[E|EQ|4|abc;I|BT|abc|;E|NB|3|5]	DUMP:CONVT_NO_NUMBER	-
+i	[2]	string	[I|BT|3|;I|EQ|0|5]	F	-
+c3	[**]	c3	[I|BT||]	F	-
+i	[2]	i	[E|LE|1|-1;I|LE|4|]	T	-
+c3	[]	c3	[I|LT||;I|NP||;E|LE||;I|CP|#a|]	F	0
+string	[#*a]	string	[I|NE|a|]	T	-
+i	[4]	string	[I|LT|abc|4]	DUMP:CONVT_NO_NUMBER	-
+i	[4]	i	[I|GE|1|]	T	-
+i	[-1]	i	[E|BT|-1|2;I|BT|3|4]	F	-
+i	[-1]	string	[E|NE|4|]	F	-
+i	[4]	string	[I|BT|1|;E|LE|abc|2;E|BT|1|]	DUMP:CONVT_NO_NUMBER	-
+c3	[ ba]	c3	[E|CP||A*]	T	3
+i	[4]	i	[I|EQ|2|;I|NE|3|2;E|EQ|-1|0]	T	-
+string	[a]	string	[I|NP|A|;I|CP|*a+| ]	F	1
+i	[1]	i	[I|BT|3|5]	F	-
+i	[1]	string	[I|NE|1|;I|BT|2|;E|GT|3|5;E|GE|-1|3;I|EQ|4|3]	F	-
+c3	[+a#]	c3	[I|CP||Aab;E|BT|a|#;E|NB||aA;E|NB|b #|bba;E|eq|b|A+]	F	3
+string	[#a]	string	[E|EQ||a+*;I|BT| ba|;E|LT| A#|;E|BT| a|;E|CP|a*a|]	F	2
+i	[5]	i	[I|NB|5|;E|LT|2|3;I|BT|5|5]	T	-
+i	[1]	i	[I|NE|0|;I|LT|1|-1;I|NE|3|0]	T	-
+string	[b#a]	string	[I|BT||;E|NP||;I|LT|+|]	F	3
+c3	[#a]	c3	[I|BT|*A| a*]	F	-
+i	[1]	i	[E|LT|-1|5;I|EQ|4|-1]	F	-
+i	[-1]	i	[I|GT|5|;E|NB|0|0;I|NE|2|]	F	-
+i	[4]	i	[E|BT|2|3;E|LE|2|4;E|LT|2|0;I|GT|3|5;I|XX|3|2]	T	-
+c3	[ ]	c3	[E|GT||#a ;I|CP|bA*|;E|GT|*#|a ;E|EQ|*|**a;I|NE||]	F	3
+string	[++]	string	[E|NB| #|;I|LE|*aa|;I|CP|#a|*+ ;I|BT|b*|;I|CP|++|a ]	F	-
+string	[b]	string	[E|BT|a+a|;I|EQ|b |]	F	-
+i	[0]	string	[E|EQ|4|1;E|eq|0|;E|BT|4|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[]	string	[I|CP| |;I|BT| |+a]	F	0
+i	[-1]	i	[I|GE|2|;E|EQ|4|;I|BT|3|0;E|BT|3|;I|GE|3|2]	F	-
+string	[]	string	[I|LE|+|;E|LT| |]	F	-
+string	[*a]	string	[E|NB|a# |;E|EQ|*a|Ab]	F	-
+string	[ #b]	string	[I|CP||]	F	3
+i	[1]	i	[I|NB|4|-1;E|NE|1|]	T	-
+string	[]	string	[I|BT|A|]	F	-
+c3	[b]	c3	[E|GT||ba+;E|LT||;I|BT| A|##]	F	-
+c3	[ *]	c3	[I|GT| a|]	F	-
+string	[a+]	string	[I|LT|a |A+*]	F	-
+string	[a]	string	[E|GE|ba|b#*;I|LE|a|;I|LE|*|]	T	-
+string	[aa]	string	[I|GT|*|+;I|BT|b |]	T	-
+i	[5]	i	[E|NB|1|0;I|LE|2|;I|BT|3|1;I|EQ|0|]	F	-
+string	[#]	string	[E|BT|#a |a#;I|LE|#b |# ]	T	-
+c3	[*ba]	c3	[I|NP|+a|;I|EQ|a| *a;E|BT|+a|]	T	3
+string	[#bA]	string	[I|CP|ba| a ;I|XX|aa|+b;I|LT|+a|# b]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[2]	i	[I|BT|4|-1;E|LE|3|0;E|LT|1|-1;I|BT|-1|;I|EQ|0|0]	F	-
+c3	[b**]	c3	[E|EQ||a+a;E|BT|*|;I|BT|a|;I|NE|a|;I|BT| | a*]	T	-
+i	[-1]	i	[X|GT|-1|3;I|GE|-1|2;E|NB|5|;E|NB|5|3;I|BT|4|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+string	[*]	string	[I|NB||+A#;I|LT|b|AaA;I|CP|+*A|;I|CP||;I|BT||]	T	-
+i	[2]	string	[E|NB|5|;I|LE|4|;E|NE|1|5]	F	-
+string	[a*+]	string	[E|NE||;E|EQ|+A|;E|LT||;E|CP|* A|a#]	F	-
+i	[4]	i	[E|NB|3|4;E|GT|5|3]	T	-
+i	[5]	string	[I|LT|5|;I|NB|0|3;I|BT|3|2;E|EQ|2|abc]	T	-
+i	[5]	i	[E|BT|2|3;I|GT|4|;E|BT|-1|;E|EQ|0|1]	T	-
+c3	[]	c3	[E|LT|a*|]	F	-
+c3	[b]	c3	[I|BT|  a|#;I|EQ|ba|]	F	-
+i	[5]	i	[I|NB|1|-1;I|GT|-1|4;E|BT|3|4;E|LT|3|;X|GE|2|4]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[4]	i	[ |GE|2|4]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+c3	[*A+]	c3	[I|EQ||;E|GE|+|aa;I|GT|+aA|;E|LE|a+|]	F	-
+c3	[]	c3	[I|CP||b;I|LT|ab*|*;E|EQ||]	F	3
+string	[# +]	string	[I|NE|baa| a+;I|EQ|aa|a*A;E|GE|+a|]	T	-
+string	[+ ]	string	[E|GE|| +;E|NP|aa|;I|CP||#;I|LT|+|;E|CP|aa|]	F	-
+i	[-1]	string	[I|NB|1|;E|NE|-1|abc;I|NB|3|5;I|GE|2|abc]	T	-
+string	[a* ]	string	[I|NB| |;I|NB| |;E|eq| A|;I|EQ|aA|;I|BT|ab#|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[b]	string	[I|LT|##b|*ba;E|BT|a#+|;I|GE| A|]	T	-
+i	[2]	string	[I|EQ|3|]	F	-
+i	[-1]	string	[I|BT|1|3;I|EQ|0|;E|BT|4|;E|E |3|3]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+c3	[]	c3	[E|CP||a]	T	3
+c3	[]	c3	[E|NB| A|A;E|CP| |;I|LE| |ab ;I|LE|a|a;I|LT|**b|]	F	-
+string	[b++]	string	[E|LE|A|;E|EQ| A|A+;I|EQ|b|+ #;I|BT||b+b;E|GE||]	F	-
+c3	[  *]	c3	[I|BT||## ;I|CP|ab|;I|EQ|A +|#;E|NB||# b]	T	-
+i	[2]	i	[E|EQ|1|4;I|EQ|1|;E|NE|0|1;E|BT|4|]	F	-
+c3	[#a*]	c3	[I|GE|+|a ]	F	-
+c3	[Aa]	c3	[I|LE|a##|;I|GT|#|+b;I|NB||;E|NE||bb]	F	-
+i	[0]	i	[E|NB|5|;I|BT|1|;E|LE|-1|;E|BT|3|0;E|NE|-1|4]	F	-
+i	[5]	string	[E|EQ|-1|]	T	-
+i	[3]	string	[]	T	-
+c3	[]	c3	[I|BT| *+| a#;E|CP|b |;I|NB|a#a|]	T	3
+string	[+A]	string	[I|BT|b|+ ]	F	-
+i	[-1]	string	[I|EQ|abc|2;I|GE|5|2]	DUMP:CONVT_NO_NUMBER	-
+c3	[a]	c3	[E|CP|a| +;I|LT|*|a]	F	3
+i	[1]	i	[I|BT|5|;I|GE|-1|5;i|LE|4|-1;I|LE|1|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[4]	i	[E|BT|-1|5;E|LE|4|;I|NE|5|;I|BT|2|]	F	-
+c3	[+]	c3	[I|CP|b|;I|NP||b*]	T	3
+i	[3]	string	[I|NE|0|;I|GT|5|;I|LT|5|-1]	T	-
+i	[4]	i	[E|eq|1|-1;E|NB|1|0;I|BT|5|2]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[-1]	i	[E|NB|1|]	F	-
+i	[3]	string	[I|GE|5|1;E|BT|1|]	F	-
+c3	[ab]	c3	[E|GE| ba|]	F	-
+i	[3]	string	[I|E |1|;I|EQ|5|;I|eq|-1|;I|EQ|1|;E|NE|abc|2]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[]	string	[E|CP|*+|]	F	0
+i	[4]	string	[E|GT|0|;E|LT|abc|;I|LT|3|2;E|NE|3|2]	F	-
+i	[1]	i	[X|BT|4|;I|BT|5|5;E|BT|5|3;E|BT|4|2]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+c3	[A]	c3	[E|NE|a|;I|CP|A|#a;E|GE||#*a;I|NP|b+b|a;I|CP|+#b|]	F	-
+i	[3]	i	[I|LT|4|0;I|LT|-1|2;E|BT|-1|5]	F	-
+i	[3]	i	[E|GE|-1|5;I|EQ|2|;I|BT|3|;E|EQ|-1|]	F	-
+c3	[ ]	c3	[I|GE|+b+|;I|NP|*#A|]	T	3
+i	[0]	i	[E|EQ|4|;E|LE|1|3]	F	-
+string	[*#]	string	[E|GE||;E|GT||;E|GT|#|;I|BT||aaa;E|eq|#+|]	F	-
+i	[1]	i	[E|BT|1|2;I|LE|1|-1;I|NE|5|]	F	-
+c3	[#bA]	c3	[E|GT|bA|;E|LT||a##;I|CP|a|Aa+]	F	3
+i	[5]	i	[I|LT|2|;I|BT|1|]	F	-
+string	[*]	string	[I|BT|ab|;E|CP|*|;I|CP|a*|#a;I|CP|#a|+a;I|GE|* b|]	F	0
+string	[a #]	string	[I|BT|Ab|;I|E |#A|;E|NE|**a|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[1]	string	[E|EQ|2|3;E|GE|5|;I|BT|4|5]	F	-
+i	[2]	string	[I|NB|1|3;I|NE|4|0;I|GE|2|;I|LT|5|]	T	-
+string	[*]	string	[I|BT| *b|aa;I|GT|b +|*aa;E|NB|aa#|;I|GT|a|;I|BT| |]	F	-
+c3	[ AA]	c3	[I|CP|A**|aa+;E|CP|aa|;X|NP|#|;E|CP| |+#b]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[3]	string	[E|LE|2|3;I|LT|4|0;I|EQ|-1|]	T	-
+i	[2]	string	[E|EQ|2|;E|XX|0|abc;I|LE|3|;E|EQ|abc|-1;I|EQ|5|]	F	-
+string	[*#]	string	[I|BT|+a|aa;I|CP|bb|***;E|BT|#aa|;E|GT|+ |;I|LT|b|#]	T	2
+i	[3]	string	[ |GE|2|;I|LE|3|abc;I|EQ|0|abc;E|EQ|5|-1;E|EQ|4|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[0]	i	[I|GT|3|4;E|LE|4|1;E|GT|2|;I|LE|4|3;I|NB|0|]	F	-
+c3	[#]	c3	[I|GE||;I|NP||]	T	-
+string	[]	string	[E|CP||; |NE|ba|;E|CP|b*|]	F	0
+c3	[* ]	c3	[I|EQ|+b+|;I|NP|bAa|b*]	T	3
+i	[3]	string	[E|NE|3|;E|LT|3|;I|NB|0|-1;I|E |0|abc]	T	-
+string	[#]	string	[E|NE|##|  ;I|BT|ab|+#;E|LT|aa|+]	F	-
+string	[b  ]	string	[]	T	-
+c3	[a]	c3	[I|NB||AA;E|LE|a #|baA]	F	-
+c3	[A]	c3	[]	T	-
+string	[a+a]	string	[I|LT|#|;X|LT|+| ;E|LT|+a|;E|EQ| a|#]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[3]	string	[E|NE|abc|1;I|BT|-1|0;I|GT|abc|-1;I|NB|abc|-1]	DUMP:CONVT_NO_NUMBER	-
+i	[2]	i	[I|EQ|-1|;I|LE|3|1]	T	-
+c3	[]	c3	[I|XX|a+#|;E|GT||;E|EQ|*|A;E|EQ|*#A|+*a;I|NB|aaA|]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+string	[*b]	string	[I|NE||;I|GE|A+*|##]	T	-
+i	[5]	string	[I|GE|1|5]	T	-
+i	[4]	string	[E|EQ|abc|;E|GT|0|;E|GT|0|; |GT|4|]	DUMP:CONVT_NO_NUMBER	-
+c3	[#a]	c3	[E|CP||;E|EQ|A|;E|BT|a|]	T	3
+string	[]	string	[E|XX||]	DUMP:CHECK_SELOPT_ILLEGAL_OPTION	-
+i	[3]	string	[I|LE|5|;E|LT|4|3;E|LT|3|;I|BT|4|4;E|GT|3|]	F	-
+c3	[a]	c3	[I|CP|b|#A;I|CP|*#|]	T	1
+i	[4]	i	[X|NE|4|5;I|NB|1|2;E|EQ|-1|1;E|BT|0|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[0]	i	[E|NE|3|;E|BT|1|;I|EQ|4|;E|EQ|3|5]	F	-
+string	[]	string	[I|GT|a|;E|NB||+ a;I|GE|+ #|;I|BT|Aa+|;I|NB|a|Aa*]	T	-
+c3	[]	c3	[I|GE|a|a*b;I|BT|A|;I|NB|ab|;I|NE| |+AA;E|NB|bA*|b]	F	-
+c3	[A]	c3	[I|NB||;I|LE|aa |A*a]	T	-
+i	[3]	i	[ |NE|3|3;I|BT|0|;I|NE|-1|;E|LE|2|;I|BT|3|4]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[0]	i	[I|BT|5|4;I|EQ|5|;E|EQ|3|;I|LT|5|0;I|BT|1|0]	T	-
+i	[5]	i	[E|NE|1|2;E|EQ|1|;I|NB|-1|3]	F	-
+c3	[aaa]	c3	[E|CP|a+|b;E|LE|A#|;E|EQ|aa|]	T	3
+i	[-1]	string	[I|GT|1|3;E|GT|-1|]	F	-
+i	[4]	i	[I|LE|1|;I|LE|4|]	T	-
+string	[aA#]	string	[I|LT|*|a#;I|CP|b |a;E|CP|a  | b ]	F	3
+i	[1]	i	[I|BT|4|5;E|EQ|1|3]	F	-
+i	[-1]	string	[E|BT|2|]	T	-
+i	[2]	string	[I|NB|1|;E|LT|2|-1;I|GT|0|5;E|EQ|5|5;E|LE|0|]	T	-
+c3	[]	c3	[E|LE|a#a|;I|BT||;I|GT|A|;E|NB|b|+a]	F	-
+i	[1]	string	[I|GT|5|abc;I|GE|abc|1;I|BT|2|-1]	DUMP:CONVT_NO_NUMBER	-
+string	[A*]	string	[E|BT|a |  ;I|GE|aa#|a#;I|CP|+|+ ;E|EQ|**+|]	F	2
+i	[0]	string	[I|NB|2|;E|LT|4|5]	F	-
+i	[4]	i	[I|LT|1|;E|EQ|5|-1;I|NE|0|;I|NE|-1|;E|BT|3|1]	T	-
+i	[0]	string	[I|EQ|3|;I|BT|5|5;I|GE|5|;E|GE|0|;I|EQ|2|abc]	F	-
+string	[a+]	string	[I|BT|b|a]	F	-
+i	[2]	i	[I|BT|-1|5;E|EQ|1|4;E|EQ|4|;E|GT|2|2]	T	-
+i	[1]	i	[E|GT|-1|;I|BT|0|;I|BT|-1|;E|LE|3|-1;E|NE|4|]	F	-
+i	[4]	i	[E|LE|-1|;I|EQ|4|1;E|NB|-1|2]	F	-
+string	[]	string	[E|LE||;E|EQ||;I|EQ||;E|NP|b|a]	F	-
+i	[1]	string	[X|LE|-1|4;E|NB|5|;E|EQ|-1|1;E|EQ|-1|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[2]	i	[I|LT|0|4;I|BT|5|;E|BT|2|]	F	-
+c3	[Ab]	c3	[I|EQ|*|*A ;I|CP|*A|;E|GE|| *]	F	3
+i	[5]	i	[I|LT|2|2;I|BT|5|-1;E|GE|1|2;I|LT|1|4;E|LE|2|-1]	F	-
+c3	[A a]	c3	[I|CP|##*|*;E|NE||;I|BT||#b;E|CP|+|#aA]	F	3
+i	[5]	string	[E|LE|5|;E|LT|5|3]	F	-
+i	[4]	i	[E|NE|4|-1;E|GT|2|]	F	-
+string	[##]	string	[I|GE||;E|BT|*  |;I|CP||*]	T	-
+string	[ aa]	string	[]	T	-
+string	[  ]	string	[E|NB|b|++b;I|BT||aa;I|CP||]	F	-
+i	[4]	i	[I|GE|4|1;I|EQ|4|;I|BT|-1|]	T	-
+c3	[a]	c3	[I|GT|aA|Aa ;I|CP||a]	F	3
+i	[2]	i	[I|LE|1|0;I|BT|5|1;E|GT|2|4;I|BT|4|4]	F	-
+i	[0]	i	[I|EQ|3|1;I|EQ|0|5;I|GT|3|]	T	-
+c3	[*b]	c3	[I|LE| A|;I|NE|a|aa;I|EQ|a|;E|NB||;I|NE||]	F	-
+c3	[a]	c3	[I|LE|a |b;I|GE|| aA;E|NP||+;I|NE||]	F	3
+string	[+a]	string	[E|NE| |]	F	-
+c3	[aAa]	c3	[I|CP|# b|;E|CP|b|;E|GT|A*|;I|BT|b|a*]	F	3
+c3	[]	c3	[E|CP||;I|LE|b|;I|LT|*| #]	F	0
+string	[a*+]	string	[i|NP||aa*;I|CP|A+|+aa;I|BT|bb|;I|BT|+A|;I|LE|Aa|]	DUMP:CHECK_SELOPT_ILLEGAL_SIGN	-
+i	[3]	i	[I|BT|3|;I|GE|3|3]	T	-
+i	[0]	i	[I|NB|3|;I|NE|-1|2;I|LT|5|]	T	-
+c3	[*ab]	c3	[I|BT|a|a*a;I|EQ|*ab|aA;I|LT|aa|]	T	-
+i	[4]	i	[E|GT|4|5;I|EQ|1|;E|NB|1|]	F	-
+string	[]	string	[I|GE|#|aa;I|EQ|*A|;I|BT|b b|A+A]	F	-
+i	[2]	i	[I|NE|0|1;I|GT|3|-1;E|EQ|1|1;I|BT|0|2;I|GT|0|2]	T	-
+string	[]	string	[I|NP||;E|LE|A|]	F	0
+string	[Aba]	string	[I|NP|bA*|;I|GE|A+|;E|EQ|bbb|;E|CP|AA|;I|CP||]	T	3
+i	[5]	i	[I|LT|2|3;I|NB|3|3]	T	-

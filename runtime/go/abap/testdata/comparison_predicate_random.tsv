@@ -1,0 +1,3849 @@
+# Random cells of the string, byte and bit operators, held out: the rules were worked out before these cells were run.
+# Columns: operator, type of a, value of a, type of b, value of b, expected result of "a <operator> b" (T or F, or
+# DUMP:<runtime error> for a runtime error that cannot be caught), expected sy-fdpos afterwards (- if the expression
+# does not set it). IS INITIAL has a single operand.
+# Operands are set as in comparison.tsv: a c, n, d or t holds exactly the characters given, padded with blanks; any
+# other type gets the given text converted to it (x and xstring as hex digits). The operands are data objects whose
+# type is known at run time only (generic parameters). With static types the cells marked DUMP:... are syntax errors.
+# No cell has a CP or NP pattern ending in a # that escapes nothing.
+CO	c3	[#]	c2	[#0]	F	1
+CO	string	[*a#BBK1]	t	[a#K1]	F	0
+CP	c6	[aς]	string	[*]	T	0
+CS	n2	[B]	c4	[ ]	T	0
+CP	c3	[a]	string	[**]	T	0
+CN	c4	[éa ]	c4	[éa]	F	4
+CP	c2	[]	t	[*]	T	0
+CP	c3	[ıςi]	t	[*]	T	0
+CP	c4	[]	c10	[*1]	F	4
+CP	c2	[ ]	c10	[é]	F	2
+CP	n4	[É]	t	[**]	T	0
+NA	t	[bı1ß]	d	[ı]	F	1
+CA	c2	[B]	c3	[ÉéB]	T	0
+CP	string	[σc]	t	[*]	T	0
+NA	c1	[]	c1	[I]	T	1
+CP	d	[σ AaİI]	string	[😀 ]	F	8
+CP	n4	[a1 ]	d	[*]	T	0
+CP	c4	[é*ı]	d	[*#***]	T	1
+CP	string	[aaς aß]	string	[1]	F	6
+CS	c3	[a+]	c10	[a+ c]	F	3
+NP	n4	[é]	string	[*]	F	0
+CS	c1	[]	string	[ Σ]	F	1
+NP	c3	[iK0]	c4	[#K]	T	3
+NA	string	[ 10σσÉ]	c3	[😀]	F	0
+NP	string	[İ 😀a1a]	c1	[A]	T	7
+CN	n2	[cσ]	string	[cσ]	F	2
+NP	string	[]	c6	[*]	F	0
+NP	string	[Éb0 B]	c4	[*+]	F	4
+NP	c2	[😀]	d	[😀*]	F	0
+CA	string	[ 😀a#B]	n2	[ΣB]	T	5
+CP	string	[ςb]	n4	[**#]	F	2
+CP	d	[1KıΣ😀İ1]	c3	[*]	T	0
+CS	c2	[ı]	c6	[]	T	0
+NS	string	[σ*]	n4	[é1σ]	T	2
+CO	string	[ba]	c2	[ba]	T	2
+CN	n2	[#]	d	[#i]	F	2
+CP	n4	[IAσ1]	c4	[*+*]	T	0
+CN	c6	[]	c4	[]	F	6
+NS	c1	[]	c1	[ ]	F	0
+CP	c6	[b😀KÉK]	c1	[*]	T	0
+CO	n4	[é#]	c4	[é# ]	T	4
+CO	c4	[+ς]	string	[+ς]	F	2
+CA	c3	[]	string	[0ΣaÉ]	F	3
+CN	d	[aIΣBΣ]	c3	[aIΣ]	T	3
+CA	n2	[a]	t	[ ]	T	1
+CN	string	[aaI]	c4	[1😀ς]	T	0
+CP	c3	[ÉB]	c3	[*+]	T	1
+NP	string	[ßB]	n2	[]	T	2
+NS	d	[]	string	[      ]	F	0
+NP	string	[İ]	t	[*]	F	0
+CP	string	[*aςςσIσa]	c3	[#*a]	F	8
+CP	c10	[]	n2	[**]	T	0
+CO	c6	[1]	c1	[1]	F	1
+NA	c1	[1]	string	[1]	F	0
+CP	n2	[ςß]	string	[*]	T	0
+CS	string	[İÉI+Σa#é]	c1	[Σ]	T	4
+CS	c1	[ ]	t	[]	T	0
+CP	n2	[]	n4	[]	T	0
+CS	d	[*😀#0cÉA]	c3	[+Éb]	F	8
+CS	c10	[baBa]	d	[ ]	T	0
+CN	string	[bß😀acK]	c2	[bß]	T	2
+NA	c6	[😀aı]	c2	[1a]	F	2
+CO	c3	[AσΣ]	n2	[bb]	F	0
+CP	c2	[σ+]	c4	[Σ#+*]	T	0
+CA	n2	[]	c4	[K a]	T	0
+CP	c4	[]	string	[# *]	T	0
+CO	c2	[BA]	c2	[BA]	T	2
+CP	c2	[0ß]	c6	[***]	T	0
+CS	n4	[]	string	[]	T	0
+CN	c1	[]	string	[]	T	0
+CO	c6	[iΣÉ0]	c2	[iΣ]	F	2
+NA	c1	[]	string	[AσA]	T	1
+CP	c10	[ıbİσ😀]	c4	[*]	T	0
+CP	d	[ς*#aσ]	c4	[*σ*]	T	0
+NA	c4	[]	c6	[ı]	F	0
+CS	c3	[+*]	n4	[Éσa ]	F	3
+CP	c1	[ı]	c1	[*]	T	0
+CO	n4	[iaa]	c3	[baß]	F	0
+CN	string	[ßa #ςσ+a]	c10	[ßa #ςσ]	T	6
+NA	c3	[ Kς]	c3	[b a]	F	0
+NA	c6	[😀a0Σb]	c2	[c]	T	6
+CS	string	[İIab]	n4	[ ]	T	0
+NS	c6	[ÉaÉaς]	c2	[éA]	F	0
+CO	string	[]	t	[]	T	0
+CP	c1	[1]	t	[*]	T	0
+CP	string	[#a]	t	[*]	T	0
+CP	string	[aıAß😀]	string	[İ]	F	6
+CN	t	[ ]	c3	[ A]	F	6
+NP	c2	[Aé]	string	[]	T	2
+CO	c3	[]	n4	[]	T	3
+CS	n4	[]	c2	[]	T	0
+CO	c4	[Σ]	string	[Σİ]	F	1
+CP	n4	[ b]	c1	[*]	T	0
+CN	n2	[a]	string	[a]	T	1
+CP	string	[iÉbc#]	c3	[***]	T	0
+CP	string	[ é+  ς]	string	[**]	T	0
+CN	n2	[K]	c3	[K K]	F	2
+CN	c3	[B ]	c2	[B ]	F	3
+NA	t	[1İAÉa0]	c2	[]	T	6
+CN	c6	[bıİ]	n2	[bı]	T	2
+CA	t	[++ K]	t	[K]	T	2
+CS	c3	[Éİé]	c1	[i]	F	3
+CS	t	[#]	c2	[# ]	T	0
+CP	c6	[σabİ]	d	[**# +]	T	4
+CS	string	[0σİ]	string	[0σ]	T	0
+CP	c6	[Éİ*aς]	c6	[éi]	F	6
+NS	c2	[ßa]	d	[]	F	0
+CS	string	[#ς1A]	string	[ ]	F	4
+CP	n2	[]	string	[#  ]	T	0
+NA	d	[ßI1iA]	c1	[ς]	T	8
+CA	n4	[]	c2	[]	T	0
+CO	n4	[ ς]	string	[ ς]	T	4
+CS	c3	[b0]	c3	[1]	F	3
+NP	c6	[]	d	[* **]	F	0
+CP	c6	[ ]	c1	[*]	T	0
+CP	n4	[]	t	[*]	T	0
+CS	string	[]	string	[]	T	0
+CS	c6	[bÉ]	string	[É ]	T	1
+CS	string	[]	c10	[B]	F	0
+CA	t	[+É]	string	[]	F	6
+NA	c6	[0ςac0+]	string	[a]	F	2
+CA	string	[]	c3	[ééA]	F	0
+CO	n2	[0]	n2	[0ς]	F	1
+NS	c6	[]	c1	[]	F	0
+CA	c1	[]	n4	[]	T	0
+CO	c6	[σ+A ]	c1	[σ]	F	1
+CO	c3	[ı]	c1	[i]	F	0
+CP	c10	[0ı É0]	c6	[ς]	F	10
+NA	string	[aKA]	c3	[0a]	F	0
+CP	c3	[aab]	t	[a*+]	T	0
+CS	c10	[+Ki]	string	[   ]	T	3
+CA	string	[#éc😀 😀i1]	t	[bK]	T	5
+CN	c1	[]	c6	[]	F	1
+CS	n2	[]	c1	[ ]	T	0
+CP	string	[]	c3	[*]	T	0
+CS	string	[ßσ#ς ]	n2	[]	T	0
+NP	c2	[1c]	string	[**]	F	0
+NP	t	[cAb]	c4	[**#]	F	3
+CO	string	[ ca0aıςa]	n4	[ c0ı]	F	2
+CA	n2	[]	c2	[#]	T	0
+NA	string	[ 1ς1İc]	string	[1😀]	F	1
+CP	c3	[😀 ]	string	[**]	T	0
+CA	n4	[]	n4	[abb]	T	0
+NS	c4	[a]	c2	[c]	T	4
+CN	c1	[]	c4	[ ]	F	1
+CN	t	[😀ß]	string	[iς]	T	0
+CO	string	[ ]	n4	[ ]	T	1
+CN	string	[Éb1ςß]	c4	[Éb1ς]	T	4
+NS	c2	[σ ]	n2	[aİ]	T	2
+NA	n2	[a]	c4	[ éa]	F	0
+NP	c10	[ß+]	string	[σi]	T	10
+CO	c6	[ςa]	c1	[ς]	F	1
+CS	c6	[]	c2	[éÉ]	F	6
+CP	c6	[A]	c6	[]	F	6
+CP	c10	[ßÉİbK+]	string	[**k]	F	10
+CN	n2	[]	c6	[b*]	F	2
+NA	d	[ é]	c2	[😀]	T	8
+CP	c1	[É]	d	[É]	T	0
+NA	d	[A0ßı]	c3	[😀σ]	T	8
+CP	c2	[]	string	[*]	T	0
+CP	c1	[Σ]	c6	[**]	T	0
+CP	d	[İ*0σ#ς]	string	[ aA]	F	8
+NS	string	[Éııσσc]	c10	[]	F	0
+CP	string	[]	c6	[1ıı]	F	0
+CA	c6	[ßBIÉ]	string	[]	F	6
+CA	c6	[B]	string	[ßc]	F	6
+CS	n2	[é]	string	[]	T	0
+CN	n2	[]	d	[]	F	2
+CN	c6	[a#BÉ]	c1	[a]	T	1
+CP	n4	[ς]	n4	[*# ]	T	1
+CN	t	[#Σ*İ😀]	c10	[#Σ*İ😀]	F	6
+CO	c6	[]	string	[ßa]	F	0
+NS	n2	[]	c3	[]	F	0
+NS	c6	[*A1]	string	[ ]	F	3
+NS	n4	[]	string	[ ]	F	0
+CP	string	[a]	string	[aBc]	F	1
+CP	c6	[a a]	c2	[**]	T	0
+CP	t	[ İ1Σßb]	c6	[*]	T	0
+CA	t	[A😀c]	d	[+BA]	T	0
+CP	string	[Ééσ1aİca]	c1	[+]	F	8
+CN	d	[Bißı]	c6	[Biı😀]	T	2
+CS	string	[aıb 1KbK]	t	[]	T	0
+CP	c4	[Iİ]	string	[I+*]	T	0
+CP	c6	[IΣ+#İ]	c10	[σaB]	F	6
+NS	c6	[KA]	c1	[a]	F	1
+CS	string	[😀iB]	c2	[σß]	F	4
+CP	string	[ςAAßa]	c10	[*]	T	0
+CA	string	[ 0bb😀aA]	n2	[ς]	T	0
+CN	c4	[]	t	[ ]	F	4
+NS	string	[é+ıi]	c10	[ı ]	F	2
+CO	string	[éIa]	c3	[aσ ]	F	0
+CA	d	[]	n4	[]	T	0
+CA	c6	[#aAbς]	c4	[a]	T	1
+CN	string	[aΣcΣaİ]	c4	[Σcİ]	T	0
+CP	c2	[]	n4	[*]	T	0
+CP	c4	[0σé]	n2	[]	F	4
+CP	c3	[  ]	c4	[*#]	T	0
+CN	c6	[ ]	c2	[ ]	F	6
+CP	c10	[a]	c2	[*]	T	0
+CN	n4	[I+K]	n4	[I+]	T	2
+NP	c10	[*bA😀]	string	[]	T	10
+CP	n2	[σ]	c2	[Σ]	T	0
+NA	c6	[ΣΣÉı]	c1	[]	F	4
+NS	n2	[BK]	string	[]	F	0
+CP	c10	[caÉı+a ]	d	[*+**+]	T	0
+NS	d	[]	n2	[ ]	F	0
+CA	c2	[İΣ]	c6	[σA]	F	2
+NS	string	[1]	c10	[A*]	T	1
+CN	n2	[]	string	[Éa]	T	0
+CS	string	[Σ1ébK]	c4	[1éb]	T	1
+NA	c2	[c]	string	[ı ]	F	1
+CP	n4	[]	string	[* ]	T	0
+CP	c6	[b]	c4	[B]	T	0
+NA	n2	[b]	c6	[b]	F	0
+NS	c10	[B+aΣ1bcc]	c2	[]	F	0
+NP	n2	[ß]	c3	[# ]	T	2
+NS	c10	[ii]	string	[I ]	F	1
+CS	c10	[*c1a 0A]	t	[0]	T	5
+CP	c4	[b+é]	string	[*é*]	T	2
+NP	c4	[Ac]	c4	[C*]	T	4
+NA	c10	[aiÉé]	n4	[aéÉ]	F	0
+CA	string	[bI]	n4	[]	F	2
+CP	c1	[+]	n4	[*]	T	0
+CP	d	[1*ı]	string	[Bb I]	F	8
+NP	c6	[iiσ bA]	string	[i+σ*]	F	0
+NS	c2	[]	string	[ ]	F	0
+NS	d	[aKσBΣ ]	n4	[1a]	T	8
+NS	n2	[]	string	[ı1]	T	2
+CS	string	[0IßK]	string	[ßKa]	F	4
+CO	c1	[]	c4	[]	T	1
+CP	string	[ 😀+aÉ]	c4	[ca]	F	6
+NP	n2	[a]	t	[*# ]	F	1
+NS	n2	[]	t	[]	F	0
+NP	n2	[]	c2	[+]	F	0
+CO	t	[ba]	t	[ba]	T	6
+CP	n4	[éÉ]	c4	[**# ]	T	2
+CS	string	[b*]	string	[]	T	0
+CP	d	[]	c6	[]	T	0
+NA	c3	[é]	t	[+ıé]	F	0
+NP	string	[]	c4	[*]	F	0
+CS	c1	[ς]	n4	[ΣI]	F	1
+CP	string	[😀+]	c6	[**]	T	0
+CP	c6	[*]	n2	[b0]	F	6
+CS	c2	[]	d	[  ]	T	0
+CN	n2	[Σ]	n2	[Σ]	F	2
+NP	t	[iéa]	t	[]	T	6
+CP	n2	[é]	d	[ İ]	F	2
+NS	d	[0 ]	string	[ Σa]	T	8
+NS	n4	[abK]	t	[baé]	T	4
+NS	c1	[]	d	[ ]	F	0
+CP	n2	[]	c4	[*+]	T	0
+CN	c1	[Σ]	c1	[Σ]	F	1
+NS	n4	[0ı#]	c6	[ ]	F	0
+CO	t	[##+]	c2	[#+]	F	3
+NA	c3	[a]	n2	[aa]	F	0
+CN	string	[]	n2	[1]	F	0
+NP	d	[😀baİa]	t	[]	T	8
+NP	n2	[]	n2	[*]	F	0
+CP	c6	[ı]	c3	[**]	T	0
+CP	d	[😀aİÉς b]	n4	[ς*]	F	8
+CP	c1	[1]	c6	[*#+]	F	1
+CO	c6	[ßÉa11+]	string	[ßÉa1+]	T	6
+CP	c4	[iBc]	c1	[*]	T	0
+CN	c4	[IKé]	string	[IKé ]	F	4
+NA	c1	[İ]	n4	[#]	T	1
+CP	n2	[ ]	string	[ *]	T	0
+CN	n4	[é]	c10	[]	T	0
+CA	string	[İ]	c1	[A]	F	1
+CN	string	[B]	string	[σ]	T	0
+NA	c10	[]	d	[#B]	F	0
+CP	string	[aAA+éÉ]	d	[*é]	T	5
+CP	c10	[aab]	c3	[*]	T	0
+NS	c1	[]	string	[ ı]	T	1
+CP	c1	[é]	c10	[*]	T	0
+NS	c2	[]	string	[İς 0]	T	2
+NP	c1	[]	c4	[]	F	0
+NS	string	[]	string	[ab]	T	0
+NP	c10	[]	c10	[]	F	0
+CP	c6	[AΣiB]	string	[*+iB#  ]	T	1
+NS	c1	[#]	d	[]	F	0
+CA	t	[É]	n2	[+ ]	T	1
+CA	c2	[é]	string	[]	F	2
+CP	string	[é]	string	[]	F	1
+CP	c3	[]	c3	[*]	T	0
+NS	c4	[😀]	c1	[]	F	0
+CO	string	[*0]	c4	[*0]	T	2
+CA	c4	[σb]	string	[*]	F	4
+CP	c3	[bB]	n2	[**]	T	0
+CO	c10	[ıa ]	d	[ıa ]	T	10
+NS	string	[+]	c1	[]	F	0
+CP	string	[BÉ]	c3	[+É*]	T	0
+CP	string	[]	n2	[*]	T	0
+CP	n2	[]	d	[*]	T	0
+CS	n4	[]	string	[    ]	T	0
+CO	d	[İ]	string	[]	F	0
+CP	d	[]	n4	[#]	T	0
+CS	d	[c0éIß1]	d	[]	T	0
+NA	c2	[]	c2	[#ı]	T	2
+NP	c4	[#ıa]	string	[*+]	F	2
+CA	string	[0Σ1bς]	n4	[1]	T	2
+CN	n2	[ı]	c3	[ßςa]	T	0
+NP	n4	[]	c6	[*]	F	0
+NS	string	[]	c1	[]	F	0
+CP	n2	[ß]	t	[ß*]	T	0
+NP	c10	[*]	t	[*+]	F	0
+CP	c10	[ςςé#IaA]	n4	[Ia#A]	F	10
+CP	string	[ ςIİıb]	c1	[*]	T	0
+NP	c6	[bKaB]	string	[*Ka+]	F	1
+CP	c6	[ ΣÉb]	string	[éI😀]	F	6
+CP	c10	[1B0B+É]	c3	[*0B]	F	10
+CN	c4	[ß#]	c2	[ß#]	T	2
+NA	c4	[İ0K]	d	[+]	F	3
+CP	c3	[ıσ]	c2	[aa]	F	3
+CS	c3	[I]	t	[]	T	0
+CA	c10	[ıé ]	d	[0 ]	T	2
+CP	c2	[éa]	string	[#ÉςB]	F	2
+CS	string	[]	t	[  ]	T	0
+NP	t	[]	c1	[*]	F	0
+CP	d	[Aa]	string	[]	F	8
+CP	c10	[B]	c2	[1I]	F	10
+NS	string	[A#b#ςaıa]	n4	[#ςa]	F	3
+CO	c1	[]	string	[*I#b]	F	0
+CA	n4	[i😀]	string	[b+]	F	4
+CP	c10	[]	c6	[   +*]	T	0
+CS	string	[c a]	string	[ ]	T	1
+NA	c4	[]	n4	[]	F	0
+NP	string	[*Iσ#ςı]	d	[aK0]	T	6
+NP	c10	[ÉibK1aa ]	n2	[*]	F	0
+NS	string	[]	c4	[]	F	0
+CN	c6	[0ςbii1]	c10	[0bi1i]	T	1
+NS	n2	[]	string	[]	F	0
+NS	c4	[a]	c4	[ ]	F	0
+CP	t	[cς]	c3	[*]	T	0
+NP	c2	[ςb]	d	[**]	F	0
+CP	c10	[b ]	string	[]	F	10
+CP	n4	[#ΣIÉ]	c2	[##]	F	4
+CP	t	[]	d	[*]	T	0
+NS	string	[I ]	string	[]	F	0
+CS	c10	[Ab01+ 😀b]	n4	[ iı]	F	10
+NA	string	[σ##*]	c10	[KÉ]	T	4
+CA	n2	[ ]	d	[IÉ]	T	0
+CP	c10	[É+ 0ıΣ]	c3	[1i ]	F	10
+CN	c4	[11iB]	c4	[iB]	T	0
+NP	c6	[ ς]	n4	[ +]	F	0
+CA	c1	[ ]	c4	[Iς ]	T	0
+CN	c1	[K]	d	[K]	F	1
+CP	c2	[bς]	c4	[**]	T	0
+CN	c4	[iab]	c2	[ia]	T	2
+NP	d	[σσ1a]	c3	[***]	F	0
+NA	t	[B iA]	c3	[]	F	1
+CO	c6	[ß😀+*]	c4	[]	F	0
+CP	n4	[b*bB]	string	[*#+]	F	4
+NA	c4	[]	string	[]	T	4
+NP	n4	[b+]	d	[* ]	F	0
+CN	c6	[ΣIbca]	c4	[ΣIbc]	T	4
+NS	t	[İÉİıa]	c3	[İÉİ]	F	0
+NP	c2	[b]	c2	[]	T	2
+CP	string	[KKaσB0]	c1	[+]	F	6
+NS	string	[*iI😀0cσi]	string	[a*0]	T	9
+CP	d	[icb0a]	c6	[* *]	T	5
+CO	c3	[]	c1	[ ]	T	3
+CA	c3	[A ]	n2	[]	T	1
+NS	c1	[]	c2	[]	F	0
+NP	c1	[]	n4	[*+]	F	0
+NP	c2	[*]	string	[]	T	2
+CP	string	[ 1iaaß#]	c2	[**]	T	0
+CP	string	[ b+σİı]	d	[*#++#İ#ı]	T	2
+CP	n2	[]	string	[σaςi]	F	2
+CP	n4	[0K*1]	string	[0k+1]	T	0
+CP	string	[bΣIaİ]	c10	[**]	T	0
+CP	string	[ıaac]	c4	[*c]	T	3
+CP	d	[I ß*]	c10	[Éaa]	F	8
+CP	n2	[]	c4	[*]	T	0
+CO	c1	[İ]	string	[İ]	T	1
+CO	t	[0]	c4	[]	F	0
+NA	c10	[]	c3	[+b]	F	0
+NP	c2	[]	string	[]	T	2
+NS	t	[1i]	c4	[]	F	0
+CP	c3	[]	string	[*]	T	0
+CS	string	[ΣaBi]	c1	[]	T	0
+NS	c1	[]	c10	[]	F	0
+NS	n2	[*]	n2	[ ]	F	0
+CN	t	[0Σσ]	c3	[0Σσ]	T	3
+CP	c3	[B]	d	[É1éA]	F	3
+CA	n4	[+1A]	n2	[B]	T	3
+NS	string	[iK]	string	[]	F	0
+CS	c1	[]	string	[]	T	0
+CN	c2	[İb]	c1	[İ]	T	1
+CP	c6	[]	c3	[* ]	T	0
+NP	string	[σb0]	string	[#σb*]	F	0
+CA	n4	[ςcaς]	c2	[bc]	T	1
+CO	string	[a#*I]	t	[#*Ii]	F	0
+NA	n2	[1ς]	string	[0]	T	2
+CO	c3	[a]	string	[B1σ😀]	F	0
+NS	t	[é]	c3	[]	F	0
+NP	c1	[]	c10	[]	F	0
+CO	c2	[b*]	n2	[b*]	T	2
+CS	n4	[İΣ]	t	[]	T	0
+NS	c3	[]	c6	[ ]	F	0
+CA	string	[]	n4	[ I]	F	0
+CO	c6	[iA*i ]	c10	[]	F	0
+NA	c4	[ς]	t	[😀 ς]	F	0
+CP	c3	[ÉaÉ]	d	[*É]	T	2
+CO	n4	[ßσa]	string	[ßσ ]	F	2
+CN	c10	[ΣΣIßß]	c10	[ΣIßB]	F	10
+CP	d	[é#++]	d	[*+*]	T	0
+NA	c4	[  ]	string	[ ]	F	0
+CP	string	[😀ςAi]	c6	[aaı#]	F	5
+CS	string	[éσİ]	c10	[σİ ]	T	1
+CP	c4	[aı]	n4	[BBA]	F	4
+NP	string	[aKcia]	c3	[**]	F	0
+NP	n4	[K]	c4	[**]	F	0
+CN	c3	[b]	c3	[b ]	F	3
+CO	n4	[]	c1	[ ]	T	4
+CS	string	[aςıKa]	c1	[]	T	0
+CP	c6	[σaiΣAa]	c6	[AI*]	F	6
+CP	c4	[cıσÉ]	string	[**]	T	0
+NA	c1	[#]	c3	[]	T	1
+CP	c10	[ı😀b]	string	[**]	T	0
+CP	string	[a]	c4	[*]	T	0
+NA	c2	[ac]	string	[ic]	F	1
+NS	n4	[bIb]	c1	[B]	F	0
+NP	c1	[]	n2	[]	F	0
+CO	c1	[K]	n4	[K]	T	1
+CS	c1	[]	c3	[]	T	0
+NP	string	[bKσ b#a]	c10	[*K+ b##]	T	7
+CP	string	[ıcA+ß BB]	t	[*Ca*]	T	1
+CO	c4	[Bß]	n2	[Bß]	F	2
+CP	n2	[B]	c1	[*]	T	0
+CP	c1	[ı]	c2	[**]	T	0
+NP	n4	[]	n4	[*]	F	0
+NS	n4	[a*]	c10	[]	F	0
+CO	d	[bII σ**ı]	t	[bI σ*ı]	T	8
+CP	n2	[ab]	string	[]	F	2
+CO	n2	[]	string	[]	F	0
+CO	string	[İB*BI*]	n2	[İB]	F	2
+CP	d	[KII]	c4	[B]	F	8
+CA	t	[1BI]	n2	[É*]	F	6
+CP	c3	[σ1]	c2	[Σ1]	T	0
+CP	n2	[]	string	[ *]	T	0
+NS	c2	[]	c6	[]	F	0
+CS	t	[Σßı*I]	c6	[]	T	0
+NA	c3	[b*]	n2	[I]	F	2
+CS	d	[]	c10	[]	T	0
+CP	c1	[I]	n4	[İ]	F	1
+CP	n2	[]	d	[i]	F	2
+CP	c2	[K]	n2	[+]	T	0
+NA	string	[É00σKΣK*]	d	[ςÉ]	F	0
+NP	string	[Σ b++i#]	t	[*#+*]	F	3
+NS	string	[Aß]	n4	[Iéa1]	T	2
+CP	c4	[#iσ]	c6	[+]	F	4
+CP	c3	[b]	string	[IİÉ]	F	3
+CP	c1	[A]	c2	[*]	T	0
+NA	c2	[İ]	t	[İ]	F	0
+CP	c4	[baÉΣ]	c2	[*a]	F	4
+NS	t	[b]	c3	[]	F	0
+CS	string	[*]	string	[*]	T	0
+CS	c10	[c😀*KAσ0a]	t	[ ]	T	0
+CO	c4	[Éς]	n2	[Bİ]	F	0
+CN	c6	[a]	c10	[aΣ]	F	6
+CA	c6	[aΣi]	d	[aAa]	T	0
+NP	t	[ißK*ıI]	t	[*]	F	0
+NS	c3	[σI]	string	[σI]	F	0
+CP	d	[aaBAΣÉ*]	n4	[+]	F	8
+CS	string	[a]	t	[ ]	T	0
+CP	c2	[]	c1	[*]	T	0
+CA	c2	[+]	c6	[0é0]	T	1
+NP	n4	[iaı]	c10	[*]	F	0
+NP	c10	[]	c4	[**]	F	0
+CN	n2	[IA]	c1	[I]	T	1
+CO	d	[😀]	string	[😀]	F	2
+NP	c2	[1]	c3	[*# ]	F	1
+NP	string	[Éςißb0 ]	n4	[* ]	F	0
+CP	n2	[]	c6	[**]	T	0
+CP	c1	[]	n4	[*]	T	0
+CS	string	[+b é ςı]	c4	[ς ]	T	5
+NS	t	[bb😀I]	string	[]	F	0
+CP	string	[a0aσéKé]	t	[*Ké*+]	F	7
+CN	c1	[a]	n4	[a]	F	1
+CP	string	[]	n4	[*]	T	0
+NA	n4	[]	t	[]	F	0
+NS	c3	[]	c3	[]	F	0
+CP	t	[ aaacİ]	t	[*i̇]	F	6
+NA	c3	[Kb]	c1	[]	F	2
+CP	c1	[*]	c1	[*]	T	0
+CO	c2	[aÉ]	string	[ab]	F	1
+CN	c10	[éaßß#]	c1	[]	T	0
+CP	n2	[😀]	n2	[**]	T	0
+CP	n2	[i]	d	[*+]	T	0
+NP	d	[😀i0KßA]	c1	[*]	F	0
+NS	t	[bB Bb]	t	[ ]	F	0
+CN	n4	[bΣ ]	t	[bΣ ]	F	4
+NA	n2	[]	c4	[0 ]	F	0
+CN	c2	[é]	n4	[é]	F	2
+NA	c3	[]	c10	[]	F	0
+CO	c6	[ı0]	c10	[ı0]	T	6
+CO	string	[]	c4	[ ]	T	0
+NS	c4	[*]	t	[]	F	0
+NA	string	[bÉba +aA]	c2	[*]	F	4
+CA	string	[a]	d	[a]	T	0
+CP	string	[0  cßı]	string	[*+cß+]	T	2
+CO	c3	[b1]	n2	[b1]	F	2
+CN	n2	[😀]	c3	[😀ς]	F	2
+CO	c10	[]	string	[ß]	F	0
+CN	c3	[ςİ]	d	[BBb]	T	0
+CA	string	[*ßa 1aΣ#]	d	[]	T	3
+CP	c4	[ca]	c3	[** ]	T	0
+CN	t	[bİAb]	c6	[bİA]	F	6
+CO	c1	[ı]	c1	[ı]	T	1
+NA	c1	[]	string	[ΣB]	T	1
+NS	string	[ı]	c6	[ı]	F	0
+CS	n4	[Σa a]	c1	[]	T	0
+NA	string	[+ ]	c1	[ß]	T	2
+CN	n4	[]	n2	[ ]	F	4
+CA	string	[Ba iıı😀]	c4	[Σıı]	T	2
+NP	c10	[a0*]	c10	[]	T	10
+NA	d	[ıaB]	n2	[😀]	T	8
+CP	string	[]	c10	[1*]	F	0
+CP	c3	[]	d	[B]	F	3
+CO	c2	[*0]	d	[*0]	T	2
+CP	c2	[ı]	c2	[I*]	T	0
+CP	n2	[ ]	c2	[0]	F	2
+CP	c1	[]	c1	[*]	T	0
+CP	string	[ #iKÉB#]	c3	[++i]	F	7
+CP	n4	[1]	c3	[]	F	4
+NP	d	[]	string	[* ]	F	0
+CP	t	[a]	t	[]	F	6
+CP	c2	[]	string	[]	F	2
+CP	c10	[B]	c2	[**]	T	0
+CP	n2	[]	t	[*]	T	0
+CP	c2	[a0]	string	[+]	F	2
+NS	d	[σA]	c4	[ ]	F	0
+CP	c4	[A]	c1	[*]	T	0
+NP	c2	[A]	c4	[]	T	2
+CP	string	[*ab1**A]	string	[bcςΣ]	F	7
+CS	string	[BB a#]	n2	[KA]	F	5
+CP	c1	[]	t	[*]	T	0
+CN	n4	[+0Σ ]	n2	[]	T	0
+CA	c10	[1]	t	[c]	T	1
+CP	c10	[K*]	t	[ςÉK ]	F	10
+CS	t	[K b]	n4	[ ]	T	0
+NS	c4	[**]	c10	[ ]	F	0
+NS	c3	[]	string	[]	F	0
+CP	string	[i]	string	[aΣ]	F	1
+CO	c10	[A*cI]	d	[A*cI ]	T	10
+CS	t	[a]	d	[]	T	0
+CN	string	[]	c4	[]	F	0
+CO	d	[]	string	[ıB]	F	0
+CA	t	[]	c4	[ııc]	T	0
+NA	c2	[Éb]	string	[]	T	2
+CO	n4	[]	n4	[]	T	4
+NP	c4	[Σ#+]	c3	[*#+]	F	2
+CP	c2	[Ia]	c3	[A]	F	2
+CS	c4	[+]	c6	[+   ]	T	0
+CS	d	[]	c3	[ ]	T	0
+CN	d	[ßbIc😀Ia]	string	[ς]	T	0
+CS	t	[bAı😀]	c4	[#ı#]	F	6
+CP	c3	[]	c2	[*+]	T	0
+CO	d	[1c#b0 0]	c2	[1c]	F	2
+CP	d	[11iςÉ]	t	[*]	T	0
+CP	c4	[I*b]	string	[bbB]	F	4
+CP	string	[aK]	c6	[]	F	2
+NP	string	[A]	string	[## +]	T	1
+CP	n2	[é]	c1	[*]	T	0
+NS	n2	[*K]	c1	[a]	T	2
+CP	c6	[]	c2	[]	T	0
+CP	string	[ıa0#c😀ab]	n4	[😀ab]	F	9
+CP	string	[éaßK1σ1]	c10	[*]	T	0
+NA	string	[]	t	[ ]	T	0
+CN	c10	[bİ+]	c4	[b+]	T	1
+NA	t	[éI]	d	[σ]	F	2
+NA	c10	[É]	c6	[ ]	F	1
+CP	string	[IbAI#]	c1	[i]	F	5
+CS	c6	[ßi]	string	[]	T	0
+NA	n4	[  aς]	c6	[ ]	F	0
+CA	string	[ é😀]	c10	[Ib]	T	0
+NA	c2	[ +]	string	[ ]	F	0
+CO	c1	[ı]	c3	[ı]	T	1
+CP	c4	[b]	string	[*]	T	0
+CO	c3	[]	c2	[]	T	3
+CP	string	[ı#ςİ]	n4	[*]	T	0
+CN	n4	[]	n2	[ß]	F	4
+CO	c6	[İ*b0B]	string	[İ*b0B]	F	5
+CP	string	[aa]	c6	[a]	F	2
+CP	c2	[a]	n4	[σ1]	F	2
+CP	string	[ i σ+aΣ]	c2	[Σ*]	F	7
+CP	n4	[]	string	[*]	T	0
+CO	c4	[]	string	[]	F	0
+NP	c1	[*]	string	[**#+]	T	1
+CN	c3	[#]	string	[##]	T	1
+CN	n4	[İßÉ]	t	[bi]	T	0
+CP	c10	[É1]	c4	[É1+ ]	T	0
+CS	string	[abIcßBς😀]	c1	[c]	T	3
+CA	c10	[I#Σ1AÉ ]	c1	[σ]	F	10
+NP	c1	[ ]	string	[]	T	1
+CS	string	[ ß #σ1]	c3	[]	T	0
+CP	c1	[0]	string	[*]	T	0
+NS	string	[ς11]	c3	[]	F	0
+NS	d	[iıcıI]	string	[ ]	F	5
+CO	string	[abaa*c]	n4	[ab*]	F	5
+CP	n2	[ ]	c1	[*]	T	0
+CO	c6	[Ai ]	n2	[Ai]	F	2
+NA	c1	[]	c3	[é]	F	0
+NA	c1	[b]	t	[ 😀]	T	1
+CP	t	[😀]	string	[*]	T	0
+CS	c2	[cς]	d	[*aİ]	F	2
+NA	c3	[σKA]	d	[σ]	F	0
+CA	c10	[Éc b#i]	string	[A ]	T	2
+CP	string	[]	d	[*]	T	0
+NA	c1	[]	t	[É]	F	0
+NA	string	[I]	d	[]	T	1
+NP	d	[ ]	c3	[*+]	F	0
+CP	c6	[]	string	[]	F	6
+CP	string	[ΣßK]	c10	[#σSS*]	F	3
+CP	c3	[]	c6	[ ]	T	0
+NP	n2	[]	c2	[]	F	0
+CP	c3	[A]	c1	[*]	T	0
+CA	n2	[é ]	string	[İ]	F	2
+NS	c10	[ißKΣİ*ςσ]	c6	[*Σ]	F	5
+CP	c4	[İ ßσ]	string	[+]	F	4
+NS	c4	[a]	d	[a]	F	0
+CP	n2	[]	string	[i é]	F	2
+CP	string	[σ bÉB#b]	c2	[*b]	T	6
+CS	c1	[]	t	[ ]	T	0
+CN	string	[ 😀ß😀 K]	t	[bKσ]	T	1
+NS	t	[]	string	[ÉI]	T	6
+CA	c2	[0a]	string	[Éİ0]	T	0
+CN	t	[IÉÉ]	string	[IÉß]	T	3
+CN	n2	[a]	c1	[a]	T	1
+NA	n4	[ςΣ]	c4	[ς]	F	0
+NS	n2	[B0]	string	[]	F	0
+CN	c10	[😀i*# ς]	c4	[😀i*]	T	4
+CO	string	[aé]	c2	[aé]	T	2
+CP	c4	[ΣΣ]	c1	[Σ]	F	4
+CA	c10	[a#AB  K]	c10	[0b ]	T	4
+NA	c2	[bi]	string	[I*ac]	T	2
+NP	c1	[b]	c6	[*+]	F	0
+NA	c6	[]	c4	[ ]	F	0
+CS	n4	[]	d	[]	T	0
+NS	t	[Kσ bé]	c1	[K]	F	0
+CP	c3	[1 ]	c1	[*]	T	0
+NS	string	[aÉKa😀*Σı]	t	[a😀]	F	3
+CN	n4	[c Σ]	c3	[c Σ]	F	4
+NA	t	[İ]	c2	[]	F	1
+CN	c2	[  ]	string	[ ς]	F	2
+CP	string	[ÉcA+I]	c10	[**]	T	0
+NA	c3	[é1]	c4	[é]	F	0
+CA	string	[aσ0σi]	string	[KΣ0]	T	2
+CN	d	[éÉa😀Ééσ]	string	[éÉa😀σ+]	F	8
+CA	c6	[B0aI]	c1	[0]	T	1
+CP	n2	[]	n4	[*]	T	0
+CO	c3	[1* ]	c1	[1]	F	1
+NP	d	[bAıcaİKσ]	t	[*ıc#a*]	F	2
+CS	c2	[b]	c3	[]	T	0
+CP	n4	[a]	c2	[**]	T	0
+CA	c6	[ééiı0i]	c1	[#]	F	6
+CO	t	[😀*İ]	c1	[*]	F	0
+NP	c10	[I+ßi ς *]	string	[]	T	10
+CN	string	[ aA*ßİ]	string	[ aA*ßİ]	F	6
+NA	c4	[]	n2	[K]	F	0
+CP	string	[+aaß011]	n2	[*0]	F	7
+CP	c2	[aς]	n2	[ÉI]	F	2
+NS	string	[ia0éÉσé]	n2	[]	F	0
+CS	n2	[*]	n2	[]	T	0
+CP	string	[]	d	[+]	F	0
+CA	d	[#σIßbı*]	c3	[A]	T	7
+CP	c3	[]	c6	[ς]	F	3
+CS	n2	[b]	d	[]	T	0
+CO	c4	[*aBA]	n2	[B*]	F	1
+CN	d	[]	c3	[]	F	8
+CO	c4	[]	c4	[ ]	T	4
+CS	d	[ab]	t	[a]	T	0
+CS	string	[KIAÉ]	c1	[K]	T	0
+CS	n2	[*]	c3	[* ]	T	0
+CP	c3	[+KΣ]	c4	[*σ]	T	2
+NS	c1	[]	string	[]	F	0
+CN	c10	[#éı+😀ı+*]	c6	[#éı+😀]	T	8
+CP	d	[ b*]	c10	[*]	T	0
+CA	string	[ı😀iΣςB ]	c4	[Σi]	T	3
+NA	c4	[😀ßİ]	string	[É]	T	4
+NP	t	[c#Kba]	string	[]	T	6
+NA	c10	[a0İ]	string	[bİ]	F	2
+CA	c1	[]	c2	[*0]	F	1
+CA	c3	[K😀]	c4	[]	F	3
+CP	n4	[]	c4	[B0😀]	F	4
+NA	string	[]	string	[ İßB]	T	0
+NS	c1	[]	c1	[]	F	0
+CP	c10	[İAK]	string	[* ]	T	3
+NA	c1	[]	t	[ß]	F	0
+CN	t	[*ß0Bcİ]	c4	[*0Bİ]	T	1
+CN	c1	[]	c10	[]	F	1
+CO	string	[]	c4	[]	T	0
+NS	string	[*1]	n2	[* ]	F	0
+CO	n2	[+*]	c6	[Éσ😀]	F	0
+CP	n2	[]	c10	[]	T	0
+CS	n2	[0]	c6	[*]	F	2
+CA	n4	[1ıaI]	c3	[A]	F	4
+CP	c3	[]	t	[*#]	T	0
+CN	c6	[aßiß]	string	[1ibß]	T	0
+NP	string	[AI]	d	[A+*]	F	0
+NS	c3	[A]	c6	[AK]	T	3
+CS	string	[ßaAaσA]	d	[0]	F	6
+CN	string	[İIß ]	string	[ İa]	T	1
+CA	c4	[A]	c3	[]	T	1
+NS	d	[Ka 0]	n2	[ 0]	F	2
+CO	t	[]	c2	[  ]	T	6
+NP	c2	[a]	c1	[0]	T	2
+CP	n2	[aa]	c10	[]	F	2
+CP	n2	[c]	c6	[*]	T	0
+CS	c10	[1KbB+Ia]	n2	[+i]	T	4
+CN	n4	[#]	string	[#]	T	1
+CO	c6	[cı]	t	[cı]	T	6
+CS	d	[K]	c6	[ ]	T	0
+NS	string	[K]	d	[Kb]	T	1
+NA	string	[😀aİaı]	c4	[cca]	F	2
+CP	c2	[]	c6	[*]	T	0
+CP	c3	[]	c1	[]	T	0
+NA	t	[KA]	c1	[]	F	2
+NP	n2	[0]	c10	[]	T	2
+CP	c10	[ı*iaI AÉ]	c1	[*]	T	0
+CA	c4	[]	c10	[I]	T	0
+CS	string	[AaBé#*]	c4	[]	T	0
+CP	c3	[ ]	t	[ *#]	T	0
+NP	d	[ßK0ß]	c1	[*]	F	0
+CP	n4	[+éÉI]	c10	[σ*c]	F	4
+CP	string	[00ÉÉc]	t	[É*]	F	5
+CP	c10	[]	t	[#]	T	0
+CP	c10	[]	string	[]	F	10
+NS	t	[1*]	string	[*]	F	1
+NS	c4	[iß]	c2	[]	F	0
+CP	d	[IKABB I]	c10	[* #I]	T	5
+CP	string	[0Éa aς]	c2	[*a]	F	6
+CA	t	[I*]	string	[]	F	6
+CA	c6	[Σ]	c4	[Σ*]	T	0
+CA	t	[é]	c1	[ı]	F	6
+CA	n4	[#I]	string	[cAI]	T	1
+NP	c3	[]	n4	[*# ]	F	0
+CS	string	[İÉ]	c10	[ßÉΣ]	F	2
+NA	c10	[B]	c3	[iKb]	T	10
+CP	string	[aİı😀]	string	[**]	T	0
+NP	c4	[+a K]	n2	[iK]	T	4
+CP	c3	[1ß]	c3	[ς]	F	3
+NP	string	[aéΣ1ß#]	c6	[σé]	T	6
+CA	c3	[ia+]	c4	[ςbİ]	F	3
+CP	c6	[0KΣaı]	c4	[*K#Σ]	F	6
+NP	c3	[aΣa]	string	[*# ]	T	3
+CO	d	[É]	n2	[É]	T	8
+CP	d	[aσςB😀Σ]	c4	[*+*]	T	0
+NA	c1	[a]	t	[İ]	T	1
+CA	n4	[]	t	[ia]	T	0
+CP	n2	[É]	string	[**]	T	0
+NS	c3	[ Σ]	c2	[ σ]	F	0
+CN	n2	[ς]	c4	[aA1a]	T	0
+NP	n2	[Σσ]	n2	[Σ*]	F	0
+NP	c4	[É]	n4	[ *]	T	4
+CP	c6	[É*ß]	c3	[é#*]	F	6
+NP	n2	[#a]	n4	[*]	F	0
+CS	string	[]	c2	[İ]	F	0
+CO	c3	[ıBÉ]	string	[#B]	F	0
+NA	t	[É#σbiK]	c1	[a]	T	6
+CP	string	[aé]	string	[*]	T	0
+NS	c6	[İß1Ic]	n4	[c]	F	4
+CO	c2	[]	t	[]	T	2
+NP	n2	[]	c1	[*]	F	0
+CS	t	[iß]	string	[iß  ]	T	0
+CP	d	[bK😀+ ς]	n4	[*]	T	0
+NS	n2	[ ]	string	[ c ]	T	2
+CP	c1	[c]	c10	[*#]	F	1
+CP	c1	[]	c2	[*]	T	0
+CP	d	[éΣab😀Bß]	c10	[*σA*]	T	1
+NP	c10	[* a#I]	c10	[**+###I]	F	2
+NA	c1	[c]	c10	[c]	F	0
+CA	c1	[]	c4	[Bİ]	T	0
+NP	c2	[]	string	[*]	F	0
+CN	string	[1B1ς1#]	n4	[ bß]	T	0
+NS	n4	[İ]	string	[ é]	T	4
+NP	c3	[😀#]	string	[ac]	T	3
+NS	d	[ς ßσ]	c4	[ İ]	T	8
+CO	d	[éς]	n2	[]	F	0
+CS	c3	[*a]	c3	[*A]	T	0
+CO	string	[ İ]	d	[ İ]	T	2
+NA	string	[ ı]	c4	[ I]	F	0
+CO	n2	[é]	d	[İa*ς]	F	0
+CP	c6	[σß1ac]	c4	[]	F	6
+CS	string	[]	c10	[ ]	T	0
+CO	n2	[]	c4	[]	T	2
+CA	string	[1Σ]	c10	[1]	T	0
+CS	n2	[ßb]	c4	[b ]	T	1
+NP	c2	[#]	c1	[*]	F	0
+CP	string	[Σİ]	c10	[**]	T	0
+CO	c2	[1 ]	string	[1]	F	1
+CS	n4	[*Σ0]	t	[]	T	0
+CP	c1	[]	string	[]	F	1
+CP	t	[+b+]	c2	[#+]	F	6
+CP	c2	[]	n4	[]	T	0
+NA	c4	[A0Bé]	c10	[]	T	4
+NP	c4	[#😀i]	n2	[*]	F	0
+CP	string	[ iσıσ0bK]	c10	[*0]	F	8
+CS	c3	[ABß]	c6	[ABß]	T	0
+NS	c2	[ß]	n4	[ ]	F	0
+CN	c2	[]	n2	[c ]	F	2
+CO	c1	[]	c2	[]	T	1
+CN	string	[aB]	t	[aB]	F	2
+CP	string	[aIaAßa]	c1	[a]	F	6
+CP	d	[b i bK1]	string	[B+]	F	8
+CS	c1	[ς]	d	[]	T	0
+NA	c6	[II1]	c3	[#]	F	3
+NA	c4	[ÉA]	c3	[]	F	2
+CP	n2	[É]	c3	[]	F	2
+CN	c4	[]	c4	[]	F	4
+CA	n4	[*1É]	t	[aσ]	T	3
+NP	string	[aÉi1]	n4	[*]	F	0
+CP	c4	[abσ*]	c6	[*]	T	0
+CP	c4	[0#]	c4	[*## ]	T	1
+CS	c4	[]	t	[]	T	0
+CN	c2	[]	t	[]	F	2
+CS	t	[1ÉAAaA]	c4	[Aa]	T	2
+CP	c3	[Éı#]	d	[*+]	T	2
+CP	n4	[]	c6	[*]	T	0
+NA	string	[A İİ]	c1	[B]	T	4
+CO	c10	[*0 a1σ]	d	[*0 a1σ*]	T	10
+NS	string	[😀İa*]	string	[ ]	T	5
+CP	t	[É]	c10	[*#]	T	1
+CP	d	[K]	string	[*]	T	0
+CO	c4	[]	c3	[]	T	4
+NS	d	[#K]	t	[]	F	0
+CA	n2	[😀]	string	[ 😀]	T	0
+NP	string	[ÉacaK I]	c1	[*]	F	0
+CP	n2	[a]	n4	[*]	T	0
+CP	t	[]	c3	[]	T	0
+NA	n4	[éİ]	c4	[]	F	2
+NA	n2	[]	string	[ı]	T	2
+CO	c4	[  ]	c3	[ ]	T	4
+CP	n2	[i1]	c4	[+]	F	2
+CO	n4	[]	c3	[ ]	T	4
+CA	string	[]	string	[]	F	0
+CA	string	[ba*]	string	[😀*]	T	2
+NS	c3	[é ]	d	[ i]	T	3
+NP	n4	[]	t	[**]	F	0
+CP	c4	[ ]	c10	[*]	T	0
+CP	n4	[ΣIbb]	n4	[**+]	T	3
+NP	d	[]	t	[# ]	F	0
+CO	c10	[bςa++ab#]	c2	[bς]	F	2
+NP	t	[]	c4	[*+]	F	0
+CN	c4	[1ß]	n4	[1ß]	F	4
+CP	c4	[σI]	t	[]	F	4
+CP	c1	[ ]	string	[]	F	1
+NA	string	[iς1éI]	c10	[+I]	F	4
+CN	c10	[KİaKaß]	c3	[Kİa]	T	5
+CA	c1	[0]	c2	[ς0]	T	0
+CO	n4	[I0b]	c1	[b]	F	0
+CA	c10	[acBa]	string	[]	F	10
+CA	c10	[#]	d	[ı#]	T	0
+CP	t	[I iı]	c2	[*]	T	0
+CN	c1	[a]	string	[a]	F	1
+CP	d	[Aıé A1iİ]	n4	[**]	T	0
+NA	string	[😀Ai]	n4	[b ]	T	4
+CO	n4	[AσBb]	c2	[Aσ]	F	2
+CN	t	[K]	c3	[ ]	T	0
+CP	d	[0K]	string	[*]	T	0
+NA	string	[bIb*😀c]	c3	[ΣcI]	F	1
+CS	string	[KıKıb]	c2	[]	T	0
+CA	string	[cıß]	c3	[BΣé]	F	3
+CP	n2	[a]	d	[**#]	T	1
+CP	string	[]	c1	[+]	F	0
+NP	string	[aA É AaΣ]	n2	[**]	F	0
+CP	c10	[IéB]	d	[#é#B*]	F	10
+NP	n2	[ib]	c10	[i**## ]	T	2
+NA	c3	[ a#]	c10	[]	F	0
+CS	t	[bıa]	c6	[]	T	0
+CN	string	[ß +😀b]	c6	[ß +😀b]	F	6
+CS	t	[]	c4	[ ]	T	0
+CA	c1	[]	c1	[1]	F	1
+CN	string	[I# K ]	c1	[I]	T	1
+CP	d	[KK]	string	[*  *]	T	2
+CS	c4	[c#]	c4	[]	T	0
+CP	d	[IaÉ]	c6	[ıbé]	F	8
+NS	c1	[]	c3	[ ]	F	0
+CP	string	[ *1]	d	[*]	T	0
+CP	c2	[ac]	string	[*bb]	F	2
+NS	c1	[]	c6	[ ]	F	0
+CO	n2	[AK]	c2	[AK]	T	2
+CS	d	[ΣiA1]	c2	[iA]	T	1
+CO	c10	[BKb]	c4	[Kb ς]	F	0
+NS	c6	[*]	string	[      ]	T	6
+CS	t	[É+ébAa]	c4	[A]	T	4
+NP	string	[ ibéc1a]	n2	[C1]	T	7
+CP	n4	[ςcé]	string	[ςcé# ]	T	0
+CP	n4	[]	c3	[*#]	T	0
+CP	c1	[Σ]	c1	[]	F	1
+CP	string	[ıé]	string	[]	F	2
+CP	n4	[ıé]	string	[*]	T	0
+CO	string	[Σ]	string	[é]	F	0
+NP	string	[*é*K İI#]	c1	[a]	T	8
+CN	n2	[Aİ]	n2	[Aİ]	F	2
+NA	string	[éAIb*]	t	[a]	T	5
+CP	c6	[Bσß]	t	[σ]	F	6
+NS	c10	[ıc1AKbσß]	d	[ıc1AKbσ]	F	0
+CP	c6	[İaé]	n2	[aÉ]	F	6
+CO	c2	[ς]	string	[]	F	0
+CS	c1	[a]	string	[A ]	F	1
+NA	c3	[b]	c2	[b]	F	0
+CA	string	[]	t	[ÉK]	F	0
+NP	c10	[ß ib0😀KΣ]	n4	[*😀*]	F	5
+CN	string	[i]	n4	[0]	T	0
+CP	c6	[]	n4	[# ]	T	0
+CA	c6	[c]	n4	[A+Σ]	T	1
+CP	d	[]	n2	[Aé]	F	8
+CP	c1	[]	c3	[*]	T	0
+NS	c3	[ Kς]	c4	[K]	F	1
+NA	t	[bÉ]	c1	[]	F	2
+CP	t	[BÉK*]	c6	[]	F	6
+NA	c1	[a]	string	[İa]	F	0
+CP	c6	[#😀É]	d	[*]	T	0
+NS	d	[éé]	c1	[]	F	0
+NP	string	[σ]	t	[ıKσ]	T	1
+NS	c2	[ ]	d	[aİ]	T	2
+CP	string	[0]	c1	[0]	T	0
+NS	t	[]	c6	[]	F	0
+CP	n2	[]	d	[**#]	T	0
+CO	n2	[é]	c2	[é]	T	2
+NP	string	[ibab+a]	n4	[a]	T	6
+CP	n4	[é ]	d	[]	F	4
+CA	n2	[]	string	[Ia+1]	F	2
+CO	n2	[+ς]	c4	[+ςB]	T	2
+CA	string	[ΣaÉ]	c6	[😀ß]	F	3
+CO	string	[İ 1]	n2	[İ ]	F	2
+CP	n2	[]	c3	[# ]	T	0
+CN	c6	[ba]	string	[a ]	T	0
+CS	string	[*béÉ]	c2	[É]	T	2
+NA	n2	[AI]	n4	[]	T	2
+CP	c3	[a]	c4	[A*]	T	0
+NS	c10	[b# ca]	string	[  ]	F	5
+NS	c1	[*]	n4	[]	F	0
+NA	c10	[i]	d	[]	F	1
+CP	c1	[ı]	c2	[*]	T	0
+CP	string	[]	c4	[*]	T	0
+NS	n2	[c]	d	[c]	F	0
+NA	string	[+bK#Kİb]	n2	[#0]	F	3
+NS	string	[]	c10	[iıßA]	T	0
+CP	c6	[aaKc σ]	c2	[*+]	T	5
+CP	c3	[*bİ]	string	[**]	T	0
+CP	string	[ı#aİB]	d	[*+a+B*]	T	1
+CS	string	[σbıΣ1a]	d	[ς]	T	0
+NS	n4	[bb]	string	[bb]	F	0
+NA	n4	[ +ςΣ]	n4	[é* ]	F	0
+CS	c10	[1*aKK]	t	[ *]	F	10
+CA	c3	[aA]	string	[0éA]	T	1
+NP	string	[bb]	c2	[]	T	2
+CA	c4	[éΣ]	t	[]	T	2
+NA	c6	[]	c10	[ı ]	F	0
+CP	string	[ÉaÉ]	string	[ΣA]	F	3
+NA	string	[bıςcéB]	n4	[ı]	F	1
+CP	t	[b]	t	[*]	T	0
+NA	c10	[]	string	[]	T	10
+CA	c2	[a+]	c3	[1]	F	2
+CP	t	[Σ]	c3	[😀A]	F	6
+CN	c6	[1ςé+ßß]	n2	[]	T	0
+CO	c2	[Aé]	c1	[A]	F	1
+CP	string	[K1AÉσK+É]	t	[K1#A]	F	8
+CN	string	[b+aa#]	d	[ba#]	T	1
+CP	t	[Éσİ 11]	string	[**]	T	0
+NS	c6	[b]	d	[B]	F	0
+NA	c4	[İ*]	c2	[ ]	F	2
+NS	c1	[]	d	[]	F	0
+NS	c1	[]	c2	[ ]	F	0
+CP	string	[a]	t	[**]	T	0
+CP	c6	[ıßa]	t	[]	F	6
+CO	c10	[cIß É]	n4	[cI É]	F	2
+CN	string	[Icı1ς😀#]	n4	[Icı1]	T	4
+CA	d	[Aİ+ib10]	n4	[i01]	T	3
+CN	c4	[+ςaa]	c6	[+ςa]	F	4
+NP	c6	[bσ]	c10	[]	T	6
+NS	c6	[1aIiKI]	c6	[]	F	0
+CO	c10	[BcB0]	c1	[B]	F	1
+NS	n2	[ΣΣ]	string	[]	F	0
+CA	n2	[0]	n2	[a]	T	1
+CP	c10	[K]	c10	[*     *]	T	1
+CN	n4	[σ]	c2	[σ]	F	4
+CS	c2	[]	string	[ ]	T	0
+CS	n2	[]	c3	[ ]	T	0
+NP	c6	[+ß]	d	[**# ]	F	2
+CA	c1	[]	c2	[ß ]	T	0
+NS	string	[]	string	[😀]	T	0
+CS	c1	[]	n2	[ ]	T	0
+CO	c3	[a a]	c1	[a]	F	1
+NA	string	[İéé#ßcσ]	d	[é]	F	1
+CA	c2	[]	string	[ K]	T	0
+CO	c4	[]	n4	[]	T	4
+CS	n2	[ßb]	c2	[É+]	F	2
+CO	c1	[]	c4	[ Σ]	T	1
+CP	d	[]	t	[]	T	0
+CP	n4	[]	c10	[*]	T	0
+NS	t	[ς b ı]	c6	[Σ  ]	F	0
+CP	t	[ı😀 é#]	n2	[]	F	6
+NA	string	[aςB*]	t	[ 😀a]	F	0
+NS	string	[BÉ bß*]	t	[ BSS*]	T	6
+CN	c10	[]	c6	[ ]	F	10
+CS	c10	[10]	c1	[ ]	T	0
+CS	d	[a+ ]	c1	[ ]	T	0
+NA	n4	[0bba]	c4	[a😀]	F	3
+CA	string	[ς aıΣa+]	d	[]	T	1
+CA	d	[éσ1IbAa]	n4	[]	T	7
+CP	d	[biÉ]	c1	[*]	T	0
+CP	string	[😀ßKıb]	c4	[*]	T	0
+NA	string	[iA]	string	[]	T	2
+NS	string	[ii ıΣςA]	string	[]	F	0
+NP	c3	[*İb]	c6	[**# ]	T	3
+CA	t	[Σa Éı]	string	[aÉΣ]	T	0
+CP	n2	[11]	string	[*1*]	T	0
+CN	n4	[b]	c6	[]	T	0
+NS	c10	[ IΣ]	string	[]	F	0
+CN	t	[aσ+ Σ]	c1	[a]	T	1
+CP	c3	[éς]	c10	[*]	T	0
+NS	string	[]	string	[ ]	T	0
+NP	n2	[]	string	[*]	F	0
+NA	string	[Σ]	string	[Σ]	F	0
+NA	c3	[]	t	[1ı]	F	0
+CA	c10	[éc😀]	d	[c1b😀]	T	1
+NS	n2	[ı]	string	[ ]	F	1
+CA	string	[ς]	c6	[]	F	1
+CA	string	[0bab]	string	[İÉ]	F	4
+NS	string	[K#ς]	c1	[*]	T	3
+NS	c2	[ß#]	string	[ßΣ ß]	T	2
+NS	n4	[]	c2	[B]	T	4
+NS	c6	[aa1ς*]	n2	[AA]	F	0
+CA	n4	[0ıa]	d	[ς]	T	3
+CS	t	[iaß😀İ]	c2	[ß]	T	2
+CA	c3	[A  ]	c6	[σÉ]	T	1
+NA	c1	[É]	n4	[ÉΣÉ]	F	0
+CP	n4	[Écb]	t	[**]	T	0
+NP	string	[+10cc😀]	string	[*#C*# ]	T	7
+CP	n2	[0c]	d	[+]	F	2
+CS	c3	[ς]	n4	[ ]	T	0
+NS	c1	[]	c10	[ ]	F	0
+CO	c4	[*]	c3	[aσ]	F	0
+CP	c2	[Σ]	n4	[b*]	F	2
+CA	n2	[]	string	[]	F	2
+NA	c4	[ßßσb]	n4	[K+#]	T	4
+CP	string	[K]	c6	[]	F	1
+CP	n4	[]	string	[1]	F	4
+NA	t	[0BΣIc#]	string	[ aΣσ]	F	2
+CP	n4	[KI ]	c3	[#KI]	T	0
+CS	c6	[KiIΣ]	c10	[b]	F	6
+CS	t	[1ΣéßBa]	d	[😀Bc]	F	6
+CP	c4	[Aaa]	t	[++*]	T	0
+NP	c2	[]	c3	[]	F	0
+CN	string	[ıaéb ]	c2	[ıa]	T	2
+CS	n4	[bİ]	string	[]	T	0
+NA	c6	[aςbA0é]	c6	[#]	T	6
+NA	c10	[ςa+i+σaB]	c4	[Σ]	F	8
+CO	string	[Ka]	c3	[İ]	F	0
+NS	d	[Ic]	n2	[  ]	F	0
+CO	c3	[0]	c3	[0ς]	T	3
+CP	c2	[]	string	[**]	T	0
+CA	c4	[]	n2	[]	T	0
+NP	n4	[É]	c6	[**]	F	0
+CP	c2	[+]	n2	[**]	T	0
+CS	c1	[ ]	string	[b]	F	1
+CA	n2	[]	c3	[AaΣ]	F	2
+CN	string	[i]	n4	[i]	F	1
+NA	string	[ébaıB#bσ]	c3	[ab]	F	1
+CN	c4	[*a+ı]	c10	[A*]	T	1
+CP	string	[i ßißΣ]	c2	[#i]	F	6
+CO	string	[]	c1	[]	T	0
+CP	c1	[a]	string	[Iı]	F	1
+CP	string	[bς*a]	string	[*+]	T	3
+NA	c4	[É]	d	[Baσ ]	F	1
+NP	n2	[aς]	c4	[]	T	2
+CN	string	[ İB+#+]	n2	[]	T	1
+CP	string	[bßcAAéI]	string	[**]	T	0
+CO	n2	[ ]	string	[]	F	0
+NS	string	[Ba]	t	[]	F	0
+CP	string	[#İı]	c10	[**#+]	F	3
+CP	n2	[é1]	n2	[é*]	T	0
+NS	c3	[σ]	d	[]	F	0
+CP	string	[İIΣiß#]	string	[*σ#ISS##*]	F	6
+CN	string	[]	c2	[]	F	0
+NS	c2	[]	c2	[]	F	0
+CP	string	[ aBaA]	c1	[]	F	5
+CP	c6	[*σσAΣ]	c4	[aiı ]	F	6
+NA	string	[ßK+]	string	[b A]	T	3
+CP	c10	[I aÉΣİσ#]	c1	[*]	T	0
+NA	string	[ς]	n2	[Σ]	T	1
+CP	n4	[+Σ0]	c3	[*]	T	0
+CP	c10	[babΣ é1]	c3	[bab]	F	10
+NA	n4	[a😀i]	c4	[ςÉa]	F	0
+NS	string	[ aI]	string	[]	F	0
+CA	string	[b]	n4	[iib]	T	0
+CN	string	[Σ#*σ]	c6	[Σ#*σ]	F	4
+CP	c1	[]	c10	[*+]	T	0
+NA	string	[#aς]	c1	[#]	F	0
+CA	c3	[# #]	c2	[ßb]	F	3
+NS	string	[É*Aİı]	n4	[ı]	F	4
+NS	c2	[É]	c4	[]	F	0
+CO	d	[ΣBßς1a]	c4	[Bßς1]	F	0
+CP	n2	[1i]	n4	[**]	T	0
+CA	c3	[σ#a]	c3	[iσ]	T	0
+CA	c1	[]	string	[ß]	F	1
+CO	c1	[]	c10	[ ]	T	1
+CA	string	[b😀]	c3	[ς]	F	3
+CS	string	[c1 bc]	c1	[ ]	T	0
+CA	string	[Iςc1ς]	c3	[001]	T	3
+CP	string	[éσÉB*]	c2	[*Σ]	F	5
+CS	string	[#aIKıΣK]	t	[ A]	F	7
+CP	string	[é  Éc]	string	[*+]	T	4
+NA	string	[😀😀ΣΣaaI]	string	[É]	T	9
+CA	string	[ΣİKİ]	string	[İ]	T	1
+CN	c1	[i]	c2	[i ]	F	1
+CP	n4	[1+#*]	string	[*#+]	F	4
+NP	c10	[#Éı]	n2	[é+]	T	10
+NS	c10	[İıKaiI]	c4	[]	F	0
+CO	c4	[]	n4	[ ς]	T	4
+CS	n2	[Iσ]	c6	[I ]	T	0
+CP	string	[Aa0b]	n2	[]	F	4
+NS	n2	[K1]	t	[]	F	0
+CA	n2	[1]	c1	[1]	T	0
+CP	c2	[ ]	c4	[ÉAΣ ]	F	2
+CN	d	[ caaßIΣ]	n4	[ caß]	T	5
+NA	t	[A]	c10	[I]	F	1
+NP	t	[c]	c6	[a]	T	6
+NA	n2	[😀]	c6	[K]	T	2
+NA	c4	[b]	string	[1]	T	4
+NS	c1	[]	n4	[]	F	0
+CP	c6	[Kc]	c1	[*]	T	0
+CP	c10	[Σßc]	string	[*c# ]	T	2
+NA	c2	[iI]	c4	[aßé]	T	2
+CA	n2	[Aİ]	t	[a]	F	2
+CP	d	[b ]	c4	[**]	T	0
+CS	d	[a]	n2	[a]	T	0
+NA	string	[ß]	string	[İß]	F	0
+CO	string	[ 😀ΣcAÉK😀]	c1	[ ]	F	1
+CA	c3	[]	c6	[😀i]	T	0
+CP	c3	[0bA]	c1	[ ]	F	3
+CS	c3	[#ai]	string	[*]	F	3
+NP	t	[]	d	[+]	F	0
+CP	c2	[+]	n2	[*]	T	0
+NS	string	[1😀]	c10	[1😀]	F	0
+NS	c10	[ ]	string	[]	F	0
+CO	c10	[İ0]	string	[İ0]	F	2
+NS	string	[cba]	string	[ ]	T	3
+CP	c2	[*]	c2	[# ]	F	2
+CP	c1	[A]	c10	[K #Σ]	F	1
+CP	t	[Aba]	n2	[*]	T	0
+CP	n2	[]	c3	[Σbi]	F	2
+NP	n4	[ aς0]	string	[ı+]	T	4
+CS	c1	[]	n4	[b]	F	1
+CO	c4	[ıςaΣ]	c10	[ςaΣB]	F	0
+CN	c10	[ΣbIςAÉac]	n2	[ib]	T	0
+CS	c6	[#*aA a]	c4	[*A]	T	1
+CO	c10	[a1bA#ςΣ]	string	[a1bA#ςΣ ]	T	10
+CP	t	[ Éİa]	c3	[*]	T	0
+CP	t	[ς+σİ]	c6	[**]	T	0
+CA	d	[]	c10	[]	T	0
+CA	string	[aÉaÉ😀İ]	c1	[]	F	7
+CP	c6	[1 ]	n4	[1*]	T	0
+CA	string	[ς 😀c * ß]	c4	[b]	T	1
+CP	c1	[i]	c4	[**+]	T	0
+CP	c2	[İ]	n2	[b]	F	2
+NP	n2	[]	n4	[*]	F	0
+CP	string	[😀I*iaB]	string	[😀I#**+]	T	0
+NA	d	[0B]	c6	[éK]	F	2
+CS	string	[IaBK IAé]	c10	[aBK ]	T	1
+CP	c4	[ÉB0]	string	[]	F	4
+CN	c3	[#aé]	c1	[#]	T	1
+CS	c6	[KI]	t	[KI ]	T	0
+CO	n4	[bıI]	c4	[aa]	F	0
+CA	string	[]	c2	[aΣ]	F	0
+CP	c10	[iIßK#İ]	t	[Σcb]	F	10
+CO	d	[éσé ]	c2	[éσ]	F	3
+CS	c1	[a]	string	[AÉ]	F	1
+NA	c4	[σσ]	c3	[c]	F	2
+CS	t	[ IKß]	d	[]	T	0
+CS	c1	[]	c4	[ σ]	F	1
+CP	string	[0😀acicb]	t	[Kb*É]	F	8
+CP	c3	[1bß]	c10	[]	F	3
+CS	string	[ a İ]	d	[ ]	T	0
+CA	string	[KKa*ςΣ]	c10	[*]	T	3
+CN	c10	[cba*]	c4	[cba*]	T	4
+CP	c6	[ ]	c6	[*]	T	0
+NA	n2	[+É]	d	[#+]	F	0
+CP	c4	[IBB]	string	[b*]	F	4
+CN	c10	[Σé0]	n2	[Σé]	T	2
+CP	c3	[ςσi]	c3	[*σi]	T	1
+NS	c4	[K]	string	[]	F	0
+NS	c10	[]	string	[ ]	F	0
+CN	string	[ßı😀a1ia]	d	[ßı😀a1i]	F	8
+CN	n4	[ıK]	t	[ıK K]	F	4
+CP	c6	[Éé]	d	[*# +]	T	2
+CS	c3	[IiÉ]	t	[i]	T	0
+CN	c4	[]	n2	[ É]	F	4
+CS	c4	[]	n2	[]	T	0
+NP	d	[ BbA]	n4	[*Ba]	F	2
+CP	string	[ 0A]	c4	[]	F	3
+CP	d	[]	n2	[# ]	T	0
+CP	n2	[+]	c10	[*]	T	0
+CA	c10	[ IéA]	c2	[]	T	0
+NS	string	[ß ΣKb]	c2	[ σ]	F	1
+CO	string	[aIiıσßςς]	t	[aIiıσß]	F	6
+CN	n4	[]	c1	[]	F	4
+CS	c1	[a]	c1	[]	T	0
+CO	n4	[Aba]	d	[Aba]	T	4
+CP	n4	[É]	string	[**]	T	0
+CP	n4	[1]	c10	[*]	T	0
+CO	t	[ı Bσ]	string	[ı Bσ]	T	6
+CA	c1	[]	c10	[A😀]	T	0
+NP	string	[σ]	string	[*]	F	0
+CN	string	[a]	c1	[]	T	0
+CP	c10	[]	n4	[*]	T	0
+CP	c4	[ı]	t	[I]	T	0
+NP	n4	[Iiİ]	c4	[**+]	F	2
+CP	string	[é#éA😀0A]	n2	[**]	T	0
+CP	c6	[Iac]	c2	[*C]	T	2
+NS	c2	[]	string	[]	F	0
+NS	c1	[b]	string	[ ]	T	1
+CO	c10	[σ#+0a]	c10	[σ#0aİ]	F	2
+NP	c2	[]	c1	[+]	F	0
+NA	c10	[İ1aa]	string	[+b]	T	10
+CP	string	[bcßIß]	c3	[*CS]	F	5
+CP	string	[I#İaaaaa]	c10	[*+]	T	7
+CP	n2	[*]	c3	[*]	T	0
+CP	c1	[]	string	[ *]	T	0
+NP	c3	[b]	c3	[]	T	3
+CP	n2	[ßÉ]	n2	[SS]	F	2
+CP	n2	[A]	c2	[a]	T	0
+NA	c3	[]	c1	[σ]	T	3
+NA	string	[aÉb]	string	[]	T	3
+NP	c4	[*1+]	c6	[1+ # ]	T	4
+CS	n2	[1]	c2	[ Σ]	F	2
+NA	t	[Ic*]	c2	[😀]	T	6
+CP	c10	[*]	n4	[#* +]	T	0
+CS	d	[a+IßIi+]	c2	[a+]	T	0
+CP	n2	[😀]	t	[*]	T	0
+NP	string	[σ]	c6	[]	T	1
+CS	c2	[σé]	c2	[ΣÉ]	T	0
+NP	t	[KKσaA ]	n4	[0σAß]	T	6
+CS	c6	[ac]	string	[ ]	T	2
+CP	n4	[1ΣK ]	c10	[*ΣK]	T	1
+CP	string	[iσ😀AKß]	c2	[σ*]	F	7
+NS	string	[Σ## ßBß ]	t	[ ßB a]	T	8
+NP	c1	[1]	string	[a0I ]	T	1
+NS	c6	[0éa😀a]	d	[0σi#]	T	6
+NA	d	[]	string	[+ß]	T	8
+CN	n4	[]	c4	[ ]	F	4
+NA	string	[]	c4	[Σ]	T	0
+CP	n4	[b]	c1	[*]	T	0
+NP	t	[0aa+]	c6	[*a#]	T	6
+NP	c6	[aa#aa ]	n4	[]	T	6
+CA	n2	[a]	string	[]	F	2
+CP	c4	[aBa]	c3	[AbA]	T	0
+CP	c6	[a]	string	[ß]	F	6
+CO	c3	[]	c6	[]	T	3
+NA	string	[#İ+]	c3	[K*]	T	3
+NS	c4	[İ]	t	[]	F	0
+CO	c4	[]	c4	[]	T	4
+CN	string	[KéßIİ]	c2	[Ké]	T	2
+CP	c1	[É]	t	[*]	T	0
+NS	c6	[]	n4	[ ]	F	0
+NA	string	[Kßıcς  K]	string	[* ]	F	5
+CN	c3	[😀0]	c10	[😀0😀]	F	3
+CP	n4	[]	c2	[**]	T	0
+CP	c6	[0I0]	c10	[+]	F	6
+CO	c2	[]	t	[I]	T	2
+CP	c6	[ı+ςa]	string	[*#a+++]	F	6
+NS	t	[BA1]	string	[]	F	0
+NS	c10	[A]	c4	[bbI]	T	10
+CA	n4	[ς😀a]	d	[ia]	T	3
+CO	c10	[c😀bσaıa]	string	[c😀bσaı]	F	8
+CP	c4	[ıK]	d	[ıK*]	T	0
+CO	string	[bı]	string	[bı]	T	2
+CO	n2	[Ié]	n2	[Ié]	T	2
+CO	t	[]	string	[ ]	T	6
+CN	c6	[ B]	c10	[]	T	1
+CA	c4	[É😀*]	c2	[aa]	F	4
+CO	string	[+ςbıK]	c4	[+bı]	F	1
+CS	n4	[a]	t	[ ]	T	0
+NS	string	[#KbiI]	t	[#kB]	F	0
+CP	d	[aIς😀ß]	c1	[*]	T	0
+NS	c3	[ Σ]	string	[]	F	0
+NS	c10	[]	t	[]	F	0
+CS	t	[éςÉa a]	t	[*ı]	F	6
+NA	c4	[É0 ]	c10	[]	F	2
+CA	string	[a0a]	string	[😀]	F	3
+CP	n2	[]	t	[]	T	0
+CN	n4	[]	d	[Kab]	F	4
+CS	c1	[c]	string	[C]	T	0
+NP	d	[*a*#😀0K]	c3	[#*a]	T	8
+CP	c3	[😀b]	string	[😀b*]	T	0
+NS	string	[]	n4	[]	F	0
+CP	d	[aaiıéK]	string	[*A+*#+]	F	8
+CP	d	[ΣbB0σ]	c6	[]	F	8
+NS	d	[ı+ßσ ]	c4	[]	F	0
+NA	string	[*aßiI]	c2	[B]	T	5
+CN	c2	[]	c10	[É ]	F	2
+CP	c6	[aσσ+σ]	n2	[*0]	F	6
+CP	n4	[ς]	c1	[ı]	F	4
+CO	string	[ıς*😀Ka#]	c4	[ıς*]	F	3
+CP	n2	[1]	string	[**]	T	0
+CP	string	[Σ]	string	[b]	F	1
+NA	n2	[É#]	n4	[I]	T	2
+NS	c1	[]	string	[Σ 0]	T	1
+CP	c3	[ 1σ]	d	[*ı]	F	3
+CA	c6	[0b]	string	[1K]	F	6
+NS	c2	[😀]	n4	[]	F	0
+CP	c6	[i*b]	c1	[*]	T	0
+NS	string	[É Σσσ0σÉ]	t	[σσ]	F	2
+CP	n2	[]	c2	[*]	T	0
+CS	c6	[é😀A]	d	[]	T	0
+CO	c3	[]	string	[😀 é#]	T	3
+CP	c4	[+b0]	c6	[*]	T	0
+CP	d	[Ké01σ]	c2	[*é]	F	8
+NP	string	[ß]	c10	[ß*]	F	0
+CN	n2	[]	c2	[😀]	T	0
+CN	c6	[b]	string	[bΣ]	T	1
+CA	c3	[]	t	[]	T	0
+CP	n2	[]	c3	[* *]	T	0
+CN	c6	[bσ#bbς]	d	[bσςK]	T	2
+CP	c6	[É]	string	[* +*# ]	T	1
+CA	n4	[ß]	c4	[]	T	1
+NS	c2	[ac]	string	[]	F	0
+CP	c2	[0]	c10	[b]	F	2
+NS	c10	[0éÉı ]	c6	[éB]	T	10
+NP	c6	[0İIb #]	c10	[#]	T	6
+CS	c10	[bA I#aßa]	c3	[  *]	F	10
+CP	string	[ıBΣéσb]	c2	[**]	T	0
+CP	string	[0a]	c1	[é]	F	2
+CP	c3	[]	c6	[+]	T	0
+NP	n4	[ı1ib]	c10	[*+*]	F	0
+CO	c10	[KΣ*1]	c3	[KΣ*]	F	3
+CP	string	[*caa]	c6	[+ca*]	T	0
+CP	c3	[ c]	c4	[*]	T	0
+CN	c6	[]	n4	[a]	F	6
+CP	c6	[éςΣΣ]	c1	[*]	T	0
+CP	c6	[c*a1]	n4	[**1]	T	3
+CO	string	[bς Iı😀Éa]	string	[bς IıÉa]	F	5
+CS	c4	[ÉI#]	string	[]	T	0
+CP	n2	[]	c10	[*]	T	0
+CP	t	[b+É]	t	[+*I]	F	6
+CP	string	[ςσb*😀]	n2	[*+]	T	5
+NA	c4	[A]	string	[aA]	F	0
+CP	n2	[a ]	string	[*# ]	T	1
+CO	string	[K]	n2	[Ka]	T	1
+NS	string	[ßéıi0]	c3	[II]	F	2
+CO	string	[+a+#aba]	n2	[+a]	F	3
+NA	c10	[ c+é0a]	c4	[a]	F	0
+CS	c6	[+éc#BK]	string	[ a*I]	F	6
+NP	c10	[é]	c10	[**+]	F	0
+CA	d	[i1bI 0]	c2	[]	T	4
+CP	n4	[b+]	c4	[*]	T	0
+CO	c3	[]	c3	[]	T	3
+CP	c10	[baÉI😀]	n4	[BςB]	F	10
+CA	t	[bß]	c6	[0b]	T	0
+CP	string	[I+a]	c2	[]	F	3
+CO	c2	[]	c1	[ ]	T	2
+CN	c4	[a]	string	[a]	T	1
+NS	c3	[*]	c10	[*  ]	F	0
+CP	string	[éı a😀]	n2	[**]	T	0
+CO	t	[+b11 +]	c3	[b11]	F	0
+CS	c4	[ıéA]	c2	[IÉ]	T	0
+CP	c6	[b1éa]	c3	[😀]	F	6
+CN	c3	[K*]	t	[K* ß]	F	3
+NA	c3	[]	c3	[KK ]	F	0
+CN	string	[++i*BA]	string	[iBA]	T	0
+NA	n2	[A]	c4	[a]	F	1
+NA	c6	[É#]	n4	[a]	F	2
+CN	n2	[#é]	t	[#é]	F	2
+CP	string	[ é1ς😀é]	c2	[*]	T	0
+NA	n2	[σ0]	c2	[ΣA]	T	2
+NS	c6	[ ςß]	n2	[ c]	T	6
+NS	string	[İbé]	string	[ ]	T	3
+CA	d	[+é]	c2	[]	T	2
+NS	d	[ σ]	t	[b]	T	8
+CP	c1	[ ]	c2	[# ]	T	0
+CO	c10	[A]	n2	[A]	T	10
+CP	c3	[]	c6	[]	T	0
+NA	string	[ I😀]	c10	[İ ]	F	0
+CP	d	[a#]	string	[*]	T	0
+CO	string	[+]	string	[+]	T	1
+NS	c2	[]	t	[  ]	F	0
+CO	n4	[ 1]	c10	[ 1ı]	T	4
+NS	c10	[]	string	[ K]	T	10
+NS	n4	[ς#0]	c2	[]	F	0
+CO	c6	[σ]	c10	[σ]	T	6
+NS	n2	[Ab]	c1	[c]	T	2
+NP	n2	[0b]	string	[baİa]	T	2
+CS	c3	[IÉ]	n2	[]	T	0
+CP	n4	[Béba]	c1	[*]	T	0
+CP	t	[#K+bΣA]	c3	[k]	F	6
+NP	t	[iσ++Σ]	c6	[]	T	6
+CA	c3	[*σ ]	c2	[ς]	T	2
+CO	c4	[ai]	string	[ai ]	T	4
+CO	c1	[]	n4	[ ]	T	1
+CS	c1	[#]	c4	[]	T	0
+CO	c4	[ς]	c4	[ς😀]	T	4
+NA	n4	[aAσς]	string	[0]	T	4
+CS	c2	[]	c2	[]	T	0
+CO	c4	[É]	string	[É ]	T	4
+CP	c2	[😀]	string	[*]	T	0
+CP	t	[😀]	c3	[I**]	F	6
+CP	string	[İ*K]	string	[σA]	F	3
+CN	string	[aÉécIIa#]	n4	[aÉéc]	T	4
+CO	string	[ÉIcÉσi ]	string	[ÉIcσi ]	T	7
+CA	c4	[ bß]	string	[b]	T	1
+NP	c1	[i]	c10	[**#]	T	1
+CP	d	[a]	t	[a]	T	0
+CP	c4	[İς]	c2	[İ]	F	4
+CP	c4	[cbK]	n4	[CB*+]	T	0
+CA	c2	[cÉ]	d	[]	F	2
+NS	string	[aİBςb#]	n4	[b]	F	2
+CO	d	[  éaßI]	string	[ éaßI]	T	8
+CP	n4	[ıAσ]	c3	[*A+]	T	1
+CP	t	[éς]	c6	[😀ÉßB]	F	6
+NP	c10	[*]	n2	[* ]	F	0
+CP	string	[Ki*KΣİ]	t	[*Σ+*]	T	4
+CN	n4	[aσ]	c10	[]	T	0
+CP	c10	[b   bB]	c10	[*#B*]	T	5
+NA	string	[00]	c6	[0]	F	0
+NA	string	[Éςa]	c3	[00]	T	3
+CO	n2	[ÉK]	c1	[É]	F	1
+CP	c1	[*]	c3	[*]	T	0
+CO	c1	[]	c2	[ c]	T	1
+NS	c4	[]	c2	[ ]	F	0
+CS	c1	[K]	n2	[]	T	0
+CA	string	[ cİI]	c1	[c]	T	1
+NS	c4	[]	c6	[ ]	F	0
+NS	d	[aba]	string	[]	F	0
+NA	d	[I0bc]	n4	[ I]	F	0
+CN	c4	[]	t	[]	F	4
+CS	string	[Bb]	n4	[]	T	0
+CP	d	[aßAi ΣA+]	n4	[*Σ#A]	F	8
+NA	string	[]	n4	[İ]	T	0
+CA	n4	[😀I*]	d	[#]	F	4
+CN	t	[bba]	c6	[ba ]	F	6
+CP	c2	[ ]	string	[*]	T	0
+CP	c3	[]	c3	[**]	T	0
+NA	n2	[i]	d	[a]	F	1
+CA	string	[a😀#İ]	string	[]	F	5
+NP	string	[éa ß😀ı1 ]	d	[ K]	T	9
+CO	d	[ 😀aa]	d	[ 😀]	F	3
+CN	t	[İaİb😀]	n4	[İab]	T	4
+CS	c3	[KÉς]	c1	[k]	T	0
+CN	c10	[b]	c6	[b ]	F	10
+CP	c10	[a1ßıı]	c1	[+]	F	10
+CP	string	[éI]	c3	[]	F	2
+CA	d	[Σ*#aA😀]	c6	[#]	T	2
+CP	string	[+bi]	t	[#i#]	F	3
+CP	t	[#Éİİ]	c4	[*+İ*]	T	1
+CN	n2	[]	t	[ ]	F	2
+NS	c3	[É]	n4	[ ]	F	0
+CA	c1	[]	c1	[]	T	0
+CP	n4	[]	string	[ *# ]	T	0
+CP	n2	[]	n2	[*]	T	0
+CP	string	[😀 II]	d	[*i]	T	4
+NA	string	[ı1c ß]	c10	[é]	F	3
+CS	c6	[ac]	d	[]	T	0
+NA	c10	[ı σ]	c3	[0ı]	F	0
+CS	c10	[iß]	c3	[  a]	F	10
+NA	n4	[ K😀]	string	[ı]	T	4
+NP	c1	[a]	string	[*]	F	0
+NS	n2	[é*]	t	[é]	F	0
+CP	n2	[]	c10	[+ *]	T	0
+CP	c10	[]	c1	[]	T	0
+NA	c3	[]	c4	[]	F	0
+CA	d	[+É b😀Σ]	c1	[É]	T	1
+CP	t	[#c  i ]	string	[a]	F	6
+NA	d	[a]	c3	[ı*a]	F	0
+CP	c3	[#ς]	string	[*# ]	T	2
+NP	c1	[]	string	[**]	F	0
+NP	n2	[ı ]	t	[**]	F	0
+NA	c3	[]	t	[ı]	F	0
+CP	c3	[ςbé]	d	[*]	T	0
+CP	n2	[aa]	c6	[*a*]	T	0
+NA	d	[]	string	[aI]	T	8
+CP	t	[bσÉIi]	string	[*]	T	0
+CN	c1	[]	c6	[ a]	F	1
+CS	c10	[K]	n2	[  ]	T	0
+CP	c6	[ßba0I]	c4	[**# ]	T	5
+CA	string	[Aa😀É]	c4	[A]	T	0
+CP	d	[c1I]	c1	[i]	F	8
+CP	c2	[ ]	c4	[+]	T	0
+NP	string	[bIac0ba]	n2	[#a]	T	7
+CA	n2	[bé]	c6	[Σab]	T	0
+NS	c6	[  AbKΣ]	c10	[  aB]	F	0
+NA	t	[i]	c4	[ai]	F	0
+CN	c2	[a]	c4	[a ]	F	2
+NS	c6	[ i]	c3	[ ]	F	0
+CA	n2	[#]	c6	[]	T	1
+NA	string	[+  bb]	c1	[+]	F	0
+NA	d	[ı0a aΣ]	c6	[a]	F	2
+CS	t	[]	c10	[]	T	0
+CA	string	[*σ#ΣbΣaΣ]	d	[K]	F	8
+CP	string	[Kσa Ka😀c]	c6	[]	F	9
+NS	string	[*i İß]	c2	[]	F	0
+CP	d	[IΣaé]	string	[σA#É*]	F	8
+CA	c10	[😀aA]	c6	[Bσ]	T	4
+NS	c10	[ÉÉ#ΣÉ😀+]	c2	[]	F	0
+NS	string	[İ ]	c3	[  ]	F	0
+CP	c4	[B iß]	t	[*]	T	0
+CN	n2	[]	n2	[]	F	2
+NA	string	[éiσ]	string	[cb]	T	3
+CA	c10	[0BIiÉc ]	string	[Kß]	F	10
+NS	n2	[KB]	c1	[]	F	0
+CP	n4	[Σ*c ]	string	[B]	F	4
+CS	c1	[*]	c1	[]	T	0
+CP	c1	[é]	c1	[*]	T	0
+CO	c3	[]	d	[I]	T	3
+NA	d	[10I]	n4	[]	F	3
+CN	n4	[ς+Σ]	d	[ςΣ ς]	T	1
+CA	c2	[]	string	[ıb]	F	2
+CP	d	[*bσı]	n4	[* +]	T	4
+CP	string	[]	c6	[*]	T	0
+CP	string	[AσAécB1É]	c10	[É]	F	8
+CP	c2	[]	c6	[a ]	F	2
+CP	n2	[]	string	[]	F	2
+CA	c6	[]	c10	[]	T	0
+CP	d	[cΣK]	c1	[*]	T	0
+CS	d	[İςa😀😀ß]	c2	[ ]	T	0
+CP	n2	[σi]	c4	[bσKK]	F	2
+CP	string	[I😀*I]	c4	[😀+É]	F	5
+CO	n4	[]	n2	[ ]	T	4
+CA	string	[é#İ#0é  ]	c3	[é]	T	0
+NP	c10	[É0ß😀IσKÉ]	d	[*😀#iΣké]	T	10
+NP	c6	[]	string	[+  +  *]	F	0
+CO	n2	[]	d	[ ]	T	2
+NS	c3	[]	string	[IB]	T	3
+CO	c2	[]	c3	[]	T	2
+NS	c6	[ééÉ]	c1	[]	F	0
+CO	string	[ςσ ]	c3	[σ a]	F	0
+CP	t	[ß0]	string	[#ß0+ # *+]	T	0
+NS	c4	[1iBé]	c3	[]	F	0
+NS	c2	[ς*]	string	[]	F	0
+CA	d	[b#b]	c2	[b]	T	0
+NS	string	[éé #ς]	c1	[]	F	0
+CA	c2	[]	c6	[+é]	T	0
+NP	c10	[Éaİ iéBé]	t	[*İ# i+]	T	10
+CO	c2	[1 ]	c10	[ı]	F	0
+NP	c3	[😀ı]	string	[]	T	3
+CO	string	[aé1]	c10	[aé1]	T	3
+CA	t	[# é]	n2	[]	T	1
+CP	string	[ıİ]	n4	[A]	F	2
+CN	c2	[1]	n2	[1+]	T	1
+CA	string	[]	string	[aB]	F	0
+CS	c2	[ ı]	n4	[]	T	0
+NS	t	[ς+]	c3	[i]	T	6
+CP	c2	[i+]	c4	[**+]	T	1
+CN	c1	[]	t	[B]	F	1
+CP	n2	[]	n2	[]	T	0
+NS	t	[a]	n4	[    ]	F	0
+CO	string	[0ßIbé]	t	[ßIbé]	F	0
+CS	c2	[ı]	n2	[  ]	T	0
+CP	d	[]	string	[*]	T	0
+CP	c3	[😀+]	c2	[]	F	3
+CN	c6	[b😀  B]	string	[b😀 B]	F	6
+NP	c1	[+]	string	[*]	F	0
+NP	c4	[A0ς]	n4	[*#]	F	3
+NA	c2	[]	n4	[]	F	0
+NA	c1	[]	n2	[ ]	F	0
+CP	n4	[I]	string	[]	F	4
+CP	c4	[aiK*]	n2	[*+]	T	3
+NP	c4	[ ς]	t	[*# ]	F	2
+NP	string	[B]	string	[]	T	1
+CS	t	[İ1ς aa]	n4	[Σ AA]	T	2
+CA	c2	[Σ ]	t	[ςbς]	T	1
+NS	c10	[]	c3	[ ]	F	0
+CP	n4	[]	c2	[##]	F	4
+NP	t	[I😀iI]	string	[*I*]	F	0
+CO	c10	[É0KcσIΣ]	string	[É0KcσI]	F	6
+CS	c4	[σb]	c3	[]	T	0
+NP	c6	[ßß]	t	[#1]	T	6
+CN	c4	[a]	c10	[a é]	F	4
+NS	n4	[😀0*]	string	[]	F	0
+CA	string	[iBÉ+K]	string	[i]	T	0
+CS	c3	[ıB]	n4	[ ]	T	0
+NA	string	[AaÉ+ Σ]	c3	[ß]	F	4
+CO	t	[ıac]	c3	[ıac]	F	3
+CS	n4	[*+😀]	c4	[ ]	T	0
+CN	d	[σa Aς]	c1	[σ]	T	1
+NA	n2	[]	c2	[]	F	0
+NP	string	[a#]	string	[a##*+]	T	2
+CA	t	[Éb0iBÉ]	n2	[aς]	F	6
+CO	c10	[éi]	c3	[éi ]	T	10
+NA	c2	[++]	string	[béİA]	T	2
+CP	t	[ccΣK]	string	[*k]	T	3
+CN	c1	[1]	n2	[1]	F	1
+CA	string	[😀c]	string	[Ba]	F	3
+CP	string	[ BςB ]	string	[ +ς*]	T	0
+CP	c4	[ Aİ]	c4	[bÉI]	F	4
+CS	string	[aAaΣ Σ]	c10	[ Σ]	T	4
+NS	n2	[ı ]	string	[ 0i+]	T	2
+CP	string	[Biςc ]	string	[i**]	F	5
+CS	d	[É😀]	c2	[😀]	T	1
+NA	string	[é]	t	[*]	T	1
+CA	t	[bıIB]	string	[#I]	T	2
+CP	c1	[]	c2	[ıσ]	F	1
+CN	n2	[]	c6	[ ]	F	2
+CA	n2	[]	string	[1 ]	T	0
+CS	c6	[ba]	c10	[ ]	T	0
+CS	c3	[İ1]	string	[b+ß]	F	3
+NS	d	[aİbKBaa]	string	[a ]	F	6
+CN	c10	[bİİb😀aσ]	c3	[bİ]	T	4
+CA	c4	[ ]	n2	[K]	T	0
+CN	c3	[]	string	[Éİ]	T	0
+CA	n4	[ς]	c4	[Bc]	T	1
+NA	c1	[]	c2	[BB]	T	1
+CP	string	[BI]	string	[aßKa]	F	2
+CP	string	[Σ*ςiςI]	t	[*]	T	0
+NA	string	[é😀aaaa0K]	d	[ba]	F	3
+CP	c6	[ ]	n2	[# ]	T	0
+NP	t	[]	string	[+]	F	0
+NP	n4	[]	string	[**]	F	0
+CA	string	[a]	c4	[ıba]	T	0
+NS	n4	[]	string	[]	F	0
+CS	c2	[]	c1	[a]	F	2
+CA	n2	[]	c4	[0]	T	0
+CS	n4	[]	c3	[]	T	0
+NA	n4	[+ıc]	c4	[#c]	F	2
+NS	string	[ΣΣΣσ]	c2	[]	F	0
+CA	t	[]	string	[σa ]	T	0
+NA	d	[ bİ+  *Σ]	string	[σ1Σ]	F	7
+NS	c10	[B*0Aı 0é]	c4	[0Aı ]	F	2
+CA	string	[K1 😀bÉB]	c2	[]	T	2
+CA	c2	[😀]	string	[A😀]	T	0
+NA	t	[😀K ı]	string	[a😀]	F	0
+CP	string	[ÉaaBσ]	n4	[ς]	F	5
+CP	t	[ıİςÉÉ]	c6	[**]	T	0
+CP	c10	[İcΣ]	string	[* *]	T	3
+CO	c4	[bé1ß]	string	[bé1ßB]	T	4
+CN	c6	[A1]	c4	[]	T	0
+CP	string	[iaßIıa]	c10	[+# ]	F	6
+NS	c3	[]	c10	[ i]	T	3
+NA	t	[ΣςİİB]	c3	[ ς]	F	1
+CO	c4	[]	c1	[ ]	T	4
+NA	c6	[i]	c1	[É]	T	6
+CA	c1	[c]	c6	[c]	T	0
+CO	d	[0B#acb😀]	c10	[0B#acb😀]	T	8
+CS	t	[aÉ*éAK]	string	[*]	T	2
+CP	c3	[aci]	c3	[*]	T	0
+CN	c3	[b]	d	[b]	F	3
+CS	c3	[b]	string	[]	T	0
+CN	t	[aςbaß]	c1	[b]	T	0
+CP	string	[İ]	c6	[]	F	1
+CO	c1	[0]	n2	[0]	T	1
+CA	c6	[1*B+]	c4	[😀]	T	4
+CS	n4	[0é]	string	[0É]	T	0
+CA	string	[+İΣAb cé]	c6	[1]	T	5
+NS	t	[]	d	[]	F	0
+NA	string	[Σ+ißiİé]	c3	[a#İ]	F	5
+NS	string	[Bcb]	c10	[bC ]	F	0
+CO	t	[+]	string	[+]	F	1
+NA	c6	[Ba1 *]	c3	[Iıa]	F	1
+NA	c3	[]	n4	[a]	F	0
+NS	c1	[Σ]	string	[c]	T	1
+CA	t	[aσ1a😀]	string	[ÉΣc]	F	6
+NP	d	[éBéBıß]	string	[*BéB]	T	8
+CP	c1	[]	string	[*]	T	0
+CO	d	[aςba  K]	c10	[aςb ]	F	6
+CP	string	[Ki ]	t	[*]	T	0
+CS	d	[#Iaßσ éς]	d	[Bé]	F	8
+CA	string	[*aaba😀]	string	[éς*]	T	0
+NA	c1	[]	c3	[]	F	0
+NS	n4	[c]	n2	[]	F	0
+NS	n2	[1]	string	[]	F	0
+CP	c2	[]	c3	[*]	T	0
+CO	c6	[IcK😀]	c6	[IcK😀 ]	T	6
+CS	d	[a]	string	[a ]	T	0
+CP	c1	[]	d	[*]	T	0
+CA	c10	[ςß a]	c4	[]	T	2
+CS	d	[1Éıß*B😀]	string	[ ]	F	8
+CP	c1	[A]	string	[A# +]	F	1
+CP	c3	[ı]	c4	[I*]	T	0
+CS	n2	[b]	c6	[ ]	T	0
+CP	c2	[Σ]	c4	[Σ]	T	0
+CS	c6	[IaaÉ0]	c6	[IaaÉ ]	T	0
+CP	c3	[Bı ]	string	[]	F	3
+NS	string	[]	c2	[]	F	0
+CP	n4	[σ]	c10	[*]	T	0
+CN	c4	[ c]	n4	[ c#]	F	4
+CP	d	[]	n4	[*+*]	T	0
+CN	n4	[Kb*+]	n2	[Kb]	T	2
+CA	string	[*b]	c3	[]	F	2
+NS	string	[B]	n4	[ı]	T	1
+CS	string	[b]	n2	[]	T	0
+NA	c1	[]	string	[]	T	1
+CS	c6	[I😀]	n4	[aß]	F	6
+CP	d	[ii#ςς]	string	[**]	T	0
+NP	string	[]	d	[]	T	0
+NP	c10	[ςKΣI]	string	[*]	F	0
+NS	string	[aİİ 1B]	c2	[İİ]	F	1
+CS	string	[#😀i]	string	[i ]	F	4
+NP	c6	[b#a]	string	[*#a*]	F	2
+CP	string	[iB ]	c4	[*]	T	0
+CO	c3	[ ]	c1	[a]	F	0
+CO	c6	[A]	c4	[Σı]	F	0
+CP	string	[]	c6	[]	F	0
+CS	d	[σ0a]	t	[   ]	T	0
+NA	string	[σΣa]	c3	[+a]	F	2
+CP	n4	[ÉA]	c6	[*]	T	0
+CA	n4	[b]	string	[σb]	T	0
+NS	t	[1Ia😀]	n4	[a😀 ]	F	2
+NA	c3	[İ]	t	[İa]	F	0
+CA	n2	[b]	c6	[b]	T	0
+CP	t	[ aİab]	c2	[1ς]	F	6
+CP	string	[]	n4	[]	F	0
+NS	string	[Aİab ]	t	[ ]	F	0
+CA	t	[#]	string	[b ]	T	1
+NS	c2	[]	n2	[]	F	0
+CP	c6	[1écı+]	n2	[1]	F	6
+CP	c6	[]	n4	[]	T	0
+NA	n4	[Éaσ]	c10	[σ]	F	2
+NA	n2	[]	c4	[İ]	F	0
+CP	c4	[]	d	[ς]	F	4
+CP	string	[bσ1b#]	c10	[1é0]	F	5
+CS	string	[iÉ*aaÉ]	c2	[*]	T	2
+CN	string	[béé B]	c4	[bé 1]	T	4
+NA	string	[ **]	t	[*]	F	0
+NS	t	[ßÉıÉ]	c2	[ß]	F	0
+NS	c6	[i]	c4	[i]	F	0
+NS	n2	[*]	n4	[]	F	0
+CS	string	[0*]	string	[]	T	0
+CP	string	[ÉaIAςi]	string	[*i*]	T	2
+NP	n4	[bb]	c3	[*B ]	F	1
+CP	n4	[]	n4	[*+]	T	0
+CO	c2	[Aa]	c4	[Aa]	T	2
+CP	t	[cς ß😀]	c6	[**]	T	0
+CN	c2	[ı1]	d	[ı1b]	F	2
+CO	string	[ß]	string	[B]	F	0
+CO	c4	[iAKß]	c10	[iAKß]	T	4
+CA	c4	[]	c1	[]	T	0
+CO	t	[ıσÉ0b]	c1	[σ]	F	0
+NA	c4	[+]	string	[K]	T	4
+CP	c10	[AIΣaİ1b0]	string	[*b]	F	10
+NA	c2	[b]	t	[ςab]	F	0
+CP	c2	[]	string	[**+]	T	0
+CP	t	[Σ ς]	string	[**]	T	0
+NS	n4	[B]	n2	[a]	T	4
+CA	c6	[]	n2	[I]	T	0
+NP	c2	[É*]	n2	[**]	F	0
+CP	n2	[ ı]	n2	[**]	T	0
+NS	c4	[b İİ]	c2	[ ]	F	0
+NS	string	[A😀a]	c1	[1]	T	4
+NP	c2	[]	c4	[ #+]	T	2
+CA	c1	[]	n4	[bß ]	T	0
+NA	string	[]	string	[0é]	T	0
+CP	string	[ÉKÉ0bc😀 ]	string	[*0BC]	F	9
+CP	string	[]	string	[+]	F	0
+CP	c4	[]	d	[*]	T	0
+NS	n2	[ab]	c4	[ςi A]	T	2
+CP	c3	[ΣİA]	string	[*]	T	0
+CA	n2	[a]	t	[a]	T	0
+CS	n2	[#]	c10	[]	T	0
+CP	c6	[+]	c10	[*]	T	0
+NP	d	[]	c2	[**]	F	0
+CP	string	[éi*#a+]	c2	[*]	T	0
+NP	d	[ßabé ib]	n4	[*B *]	F	6
+CO	c6	[bı]	d	[bı]	T	6
+NS	n2	[]	c1	[ ]	F	0
+CN	string	[]	n4	[A]	F	0
+CP	c10	[ cKéiA0]	c4	[***]	T	0
+CP	t	[I😀*é]	string	[**]	T	0
+CA	c6	[ß]	c2	[a]	T	1
+CP	string	[İ 😀0Σ** ]	string	[]	F	9
+CO	d	[]	t	[ B]	T	8
+CP	c4	[İ*bÉ]	string	[*É*]	T	3
+CP	c1	[I]	string	[1]	F	1
+CP	string	[]	string	[cÉ]	F	0
+CN	c2	[]	c3	[#]	F	2
+CA	c1	[]	d	[ß ]	T	0
+CN	c6	[Σı]	c1	[B]	T	0
+NA	string	[]	c3	[😀 ]	T	0
+NP	n2	[#]	c10	[*]	F	0
+CS	n2	[c]	c6	[]	T	0
+NS	string	[ÉΣıbA*ß]	n2	[1*]	T	7
+CP	t	[😀]	c10	[*]	T	0
+CN	n2	[K]	n4	[a]	T	0
+CP	string	[1b#A#İc]	c1	[*]	T	0
+CS	c2	[0Σ]	n4	[b😀]	F	2
+NS	n2	[ ı]	string	[I]	F	1
+NS	c3	[]	n4	[a*i]	T	3
+NA	c4	[#]	string	[i]	T	4
+NS	c4	[]	string	[ı]	T	4
+CP	string	[ςaa ıI]	n4	[I*]	F	6
+CA	c6	[σAßB1]	string	[*ςA]	T	1
+CN	string	[a😀İ😀1Kbé]	c2	[a]	T	1
+NP	c10	[]	c1	[*]	F	0
+CN	c6	[İ]	c10	[]	T	0
+CN	string	[Bςς]	string	[ςaKa]	T	0
+CP	c2	[ai]	n2	[*]	T	0
+CP	c10	[Éé]	d	[*é*]	T	0
+CO	t	[Éaba]	string	[* b]	F	0
+NS	d	[Σ]	string	[ ]	F	1
+CA	c1	[]	c3	[ı]	T	0
+CO	c4	[]	n4	[ ]	T	4
+CN	c6	[]	n4	[]	F	6
+NA	n4	[a]	string	[ıÉ]	T	4
+NS	n2	[0]	string	[*]	T	2
+CP	d	[ß1ı0éİ]	string	[*#S1I0]	F	8
+CO	string	[Bıςa]	string	[Bıςa]	T	4
+NA	n2	[Aı]	t	[#A]	F	0
+CP	c3	[B😀]	c10	[Σb]	F	3
+NP	string	[σ+b b]	c6	[* b*# ]	T	5
+CP	c3	[ aé]	c6	[*]	T	0
+NS	string	[ΣB]	t	[]	F	0
+CS	t	[]	c1	[ ]	T	0
+CP	c4	[ ]	c3	[  ]	T	0
+CO	c1	[]	string	[ 1]	T	1
+CN	c1	[1]	n4	[béi1]	F	1
+CO	t	[K 😀]	string	[K 😀*]	T	6
+CO	c6	[0*Σ ]	n2	[*Σ]	F	0
+CO	c2	[i0]	string	[i0]	T	2
+CN	c10	[ıÉBb]	t	[ié]	T	0
+CO	c4	[İa]	string	[]	F	0
+NP	t	[😀İK]	c2	[b0]	T	6
+CP	c3	[i]	c4	[]	F	3
+CP	c2	[ß]	c2	[**]	T	0
+CP	c6	[*a]	string	[**]	T	0
+CO	string	[bΣσσéΣAΣ]	c6	[bΣσéA]	T	8
+CN	string	[éı]	c3	[éı ]	F	2
+NP	c10	[KB0aΣb]	d	[a😀]	T	10
+CP	c10	[σ+ı#]	c10	[#]	F	10
+CA	d	[aAabς0a]	c10	[Σ]	T	7
+NS	string	[σi İa]	c6	[ ]	F	0
+CP	c3	[I#ς]	n4	[*]	T	0
+CO	c4	[*]	c4	[]	F	0
+CN	c6	[ aσ]	d	[ aσa]	F	6
+CP	string	[Ibéa]	string	[*]	T	0
+CA	string	[ibaa0#]	c10	[#Σ*]	T	5
+CP	c2	[a]	string	[IΣ*]	F	2
+CN	c10	[ςaİiKΣbb]	c4	[ςaİi]	T	4
+NS	n2	[aé]	c1	[é]	F	1
+CP	c3	[cß ]	c4	[*#]	T	2
+CP	d	[B]	n2	[*+]	T	0
+NA	n4	[aa ]	n2	[aı]	F	0
+NA	c6	[ 0+iσς]	t	[a]	F	0
+CA	string	[ςKb]	n4	[K]	T	1
+CS	c10	[éKςa ]	d	[Ék]	T	0
+NA	c10	[Ka#ié]	t	[ii]	F	3
+NA	c1	[]	c10	[#a]	F	0
+NS	string	[1σéc ]	c6	[]	F	0
+CP	string	[c]	c6	[*+]	T	0
+CA	c1	[]	c2	[a]	T	0
+CN	n4	[ı]	c10	[ıΣ]	F	4
+CP	string	[]	string	[*+]	T	0
+CA	c10	[ ]	c10	[I]	T	0
+CP	c4	[]	string	[  *+*]	T	0
+CO	c3	[ß*]	c1	[ß]	F	1
+CO	c10	[ςİ ς]	n4	[ςİ]	T	10
+CS	string	[ß]	c1	[b]	F	1
+CP	string	[Éaba]	c4	[]	F	4
+NS	c1	[ı]	string	[ ]	T	1
+NS	string	[😀KI+ σ#]	n4	[ ]	F	0
+NP	c6	[]	string	[]	T	6
+CP	t	[]	string	[*#  ]	T	0
+CP	c10	[σA]	d	[+*]	T	0
+NA	d	[ *Σb]	string	[*]	F	1
+CP	c2	[İ]	c1	[]	F	2
+CP	n4	[#ı0]	c6	[**]	T	0
+CP	c10	[ς I😀]	c10	[cI]	F	10
+CA	string	[  😀Σİ]	c6	[K]	T	0
+NA	c6	[II]	string	[aI]	F	0
+NS	n4	[1]	d	[1]	F	0
+CP	c6	[iß0ÉÉ]	c4	[ c]	F	6
+NA	c3	[]	c1	[Σ]	T	3
+CS	c10	[aBaßı #]	c3	[]	T	0
+CP	c3	[ßı]	c3	[SS]	F	3
+CN	n4	[İcé]	c3	[İé]	T	1
+CN	c3	[ς]	d	[ς ]	F	3
+NA	string	[bbI ]	c6	[a]	F	3
+CO	c1	[]	c2	[A]	T	1
+CP	n2	[A]	c2	[*]	T	0
+CS	c10	[1ia]	d	[#*İK]	F	10
+CP	c4	[]	n2	[*]	T	0
+NS	c10	[]	c1	[]	F	0
+CO	d	[É1Éa+]	d	[1a+ +]	F	0
+NS	c6	[ıa😀σß]	t	[ß*]	T	6
+NA	c3	[*]	c10	[]	F	1
+NS	string	[01+#ba i]	string	[1 ]	T	8
+NP	c10	[+a ]	c10	[İ]	T	10
+CP	string	[ΣςK]	n2	[**]	T	0
+CN	c6	[0]	c4	[]	T	0
+CA	c2	[b]	c4	[ΣAa]	T	1
+CP	c2	[b1]	string	[😀ai]	F	2
+CN	c1	[]	string	[ ]	F	1
+NS	c6	[aI]	n2	[]	F	0
+CA	string	[]	d	[]	F	0
+NA	c1	[]	c10	[İ]	F	0
+CP	string	[ ßIΣ#A i]	d	[*i# ]	F	8
+CS	c3	[0 ]	string	[]	T	0
+CP	d	[ß]	n2	[]	F	8
+NP	c3	[0]	c2	[0]	F	0
+CP	c4	[Σ]	c10	[IıK ]	F	4
+CS	n4	[i]	string	[i ς]	F	4
+CA	c6	[ς*aaςΣ]	t	[ AÉ]	F	6
+CO	n2	[σ]	t	[σİ]	T	2
+CP	d	[+ İ+a ]	c10	[*#]	T	5
+NS	n4	[1c]	c10	[İéi]	T	4
+CP	c2	[]	t	[ cσa]	F	2
+NA	c2	[#]	c3	[😀c]	T	2
+NA	string	[ΣbIς]	string	[ς]	F	3
+CP	c6	[AAB*]	n4	[**]	T	0
+CO	c10	[0#]	c6	[0#]	T	10
+CP	t	[aKbab]	string	[*Kba]	F	6
+CA	c10	[0É]	c3	[A]	T	2
+CN	n4	[Σ]	c1	[Σ]	T	1
+CN	string	[abcσAA]	c2	[ab]	T	2
+CP	n4	[1İbΣ]	c1	[*]	T	0
+NP	c4	[aß😀]	t	[*]	F	0
+CP	c2	[cK]	c6	[C*]	T	0
+NP	t	[]	t	[ Σab]	T	6
+NS	string	[0😀iBB ]	string	[0😀iB ]	T	7
+CS	c3	[]	n4	[  b]	F	3
+CS	string	[É😀ß]	c3	[ß]	T	3
+CP	c1	[a]	string	[**]	T	0
+CO	c2	[ Σ]	n4	[ Σb]	T	2
+CP	c3	[ıσ ]	c6	[*]	T	0
+CS	c6	[0😀]	d	[]	T	0
+NA	string	[#]	c10	[]	T	1
+CA	t	[éBaiİ]	string	[#]	F	6
+CP	c1	[]	d	[+]	T	0
+CP	t	[i]	n4	[i*]	T	0
+CP	c3	[#]	c4	[*]	T	0
+CA	c4	[i I]	c6	[]	T	1
+NA	c2	[é]	string	[0]	T	2
+CN	c2	[#]	c2	[# ]	F	2
+CP	c3	[Éσ+]	c1	[é]	F	3
+NA	n4	[bia]	c10	[A a]	F	2
+CA	c10	[ABBıςéaÉ]	c6	[ς]	T	4
+CN	t	[i#B]	string	[İ]	T	0
+CP	c6	[ς]	c3	[**]	T	0
+NA	c1	[]	t	[Ib ]	F	0
+CO	string	[BKI a]	t	[BKI a]	T	5
+NP	d	[İA]	c6	[σ]	T	8
+CA	string	[ #σ#*a1]	n4	[1]	T	0
+NP	string	[ςΣ]	d	[**]	F	0
+NS	c4	[b]	c6	[ıKb]	T	4
+CN	c3	[ i]	n2	[ i]	F	3
+NP	c6	[baÉ+a]	c1	[*]	F	0
+CP	c1	[I]	c10	[]	F	1
+CP	n4	[]	string	[* ## ]	F	4
+NA	c3	[Σ]	d	[]	F	1
+CN	c6	[cBcéı]	string	[cBéı]	T	5
+CS	c6	[0éΣa]	t	[éΣa   ]	T	1
+CP	string	[b0]	c6	[aßςA]	F	2
+NS	n4	[]	n2	[  ]	F	0
+CO	string	[İ ςς]	t	[İ ς]	T	4
+CA	c3	[ BB]	n4	[B]	T	0
+CN	c2	[]	c6	[ ]	F	2
+NA	string	[1#]	c10	[é0#]	F	1
+CN	string	[ ]	c1	[ ]	F	1
+CN	c4	[+Iié]	t	[+Ié]	T	2
+CO	c6	[😀b]	n4	[aİΣi]	F	0
+CP	c4	[bσa]	c6	[]	F	4
+NA	t	[ 0😀é]	n2	[1 ]	F	0
+CP	c3	[1]	string	[*+]	T	0
+NS	c10	[a1σ+Bß]	d	[]	F	0
+CP	t	[B]	c10	[+]	T	0
+CP	n2	[σ]	string	[***]	T	0
+CP	string	[iÉ#]	n4	[*+]	T	2
+NS	c1	[]	c4	[]	F	0
+CP	t	[Σaσa]	string	[*aσ*]	T	1
+CN	string	[]	c2	[a]	F	0
+NA	c3	[ ]	n4	[😀bı]	T	3
+CS	string	[ΣéÉb]	string	[]	T	0
+NA	c10	[1AA😀0aς]	c1	[ς]	F	7
+CP	c4	[A]	c1	[c]	F	4
+CN	c4	[1]	c6	[1 #]	F	4
+CA	c10	[K]	string	[]	F	10
+NP	c3	[Σ]	c1	[*]	F	0
+NP	d	[b11b😀Ab]	d	[*😀*+]	F	4
+NA	string	[0 Éé*I#]	c6	[I ]	F	1
+NP	c3	[0]	string	[**]	F	0
+CP	c1	[K]	string	[K*]	T	0
+NP	c3	[i]	c10	[I*]	F	0
+NS	c2	[ß]	string	[*0ı*]	T	2
+CS	string	[ςB é bic]	c10	[#]	F	8
+CO	d	[A0ib+ΣÉ]	c3	[A0b]	F	2
+CA	string	[ı+Aß]	string	[+]	T	1
+CO	c2	[]	n2	[]	T	2
+CO	c10	[i+]	c1	[i]	F	1
+CP	string	[b*É😀#]	d	[*]	T	0
+CO	c6	[Kıß]	c2	[Kı]	F	2
+NA	t	[iAKςb]	c4	[ßΣ]	F	5
+CN	n4	[ß]	string	[ß]	T	1
+CS	c4	[K*]	string	[ ]	T	2
+CN	n4	[I😀é]	d	[I😀é]	F	4
+CO	n4	[+cİÉ]	n2	[+c]	F	2
+CO	t	[ςB]	c6	[ςB]	T	6
+CP	n4	[ aB]	n4	[i+]	F	4
+CS	string	[]	c2	[]	T	0
+CP	string	[aabİ1]	n4	[**]	T	0
+CN	t	[]	t	[a]	F	6
+NS	string	[éß]	c10	[İ]	T	2
+CP	c3	[ ]	d	[*]	T	0
+CP	c4	[c]	c6	[*# ]	T	1
+NP	c6	[]	c1	[İ]	T	6
+NS	c6	[😀]	c3	[ 1]	T	6
+CP	c10	[aσIb#aΣb]	t	[*#]	T	8
+CS	c3	[b]	c10	[b]	T	0
+CP	string	[]	string	[]	T	0
+NA	n4	[bİ]	n4	[]	F	2
+NP	d	[İ+bb]	string	[*]	F	0
+CS	c4	[]	d	[AAé0]	F	4
+CP	n2	[]	c3	[*#]	T	0
+NS	c6	[ß😀  ]	n4	[B]	T	6
+CS	d	[É]	c6	[Bςb]	F	8
+CO	string	[B II]	n2	[B]	F	2
+CA	n4	[ ac]	t	[bb]	T	0
+CA	c10	[##]	c6	[cİ#]	T	0
+CP	c1	[ ]	string	[i0ß]	F	1
+CP	c2	[σİ]	c6	[σ+]	T	0
+CP	string	[😀]	string	[**]	T	0
+CN	string	[σiéaKc]	c3	[σié]	T	3
+CP	c3	[ÉÉB]	n2	[*+]	T	2
+CP	c4	[]	c2	[Σ]	F	4
+NS	c4	[K+]	string	[]	F	0
+CS	t	[b0IcI*]	string	[b0I ]	F	6
+CO	d	[b0a ς]	string	[]	F	0
+CN	t	[]	c4	[ ]	F	6
+NS	c2	[0]	string	[ ]	F	1
+CS	c10	[σıAc😀]	c1	[σ]	T	0
+NP	c3	[]	c6	[*# #]	F	0
+CO	string	[Σ]	c10	[Σ]	T	1
+NS	d	[c1Kσ]	string	[  ]	F	4
+CP	n2	[ a]	n2	[]	F	2
+CP	c6	[]	c4	[* # ]	T	0
+CN	string	[0σ1É]	n4	[0σ1É]	F	4
+CP	string	[😀b+a😀1b]	c10	[σ ]	F	9
+NS	t	[é a1é]	string	[é a]	F	0
+CO	d	[aßA]	string	[ßA 😀]	F	0
+CA	c6	[😀ς0ς]	n2	[B]	T	5
+CP	d	[İ]	d	[K]	F	8
+CP	c3	[ıa]	c10	[*]	T	0
+CO	c1	[a]	c2	[a]	T	1
+CN	c3	[a]	c4	[aΣ]	F	3
+CN	t	[cß]	c1	[c]	T	1
+CP	n2	[I ]	string	[ΣKς ]	F	2
+CO	c1	[b]	string	[bb]	T	1
+NP	string	[İcKΣ]	c3	[*Σ]	F	3
+NS	string	[Bba]	string	[ba]	F	1
+CP	c3	[Kİİ]	c10	[+*]	T	0
+CP	c3	[b]	c10	[KÉ😀]	F	3
+CN	c1	[]	n2	[]	F	1
+NP	c1	[İ]	string	[*]	F	0
+NS	t	[]	string	[]	F	0
+CA	c3	[Éc]	t	[c]	T	1
+NS	string	[ıAı0*B*a]	c4	[b* ]	F	5
+NP	c4	[]	n2	[]	F	0
+CP	c4	[B]	c1	[é]	F	4
+NP	n2	[]	c3	[*]	F	0
+NA	c6	[I Kié]	string	[0]	T	6
+CS	string	[*0aςςaς0]	string	[*0aς]	T	0
+CN	c10	[]	c1	[ ]	F	10
+CN	t	[σ]	c6	[σ]	F	6
+CS	c10	[σ😀ÉÉA+]	n2	[a ]	T	5
+NS	string	[1 ßσ😀iK ]	c2	[ σ]	T	9
+NS	c10	[ ]	t	[]	F	0
+CN	d	[]	n2	[]	F	8
+NS	c3	[é]	d	[]	F	0
+NS	c4	[11BÉ]	string	[ß]	T	4
+CA	n4	[1]	c10	[1]	T	0
+CO	c4	[aIb]	n2	[aI]	F	2
+NS	c6	[IKİI]	c2	[]	F	0
+CP	string	[ßI]	c10	[*]	T	0
+NS	n2	[Kσ]	c10	[aéσ]	T	2
+NS	c2	[*]	c6	[1σ]	T	2
+CP	string	[#ΣßBa0K😀]	n2	[Ba]	F	9
+CP	c10	[AaΣı  i#]	c3	[*A*]	T	0
+NA	c1	[]	string	[i😀 ]	F	0
+CA	string	[ı1Ba]	string	[0i1]	T	1
+CP	c3	[+I]	n2	[#+]	F	3
+CP	t	[iÉcK]	c1	[c]	F	6
+CN	c3	[ K]	c3	[ +]	T	1
+NA	c2	[]	n2	[1ς]	T	2
+CO	n4	[IBb]	string	[IBb ]	T	4
+NA	t	[*1ıİ ]	string	[]	T	6
+CO	c3	[a]	c10	[ *]	F	0
+CO	c1	[a]	n2	[a]	T	1
+CA	c10	[aİİI1İi1]	c1	[É]	F	10
+CA	c4	[ab]	string	[ba]	T	0
+NP	c4	[00]	c10	[**]	F	0
+CP	c6	[]	c10	[# ]	T	0
+CN	d	[1ΣßK]	c4	[1ßK]	T	1
+CA	d	[İaé1]	c10	[1c]	T	3
+NP	string	[0IK]	c4	[0]	T	3
+NA	c10	[I*ß0ıc 😀]	c4	[ςc]	F	5
+CP	c3	[]	string	[+]	T	0
+CP	t	[éa]	string	[**]	T	0
+CN	string	[Kbbς *I]	c4	[Kbς ]	T	5
+NP	string	[éı]	c1	[ ]	T	2
+CA	c6	[A0I]	c2	[ıA]	T	0
+CP	string	[K*ß ab*]	c1	[+]	F	7
+NP	c10	[]	n4	[A]	T	10
+NP	n4	[1éß]	c6	[]	T	4
+NP	n2	[]	string	[ **]	F	0
+CN	c6	[i0aΣΣ]	t	[aK]	T	0
+CP	string	[]	t	[*]	T	0
+CS	c6	[a A ]	string	[0ia]	F	6
+CA	n4	[b]	n2	[]	T	1
+CS	c2	[i]	c1	[i]	T	0
+NA	n4	[Σß+c]	c6	[İ😀0]	T	4
+NP	string	[😀ß ß]	n4	[İaσA]	T	5
+CO	string	[😀B  b]	string	[😀B b#]	T	6
+NP	string	[aißÉ1]	n2	[]	T	5
+CA	d	[É]	n2	[0]	T	1
+CS	string	[  ]	d	[ ]	T	0
+CO	c6	[]	d	[]	T	6
+CN	string	[😀bba]	c3	[😀b]	T	4
+CP	n4	[Éİ]	string	[#Éİ+]	T	0
+NS	string	[ß1I a*0a]	string	[0A ]	T	8
+CP	d	[Σ]	c2	[+]	T	0
+CS	string	[Σ1i*0]	c6	[]	T	0
+CN	c10	[aßςB0b#σ]	c4	[aßςB]	T	4
+CP	string	[ßé1]	n4	[İ]	F	3
+CA	c2	[]	c10	[]	T	0
+CP	c3	[0a]	c1	[*]	T	0
+CP	t	[İ1]	c6	[ı σ]	F	6
+CO	c3	[]	c4	[]	T	3
+CP	t	[iΣ1σ]	c2	[#i]	F	6
+CP	string	[aéa a* ]	string	[*]	T	0
+NA	string	[bςi]	c4	[i]	F	2
+NP	c6	[b ßé+İ]	n4	[+# S]	T	6
+CS	string	[aσ]	string	[ÉςAı]	F	2
+CP	c3	[+ıA]	c4	[#+I*]	T	0
+CP	c3	[ΣiA]	string	[*# ]	F	3
+CS	c1	[K]	t	[k0]	F	1
+CP	c2	[B]	string	[σİß]	F	2
+CN	n2	[]	c3	[]	F	2
+CN	t	[]	string	[a]	T	0
+CA	c1	[]	c2	[]	T	0
+CO	string	[1😀 σa]	string	[1 σ#]	F	1
+CP	t	[]	c4	[# ]	T	0
+CP	c3	[]	c6	[*#]	T	0
+CS	string	[+0#IKσı]	n4	[#IKσ]	T	2
+CP	c1	[K]	t	[*]	T	0
+CO	c4	[ éÉ]	n2	[ é]	F	2
+CA	t	[#1bB]	string	[K  ]	T	4
+CN	t	[Σ]	c6	[Σ]	F	6
+CP	c3	[İ1]	n2	[*]	T	0
+CP	string	[ß*ı#é]	c4	[**ı]	F	5
+NA	c2	[ı]	string	[1É0]	T	2
+CP	d	[aσİbΣ#]	c6	[😀 ]	F	8
+CP	c10	[İ]	c10	[*]	T	0
+NA	c3	[ÉΣı]	c3	[Σ]	F	1
+CP	string	[Aba#]	c4	[]	F	4
+CO	t	[😀 ]	string	[😀 É]	T	6
+CO	c3	[#]	n2	[]	F	0
+CN	d	[Σ]	t	[Σ]	F	8
+CO	c10	[ßAΣ]	c6	[ ]	F	0
+NS	c10	[Σ]	n4	[]	F	0
+CA	c4	[Ii]	string	[I]	T	0
+NP	string	[éÉi*]	c4	[*#é]	T	4
+CS	c6	[İ0]	c2	[😀]	F	6
+NA	string	[]	c4	[]	T	0
+CP	c6	[ß1baé]	c6	[]	F	6
+CN	c3	[b0K]	c6	[b0K😀]	F	3
+CP	c6	[a]	c2	[+I]	F	6
+NA	c1	[i]	n2	[]	T	1
+CA	n4	[Σ😀b]	n4	[b]	T	3
+NS	c6	[I😀bé]	string	[😀b]	F	1
+CP	c1	[]	c6	[ccca]	F	1
+CS	c1	[Σ]	c3	[]	T	0
+CP	n2	[Aa]	string	[éı ]	F	2
+CP	c2	[ıσ]	n4	[+]	F	2
+CA	n4	[ΣaΣ]	c10	[a]	T	1
+CP	c10	[ßa aİib]	n2	[Ab]	F	10
+CP	string	[IİBΣ cB]	c1	[i]	F	7
+CS	c10	[σIéı]	n4	[σIéı]	T	0
+NS	c1	[Σ]	c10	[Σ1]	T	1
+CP	n4	[ıÉı]	string	[Éı]	F	4
+CA	c1	[ß]	c3	[+ß]	T	0
+CO	c3	[]	t	[]	T	3
+CS	string	[İ0Ibab]	t	[ab]	T	4
+NA	string	[]	t	[ıÉ]	T	0
+NA	c3	[σ]	n2	[ σ]	F	0
+NS	c3	[ ]	string	[  ]	F	0
+NS	c10	[0😀Éi+ς😀]	n4	[i+ ]	F	4
+NP	d	[σς]	string	[*]	F	0
+CO	c1	[İ]	string	[acbΣ]	F	0
+CA	string	[aaI]	c2	[0c]	F	3
+CP	string	[ #aςßé]	c10	[a]	F	6
+CP	c10	[bKKiaÉ]	c3	[K+i]	F	10
+CS	c6	[Σ😀1]	string	[Σ😀1]	T	0
+CN	c2	[a]	c4	[1ÉΣ]	T	0
+NA	c10	[a+iσAı]	c1	[]	F	6
+CS	c1	[]	string	[ ]	T	0
+NS	c6	[I* bca]	c3	[ b]	F	2
+NA	c10	[i ]	c6	[É]	F	1
+NP	c6	[Éb*ica]	c3	[ςı ]	T	6
+NP	string	[+*]	string	[+*+]	F	0
+CS	c4	[]	c6	[ß]	F	4
+CP	c10	[iK+ I#é]	string	[**]	T	0
+CS	t	[ b]	c2	[]	T	0
+NP	string	[bA ]	n2	[#B]	T	3
+CA	c3	[Iı]	d	[ıı]	T	1
+CP	c2	[]	n2	[#]	T	0
+CS	string	[]	n4	[ ]	T	0
+CN	c3	[Aa]	string	[Aa]	T	2
+CN	c3	[]	t	[É]	F	3
+CS	c3	[Σci]	c6	[Σc]	T	0
+CS	string	[ΣÉσ😀]	d	[😀]	T	3
+NP	c2	[😀]	string	[]	T	2
+CS	n4	[ccAΣ]	n2	[1+]	F	4
+NS	c10	[+Kßςi]	string	[+Kßςi  ]	F	0
+CP	n4	[ı0İ]	string	[İ*]	F	4
+CP	d	[ς1ßbß0]	c3	[]	F	8
+NA	c6	[]	n4	[]	F	0
+CP	string	[ É1]	c4	[*+# ]	F	3
+NS	string	[Bbıc1#cΣ]	t	[a #B]	T	8
+CP	t	[İ]	string	[A]	F	6
+CO	n2	[😀]	c2	[😀]	T	2
+CP	n2	[Éı]	c10	[é]	F	2
+CN	string	[]	d	[ς]	F	0
+CA	n4	[ B]	c3	[]	T	0
+CP	n2	[]	c3	[* ]	T	0
+CO	d	[]	n4	[]	T	8
+CA	n4	[a😀I]	c10	[ıb]	F	4
+CP	d	[*]	c1	[*]	T	0
+CP	c10	[Ia1σI]	string	[*Σi]	T	3
+CP	n2	[ßİ]	string	[*+]	T	1
+CA	c3	[É]	n4	[É]	T	0
+CN	string	[1 c]	c10	[1 cA]	F	3
+CN	string	[ KKb ı]	n4	[#AéK]	T	0
+CP	c2	[σ]	string	[Kc#c]	F	2
+CO	string	[+b]	c3	[+b]	T	2
+CP	c10	[aßB]	c1	[*]	T	0
+CA	n2	[B]	string	[]	F	2
+CA	c4	[1aé]	d	[]	T	3
+CN	string	[Σσi]	n4	[Σσi]	F	3
+CN	string	[0c0+]	n4	[0c+]	F	4
+CP	n4	[ı1cς]	c1	[ı]	F	4
+NA	string	[a ]	string	[bKa]	F	0
+NP	string	[]	t	[*]	F	0
+CO	n4	[0aı]	n2	[*c]	F	0
+CN	c2	[ς]	string	[ς]	T	1
+NS	c6	[ıΣ aIa]	t	[ Ai]	F	2
+NA	d	[İσ]	string	[ ]	F	2
+CA	c4	[]	c6	[σ]	T	0
+CP	d	[Éİİb😀aΣ]	c1	[İ]	F	8
+NP	n4	[KÉ#i]	c3	[KÉ*]	F	0
+NS	c2	[]	c4	[]	F	0
+CP	c3	[i]	string	[**+]	T	0
+CP	string	[ ]	string	[]	F	1
+NP	c3	[ı+]	c3	[ı#+]	F	0
+NS	c3	[😀é]	string	[ ]	T	3
+CP	n2	[a]	c3	[*]	T	0
+CA	string	[σ]	string	[]	F	1
+CS	c2	[]	n2	[]	T	0
+NP	t	[#ı]	c2	[İ]	T	6
+CN	c6	[İΣ0σ]	c3	[İΣ0]	T	3
+CA	string	[+]	string	[İI]	F	1
+CA	t	[ *İ]	c2	[ ]	T	0
+NA	c4	[😀c]	c2	[ς]	F	3
+NP	c1	[]	string	[+ςBß]	T	1
+CP	c1	[I]	n4	[I]	T	0
+NP	n4	[ ]	string	[*]	F	0
+CO	n2	[Bσ]	string	[😀ıé]	F	0
+CN	c2	[aé]	n4	[aé]	F	2
+CP	t	[]	c10	[]	T	0
+NS	c3	[a]	c10	[1Ia]	T	3
+NS	c10	[1K]	n4	[1 ]	F	0
+NA	t	[İéb0]	c1	[K]	T	6
+CP	c3	[b]	t	[*]	T	0
+CO	c4	[0Aaı]	c10	[0Aı]	F	2
+NP	c2	[10]	n2	[A]	T	2
+CN	string	[aßİ]	d	[aßİ]	F	3
+NA	string	[a]	string	[*ς*]	T	1
+CP	t	[A1ς]	c10	[*# ]	T	3
+CP	string	[+ci+b]	n4	[*I*B]	T	2
+CN	c2	[Ka]	c3	[KaK]	F	2
+CP	n4	[Σ]	n4	[****]	T	0
+CP	c3	[ ]	string	[]	F	3
+CP	c4	[1+]	d	[**]	T	0
+CA	c2	[ßa]	c4	[éσ]	F	2
+CP	c3	[Σ+]	c6	[**]	T	0
+CS	string	[aßéAßiΣ😀]	d	[ÉaSSIı]	F	9
+CS	c6	[aB]	c1	[é]	F	6
+NS	c4	[]	c10	[]	F	0
+NS	c10	[É]	string	[B😀b]	T	10
+CO	string	[aa]	t	[aİ]	T	2
+NP	c6	[KBaAΣς]	c2	[*a]	T	6
+CO	string	[]	c2	[1]	T	0
+NP	c2	[ıB]	d	[éß]	T	2
+NP	c6	[c1baİ]	c2	[i ]	T	6
+CS	string	[aKa]	n4	[ ]	T	0
+CS	c4	[σa#a]	c1	[İ]	F	4
+CP	string	[ aBς]	d	[aςb]	F	4
+NA	d	[Aa ]	c6	[]	F	2
+CP	string	[ı]	c4	[**# ]	F	1
+CO	string	[a1É1ÉcB1]	c6	[a1ÉcB]	T	8
+CP	c3	[a]	c3	[]	F	3
+CO	c1	[]	c2	[ ]	T	1
+NP	c3	[a]	d	[*]	F	0
+NA	string	[IaI#B1a]	c4	[K]	T	7
+CO	d	[]	string	[ 1]	T	8
+CA	c10	[ÉKß]	c6	[bK]	T	1
+CO	c3	[abb]	c2	[b]	F	0
+CA	string	[ı +ςß0bB]	string	[aı]	T	0
+CP	c3	[+cK]	d	[+]	F	3
+NS	c3	[σA]	n2	[A]	F	1
+NP	c3	[ßa ]	string	[ß+]	F	0
+NP	c6	[ßıéb]	c4	[S#SI]	T	6
+CA	n2	[]	c1	[ ]	T	0
+CN	c4	[]	c10	[]	F	4
+CN	c4	[]	string	[ c]	F	4
+CP	c2	[]	c2	[*+]	T	0
+CP	n4	[É]	c2	[*]	T	0
+CP	c10	[bΣc]	c10	[a0A ]	F	10
+NP	n2	[i]	string	[**]	F	0
+NP	c1	[é]	c4	[b**]	T	1
+CA	c6	[0K#ıa]	d	[]	T	5
+CP	c1	[B]	n4	[B]	T	0
+CO	t	[ Σaa]	t	[Σa]	T	6
+CP	string	[ié]	c3	[*+]	T	1
+NS	c1	[ς]	c4	[İ]	T	1
+NA	t	[ci]	c2	[1]	F	2
+CS	string	[iΣı ]	t	[ ]	T	0
+CA	c10	[b# ]	c1	[]	T	2
+CO	string	[bc😀 #b]	n2	[bc]	F	2
+NA	string	[i0]	c3	[i]	F	0
+NA	string	[ ÉBςi]	c3	[a ]	F	0
+CP	n2	[]	string	[*]	T	0
+NS	c3	[b0]	t	[]	F	0
+CP	c4	[a]	string	[ßσ0]	F	4
+NP	d	[00abß0a]	string	[+0a *]	T	8
+NA	n2	[+]	t	[+]	F	0
+CP	string	[éσ😀i#]	string	[##]	F	6
+CP	c4	[a0]	string	[a]	F	4
+NS	c4	[]	d	[ ]	F	0
+CP	c6	[ Σ1bB]	c6	[ Σ1++]	T	0
+NA	string	[Aa]	t	[Éc]	T	2
+NA	c6	[*Iς1]	c1	[ ]	F	4
+CP	t	[İ]	d	[]	F	6
+CP	t	[bİ]	d	[b*]	T	0
+CP	string	[aa]	t	[*+]	T	1
+NS	string	[ÉςıBK]	string	[ςıBK]	F	1
+CP	string	[ıß😀BÉ ]	d	[ISS*bé *]	F	7
+CS	c6	[]	c3	[É]	F	6
+CA	c1	[i]	string	[ba😀c]	F	1
+CP	string	[σΣÉ]	d	[]	F	3
+CP	d	[1Σ0B]	c1	[ ]	F	8
+CN	c2	[]	c10	[]	F	2
+CA	n4	[]	string	[ ]	T	0
+CS	t	[İ]	n4	[ ]	T	0
+CN	n4	[ Σσ0]	d	[]	T	1
+NP	c10	[]	n4	[😀#]	T	10
+CP	string	[σa😀bςς+]	string	[*#+*]	T	7
+CN	t	[Bb]	string	[Bb ]	F	6
+NA	c10	[ßıİAßb]	n4	[ıA]	F	1
+NS	n4	[]	n4	[ ]	F	0
+CA	string	[bb ]	d	[b]	T	0
+CP	n2	[b0]	string	[b+]	T	0
+CP	string	[B #ςbÉ ]	c10	[*cAa]	F	7
+NA	n4	[+ i0]	c6	[A ]	F	1
+CS	n2	[]	n2	[]	T	0
+CP	c4	[ a1c]	c3	[*# ]	F	4
+CP	string	[bc*#10]	t	[*+1*]	T	3
+CP	c10	[Ac#K]	string	[*]	T	0
+CS	string	[ßσ İa😀]	n2	[]	T	0
+CP	n2	[b]	n4	[B]	T	0
+CN	c6	[İ ς😀b]	c3	[É]	T	0
+CP	c10	[Ba]	c6	[**]	T	0
+NA	c3	[b]	c2	[bI]	F	0
+CA	string	[σc#σ0]	string	[c]	T	1
+CP	string	[K]	d	[A+]	F	1
+CP	string	[1ıa]	string	[**]	T	0
+CO	string	[bBıÉ]	string	[bBıÉ]	T	4
+CP	c4	[Σb😀]	c2	[*+]	T	3
+CA	c6	[#İ#1a]	string	[]	F	6
+NA	n4	[ς]	c6	[]	F	1
+NS	c4	[😀0a]	string	[ ]	T	4
+NS	c6	[c]	t	[é]	T	6
+CO	c10	[1#AB ]	string	[1AB ]	F	1
+CP	c4	[]	d	[#]	T	0
+NA	c2	[]	c10	[]	F	0
+NA	string	[]	c6	[]	T	0
+NA	string	[]	n2	[]	T	0
+NP	c1	[]	n2	[ *]	F	0
+CS	string	[ σ0b]	c6	[]	T	0
+CN	c4	[σİa]	string	[σİa ]	F	4
+CP	c2	[ß]	string	[ß]	T	0
+CA	c4	[A1bσ]	c2	[A1]	T	0
+NA	d	[KßiA]	t	[]	F	4
+CA	t	[ςÉ]	string	[ßÉ]	T	1
+CO	c4	[1A]	c10	[1 ]	F	1
+CP	t	[*#😀a ]	t	[a ]	F	6
+CP	d	[Kéa*ı+a]	c2	[😀]	F	8
+CA	c1	[a]	c4	[]	F	1
+CS	string	[aéİa# Σ*]	d	[]	T	0
+CN	c1	[]	c10	[ ]	F	1
+CP	c4	[]	string	[    ]	T	0
+NP	c1	[b]	string	[#b*+]	T	1
+CS	t	[ ßBΣ]	d	[]	T	0
+CP	c1	[*]	n2	[*]	T	0
+CA	t	[Bé]	n4	[1é]	T	1
+CA	c1	[]	c4	[Σ]	T	0
+CP	n2	[]	c10	[ **]	T	0
+CO	c3	[a]	string	[a]	F	1
+CP	n4	[]	string	[ı0 ]	F	4
+CN	string	[ba1 A]	c6	[ba1 A]	F	5
+CS	c10	[B😀aéa]	c10	[A]	T	3
+CS	c2	[ßK]	c4	[KßA]	F	2
+CS	string	[b0]	t	[0]	T	1
+CP	d	[a * ]	n4	[* *+]	T	1
+NA	t	[a  0]	string	[ 0]	F	1
+CP	c10	[σ]	c4	[+]	T	0
+NP	c1	[]	d	[Σß]	T	1
+CS	d	[ςKi İÉ1]	d	[ςKi İÉ]	T	0
+NA	c3	[Éaa]	c4	[ba]	F	1
+NS	string	[ É]	n2	[ Σ]	T	2
+CS	n4	[B]	c4	[]	T	0
+CS	t	[+IIİ0*]	d	[😀]	F	6
+NP	c1	[]	n4	[*]	F	0
+CA	n4	[a]	t	[ ß]	T	1
+NP	n4	[K##]	c3	[*#+]	T	4
+CO	t	[]	n4	[]	T	6
+NS	n4	[é]	c2	[]	F	0
+CP	n2	[ς]	c4	[ac]	F	2
+CO	c1	[*]	c1	[*]	T	1
+CN	d	[]	c4	[ ]	F	8
+NS	d	[aaIb*ß]	string	[ςK]	T	8
+CP	c6	[]	c4	[*]	T	0
+CP	t	[1]	c2	[* ]	T	0
+CP	string	[*σb]	t	[]	F	3
+CN	n2	[σA]	c2	[1]	T	0
+CP	c3	[😀 ]	t	[*]	T	0
+CS	string	[É]	string	[ ]	F	1
+CP	string	[i*i#IKΣ]	c10	[i*#]	F	7
+CP	c3	[cİΣ]	string	[*]	T	0
+CO	t	[]	string	[]	F	0
+CN	c3	[Éİ]	d	[İ]	T	0
+CN	n4	[ +K]	string	[+Kb]	T	0
+NP	string	[ca*aσéı]	c10	[*]	F	0
+NP	c6	[a*İa]	t	[*#*#İa]	F	1
+NS	d	[bΣ]	n2	[a#]	T	8
+CA	string	[iςK]	c1	[İ]	F	3
+CP	c4	[]	string	[*]	T	0
+CP	c1	[é]	string	[*]	T	0
+CP	n4	[ σ+a]	string	[σ]	F	4
+CP	t	[ΣK*ié]	c2	[é]	F	6
+CP	n2	[ ]	t	[]	T	0
+NS	c2	[A]	n2	[ ]	F	0
+CO	string	[K1bbß]	c6	[1bßσ]	F	0
+CP	c1	[b]	c1	[]	F	1
+CA	t	[éΣbA]	c10	[+Σ]	T	1
+CO	n2	[#a]	c2	[#a]	T	2
+NP	n2	[ς+]	c4	[*+*]	F	0
+CO	c2	[I]	c1	[ς]	F	0
+CA	string	[]	c3	[]	F	0
+NP	n4	[]	c4	[]	F	0
+CP	string	[*caΣ1]	d	[***]	T	0
+CO	n2	[]	c4	[bé😀]	F	0
+CO	c6	[ σı😀B]	c6	[ σı😀B]	T	6
+NS	c10	[1σiBK111]	n4	[]	F	0
+CP	c2	[b]	string	[**# ]	T	1
+CP	c4	[I]	n4	[i*]	T	0
+NP	string	[0éa+ßb]	d	[*+ß*# ]	T	6
+CN	c4	[a+1]	c3	[a+1]	T	3
+CO	string	[bß 1ba ]	n4	[bß 1]	F	5
+NP	string	[ 😀0]	string	[*#0+]	T	4
+NS	t	[ıB +]	c4	[  ]	F	0
+CP	c1	[+]	c2	[*]	T	0
+CS	string	[ςb0AÉÉa]	c10	[A ]	T	3
+CP	c1	[ı]	string	[*]	T	0
+CP	c3	[K]	c2	[**]	T	0
+NA	c10	[ς😀😀Σ]	d	[😀]	F	1
+CO	d	[]	d	[ ]	T	8
+CP	c10	[cBaßσ ]	c1	[*]	T	0
+CP	c10	[caaéI a]	c4	[ ]	F	10
+NP	c3	[]	c10	[ ]	F	0
+CS	n4	[]	c10	[  ]	T	0
+CP	n2	[0b]	t	[*]	T	0
+CS	d	[B1]	c6	[B]	T	0
+CA	string	[]	d	[K]	F	0
+CA	n4	[+i1B]	c1	[]	F	4
+CP	string	[ßAIßσΣσ]	string	[*]	T	0
+NP	c4	[0ςİa]	string	[Σ]	T	4
+NS	c10	[éI]	string	[]	F	0
+CP	string	[0σaIKaIc]	c2	[#c]	F	8
+NA	c2	[a]	d	[#ba]	F	0
+CS	string	[a1Σib]	t	[]	T	0
+NA	c3	[ΣBa]	c1	[É]	T	3
+CA	n4	[]	t	[ 😀]	T	0
+CO	c6	[İ00]	c1	[İ]	F	1
+CN	c1	[ı]	n4	[Ib]	T	0
+CP	string	[ßé #baσ]	c4	[*aσ]	T	5
+CA	t	[İσ]	n2	[ ]	T	2
+NA	t	[KÉ😀😀]	d	[b]	T	6
+CP	c10	[cBΣbA]	c6	[*+]	T	4
+CA	c10	[ßBİaaaς]	string	[ß]	T	0
+NS	string	[ςi+]	string	[Σ]	F	0
+CP	d	[I É]	c4	[]	F	8
+CN	c1	[b]	string	[b]	F	1
+CN	n4	[]	c6	[]	F	4
+NS	string	[σ+σb*]	n4	[* ]	F	4
+CP	c6	[Ia#ß]	c10	[**]	T	0
+CS	c4	[]	c6	[É]	F	4
+CP	c1	[]	c10	[*]	T	0
+CN	d	[ς1c É+c]	n2	[ςc]	T	1
+NS	c6	[]	c2	[]	F	0
+CS	n4	[É]	c3	[ß]	F	4
+NA	c4	[éßb]	string	[σ ]	F	3
+CN	d	[+😀 😀]	c6	[😀 ı]	T	0
+CA	c4	[aςΣİ]	c10	[0😀]	F	4
+CN	string	[11+Ii1ß]	n4	[a0ςΣ]	T	0
+CS	c2	[Σ]	string	[]	T	0
+CN	n4	[éσÉ]	string	[b0i]	T	0
+CA	d	[σσK]	string	[i ]	T	3
+NA	c1	[b]	c6	[b]	F	0
+CP	string	[B]	c4	[**]	T	0
+NA	string	[c😀B*B]	string	[#]	T	6
+NA	n2	[]	n2	[#]	F	0
+NS	c6	[i]	n2	[i]	F	0
+NS	string	[i]	string	[É😀]	T	1
+CA	c3	[Aı]	n4	[IA]	T	0
+CP	t	[I+a]	c10	[]	F	6
+CS	d	[0A]	c10	[]	T	0
+CO	c4	[*]	c10	[*ς]	T	4
+CP	c6	[ aKa😀]	c6	[**]	T	0
+CP	string	[Ia#*ébi]	c3	[**]	T	0
+NP	t	[aςıc😀]	c10	[*ı+*]	F	2
+NA	t	[]	string	[+ ]	F	0
+NA	c6	[0Σ]	d	[i]	F	2
+CP	n4	[+0σI]	string	[*]	T	0
+NS	c4	[]	n2	[]	F	0
+CN	d	[cb+Kaaσé]	string	[cb+Kaé]	T	6
+CO	c3	[Aa]	d	[Aa]	T	3
+CN	c6	[b]	c4	[b ]	F	6
+NS	c4	[1]	n2	[]	F	0
+NA	n4	[KßςB]	c4	[+aK]	F	0
+CN	c6	[ΣéBa]	string	[ΣéBa*]	T	4
+CP	c10	[Ic ΣΣÉ]	c2	[iC]	F	10
+CP	c2	[*b]	n2	[]	F	2
+CO	string	[b]	c4	[bc]	T	1
+NS	n4	[é]	c2	[  ]	F	0
+CP	t	[É1σb+b]	string	[σ]	F	6
+CN	c10	[ 0a BBb]	n2	[ 0]	T	2
+CP	string	[i]	c3	[i*]	T	0
+NS	string	[éİa😀#İ*]	string	[İa😀#İ* Σ]	T	8
+CA	string	[Éa#c]	n4	[a]	T	1
+NA	c4	[*+]	c4	[😀]	F	2
+CS	n2	[ß]	d	[]	T	0
+CN	c3	[ßA]	string	[ßA]	T	2
+CA	d	[ςI*K1]	c6	[ı0]	T	5
+CP	string	[K]	string	[*+]	T	0
+CA	c6	[ı]	c4	[IσK]	T	1
+NA	d	[]	n4	[éc ]	F	0
+CN	string	[😀 B 0cé]	t	[😀 B0c]	T	7
+CA	c6	[aıc]	n4	[]	T	3
+CP	c1	[a]	c1	[a]	T	0
+CP	n2	[]	string	[ ]	T	0
+NS	n2	[σ]	string	[σ ]	F	0
+NA	n4	[]	string	[É]	T	4
+CN	t	[É]	c2	[Éb]	T	1
+NP	string	[]	string	[#+]	T	0
+CO	n2	[]	n4	[]	T	2
+NP	t	[]	t	[ßc]	T	6
+NS	string	[ς]	c10	[]	F	0
+CN	c4	[ııK]	t	[ıKI]	F	4
+NA	t	[Ia1B]	string	[😀]	T	6
+CS	c1	[]	c4	[ K]	F	1
+CA	string	[İı*😀ıAİ]	c10	[]	F	8
+CN	c6	[éB1]	d	[]	T	0
+NP	c10	[ b1*]	string	[b1**]	T	10
+CO	string	[ıb0#]	t	[ıb0#]	T	4
+CN	string	[ ßbé😀]	c6	[ ßé😀Σ]	T	2
+NS	n4	[+ßAΣ]	c6	[a0aa]	T	4
+CP	c1	[]	c4	[]	T	0
+NP	c6	[é#ABI1]	string	[*]	F	0
+NS	string	[I😀#]	string	[]	F	0
+CS	c2	[ß#]	string	[#]	T	1
+NA	c10	[aI]	c4	[]	F	2
+NP	n2	[a]	c6	[*]	F	0
+NS	c4	[😀]	c2	[]	F	0
+NA	string	[cß#😀B B]	c4	[aß]	F	1
+CS	d	[]	t	[ςa]	F	8
+CS	c2	[ ]	c6	[ ]	T	0
+CP	c2	[I ]	string	[I *]	T	0
+CP	c4	[+#B]	n4	[ # ]	F	4
+NS	n2	[]	d	[A]	T	2
+CS	c4	[]	n4	[]	T	0
+NA	string	[A0]	n2	[10]	F	1
+CP	string	[σ😀B]	c3	[*]	T	0
+CP	string	[é]	c3	[*]	T	0
+NA	n4	[a*c]	string	[😀I]	T	4
+CP	n4	[aİ]	c10	[*]	T	0
+NA	t	[c]	string	[ ]	F	1
+CP	c6	[1]	n2	[+]	T	0
+NP	d	[ς1Éσa]	string	[*]	F	0
+NS	d	[BΣı#σ]	t	[I#Σ ]	F	2
+CP	string	[ba]	n4	[*a+]	F	2
+CP	n2	[]	c3	[*]	T	0
+NA	c2	[B]	t	[B]	F	0
+NA	string	[]	n4	[éa]	T	0
+NA	t	[]	string	[#]	T	6
+NA	c10	[aΣİiΣ]	n2	[b]	F	5
+NA	string	[ *1ıKiI]	string	[]	T	7
+CN	c4	[1Éσ ]	c1	[1]	T	1
+NS	string	[İ *ai]	d	[ *ai]	F	1
+NS	string	[0]	string	[]	F	0
+NA	string	[ıÉ😀aKbAa]	n2	[aI]	F	4
+CO	c4	[]	c1	[a]	F	0
+CP	d	[]	string	[]	F	8
+CN	t	[]	c2	[İ]	F	6
+CS	c2	[a]	d	[]	T	0
+NS	n4	[cc]	c3	[I]	T	4
+CA	c1	[a]	string	[ßa]	T	0
+CS	d	[+ab ßiaK]	c10	[ß#c]	F	8
+CS	c6	[ba ]	n4	[ ]	T	0
+CO	string	[ b]	string	[ b]	T	2
+CN	string	[ßÉa*aKb]	c10	[ßÉ*Kb😀]	T	2
+CA	c2	[#]	t	[#]	T	0
+NP	c4	[aIa1]	string	[**]	F	0
+CS	t	[+IKßa]	c3	[IKß]	T	1
+CP	d	[BiÉcaaΣb]	string	[++]	F	8
+CP	string	[*]	string	[*]	T	0
+CP	c6	[]	c1	[ı]	F	6
+CP	string	[]	c1	[]	F	0
+CA	c4	[σ0]	string	[1]	F	4
+CP	c2	[a]	d	[#a]	T	0
+NA	c1	[]	string	[0]	T	1
+NA	string	[😀0iΣ]	n2	[0]	F	2
+CP	c1	[]	t	[# +]	F	1
+CP	c2	[ab]	c1	[*]	T	0
+NA	n4	[aA]	c10	[Éa]	F	0
+CO	c1	[ß]	t	[ß]	T	1
+CA	n2	[K#]	string	[K]	T	0
+NA	string	[😀é]	n2	[😀]	F	0
+CS	n2	[]	t	[]	T	0
+CP	c3	[]	c10	[# ]	T	0
+CS	c2	[É]	c10	[İ]	F	2
+CA	c6	[ 1A]	n2	[aa]	F	6
+CP	n2	[É]	c3	[*]	T	0
+CP	d	[0😀+]	d	[*#+*   *]	T	3
+CA	t	[]	c2	[K+]	F	6
+CA	c4	[+ba]	c6	[σıaé]	T	2
+NP	t	[İ]	string	[]	T	6
+NA	string	[b#Kéıσ ]	d	[]	F	6
+CN	t	[İ]	c4	[İ ]	F	6
+CP	n4	[a1]	c4	[*]	T	0
+CA	d	[#éA*1]	c6	[I]	T	5
+CP	c4	[+a]	c6	[**]	T	0
+CN	d	[bΣ0ı😀aς]	c4	[Σ0ı]	T	0
+CS	c2	[]	string	[]	T	0
+CP	c4	[ß]	c10	[]	F	4
+CP	string	[AΣc+]	string	[**## ]	F	4
+NA	n4	[É]	d	[aKÉ]	F	0
+CN	n4	[ΣAé ]	string	[ΣAé ]	F	4
+CS	n2	[]	string	[É]	F	2
+NS	string	[*]	c1	[]	F	0
+NP	c2	[+*]	c3	[*]	F	0
+CA	c6	[]	t	[Ka]	T	0
+NA	c1	[#]	t	[b#]	F	0
+CP	c3	[]	t	[]	T	0
+CA	c4	[B]	c1	[c]	F	4
+NS	t	[A😀]	c6	[]	F	0
+CS	n2	[]	c4	[ ]	T	0
+CO	n2	[1É]	c1	[1]	F	1
+CO	c6	[aσbab#]	n2	[ab]	F	1
+CA	d	[c0ΣcßKßB]	c1	[]	F	8
+CP	c1	[+]	c3	[a]	F	1
+CP	c10	[+ΣcB]	c6	[*ΣcB# ]	T	1
+CS	n2	[*]	c4	[a#I]	F	2
+CA	c2	[]	n4	[a]	T	0
+CO	c1	[]	d	[ a]	T	1
+NA	n2	[i]	n2	[ıi]	F	0
+NA	c4	[cßa]	c1	[0]	T	4
+CN	d	[bI+é ]	n2	[b+]	T	1
+CA	c2	[]	string	[K ]	T	0
+CN	d	[IΣ#Iac]	c1	[I]	T	1
+CS	c10	[Σ]	t	[]	T	0
+CA	c4	[1]	n4	[]	T	1
+CP	string	[0ı ßBcca]	string	[*+*]	T	0
+CS	c6	[KÉİcbΣ]	c1	[c]	T	3
+CP	string	[ abΣ#]	c3	[ ab]	F	5
+CN	n2	[aİ]	string	[ßßσß]	T	0
+CP	c1	[]	string	[AÉ]	F	1
+CP	c3	[😀]	string	[* ]	T	2
+CS	string	[ς+biKbσ]	c10	[ ]	T	0
+CP	n2	[]	string	[* ]	T	0
+CS	n4	[]	string	[1+é]	F	4
+CO	c1	[I]	n2	[É]	F	0
+CP	c2	[é]	c3	[*]	T	0
+NA	c6	[+aσaİi]	d	[]	T	6
+CN	d	[😀ba]	n4	[😀ba]	T	4
+CP	string	[İaς]	string	[]	F	3
+NP	c2	[a]	string	[*]	F	0
+CP	t	[ bia]	t	[0cß😀]	F	6
+NA	c3	[]	string	[ ]	F	0
+CP	string	[ß0 é* ]	c4	[+]	F	6
+CP	c3	[I+A]	string	[*]	T	0
+CO	c2	[K]	string	[KÉ]	F	1
+CP	string	[ßΣ]	string	[#ß*# ]	F	2
+CO	c1	[]	n2	[]	T	1
+CS	c3	[*É]	c10	[ ]	T	0
+NS	t	[a#*aéc]	string	[a#*aéc]	F	0
+CA	n4	[a]	c3	[é]	T	1
+CA	c6	[#KΣİ]	string	[A]	F	6
+NA	c1	[]	c1	[]	F	0
+CA	c2	[1ς]	n4	[1]	T	0
+CA	c6	[éIA😀]	c2	[KA]	T	2
+NP	n4	[ÉBA]	c1	[é]	T	4
+CP	c6	[Ibb1ßσ]	n4	[*1*]	T	3
+CA	d	[A]	n2	[]	T	1
+CS	n2	[1A]	c2	[]	T	0
+NP	c4	[a]	string	[**  *# ]	F	1
+CP	c4	[Σ]	string	[**]	T	0
+CP	string	[ıÉaaı0ÉA]	string	[]	F	8
+CP	string	[ı]	string	[+*]	T	0
+CN	n4	[]	string	[ ]	F	4
+CA	string	[]	n2	[#]	F	0
+NS	n4	[Iİ]	t	[]	F	0
+NP	n2	[]	string	[]	T	2
+CP	c3	[ı σ]	c4	[**]	T	0
+CO	n2	[İı]	c4	[İı ]	T	2
+CN	string	[σıB0ac😀]	c4	[σıB0]	T	4
+NS	string	[ß1σ*ÉI]	c6	[]	F	0
+CP	c10	[]	d	[*]	T	0
+CP	t	[I]	c10	[+]	T	0
+CA	c3	[b]	c2	[Éİ]	F	3
+CA	c2	[+K]	c10	[]	F	2
+CP	d	[ı]	string	[*]	T	0
+CS	n4	[éÉ1]	string	[]	T	0
+NP	c3	[]	n2	[+]	F	0
+NP	d	[c]	string	[#  *]	T	8
+CO	n2	[😀]	c10	[😀c]	T	2
+CA	n4	[😀B ]	t	[ aB]	T	2
+CP	n2	[ς]	c2	[ς]	T	0
+NP	string	[ςiéİß]	d	[*#ß*]	F	4
+CO	d	[İKσ1]	d	[İKσ1]	T	8
+CO	t	[Éb]	c6	[Éb]	T	6
+CP	n2	[😀]	c4	[😀]	T	0
+CS	c4	[ς]	c4	[]	T	0
+CO	d	[b b]	c3	[b b]	T	8
+CA	n2	[i ]	t	[0]	T	1
+NP	string	[0ςaÉ]	d	[*++É*]	F	1
+CN	c1	[1]	c3	[1A]	F	1
+CP	c3	[ c#]	n2	[ σ]	F	3
+CP	n2	[0a]	c2	[**]	T	0
+CP	c10	[abAé 😀bb]	c10	[Ba*#]	F	10
+NP	c10	[ *cİ0σ1σ]	c2	[*Σ]	F	7
+CN	c3	[İaσ]	string	[İaσ]	F	3
+CA	d	[0İ😀σσK]	string	[Σσ]	T	4
+NP	n2	[*]	c6	[σKc]	T	2
+NP	string	[ı#b]	c10	[ciaß]	T	3
+NA	c3	[a]	t	[a ]	F	0
+CP	c2	[*]	t	[*]	T	0
+CS	string	[]	c4	[]	T	0
+CA	t	[Ibaca+]	c10	[*]	F	6
+CN	c3	[#]	c3	[# ]	F	3
+CS	string	[ébBa+]	string	[]	T	0
+CN	n2	[i]	n2	[]	T	0
+NP	n4	[aKb ]	c10	[ ]	T	4
+CO	c6	[ aσ]	n2	[ a]	F	2
+CS	string	[İσKA ]	d	[σKA]	T	1
+CN	t	[]	string	[ ]	F	6
+NP	string	[σibI*abσ]	c4	[]	T	8
+CN	n2	[]	c2	[  ]	F	2
+NS	string	[😀aA😀 ]	c2	[  ]	F	0
+NP	c4	[BσΣé]	n4	[😀i]	T	4
+NA	string	[aÉ#]	c10	[iı#]	F	2
+CP	string	[#II ıKς]	string	[#ii +]	F	7
+CA	c6	[ σ]	c3	[B]	T	0
+CP	c10	[B😀0σ 1]	n4	[i]	F	10
+CN	c2	[İı]	c4	[İı]	F	2
+CP	string	[AéÉBσσé]	c6	[σı]	F	7
+CP	string	[]	string	[*]	T	0
+NP	c3	[]	c10	[* #]	F	0
+CO	d	[*]	n2	[*]	T	8
+NA	c1	[c]	string	[Iσ*I]	T	1
+CS	c1	[1]	string	[ ]	F	1
+NA	c4	[aI😀]	string	[BKa]	F	0
+NA	string	[+0a ]	string	[ßaa]	F	2
+CN	n4	[A]	c6	[A ]	F	4
+CP	c3	[σaB]	d	[*a]	F	3
+NA	c4	[iß]	string	[B]	T	4
+CP	c1	[I]	d	[é1]	F	1
+CP	c2	[İ]	t	[*]	T	0
+NS	d	[éσIİ0bAK]	c4	[I1#]	T	8
+NP	string	[ıaiK ]	d	[cA]	T	5
+CN	c1	[É]	c6	[É]	F	1
+NA	c4	[Σıσ]	t	[#bΣ]	F	0
+NP	d	[Bı#K*]	string	[**]	F	0
+CS	d	[]	n4	[]	T	0
+CO	d	[É+B1ac1]	t	[É+B1ac]	F	7
+CS	c1	[]	n4	[ ]	T	0
+NA	c4	[#Σ]	c1	[i]	T	4
+CP	c4	[1aİ]	string	[*]	T	0
+NS	c10	[😀İKİ😀ı]	c4	[😀İK]	F	0
+CO	string	[]	string	[]	T	0
+CP	string	[AÉcσ1Kı]	n2	[**]	T	0
+CN	d	[*]	c3	[*c]	F	8
+CO	n2	[Ib]	d	[1İB]	F	0
+CS	c2	[ςA]	n4	[a]	T	1
+NA	c4	[I]	c6	[ ]	F	1
+NS	n2	[]	c2	[ ]	F	0
+NP	d	[ ]	d	[*]	F	0
+CO	t	[]	c1	[b]	F	0
+CO	c3	[ba]	d	[a😀]	F	0
+CN	c2	[Ic]	n2	[c]	T	0
+CO	c1	[]	c3	[ςς]	T	1
+NP	n4	[BÉA]	c6	[ac0]	T	4
+CP	c2	[]	n4	[bÉA]	F	2
+CS	string	[biéBΣÉb*]	c4	[É]	T	2
+CP	t	[iIb0Σ]	c10	[i*b*]	T	0
+CO	t	[1]	t	[1 *]	T	6
+CP	string	[+ Σ]	c2	[*]	T	0
+NS	c6	[]	c6	[]	F	0
+CO	c1	[]	c1	[ ]	T	1
+CA	c2	[Σ]	c6	[aa]	T	1
+CP	n4	[ia]	c10	[*]	T	0
+NS	c3	[]	string	[ ]	F	0
+CA	t	[😀b ab]	c2	[😀]	T	0
+CP	string	[cςIΣßÉ😀]	d	[]	F	8
+CS	string	[cςa0 b]	c3	[]	T	0
+CA	c6	[aB]	c3	[ ]	T	2
+CP	c6	[0b😀i]	string	[ı]	F	6
+NP	c1	[a]	string	[**]	F	0
+CP	c2	[]	d	[**]	T	0
+NP	n2	[😀]	d	[]	T	2
+CO	c3	[]	c2	[*I]	F	0
+CN	c6	[aKIab]	c4	[aKIb]	T	5
+CO	c6	[İ+😀İa]	c10	[İ+]	F	2
+NS	t	[ıIA Ia]	t	[]	F	0
+NA	c10	[é+1İI#é]	n4	[Aiς]	F	7
+CP	c3	[ıςb]	t	[**+]	T	2
+NP	string	[ßBbaς ]	c3	[*Bb]	T	6
+NA	c4	[aac]	c4	[]	F	3
+CO	string	[cc Iı😀]	c3	[cIı]	F	2
+NA	c10	[iÉİ]	string	[**]	T	10
+CP	c1	[b]	c6	[**]	T	0
+NS	c10	[éa]	string	[   ]	F	2
+NS	string	[c0 ς#]	string	[]	F	0
+CA	string	[ΣςcbaK]	t	[Σ1]	T	0
+NP	c4	[c]	c3	[ # ]	T	4
+NP	n4	[KKa]	string	[kkA*]	F	0
+CP	c2	[cσ]	c4	[*+]	T	1
+CP	c2	[]	n2	[# ]	T	0
+CO	n4	[]	d	[ 😀]	T	4
+NA	n2	[]	string	[İB]	T	2
+NA	n4	[# é]	string	[ıς]	T	4
+CP	c6	[ #ßBb ]	n4	[]	F	6
+CP	string	[ıa ]	t	[*# ]	T	2
+NA	c4	[ı]	n4	[iÉ]	F	1
+CO	string	[caI]	c1	[c]	F	1
+CP	c2	[ A]	n4	[**+]	T	1
+NA	t	[+ΣBıB]	string	[  ]	F	5
+NA	c1	[]	t	[]	F	0
+CS	n4	[+Σa#]	n4	[+Σa]	T	0
+CP	c10	[ÉcΣ+0]	d	[**]	T	0
+CO	t	[😀+ΣΣ]	string	[😀+Σ]	F	5
+CO	string	[aiKς#ß+😀]	c10	[aiKς#ß+😀]	T	9
+NA	c3	[]	t	[K]	F	0
+CP	string	[bAÉ]	c10	[*]	T	0
+CP	c2	[ß]	c3	[**]	T	0
+CP	string	[😀a1 éca]	d	[*1 +c+*]	T	3
+CP	c10	[bİ😀bıßa]	string	[*😀B+*SA+ ]	F	10
+CA	c10	[ #a]	string	[éB]	F	10
+CO	c6	[+]	n4	[+ ς]	T	6
+CP	n2	[+]	c3	[+]	T	0
+CO	string	[ÉIAK]	string	[II+]	F	0
+CN	string	[aς*a]	c3	[😀]	T	0
+CA	d	[+ Σé😀]	n2	[]	T	1
+NP	t	[ß ]	string	[*+ ]	F	0
+CP	c10	[ı+]	c10	[ı+]	T	0
+CP	c2	[i]	n2	[]	F	2
+CP	c10	[b]	string	[** #    *]	T	1
+CP	c6	[ıb 0]	c6	[* +]	T	2
+CP	n4	[aσ1]	n4	[# ]	F	4
+CP	string	[+aΣéσB]	c10	[aß]	F	6
+CP	string	[É béß0 ]	c10	[bé# ]	F	7
+CS	c1	[ ]	c4	[ ]	T	0
+CP	d	[Bb*]	string	[😀+]	F	8
+CN	c1	[0]	c10	[0]	F	1
+NP	c10	[aİaΣ#]	c6	[*+]	F	4
+NP	c4	[]	c6	[*]	F	0
+BYTE-CO	x5	[]	x1	[]	T	5
+BYTE-CN	x1	[00]	xstring	[00]	F	1
+BYTE-CA	x2	[]	x3	[]	T	0
+M	x5	[0F01]	xstring	[01]	F	-
+Z	x2	[1000]	xstring	[00]	T	-
+BYTE-CO	xstring	[02A1A101]	xstring	[01]	F	0
+O	xstring	[FF00]	xstring	[00]	T	-
+M	x2	[0000]	x5	[0000FF]	F	-
+BYTE-CS	xstring	[00]	x5	[]	F	1
+BYTE-NS	x3	[]	xstring	[00]	F	0
+O	xstring	[]	x1	[0F]	F	-
+O	xstring	[020210]	x2	[]	T	-
+Z	xstring	[00020FFF00]	x5	[0200]	T	-
+M	x3	[0F]	xstring	[02A1]	T	-
+Z	x5	[FFFF00]	x1	[0F]	F	-
+Z	x5	[A1A101]	x2	[]	T	-
+BYTE-CN	x3	[010101]	x5	[100F]	T	0
+BYTE-NA	x2	[02]	x2	[A101]	T	2
+M	x2	[0F]	xstring	[0F01]	T	-
+O	x2	[020F]	x5	[]	T	-
+O	x1	[A1]	xstring	[10]	F	-
+Z	xstring	[0F]	x3	[10]	T	-
+BYTE-CA	x2	[1001]	x1	[]	F	2
+BYTE-NS	x1	[]	x2	[01]	T	1
+Z	xstring	[FF0110FF10]	xstring	[]	T	-
+BYTE-NS	x5	[00]	xstring	[]	F	0
+O	x3	[00100F]	x5	[0100]	F	-
+M	x1	[A1]	x5	[0100FF]	T	-
+BYTE-CO	x3	[01FFA1]	x2	[A100]	F	0
+BYTE-CS	xstring	[A110A110]	x1	[01]	F	4
+O	x5	[0210]	xstring	[0001FF]	F	-
+M	x1	[01]	x1	[10]	F	-
+BYTE-CS	x3	[FF0FFF]	xstring	[]	T	0
+BYTE-CN	x3	[021010]	x3	[]	T	0
+BYTE-CS	xstring	[0F1000A1]	xstring	[]	T	0
+BYTE-NA	xstring	[01020200]	x5	[]	F	3
+BYTE-CO	xstring	[00A1A1]	x2	[]	F	1
+BYTE-CS	xstring	[A100]	xstring	[]	T	0
+Z	x2	[0F10]	x5	[]	T	-
+BYTE-NS	xstring	[010002]	xstring	[]	F	0
+BYTE-CA	x1	[A1]	x1	[]	F	1
+M	x5	[]	xstring	[00]	F	-
+BYTE-CN	x5	[A10F10]	x3	[0100]	T	0
+BYTE-CA	x3	[00A1FF]	x2	[]	T	0
+M	xstring	[10]	xstring	[10]	F	-
+BYTE-CO	x5	[0102FF0010]	x3	[02FF00]	F	0
+Z	x2	[]	x3	[]	T	-
+BYTE-CS	x2	[00A1]	x2	[0F0F]	F	2
+BYTE-CO	x3	[0010]	x5	[]	F	1
+BYTE-CO	x2	[]	xstring	[0FA101]	F	0
+BYTE-CN	xstring	[000F000F]	xstring	[]	T	0
+Z	xstring	[00A1]	xstring	[0F]	T	-
+BYTE-CA	x1	[A1]	x1	[00]	F	1
+Z	x5	[020F00]	x5	[020F00]	F	-
+BYTE-CN	x3	[00]	x2	[10]	F	3
+BYTE-NA	x3	[0110]	x3	[A10F]	F	2
+M	x2	[020F]	x3	[]	F	-
+M	xstring	[000F10]	x5	[02]	F	-
+BYTE-CO	x3	[10FFFF]	x1	[]	F	0
+Z	x3	[]	xstring	[]	T	-
+BYTE-CS	x1	[00]	xstring	[00020100]	F	1
+BYTE-NA	x3	[020201]	x5	[]	T	3
+BYTE-CO	x1	[FF]	x5	[]	F	0
+BYTE-CS	x1	[10]	xstring	[]	T	0
+BYTE-NA	x5	[]	x1	[]	F	0
+M	xstring	[FFA1000000]	x3	[01]	F	-
+M	xstring	[10FFA101]	x3	[10FFA1]	F	-
+BYTE-NA	xstring	[01A10101]	xstring	[]	T	4
+BYTE-CA	x5	[FF]	x3	[A101]	T	1
+BYTE-NA	x3	[]	x1	[]	F	0
+BYTE-NA	xstring	[00A1]	x2	[]	F	0
+BYTE-NA	x3	[01A100]	x3	[]	F	2
+BYTE-CS	x3	[020000]	x5	[]	F	3
+M	x2	[FF00]	x1	[]	F	-
+BYTE-CO	x2	[]	xstring	[]	F	0
+BYTE-CS	x5	[A100]	x1	[]	T	1
+BYTE-NA	xstring	[020F01A10F]	x2	[]	T	5
+BYTE-CA	x5	[00A1]	xstring	[FF02]	F	5
+BYTE-NA	xstring	[FF]	xstring	[FF]	F	0
+Z	x5	[0F10FF0F]	x3	[00A1]	T	-
+BYTE-CO	x2	[1000]	x5	[0F]	F	0
+Z	x1	[00]	xstring	[]	T	-
+BYTE-NS	x2	[1002]	x2	[]	T	2
+O	x5	[]	xstring	[]	T	-
+BYTE-CN	x3	[]	xstring	[]	T	0
+BYTE-CO	x1	[0F]	xstring	[]	F	0
+BYTE-NS	x3	[A1FF00]	x2	[0110]	T	3
+M	x5	[020010]	xstring	[FF00]	T	-
+O	x5	[00A101]	x3	[01]	F	-
+BYTE-CA	xstring	[01100102]	xstring	[]	F	4
+BYTE-CS	x1	[A1]	x5	[02]	F	1
+Z	x1	[FF]	x3	[FF]	F	-
+BYTE-CN	x3	[02FF]	x5	[FF]	T	0
+O	x5	[10000100]	xstring	[01FF01]	F	-
+M	x5	[A1A10200]	x3	[]	F	-
+BYTE-CA	xstring	[]	x5	[]	F	0
+BYTE-NA	xstring	[]	x5	[]	T	0
+BYTE-CN	x3	[0000]	x5	[00]	F	3
+BYTE-CN	x5	[0F00]	x2	[]	T	0
+O	x5	[00100F]	x1	[02]	F	-
+BYTE-CN	x2	[FF]	x2	[0101]	T	0
+BYTE-NA	x3	[00]	x1	[FF]	T	3
+M	xstring	[10]	xstring	[]	F	-
+Z	xstring	[]	x2	[]	T	-
+M	x1	[10]	x3	[0F02A1]	F	-
+BYTE-NA	x5	[1000000201]	x2	[0000]	F	1
+BYTE-CO	xstring	[FF100F]	x2	[]	F	0
+M	x3	[]	x3	[]	F	-
+M	x2	[FF10]	x1	[]	F	-
+O	x5	[01]	x2	[]	T	-
+Z	x5	[A1FF100F10]	x2	[000F]	F	-
+Z	xstring	[02FF]	x1	[]	T	-
+Z	x1	[00]	x2	[0001]	T	-
+Z	xstring	[02A1]	xstring	[A1]	T	-
+M	xstring	[00010110]	x1	[]	F	-
+BYTE-CA	x3	[0210FF]	x5	[FF10A1]	T	1
+BYTE-CA	xstring	[0FFF10]	x5	[]	F	3
+BYTE-CN	x2	[FF]	x3	[]	T	0
+O	x2	[0F0F]	xstring	[0002A1]	F	-
+BYTE-CN	x3	[]	x3	[02A1]	F	3
+Z	x2	[]	x1	[]	T	-
+Z	x2	[0110]	x2	[01]	F	-
+BYTE-CA	x2	[FF10]	xstring	[]	F	2
+M	x2	[FF02]	x5	[]	F	-
+Z	x5	[FF]	x3	[FFFF]	F	-
+Z	x5	[A10F0100]	xstring	[]	T	-
+M	xstring	[]	xstring	[]	F	-
+O	xstring	[FF10FF]	x3	[]	T	-
+BYTE-CN	x2	[]	x1	[02]	T	0
+BYTE-NS	x1	[]	xstring	[10]	T	1
+M	x5	[020FFF0010]	x3	[0000]	F	-
+BYTE-NS	xstring	[020F0110FF]	x1	[01]	F	2
+BYTE-CN	xstring	[01A100A1]	x3	[]	T	0
+BYTE-CA	x1	[0F]	xstring	[0102]	F	1
+BYTE-CO	x1	[0F]	x3	[0100A1]	F	0
+O	xstring	[00FF00]	x1	[]	T	-
+O	x2	[FF10]	x2	[FF]	T	-
+BYTE-NA	xstring	[021002]	x1	[02]	F	0
+BYTE-NS	xstring	[A1000F]	x5	[]	T	3
+Z	x2	[0F00]	x5	[]	T	-
+M	xstring	[]	x3	[]	F	-
+BYTE-CS	x5	[]	x1	[]	T	0
+Z	x5	[FF]	x1	[]	T	-
+BYTE-NS	xstring	[0001A1]	x1	[]	F	0
+Z	x5	[02]	xstring	[]	T	-
+BYTE-CO	x1	[02]	x5	[A1]	F	0
+BYTE-NA	x1	[00]	x5	[A1000F]	F	0
+M	x1	[0F]	x5	[]	F	-
+Z	x1	[01]	x5	[A1A1FF]	F	-
+O	x1	[00]	x5	[0F1000]	F	-
+BYTE-CS	x2	[FF00]	xstring	[00A110]	F	2
+BYTE-NA	xstring	[1002]	x1	[FF]	T	2
+BYTE-CO	xstring	[A1]	xstring	[]	F	0
+BYTE-NS	xstring	[]	x1	[]	T	0
+BYTE-NS	x2	[0001]	x3	[00]	T	2
+BYTE-NS	xstring	[100002]	x1	[01]	T	3
+M	xstring	[000201]	x5	[]	F	-
+O	x5	[020F0102]	x2	[0FA1]	F	-
+O	x1	[]	x5	[]	T	-
+BYTE-CN	x3	[00]	x3	[]	F	3
+BYTE-CA	xstring	[0F0110FFFF]	x5	[]	F	5
+BYTE-CA	x3	[020100]	xstring	[A10F]	F	3
+BYTE-NS	x1	[02]	xstring	[]	F	0
+BYTE-CO	x3	[]	x1	[]	T	3
+BYTE-NS	x2	[FF02]	x3	[]	T	2
+BYTE-CA	xstring	[010F0FFF]	xstring	[0FFF]	T	1
+BYTE-CO	x1	[FF]	x2	[]	F	0
+Z	x2	[0FFF]	xstring	[00]	T	-
+M	x1	[10]	xstring	[]	F	-
+M	x1	[]	xstring	[]	F	-
+Z	x1	[02]	x2	[FF]	F	-
+BYTE-NS	x5	[A1]	x2	[]	F	1
+O	x5	[]	x2	[]	T	-
+BYTE-CN	x3	[00]	x5	[FFA1FF]	F	3
+BYTE-CO	x5	[0000]	xstring	[01A102]	F	0
+BYTE-CS	x1	[01]	xstring	[]	T	0
+Z	x5	[01]	x1	[]	T	-
+O	x3	[000F0F]	x3	[A10010]	F	-
+Z	x3	[0F]	x1	[]	T	-
+O	x2	[]	xstring	[01]	F	-
+M	xstring	[01FF020100]	x1	[01]	F	-
+M	x2	[A1]	x3	[00]	F	-
+BYTE-NA	x2	[]	xstring	[A100]	F	0
+BYTE-NS	x1	[]	x5	[]	T	1
+O	x5	[01A10010]	x1	[]	T	-
+Z	xstring	[FF]	x3	[]	T	-
+BYTE-CS	x5	[]	x5	[]	T	0
+O	xstring	[]	x1	[]	T	-
+BYTE-CS	xstring	[0010FF00]	x1	[]	T	0
+BYTE-CA	x3	[0F00]	x1	[]	T	1
+O	xstring	[0010FF]	x2	[]	T	-
+BYTE-NS	x5	[]	x3	[]	F	0
+O	x2	[]	x3	[A1A1A1]	F	-
+O	x1	[]	x1	[]	T	-
+Z	xstring	[0F0F]	x5	[0001A1]	F	-
+BYTE-CA	x3	[02020F]	x5	[FF10]	F	3
+BYTE-CA	xstring	[00FFA110]	xstring	[0101]	F	4
+Z	xstring	[FF]	xstring	[]	T	-
+Z	x1	[10]	xstring	[010F]	T	-
+O	xstring	[FF02A1FF]	x2	[]	T	-
+Z	xstring	[01]	x5	[0010FF]	T	-
+BYTE-NS	x3	[0F00]	x2	[0FA1]	T	3
+O	xstring	[A10210000F]	x5	[FF]	F	-
+O	xstring	[0F00010000]	xstring	[00]	T	-
+BYTE-NS	xstring	[0F00]	x2	[]	T	2
+O	x3	[01FFA1]	x1	[]	T	-
+M	xstring	[0F0F0F00]	x5	[]	F	-
+BYTE-NS	x1	[A1]	xstring	[]	F	0
+O	x3	[A1FF]	x1	[01]	T	-
+BYTE-CO	x5	[0000]	xstring	[]	F	0
+M	x5	[000F02]	x2	[0F]	F	-
+O	x5	[FFFF00]	xstring	[00]	T	-
+Z	x3	[00A10F]	x2	[00]	T	-
+O	x3	[0F0F02]	x1	[0F]	T	-
+Z	xstring	[0001A1]	x2	[FF02]	T	-
+Z	xstring	[]	xstring	[]	T	-
+BYTE-CO	x5	[0FFFA10102]	x1	[]	F	0
+BYTE-CS	x3	[000F]	xstring	[00]	T	0
+Z	xstring	[FF100000]	x2	[]	T	-
+BYTE-CA	x2	[00]	x1	[]	T	0
+BYTE-CS	xstring	[FF10010F]	xstring	[0010A1]	F	4
+M	xstring	[]	xstring	[00FF]	F	-
+Z	xstring	[0010000F]	x5	[0001]	T	-
+BYTE-NA	xstring	[02]	x2	[]	T	1
+BYTE-CO	xstring	[02FF]	xstring	[FF]	F	0
+BYTE-CO	x1	[01]	xstring	[]	F	0
+O	x5	[FF0F000200]	x1	[]	T	-
+O	xstring	[10]	xstring	[]	T	-
+O	x5	[0202]	x1	[]	T	-
+O	x1	[01]	x5	[02]	F	-
+O	x3	[0002A1]	xstring	[A1]	F	-
+BYTE-CN	xstring	[00A1000F00]	x2	[A100]	T	3
+BYTE-CA	x3	[01000F]	xstring	[]	F	3
+Z	x2	[0200]	xstring	[]	T	-
+M	xstring	[10FF0F]	xstring	[]	F	-
+BYTE-CS	x5	[1000]	xstring	[101001]	F	5
+BYTE-CO	x1	[00]	x2	[0000]	T	1
+BYTE-CN	x1	[0F]	x2	[]	T	0
+Z	xstring	[10010F01A1]	xstring	[A1]	T	-
+O	xstring	[02]	x1	[]	T	-
+Z	x2	[0000]	x5	[]	T	-
+Z	xstring	[10000010]	x5	[00A100]	T	-
+BYTE-CN	xstring	[00A110]	x5	[A1A1]	T	2
+M	x2	[0100]	xstring	[01]	F	-
+BYTE-NA	xstring	[FF00]	xstring	[FF00]	F	0
+Z	xstring	[01A1]	x2	[]	T	-
+BYTE-CN	x2	[A110]	x2	[]	T	0
+M	x2	[A10F]	xstring	[]	F	-
+O	x3	[0F00]	xstring	[0F]	T	-
+M	x1	[A1]	xstring	[0102]	T	-
+BYTE-CS	x3	[0F]	xstring	[10100F]	F	3
+BYTE-CS	xstring	[]	x5	[]	F	0
+O	x2	[020F]	x5	[020F02]	F	-
+M	x5	[1000A1]	xstring	[1000]	F	-
+BYTE-CS	x1	[02]	x3	[0F]	F	1
+BYTE-CS	x3	[0F]	x1	[]	T	1
+Z	x3	[00]	xstring	[]	T	-
+BYTE-NA	x3	[02]	x1	[]	F	1
+BYTE-CO	xstring	[A102]	xstring	[02]	F	0
+BYTE-CA	x3	[A1FF10]	xstring	[]	F	3
+M	x3	[FF1000]	x2	[00FF]	T	-
+BYTE-CO	xstring	[0000A1]	x3	[A1]	T	3
+BYTE-CS	xstring	[100100FF]	x5	[]	F	4
+BYTE-CS	x1	[00]	x2	[]	F	1
+Z	xstring	[0202020010]	x2	[A1]	T	-
+BYTE-CS	x2	[00FF]	xstring	[]	T	0
+BYTE-NA	x1	[00]	x2	[]	F	0
+O	xstring	[01]	xstring	[]	T	-
+BYTE-CA	x5	[]	xstring	[]	F	5
+BYTE-CO	x1	[10]	x3	[0100]	F	0
+Z	x2	[FF00]	x1	[00]	T	-
+BYTE-CO	xstring	[0110A110A1]	xstring	[10A1]	F	0
+BYTE-CS	xstring	[0100]	xstring	[]	T	0
+BYTE-CO	x1	[00]	x3	[A1FF]	T	1
+O	x2	[02]	x2	[]	T	-
+Z	xstring	[020F010F]	x5	[FF10]	F	-
+Z	xstring	[0200000F]	x5	[02010F]	F	-
+M	x3	[0F10A1]	x2	[0102]	T	-
+BYTE-CS	xstring	[0F0F00A101]	xstring	[0F]	T	0
+BYTE-CO	x3	[0000FF]	x5	[]	F	2
+M	xstring	[A1010F0110]	x2	[0F]	T	-
+Z	x5	[00FF02]	x3	[]	T	-
+O	x1	[10]	x1	[]	T	-
+Z	x3	[A10F0F]	x5	[020F02]	F	-
+BYTE-NS	x1	[01]	xstring	[]	F	0
+BYTE-NS	x3	[]	x3	[]	F	0
+BYTE-CS	x1	[]	xstring	[]	T	0
+BYTE-CA	x3	[]	xstring	[A1]	F	3
+BYTE-CS	x2	[0F]	xstring	[]	T	0
+BYTE-NS	x2	[]	xstring	[]	F	0
+Z	xstring	[01A110]	x3	[01A1]	F	-
+BYTE-NS	x5	[0110]	x2	[000F]	T	5
+Z	x2	[0010]	xstring	[]	T	-
+M	xstring	[0F0110]	xstring	[0F0110]	F	-
+BYTE-CS	x2	[0001]	xstring	[FF01]	F	2
+O	x1	[FF]	x5	[]	T	-
+M	xstring	[0000]	x3	[]	F	-
+O	xstring	[01FF01A1]	xstring	[]	T	-
+M	xstring	[02000F01]	x3	[]	F	-
+O	x3	[FF10A1]	x3	[010100]	F	-
+M	x5	[0010021000]	x2	[1002]	F	-
+BYTE-CN	x5	[0F000F0202]	xstring	[02A100]	T	0
+O	x2	[FF01]	xstring	[FF010F]	F	-
+BYTE-CN	x5	[A102FF00]	x1	[]	T	0
+O	x2	[0F00]	xstring	[]	T	-
+BYTE-CA	xstring	[FF0001A100]	xstring	[01A100]	T	1
+BYTE-NS	xstring	[FF]	xstring	[]	F	0
+Z	x1	[A1]	x3	[]	T	-
+BYTE-NA	x1	[FF]	x1	[FF]	F	0
+M	x1	[02]	xstring	[]	F	-
+BYTE-NA	x1	[]	xstring	[]	T	1
+BYTE-CS	x3	[A10110]	xstring	[0101]	F	3
+BYTE-NS	xstring	[10001000]	x5	[]	T	4
+BYTE-NS	xstring	[]	xstring	[010F]	T	0
+M	xstring	[0FA102A10F]	x1	[]	F	-
+BYTE-NS	x1	[]	xstring	[]	F	0
+O	x5	[00FF0F0FFF]	x2	[00]	T	-
+O	x2	[]	x3	[000F10]	F	-
+BYTE-NA	x1	[02]	x2	[0200]	F	0
+O	x3	[10]	xstring	[10]	T	-
+BYTE-NA	xstring	[0FFF0F02A1]	x2	[0F02]	F	0
+Z	xstring	[01A101FFA1]	xstring	[A101FF]	F	-
+BYTE-NA	xstring	[10000200]	x1	[]	F	1
+BYTE-CA	x2	[00FF]	x3	[]	T	0
+BYTE-CA	x5	[0101]	xstring	[]	F	5
+M	x1	[10]	xstring	[A1]	F	-
+O	xstring	[00001002]	x3	[]	T	-
+BYTE-NS	x3	[A1]	xstring	[]	F	0
+M	x3	[0F1000]	xstring	[1000A1]	F	-
+BYTE-CN	x5	[100F]	x1	[02]	T	0
+O	x3	[A11002]	x5	[100F]	F	-
+BYTE-CA	x3	[01]	xstring	[]	F	3
+Z	x5	[000102A1]	x2	[0001]	F	-
+BYTE-CN	x5	[10]	x2	[]	T	0
+BYTE-CN	xstring	[FF00A1A1]	xstring	[A1A1]	T	0
+O	xstring	[01FFFF]	x3	[]	T	-
+O	x5	[0FFF]	xstring	[0010]	T	-
+BYTE-CO	xstring	[0F]	x2	[]	F	0
+BYTE-NS	xstring	[01020FA1]	xstring	[]	F	0
+Z	x5	[00]	x2	[]	T	-
+Z	x1	[0F]	x2	[]	T	-
+BYTE-CA	x5	[A1FF00]	x1	[]	T	2
+BYTE-CA	x3	[]	x1	[]	T	0
+Z	x3	[000000]	x2	[0000]	T	-
+M	x5	[01]	x1	[01]	F	-
+Z	x5	[FF0F000F]	x5	[]	T	-
+BYTE-NS	x5	[FF020F0101]	x5	[]	T	5
+Z	xstring	[01000F10]	x1	[01]	F	-
+M	x1	[]	x5	[02]	F	-
+BYTE-CN	x1	[10]	xstring	[FF02]	T	0
+M	xstring	[0010]	x2	[0202]	F	-
+M	x1	[02]	x1	[]	F	-
+Z	x3	[02010F]	x2	[]	T	-
+BYTE-NS	xstring	[010002A110]	xstring	[0002FF]	T	5
+BYTE-NS	x1	[10]	xstring	[0210]	T	1
+Z	x2	[0F10]	x1	[10]	T	-
+BYTE-NS	xstring	[00100000]	x5	[00]	T	4
+BYTE-CO	xstring	[A1]	x2	[]	F	0
+M	x3	[00]	xstring	[021000]	F	-
+O	x3	[0100]	xstring	[0100]	T	-
+M	x3	[0000]	xstring	[]	F	-
+BYTE-CN	x2	[]	xstring	[10]	T	0
+BYTE-NS	x1	[0F]	xstring	[0F01]	T	1
+BYTE-CN	x3	[]	x1	[]	F	3
+M	xstring	[00100F0001]	x5	[00]	F	-
+BYTE-CA	xstring	[01A101]	x2	[]	F	3
+Z	x3	[]	x3	[]	T	-
+BYTE-CO	x2	[A100]	xstring	[0F02A1]	F	1
+Z	x5	[0001]	x3	[]	T	-
+BYTE-CS	xstring	[A110]	x1	[]	F	2
+O	x3	[]	xstring	[00A1]	F	-
+BYTE-NA	x1	[FF]	x3	[]	T	1
+BYTE-NS	x2	[FF]	x5	[FF]	T	2
+Z	x2	[]	x2	[02A1]	T	-
+BYTE-NS	x3	[02]	x1	[00]	F	1
+BYTE-CO	x3	[10]	x5	[]	F	0
+Z	x5	[0110]	x3	[10]	T	-
+BYTE-NS	x2	[1002]	x3	[A10F]	T	2
+O	xstring	[10]	xstring	[10]	T	-
+BYTE-NA	x2	[FFA1]	x5	[]	T	2
+M	x2	[1000]	x3	[]	F	-
+BYTE-CN	xstring	[010100]	x5	[010100]	F	3
+BYTE-CS	x5	[]	xstring	[01]	F	5
+M	xstring	[020F10]	xstring	[]	F	-
+BYTE-NS	xstring	[01]	x1	[01]	F	0
+BYTE-CS	x3	[00000F]	x3	[]	F	3
+BYTE-NS	xstring	[010F]	xstring	[01]	F	0
+BYTE-NS	xstring	[0F]	xstring	[100201]	T	1
+BYTE-CS	x3	[00FF]	x2	[]	F	3
+Z	xstring	[101002]	x5	[1010]	F	-
+BYTE-CS	x3	[010001]	x1	[0F]	F	3
+O	x3	[00000F]	x1	[]	T	-
+M	x2	[A100]	x2	[02]	F	-
+BYTE-NS	xstring	[1000FF0002]	x3	[1000FF]	F	0
+BYTE-CS	x1	[00]	xstring	[]	T	0
+Z	x1	[]	xstring	[]	T	-
+BYTE-NA	xstring	[0110FF0100]	x1	[00]	F	4
+BYTE-CS	xstring	[00FF100F]	x2	[FF0F]	F	4
+BYTE-CN	x1	[10]	xstring	[]	T	0
+BYTE-CO	x1	[]	x3	[]	T	1
+M	x1	[01]	x3	[]	F	-
+BYTE-CS	x2	[1000]	xstring	[FF1000]	F	2
+BYTE-NA	xstring	[01FF0FA101]	x1	[]	T	5
+BYTE-NS	xstring	[0F0000FF]	x3	[]	T	4
+BYTE-NS	x2	[10]	xstring	[]	F	0
+BYTE-CA	x2	[0100]	x1	[]	T	1
+M	xstring	[01]	x2	[01]	F	-
+BYTE-NS	xstring	[0000]	x3	[00]	T	2
+O	x3	[0F]	xstring	[]	T	-
+O	xstring	[020F]	xstring	[0F]	F	-
+M	x2	[FFA1]	xstring	[]	F	-
+M	x5	[FFA10F]	x1	[]	F	-
+Z	x2	[A1FF]	x1	[A1]	F	-
+BYTE-NS	xstring	[02100001FF]	x3	[]	T	5
+Z	xstring	[101010]	x5	[A1]	T	-
+O	x5	[00020FFF]	x3	[FF]	F	-
+Z	x5	[011001]	x1	[01]	F	-
+M	x2	[]	x2	[]	F	-
+BYTE-CA	x5	[]	x2	[]	T	0
+M	xstring	[0F10A1]	x5	[A1]	T	-
+BYTE-CO	xstring	[00]	xstring	[]	F	0
+O	x1	[]	xstring	[]	T	-
+M	x5	[01]	x1	[]	F	-
+O	x5	[000F0F0F]	xstring	[A10000]	F	-
+O	x3	[00A1]	x3	[]	T	-
+M	x2	[01A1]	x1	[]	F	-
+M	xstring	[00]	x3	[]	F	-
+M	xstring	[01A10FA1]	x2	[00]	F	-
+BYTE-CN	x2	[02A1]	x2	[]	T	0
+BYTE-CA	x5	[01]	xstring	[00A102]	T	1
+M	x5	[]	x5	[]	F	-
+M	x2	[]	x1	[]	F	-
+Z	x3	[01A100]	x3	[01]	F	-
+Z	xstring	[000000]	xstring	[FF1000]	T	-
+BYTE-NS	x2	[0010]	x5	[]	T	2
+Z	x1	[00]	x2	[01A1]	T	-
+BYTE-CS	x2	[0100]	x2	[0FFF]	F	2
+M	x3	[01FFA1]	x2	[0200]	F	-
+BYTE-CN	xstring	[0F0F]	xstring	[0FFF0F]	F	2
+Z	xstring	[020F]	xstring	[]	T	-
+BYTE-CA	xstring	[00A1]	x5	[A1]	T	0
+BYTE-NS	xstring	[0F1002]	xstring	[1002]	F	1
+O	x5	[A10F0F10]	xstring	[0F0002]	F	-
+BYTE-CS	xstring	[02]	xstring	[]	T	0
+O	x2	[FFFF]	x1	[02]	T	-
+BYTE-NA	x1	[01]	x2	[]	T	1
+BYTE-CN	x2	[10]	x1	[02]	T	0
+M	xstring	[100000]	x2	[]	F	-
+BYTE-NS	x3	[020F10]	xstring	[]	F	0
+BYTE-NA	xstring	[FF01]	xstring	[]	T	2
+BYTE-CA	x1	[02]	x1	[02]	T	0
+Z	xstring	[000F02010F]	xstring	[FF]	T	-
+O	x5	[000002A1A1]	x2	[00]	T	-
+O	xstring	[00A1A1]	x2	[]	T	-
+O	x2	[]	x1	[]	T	-
+O	x3	[00]	x2	[01]	F	-
+BYTE-CA	x1	[10]	xstring	[]	F	1
+BYTE-CO	x1	[01]	xstring	[010F]	T	1
+BYTE-NA	xstring	[1000]	x1	[]	F	1
+BYTE-CO	xstring	[A110000100]	x1	[]	F	0
+Z	x2	[0010]	xstring	[A1]	T	-
+M	x1	[01]	xstring	[01]	F	-
+BYTE-CS	x3	[0100A1]	xstring	[A1]	T	2
+Z	x2	[0F10]	xstring	[]	T	-
+BYTE-NS	xstring	[A1]	x5	[0F]	T	1
+Z	x2	[FFA1]	x1	[00]	T	-
+BYTE-CA	xstring	[A1A1FFA10F]	x5	[A1FFA1]	T	0
+BYTE-NS	x2	[]	x3	[FF00]	T	2
+BYTE-NA	x5	[10A1100210]	x5	[0010]	F	0
+Z	x5	[0F00A100]	xstring	[00]	T	-
+M	x2	[0102]	xstring	[]	F	-
+M	x3	[0F0210]	x2	[0F02]	F	-
+O	x2	[A1FF]	xstring	[000210]	F	-
+Z	x1	[]	x2	[]	T	-
+Z	xstring	[00000100]	xstring	[]	T	-
+BYTE-NS	x2	[FF01]	x2	[10]	T	2
+O	xstring	[A1]	x3	[]	T	-
+BYTE-NA	x3	[021001]	x5	[0210]	F	0
+M	xstring	[0010000200]	xstring	[000001]	F	-
+M	x2	[0110]	x3	[]	F	-
+BYTE-CS	xstring	[FFA10F01]	x2	[]	F	4
+BYTE-CN	x3	[0F00]	xstring	[00010F]	F	3
+BYTE-CN	x5	[0101FF010F]	x3	[]	T	0
+BYTE-NS	x5	[10000200]	x2	[]	F	3
+Z	x1	[00]	x2	[A100]	T	-
+BYTE-CN	x3	[]	x2	[]	F	3
+O	x5	[FF0102]	xstring	[FF]	T	-
+BYTE-NA	xstring	[]	x2	[FFA1]	T	0
+O	xstring	[]	xstring	[02]	F	-
+M	xstring	[A1010000]	x5	[]	F	-
+M	x5	[00000F]	x5	[000F]	F	-
+M	x3	[10020F]	x5	[01]	F	-
+O	x2	[0100]	x5	[]	T	-
+Z	xstring	[]	x1	[]	T	-
+Z	x2	[A102]	x1	[10]	T	-
+BYTE-NA	x3	[101010]	x3	[]	T	3
+Z	xstring	[000F]	x5	[]	T	-
+Z	x1	[02]	xstring	[]	T	-
+BYTE-CO	x1	[]	xstring	[]	F	0
+BYTE-CS	x1	[02]	xstring	[]	T	0
+BYTE-NS	x3	[0F01FF]	x5	[FF0102]	T	3
+BYTE-CS	x3	[0F]	x2	[10]	F	3
+BYTE-CO	x2	[01]	xstring	[]	F	0
+BYTE-NA	xstring	[01FF0F]	xstring	[A1]	T	3
+M	x2	[1002]	x2	[0000]	F	-
+BYTE-NS	x1	[0F]	x1	[]	T	1
+M	x3	[1002]	xstring	[02A110]	F	-
+BYTE-NS	x2	[000F]	xstring	[]	F	0
+BYTE-CO	x1	[02]	xstring	[]	F	0
+O	x3	[01]	x3	[000010]	F	-
+Z	x5	[101000]	xstring	[]	T	-
+BYTE-NA	x5	[020000]	x1	[]	F	1
+Z	xstring	[0FA1]	x5	[]	T	-
+Z	x3	[A1]	x1	[02]	T	-
+BYTE-NS	x5	[A1A10001]	x1	[]	F	2
+BYTE-NS	x1	[]	x2	[A1]	T	1
+BYTE-NS	xstring	[00]	x5	[]	T	1
+O	x3	[001001]	x2	[]	T	-
+M	xstring	[020000FF]	x3	[000F00]	F	-
+BYTE-CN	xstring	[0F00]	xstring	[]	T	0
+Z	x1	[0F]	xstring	[]	T	-
+Z	xstring	[00010F01]	xstring	[01]	T	-
+BYTE-NA	xstring	[]	xstring	[020002]	T	0
+M	x3	[00FF10]	x5	[]	F	-
+O	xstring	[A1]	xstring	[A1]	T	-
+BYTE-CO	xstring	[A110]	x3	[A1]	F	1
+Z	xstring	[0100A1]	xstring	[]	T	-
+Z	x3	[02A1FF]	x3	[010F]	F	-
+BYTE-CA	x5	[00FF000000]	x5	[010100]	T	0
+BYTE-CN	xstring	[0101010001]	xstring	[]	T	0
+M	x2	[10]	xstring	[A1FF02]	F	-
+BYTE-CA	x3	[0F0F0F]	xstring	[]	F	3
+O	xstring	[]	xstring	[0100FF]	F	-
+BYTE-CA	x2	[A1A1]	x1	[]	F	2
+BYTE-NA	xstring	[]	x5	[0002]	T	0
+BYTE-CO	x1	[01]	xstring	[FF]	F	0
+BYTE-CS	xstring	[0000020000]	x2	[0200]	T	2
+BYTE-CN	x3	[A101FF]	xstring	[00]	T	0
+O	x2	[A1FF]	x3	[]	T	-
+Z	x1	[01]	x1	[A1]	F	-
+O	xstring	[01FFFF0F]	x1	[]	T	-
+BYTE-CA	x3	[020F]	x2	[FF00]	T	2
+O	x3	[000210]	xstring	[]	T	-
+BYTE-NA	x3	[00]	x5	[]	F	0
+Z	x1	[]	x1	[]	T	-
+BYTE-CS	xstring	[0010010F02]	x5	[10010F]	F	5
+M	x1	[00]	xstring	[]	F	-
+O	xstring	[1001]	xstring	[A1]	F	-
+BYTE-CS	xstring	[10]	x3	[]	F	1
+O	x5	[0F000FFF]	x3	[]	T	-
+O	x5	[00000000FF]	x5	[00]	T	-
+O	xstring	[02]	x3	[02]	T	-
+BYTE-NS	xstring	[0201100F]	xstring	[]	F	0
+Z	xstring	[0100020002]	xstring	[]	T	-
+M	x5	[]	x3	[0FFF]	F	-
+BYTE-CA	xstring	[0202]	x1	[02]	T	0
+M	xstring	[0F]	x3	[FF00FF]	T	-
+BYTE-NA	xstring	[0F0FFF0001]	x2	[01]	F	3
+O	x2	[]	x5	[01]	F	-
+BYTE-NS	x2	[0F0F]	xstring	[01]	T	2
+Z	xstring	[01]	xstring	[FF]	F	-
+BYTE-NS	xstring	[1000FF0F]	xstring	[]	F	0
+BYTE-NS	x3	[02A1]	x3	[]	T	3
+Z	x3	[001000]	x1	[01]	T	-
+M	x3	[01]	xstring	[A10F01]	T	-
+BYTE-CN	x1	[0F]	x2	[00]	T	0
+BYTE-CO	xstring	[10A102]	x5	[]	F	0
+BYTE-NA	x5	[00]	x2	[]	F	0
+BYTE-NA	x2	[A100]	x2	[A100]	F	0
+BYTE-CA	x1	[00]	x1	[A1]	F	1
+O	x2	[000F]	x5	[]	T	-
+BYTE-CS	x3	[020F]	xstring	[]	T	0
+BYTE-CN	x3	[100100]	x1	[10]	T	1
+BYTE-CS	xstring	[0FA110]	x3	[A1]	F	3
+O	x1	[00]	x1	[A1]	F	-
+O	x2	[0F01]	x2	[00A1]	F	-
+BYTE-CN	x2	[]	xstring	[00]	F	2
+Z	x2	[0000]	x3	[00]	T	-
+Z	x2	[0F00]	x5	[0000]	T	-
+BYTE-CS	xstring	[0F00000100]	xstring	[]	T	0
+Z	xstring	[020200A100]	x2	[]	T	-
+BYTE-CS	xstring	[]	x3	[0F1010]	F	0
+Z	x5	[1000]	x1	[10]	F	-
+O	xstring	[0010A10000]	x5	[021000]	F	-
+BYTE-CO	xstring	[]	x5	[]	T	0
+Z	x2	[00]	x1	[00]	T	-
+Z	x5	[]	xstring	[]	T	-
+O	xstring	[10000F01]	x2	[]	T	-
+M	xstring	[00FFA110]	x3	[0F0000]	F	-
+Z	x5	[00020F10]	xstring	[10]	T	-
+BYTE-CN	xstring	[FF]	xstring	[]	T	0
+Z	x5	[0000A100FF]	x3	[]	T	-
+BYTE-NS	x2	[FF]	x5	[0210FF]	T	2
+M	x5	[02FF0001]	xstring	[]	F	-
+M	xstring	[]	x1	[10]	F	-
+BYTE-CN	x5	[0001]	x5	[02A1]	T	1
+M	xstring	[00A1]	xstring	[]	F	-
+BYTE-NS	x5	[00FF011010]	x5	[0F0200]	T	5
+O	x1	[00]	xstring	[00]	T	-
+M	x2	[0F10]	x5	[10A10000]	F	-
+O	xstring	[0F020F00]	x3	[0100]	T	-
+O	xstring	[0F10FF02A1]	x3	[0F]	T	-
+M	x5	[010F0010FF]	x3	[01]	F	-
+Z	xstring	[]	x5	[]	T	-
+BYTE-CO	xstring	[]	x3	[]	T	0
+Z	x2	[01]	x1	[]	T	-
+Z	x5	[0F]	x2	[A1]	F	-
+BYTE-CS	xstring	[]	xstring	[01A101]	F	0
+BYTE-CS	x3	[0200A1]	x1	[02]	T	0
+BYTE-CO	x2	[0110]	x1	[]	F	0
+BYTE-CS	x2	[]	x3	[]	F	2
+O	xstring	[00]	x2	[]	T	-
+BYTE-CA	x5	[A110FF01]	xstring	[]	F	5
+BYTE-CS	x2	[FF]	x5	[0201]	F	2
+BYTE-NA	x2	[1002]	x5	[00]	T	2
+BYTE-CO	x2	[0FFF]	xstring	[]	F	0
+O	xstring	[1000]	x5	[]	T	-
+BYTE-CN	x2	[10]	x1	[]	T	0
+Z	x5	[FFFFFF]	x3	[FF]	F	-
+M	x5	[0201FF]	x3	[00A101]	T	-
+BYTE-NA	x1	[00]	xstring	[]	T	1
+BYTE-NS	xstring	[FF02FF]	x3	[]	T	3
+O	x3	[00000F]	x1	[00]	T	-
+BYTE-CN	x3	[000F00]	xstring	[0010]	T	1
+BYTE-CN	xstring	[A1]	x3	[]	T	0
+M	xstring	[01020110FF]	x5	[]	F	-
+BYTE-NA	x2	[]	xstring	[020000]	F	0
+M	x1	[01]	xstring	[A1FF02]	T	-
+BYTE-NA	xstring	[FF000F]	x5	[]	F	1
+Z	x3	[FF]	x5	[]	T	-
+BYTE-NA	x5	[A1]	xstring	[]	T	5
+BYTE-CO	x1	[00]	x1	[00]	T	1
+Z	x5	[A110]	x5	[]	T	-
+BYTE-CO	xstring	[]	x1	[]	T	0
+M	x1	[]	x2	[]	F	-
+BYTE-NS	x2	[02A1]	xstring	[02A1]	F	0
+O	xstring	[0000010000]	x1	[01]	F	-
+BYTE-NA	xstring	[A1]	xstring	[]	T	1
+O	x3	[020FFF]	x3	[]	T	-
+O	x5	[00]	x5	[]	T	-
+O	x3	[10]	x5	[0F]	F	-
+Z	xstring	[0F021010]	x5	[00]	T	-
+BYTE-NS	x2	[010F]	xstring	[]	F	0
+M	x2	[0000]	x1	[02]	F	-
+BYTE-NS	x1	[FF]	x3	[01]	T	1
+BYTE-CS	x2	[FFFF]	x3	[FFFF]	F	2
+BYTE-CN	xstring	[0000]	x2	[]	F	2
+O	x5	[A1]	x2	[0F01]	F	-
+O	xstring	[]	x3	[]	T	-
+M	xstring	[00]	x3	[00]	F	-
+BYTE-NA	xstring	[0F0010FF]	xstring	[02000F]	F	0
+BYTE-CO	xstring	[01]	x5	[]	F	0
+BYTE-CN	x2	[0001]	x5	[]	T	1
+O	xstring	[FF100F]	x5	[]	T	-
+BYTE-NS	xstring	[0102A1]	x1	[]	T	3
+BYTE-NA	x1	[0F]	xstring	[]	T	1
+BYTE-NA	xstring	[0201]	x3	[]	T	2
+BYTE-CO	x5	[FFFFFF]	x5	[FF]	T	5
+O	x2	[]	x2	[]	T	-
+O	x5	[0001]	xstring	[0FA1]	F	-
+BYTE-CA	x5	[10001001]	xstring	[01]	T	3
+M	xstring	[000F10FF]	xstring	[]	F	-
+BYTE-NS	xstring	[FFFF10FF00]	xstring	[020100]	T	5
+BYTE-NA	xstring	[]	xstring	[]	T	0
+M	x5	[FF000F0110]	x2	[01]	F	-
+BYTE-CS	x1	[0F]	x5	[A1]	F	1
+BYTE-CA	x5	[0F0001]	xstring	[0110]	T	2
+BYTE-NS	x3	[0110]	x1	[FF]	T	3
+BYTE-CS	xstring	[02FF10]	x1	[02]	T	0
+BYTE-CO	x3	[A10200]	x1	[00]	F	0
+M	x2	[02A1]	x3	[000F]	T	-
+M	x3	[A10FA1]	x2	[]	F	-
+Z	xstring	[02100010]	x2	[]	T	-
+BYTE-CA	xstring	[020F]	x5	[]	F	2
+O	x1	[00]	x2	[]	T	-
+M	xstring	[A10FA102FF]	x1	[]	F	-
+M	x5	[02020F01A1]	x2	[0F00]	T	-
+O	xstring	[A1]	x2	[A1]	T	-
+BYTE-CO	xstring	[000200]	x3	[02]	T	3
+O	x1	[]	x2	[]	T	-
+M	x5	[0202001000]	xstring	[]	F	-
+O	xstring	[0F0101FFA1]	x2	[0100]	T	-
+Z	x1	[]	xstring	[0110]	T	-
+Z	xstring	[00]	x5	[00]	T	-
+BYTE-CO	xstring	[101000]	x5	[0101]	F	0
+O	xstring	[0000A1]	x3	[0000A1]	T	-
+BYTE-CN	x3	[000F0F]	x1	[0F]	T	0
+O	x5	[0FFF1000]	x1	[]	T	-
+BYTE-NS	x5	[00]	x1	[]	F	0
+BYTE-CA	xstring	[A10FFFA102]	x3	[001000]	F	5
+BYTE-CN	x2	[FF]	xstring	[FF]	T	1
+BYTE-CN	xstring	[10]	xstring	[0110A1]	F	1
+BYTE-CS	xstring	[]	x5	[0FFFFF]	F	0
+O	xstring	[01]	x1	[]	T	-
+Z	x5	[01A110]	xstring	[00000F]	T	-
+BYTE-CA	xstring	[A100000F0F]	xstring	[]	F	5
+O	x1	[00]	xstring	[]	T	-
+O	x3	[]	x1	[]	T	-
+M	x2	[0FA1]	x3	[]	F	-
+M	x5	[10010000]	x2	[10]	F	-
+BYTE-CA	xstring	[]	x2	[0000]	F	0
+M	xstring	[00A100]	x3	[]	F	-
+M	x1	[0F]	xstring	[]	F	-
+Z	x3	[A1]	x1	[]	T	-
+M	xstring	[]	x5	[00]	F	-
+BYTE-CO	xstring	[A1A1FF0F]	x5	[01]	F	0
+O	xstring	[01010110]	x3	[01]	T	-
+Z	x5	[01FF]	x1	[00]	T	-
+BYTE-CN	x2	[1001]	xstring	[FF00]	T	0
+BYTE-CS	xstring	[FF]	x5	[0010]	F	1
+O	x5	[FF]	x5	[02]	T	-
+BYTE-CA	x5	[A1000202]	xstring	[02]	T	2
+Z	xstring	[0FA1A10FA1]	x1	[A1]	F	-
+BYTE-CO	x5	[A1FF00]	x2	[]	F	0
+M	x5	[]	xstring	[]	F	-
+Z	xstring	[0F02FF0102]	xstring	[02]	F	-
+M	x5	[0202]	x1	[00]	F	-
+M	x5	[02100F00]	x2	[0F0F]	T	-
+BYTE-CA	x1	[0F]	x5	[02]	F	1
+O	x5	[02]	x2	[]	T	-
+M	x3	[]	x2	[A1]	F	-
+BYTE-NS	x3	[FF]	xstring	[0FFFFF]	T	3
+BYTE-CN	xstring	[0200]	x1	[A1]	T	0
+BYTE-CA	xstring	[0F]	x3	[0F]	T	0
+BYTE-CA	x3	[FF0201]	x5	[01]	T	2
+M	x3	[0000]	x2	[0000]	F	-
+M	x5	[A1]	x1	[10]	F	-
+M	x2	[00A1]	xstring	[]	F	-
+O	x3	[100F10]	x3	[FF]	F	-
+O	xstring	[000000FF]	xstring	[]	T	-
+BYTE-CN	x5	[1000A1]	xstring	[1000A1]	F	5
+Z	xstring	[A101000F]	xstring	[]	T	-
+BYTE-NA	xstring	[02]	x5	[]	T	1
+BYTE-CO	x2	[01]	x5	[01]	T	2
+M	x3	[101000]	x5	[]	F	-
+BYTE-CS	x3	[A11000]	x3	[]	F	3
+O	x1	[00]	x3	[]	T	-
+O	x1	[00]	xstring	[FF00]	F	-
+BYTE-NA	x5	[010001]	x1	[01]	F	0
+Z	xstring	[000200]	x1	[A1]	T	-
+O	x2	[0000]	x3	[011001]	F	-
+Z	x1	[0F]	x2	[0F]	F	-
+BYTE-CA	xstring	[00]	x3	[0F]	T	0
+BYTE-NA	x5	[0000101000]	xstring	[101000]	F	0
+BYTE-CS	x2	[0000]	xstring	[10]	F	2
+BYTE-NS	xstring	[FF0F]	x1	[FF]	F	0
+BYTE-CA	x1	[00]	xstring	[A1]	F	1
+O	x3	[00A1FF]	x2	[FF0F]	F	-
+M	x3	[FF0001]	x3	[]	F	-
+Z	x3	[000001]	x2	[]	T	-
+Z	x5	[02]	x5	[]	T	-
+BYTE-NA	x3	[000000]	x3	[]	F	0
+BYTE-CO	x2	[A100]	xstring	[10A1]	F	1
+O	x3	[0FFF00]	xstring	[]	T	-
+O	x2	[]	xstring	[]	T	-
+BYTE-CN	x1	[00]	xstring	[]	T	0
+BYTE-CO	x2	[FFFF]	xstring	[FFFF]	T	2
+BYTE-CS	x5	[0FA10F]	x5	[A1]	F	5
+M	x5	[]	xstring	[A1]	F	-
+BYTE-CO	xstring	[A110A1]	x2	[]	F	0
+O	x3	[0F]	x2	[]	T	-
+Z	x3	[0F0F]	xstring	[1001]	F	-
+O	x5	[100FFF0000]	xstring	[00A1]	F	-
+O	xstring	[FF02]	xstring	[]	T	-
+BYTE-CA	x3	[10A1]	x1	[A1]	T	1
+Z	x2	[A1]	x1	[]	T	-
+M	x3	[1010A1]	x3	[]	F	-
+Z	x5	[100100]	x1	[]	T	-
+Z	x1	[01]	x2	[01FF]	F	-
+Z	x3	[00FF00]	xstring	[00]	T	-
+BYTE-CA	x5	[A1FF00000F]	xstring	[]	F	5
+BYTE-CA	x5	[10FF]	x3	[]	T	2
+O	x3	[000F0F]	x2	[0F]	F	-
+BYTE-CO	xstring	[10]	x3	[]	F	0
+Z	x2	[A1FF]	x3	[]	T	-
+M	x2	[00]	x3	[]	F	-
+M	xstring	[A101]	x3	[0200]	F	-
+Z	x3	[]	xstring	[021001]	T	-
+BYTE-NA	x1	[01]	x3	[A100]	T	1
+BYTE-NA	x3	[A100]	x3	[00]	F	1
+O	x5	[00]	xstring	[00]	T	-
+BYTE-CS	x3	[100001]	x3	[01]	F	3
+O	x1	[02]	x3	[]	T	-
+BYTE-CN	x2	[00FF]	x5	[FF]	F	2
+BYTE-NA	x3	[100210]	xstring	[]	T	3
+O	xstring	[010102]	x2	[010F]	F	-
+Z	xstring	[FF]	xstring	[FF]	F	-
+BYTE-CA	xstring	[]	x3	[]	F	0
+M	x5	[]	x2	[0F02]	F	-
+BYTE-CN	xstring	[]	x1	[02]	F	0
+M	xstring	[0F0F]	x5	[]	F	-
+O	x5	[0000FFA1FF]	x1	[10]	F	-
+O	x5	[A110]	xstring	[]	T	-
+M	x5	[0F0F]	x3	[00]	F	-
+Z	x2	[0000]	xstring	[]	T	-
+O	xstring	[FF01]	x5	[000FFF]	F	-
+Z	x1	[FF]	x2	[02]	F	-
+O	x5	[0002100000]	x1	[02]	F	-
+BYTE-CO	x1	[02]	x5	[]	F	0
+O	x3	[000001]	xstring	[FF]	F	-
+O	x5	[A10F10]	xstring	[0FA110]	F	-
+O	x3	[0F]	x1	[]	T	-
+BYTE-CN	x1	[A1]	x3	[A1]	F	1
+BYTE-CO	x1	[01]	x1	[]	F	0
+BYTE-CS	x5	[]	xstring	[]	T	0
+BYTE-CA	x5	[10FFFF02]	xstring	[10FFFF02]	T	0
+O	xstring	[02]	x2	[]	T	-
+BYTE-NS	x1	[01]	x3	[0000]	T	1
+BYTE-CN	xstring	[0002010200]	x1	[]	T	1
+BYTE-CO	x1	[00]	x2	[FFA1]	F	0
+BYTE-NS	x5	[00020000]	xstring	[00]	F	0
+BYTE-CS	xstring	[00]	xstring	[]	T	0
+Z	xstring	[100110FF02]	xstring	[FF02]	F	-
+BYTE-CN	x2	[FF]	x2	[000F]	T	0
+BYTE-NS	x3	[0FFF00]	x2	[]	T	3
+M	xstring	[FF100FFF]	x1	[10]	F	-
+BYTE-NA	xstring	[A1]	x5	[]	T	1
+BYTE-NS	x2	[0F01]	x2	[]	T	2
+O	x5	[0002FF0000]	x2	[02]	F	-
+BYTE-NS	x3	[01]	x1	[02]	T	3
+BYTE-CS	x5	[A10F0010FF]	x2	[A10F]	T	0
+BYTE-CA	x2	[0110]	xstring	[10]	T	1
+BYTE-CO	x2	[FF00]	xstring	[FF000000FF]	T	2
+BYTE-CO	x3	[0F0010]	x1	[]	F	0
+O	x5	[0F0002]	xstring	[0000]	T	-
+BYTE-NA	xstring	[10FF]	x5	[]	T	2
+BYTE-CS	x5	[FF000FA10F]	x1	[0F]	T	2
+Z	x1	[]	x3	[10]	T	-
+BYTE-CN	xstring	[02A101]	x5	[]	T	0
+M	x3	[0FA100]	xstring	[]	F	-
+O	xstring	[A1000000]	x1	[]	T	-
+BYTE-NA	xstring	[001000]	x3	[]	F	0
+O	x1	[A1]	xstring	[]	T	-
+BYTE-CN	x2	[1002]	xstring	[01]	T	0
+Z	x5	[0F0001]	x5	[]	T	-
+Z	x2	[10FF]	x3	[]	T	-
+O	xstring	[0FA100]	x5	[0FA1]	T	-
+BYTE-CS	xstring	[00A1]	xstring	[]	T	0
+Z	xstring	[0100]	x2	[]	T	-
+BYTE-CS	x3	[020000]	x3	[]	F	3
+BYTE-CO	x3	[0000A1]	xstring	[1000]	F	2
+BYTE-NS	x5	[0F]	x5	[01]	T	5
+BYTE-CA	xstring	[00A1000101]	x2	[0F]	T	0
+M	x2	[0100]	x3	[FF01FF]	T	-
+O	x2	[1000]	x2	[00FF]	F	-
+BYTE-NS	x1	[10]	x5	[]	T	1
+O	xstring	[02000002]	xstring	[0002]	F	-
+BYTE-NA	xstring	[FFFFFF]	x1	[02]	T	3
+BYTE-CS	x2	[FFFF]	x3	[00]	F	2
+M	x2	[1002]	x2	[0102]	T	-
+M	x3	[01020F]	x1	[]	F	-
+Z	xstring	[A1000F0010]	x1	[00]	T	-
+BYTE-CO	x5	[0F]	x2	[0001]	F	0
+BYTE-NA	x2	[]	x5	[A1]	F	0
+BYTE-CN	x3	[101010]	x3	[020F00]	T	0
+BYTE-NA	xstring	[10000FFF]	xstring	[]	T	4
+Z	xstring	[0F010000]	x3	[0F]	F	-
+BYTE-CN	xstring	[0101A10F]	xstring	[0001]	T	2
+M	x2	[]	xstring	[]	F	-
+M	x2	[A10F]	x2	[0F]	T	-
+O	xstring	[A100]	xstring	[00]	T	-
+Z	x2	[]	xstring	[]	T	-
+Z	xstring	[0F]	xstring	[10A1]	T	-
+BYTE-NA	x1	[02]	x5	[02]	F	0
+BYTE-CS	x3	[]	xstring	[00FFFF]	F	3
+BYTE-CO	x5	[0201A1]	x2	[01]	F	0
+O	x1	[00]	x5	[]	T	-
+BYTE-CO	x3	[010001]	x1	[00]	F	0
+Z	x2	[]	xstring	[0001]	T	-
+Z	x5	[FF]	x5	[]	T	-
+BYTE-CN	x5	[A1A10100FF]	x1	[]	T	0
+BYTE-CN	x3	[]	x5	[]	F	3
+BYTE-CS	xstring	[0200A100]	xstring	[00]	T	1
+Z	x5	[0100]	x1	[01]	F	-
+BYTE-CA	x1	[02]	xstring	[]	F	1
+BYTE-CN	x3	[0F02]	x2	[A1A1]	T	0
+O	x3	[]	xstring	[00A110]	F	-
+BYTE-CA	x3	[0002]	xstring	[]	F	3
+O	x3	[00FF]	xstring	[]	T	-
+M	x3	[0101]	x5	[100FFF]	T	-
+BYTE-NS	x1	[01]	x5	[100002]	T	1
+BYTE-CO	x3	[00FF01]	x5	[]	F	1
+BYTE-CN	x2	[]	x1	[]	F	2
+Z	x5	[0002]	x5	[]	T	-
+O	x3	[01]	xstring	[10]	F	-
+BYTE-CS	x5	[10FF]	x5	[10]	F	5
+M	x5	[0F0001]	xstring	[00]	F	-
+BYTE-CN	xstring	[01]	xstring	[]	T	0
+BYTE-CA	x1	[0F]	x1	[]	F	1
+Z	x5	[1010]	x5	[]	T	-
+BYTE-CO	xstring	[]	x2	[]	T	0
+M	xstring	[0FA1]	x3	[0FA1]	F	-
+M	xstring	[10000002]	xstring	[00A102]	F	-
+M	xstring	[]	x1	[]	F	-
+BYTE-NS	x5	[FF0002]	xstring	[]	F	0
+M	x2	[FF]	x5	[]	F	-
+M	x5	[]	x2	[1001]	F	-
+BYTE-CN	xstring	[]	x5	[02]	F	0
+BYTE-CA	xstring	[000F]	x2	[0F00]	T	0
+BYTE-NA	xstring	[0000FFA1]	x3	[A1]	F	0
+BYTE-CO	xstring	[A1A1A10200]	xstring	[02]	F	0
+BYTE-CO	x5	[]	x3	[]	T	5
+M	xstring	[1002]	x2	[]	F	-
+BYTE-CS	x3	[10]	x5	[]	F	3
+BYTE-NS	x1	[10]	x3	[FF]	T	1
+BYTE-NA	xstring	[00100F]	x2	[]	F	0
+BYTE-CS	x5	[0200FF0FFF]	xstring	[000000]	F	5
+BYTE-NA	x1	[A1]	x1	[FF]	T	1
+Z	xstring	[0010]	x2	[FF0F]	T	-
+BYTE-NS	xstring	[0000]	x1	[A1]	T	2
+M	x2	[00FF]	x5	[]	F	-
+M	x1	[00]	x3	[]	F	-
+BYTE-CS	x2	[]	x5	[]	F	2
+O	xstring	[1000]	xstring	[]	T	-
+O	x1	[0F]	x3	[]	T	-
+M	xstring	[]	x5	[]	F	-
+O	x1	[00]	x3	[00]	T	-
+BYTE-CO	x1	[00]	x1	[]	T	1
+BYTE-NA	x2	[1010]	x5	[]	T	2
+BYTE-CA	x1	[02]	x1	[0F]	F	1
+BYTE-NS	xstring	[FFA1FF]	xstring	[]	F	0
+M	x2	[0F02]	x1	[]	F	-
+BYTE-CO	x3	[]	x2	[00A1]	T	3
+O	x5	[00]	xstring	[]	T	-
+BYTE-NA	x2	[10FF]	x5	[]	T	2
+BYTE-NA	xstring	[01]	xstring	[011000]	F	0
+BYTE-CS	x1	[00]	xstring	[0201]	F	1
+M	xstring	[FF]	xstring	[]	F	-
+Z	xstring	[0200]	xstring	[]	T	-
+BYTE-CN	xstring	[0F02]	x1	[0F]	T	1
+BYTE-CA	x5	[0F00]	xstring	[020F0F]	T	0
+BYTE-CN	x2	[]	xstring	[A1]	T	0
+BYTE-NA	x3	[]	xstring	[]	T	3
+Z	x3	[A1A1FF]	x5	[A1]	F	-
+BYTE-NS	x5	[0100]	xstring	[10]	T	5
+BYTE-CS	x5	[0102]	xstring	[00FF01]	F	5
+BYTE-NA	x2	[0000]	xstring	[]	T	2
+BYTE-NA	x5	[00A11002]	x5	[02]	F	0
+BYTE-CN	xstring	[1000]	x3	[1000]	F	2
+M	x5	[FFFF]	x3	[A100]	F	-
+BYTE-CO	x1	[A1]	xstring	[]	F	0
+Z	xstring	[0001A101]	x3	[]	T	-
+BYTE-CO	x5	[]	x2	[]	T	5
+BYTE-CA	xstring	[A1FF000F0F]	xstring	[A1FF000F0F]	T	0
+Z	x1	[00]	xstring	[00]	T	-
+O	xstring	[100F0001FF]	x2	[01FF]	F	-
+BYTE-CS	x5	[FF0002]	x2	[0200]	T	2
+BYTE-CO	xstring	[]	x2	[01]	T	0
+BYTE-CN	x5	[0F000200]	xstring	[]	T	0
+BYTE-CS	xstring	[00000201]	x5	[02]	F	4
+BYTE-CA	x5	[0110020200]	xstring	[]	F	5
+BYTE-CO	x1	[01]	x5	[]	F	0
+BYTE-CA	x1	[0F]	x2	[]	F	1
+BYTE-CO	xstring	[100000]	x2	[]	F	0
+BYTE-NA	xstring	[0F]	xstring	[]	T	1
+BYTE-CO	x1	[FF]	x3	[]	F	0
+BYTE-CO	x2	[0200]	xstring	[010002]	T	2
+BYTE-CO	x1	[FF]	x1	[A1]	F	0
+M	x1	[10]	x2	[]	F	-
+Z	x5	[]	x3	[]	T	-
+BYTE-CO	xstring	[FF000F01]	x5	[000F]	F	0
+M	x1	[A1]	x2	[0FA1]	T	-
+BYTE-NA	x5	[10A1FF0F00]	x2	[A1FF]	F	1
+BYTE-CO	x1	[0F]	xstring	[0F]	T	1
+O	x3	[]	x2	[]	T	-
+BYTE-CS	x5	[01A1FF00]	x3	[]	F	5
+Z	x5	[A10010]	x5	[]	T	-
