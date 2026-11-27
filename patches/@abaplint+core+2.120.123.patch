@@ -1,5 +1,5 @@
 diff --git a/node_modules/@abaplint/core/build/abaplint.d.ts b/node_modules/@abaplint/core/build/abaplint.d.ts
-index 20bc8d4..fbe2c17 100644
+index aaca179..a89678e 100644
 --- a/node_modules/@abaplint/core/build/abaplint.d.ts
 +++ b/node_modules/@abaplint/core/build/abaplint.d.ts
 @@ -432,6 +432,8 @@ declare class Attributes implements IAttributes {
@@ -89,8 +89,8 @@ index 20bc8d4..fbe2c17 100644
      filename: string;
      issues: Issue[];
      /** checks which can only run once the full object has been traversed, eg. PERFORM parameters,
-@@ -7919,6 +7941,8 @@ declare type SyntaxInput = {
-     deferred: (() => void)[];
+@@ -7921,6 +7943,8 @@ declare type SyntaxInput = {
+     emptySubstring?: INode;
      /** the statement is inside a LOOP structure */
      inLoop?: boolean;
 +    /** of the TRY, CATCH and CLEANUP blocks around the statement, the innermost one is a CATCH block */
@@ -98,7 +98,7 @@ index 20bc8d4..fbe2c17 100644
  };
  
  export declare class SyntaxLogic {
-@@ -7931,8 +7955,10 @@ export declare class SyntaxLogic {
+@@ -7933,8 +7957,10 @@ export declare class SyntaxLogic {
      private scope;
      private loopTables;
      private loopDepth;
@@ -254,145 +254,6 @@ index 1c14059..5aaf579 100644
      }
      findExtraLikeType(name) {
          var _a;
-diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_initial_operand.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_initial_operand.js
-new file mode 100644
-index 0000000..a8aa3db
---- /dev/null
-+++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_initial_operand.js
-@@ -0,0 +1,132 @@
-+"use strict";
-+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-+    if (k2 === undefined) k2 = k;
-+    var desc = Object.getOwnPropertyDescriptor(m, k);
-+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-+      desc = { enumerable: true, get: function() { return m[k]; } };
-+    }
-+    Object.defineProperty(o, k2, desc);
-+}) : (function(o, m, k, k2) {
-+    if (k2 === undefined) k2 = k;
-+    o[k2] = m[k];
-+}));
-+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-+    Object.defineProperty(o, "default", { enumerable: true, value: v });
-+}) : function(o, v) {
-+    o["default"] = v;
-+});
-+var __importStar = (this && this.__importStar) || (function () {
-+    var ownKeys = function(o) {
-+        ownKeys = Object.getOwnPropertyNames || function (o) {
-+            var ar = [];
-+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-+            return ar;
-+        };
-+        return ownKeys(o);
-+    };
-+    return function (mod) {
-+        if (mod && mod.__esModule) return mod;
-+        var result = {};
-+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-+        __setModuleDefault(result, mod);
-+        return result;
-+    };
-+})();
-+Object.defineProperty(exports, "__esModule", { value: true });
-+exports.InitialOperand = void 0;
-+const Expressions = __importStar(require("../2_statements/expressions"));
-+const nodes_1 = require("../nodes");
-+const basic_1 = require("../types/basic");
-+const _builtin_1 = require("./_builtin");
-+const _builtin_call_1 = require("./_builtin_call");
-+// The operand of IS [NOT] INITIAL is not a general expression position. Data objects, method calls, constructor and
-+// table expressions are possible, calculations are not. Of the built-in functions only the numeric and length
-+// functions and lines( ) of a data object are possible, and those with a result of type utclong
-+class InitialOperand {
-+    // the error message when the source cannot be the operand
-+    static check(source, input) {
-+        var _a, _b, _c;
-+        if (this.isExpression(source)) {
-+            return "An arithmetic, string or bit expression cannot be the operand of IS INITIAL";
-+        }
-+        const inner = this.parenthesized(source);
-+        if (inner !== undefined) {
-+            return this.check(inner, input);
-+        }
-+        // boolc( ), xsdbool( ), boolx( ) and bit-set( ) are their own forms in the Source grammar
-+        const first = source.getFirstChild();
-+        if (first instanceof nodes_1.TokenNode) {
-+            const name = first.getFirstToken().getStr();
-+            if (["BOOLC", "XSDBOOL", "BOOLX"].includes(name.toUpperCase())) {
-+                return this.functionMessage(name);
-+            }
-+            else if (name.toUpperCase() === "BIT") {
-+                return this.functionMessage("bit-set");
-+            }
-+        }
-+        const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
-+        const name = call === undefined ? undefined : _builtin_call_1.BuiltInCall.callName(call);
-+        if (call === undefined || name === undefined) {
-+            return undefined;
-+        }
-+        const returning = (_b = (_a = _builtin_1.BuiltIn.searchBuiltin(name.toUpperCase())) === null || _a === void 0 ? void 0 : _a.getParameters().getReturning()) === null || _b === void 0 ? void 0 : _b.getType();
-+        if (returning instanceof basic_1.UTCLongType) {
-+            return undefined;
-+        }
-+        else if (_builtin_1.BuiltIn.hasUnnamedArgument(name) === false || _builtin_call_1.BuiltInCall.isNumeric(call) === false) {
-+            return this.functionMessage(name);
-+        }
-+        // a named argument, "abs( val = i )", is reported on its own
-+        const argument = (_c = call.findDirectExpression(Expressions.MethodCallParam)) === null || _c === void 0 ? void 0 : _c.findDirectExpression(Expressions.Source);
-+        if (argument !== undefined && this.isDataObject(argument) === false) {
-+            return `The argument of "${name}" must be a data object in the operand of IS INITIAL`;
-+        }
-+        return undefined;
-+    }
-+    static functionMessage(name) {
-+        return `Built-in function "${name}" cannot be the operand of IS INITIAL`;
-+    }
-+    // "a + b", "a && b", "a BIT-AND b", "- a", "BIT-NOT a" or a string template
-+    static isExpression(source) {
-+        var _a;
-+        const children = source.getChildren();
-+        const first = children[0];
-+        if (first instanceof nodes_1.TokenNode) {
-+            const str = first.getFirstToken().getStr().toUpperCase();
-+            // "BIT-NOT" is three tokens, as is the function "bit-set"
-+            if (str === "+" || str === "-" || (str === "BIT" && ((_a = children[2]) === null || _a === void 0 ? void 0 : _a.getFirstToken().getStr().toUpperCase()) === "NOT")) {
-+                return true;
-+            }
-+        }
-+        return children.some(c => c.get() instanceof Expressions.StringTemplate || c.get() instanceof Expressions.ArithOperator)
-+            || source.findDirectTokenByText("&&") !== undefined;
-+    }
-+    // a field or a literal, also in parentheses, which are checked on their own
-+    static isDataObject(source) {
-+        var _a;
-+        if (this.isExpression(source)) {
-+            return false;
-+        }
-+        const inner = this.parenthesized(source);
-+        if (inner !== undefined) {
-+            return this.isDataObject(inner);
-+        }
-+        const first = (_a = source.getFirstChild()) === null || _a === void 0 ? void 0 : _a.get();
-+        return (first instanceof Expressions.FieldChain
-+            || first instanceof Expressions.Constant
-+            || first instanceof Expressions.TextElement)
-+            && source.findFirstExpression(Expressions.TableExpression) === undefined;
-+    }
-+    // the source inside the parentheses when the source is exactly "( ... )"
-+    static parenthesized(source) {
-+        const children = source.getChildren();
-+        if (children.length === 3
-+            && children[0] instanceof nodes_1.TokenNode && children[0].getFirstToken().getStr() === "("
-+            && children[1] instanceof nodes_1.ExpressionNode && children[1].get() instanceof Expressions.Source) {
-+            return children[1];
-+        }
-+        return undefined;
-+    }
-+}
-+exports.InitialOperand = InitialOperand;
-+//# sourceMappingURL=_initial_operand.js.map
-\ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_object_oriented.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_object_oriented.js
 index 244b0b7..eb85e32 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_object_oriented.js
@@ -546,10 +407,10 @@ index 0000000..21b2685
 +//# sourceMappingURL=_parentheses.js.map
 \ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
-index 5af7e91..41eab82 100644
+index 8d9fe07..289bd33 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
-@@ -48,6 +48,28 @@ class TypeUtils {
+@@ -49,6 +49,28 @@ class TypeUtils {
      constructor(scope) {
          this.scope = scope;
      }
@@ -578,7 +439,7 @@ index 5af7e91..41eab82 100644
      isCharLikeStrict(type) {
          if (type === undefined) {
              return false;
-@@ -96,14 +118,46 @@ class TypeUtils {
+@@ -97,14 +119,46 @@ class TypeUtils {
              || type instanceof basic_1.UnknownType
              || type instanceof basic_1.VoidType;
      }
@@ -626,10 +487,10 @@ index 5af7e91..41eab82 100644
          if (type === undefined) {
              return false;
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
-index f17395d..74b4adf 100644
+index 615abb6..78520a1 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
-@@ -269,7 +269,7 @@ class BasicTypes {
+@@ -270,7 +270,7 @@ class BasicTypes {
              type = new basic_1.CharacterType(type.getLength(), data);
          }
          else if (type instanceof Types.IntegerType) {
@@ -662,18 +523,10 @@ index 24beacc..f8979be 100644
      else if (type instanceof Basic.Integer8Type || type instanceof Basic.FloatType
          || type instanceof Basic.DecFloat16Type || type instanceof Basic.UTCLongType) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
-index 8de6a4d..d3e01a6 100644
+index 71fd358..d3e01a6 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/compare.js
-@@ -37,6 +37,7 @@ exports.Compare = void 0;
- const Expressions = __importStar(require("../../2_statements/expressions"));
- const nodes_1 = require("../../nodes");
- const source_1 = require("./source");
-+const _initial_operand_1 = require("../_initial_operand");
- const method_call_chain_1 = require("./method_call_chain");
- const source_field_symbol_1 = require("./source_field_symbol");
- const _syntax_input_1 = require("../_syntax_input");
-@@ -44,6 +45,17 @@ const basic_1 = require("../../types/basic");
+@@ -45,6 +45,17 @@ const basic_1 = require("../../types/basic");
  const _type_utils_1 = require("../_type_utils");
  const _builtin_1 = require("../_builtin");
  const _builtin_call_1 = require("../_builtin_call");
@@ -691,7 +544,7 @@ index 8de6a4d..d3e01a6 100644
  class Compare {
      static runSyntax(node, input) {
          var _a;
-@@ -69,29 +81,35 @@ class Compare {
+@@ -70,19 +81,27 @@ class Compare {
          if (operandMessage !== undefined) {
              return;
          }
@@ -724,39 +577,7 @@ index 8de6a4d..d3e01a6 100644
          else if (node.findDirectExpression(Expressions.CompareOperator)
              && typeUtils.isCompareable(sourceTypes[0], sourceTypes[1], sources[0], sources[1]) === false
              && sourceTypes.length === 2) {
-             input.issues.push((0, _syntax_input_1.syntaxIssue)(input, node.getFirstToken(), "Incompatible types for comparison"));
-         }
-     }
--    // a built-in function with a character-like result cannot be the operand of IS [NOT] INITIAL,
--    // "Unexpected operator IS" on a system, while one with a numeric result, lines( ), can
-+    // the operand of IS [NOT] INITIAL, see InitialOperand
-     static checkInitialOperand(node, input) {
--        var _a, _b, _c, _d;
-         if (input.scope.getOpenABAP()) {
-             return undefined;
-         }
-@@ -99,18 +117,8 @@ class Compare {
-         if (tokens.includes("IS") === false || tokens[tokens.length - 1] !== "INITIAL") {
-             return undefined;
-         }
--        const chain = (_a = node.findDirectExpression(Expressions.Source)) === null || _a === void 0 ? void 0 : _a.getChildren();
--        // xsdbool( ) and boolc( ) are their own form in the Source grammar, a condition in parentheses
--        const first = (_b = chain === null || chain === void 0 ? void 0 : chain[0]) === null || _b === void 0 ? void 0 : _b.getFirstToken().getStr().toUpperCase();
--        if ((chain === null || chain === void 0 ? void 0 : chain.length) === 4 && chain[0] instanceof nodes_1.TokenNode && (first === "XSDBOOL" || first === "BOOLC")) {
--            return `Built-in function "${chain[0].getFirstToken().getStr()}" cannot be the operand of IS INITIAL`;
--        }
--        const name = this.builtinCallName(node.findDirectExpression(Expressions.Source), input);
--        const returning = (_d = (_c = _builtin_1.BuiltIn.searchBuiltin(name)) === null || _c === void 0 ? void 0 : _c.getParameters().getReturning()) === null || _d === void 0 ? void 0 : _d.getType();
--        if (returning instanceof basic_1.StringType || returning instanceof basic_1.CharacterType) {
--            return `Built-in function "${name}" cannot be the operand of IS INITIAL`;
--        }
--        return undefined;
-+        const source = node.findDirectExpression(Expressions.Source);
-+        return source === undefined ? undefined : _initial_operand_1.InitialOperand.check(source, input);
-     }
-     // a predicate function, contains( ) or line_exists( ), is a relational expression and not a value,
-     // it can stand alone as a condition or inside boolc( ) or xsdbool( ), but cannot be an operand of a comparison
-@@ -133,31 +141,120 @@ class Compare {
+@@ -122,31 +141,120 @@ class Compare {
          const call = _builtin_call_1.BuiltInCall.fromSource(source, input);
          return call === undefined ? undefined : _builtin_call_1.BuiltInCall.callName(call);
      }
@@ -893,7 +714,7 @@ index 8de6a4d..d3e01a6 100644
          const children = source.getChildren();
          const first = children[0];
          if (first instanceof nodes_1.TokenNode) {
-@@ -166,7 +263,7 @@ class Compare {
+@@ -155,7 +263,7 @@ class Compare {
                  return true;
              }
              else if (str === "(" && children.length === 3 && children[1] instanceof nodes_1.ExpressionNode) {
@@ -902,7 +723,7 @@ index 8de6a4d..d3e01a6 100644
              }
          }
          for (const child of children) {
-@@ -176,7 +273,30 @@ class Compare {
+@@ -165,7 +273,30 @@ class Compare {
                  return true;
              }
          }
@@ -969,7 +790,7 @@ index ba69e57..64b87f8 100644
          else if (type instanceof basic_1.StringType) {
              return basic_1.StringType.get(rest);
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
-index 89beb8d..2549c4b 100644
+index 6011254..45d7b4d 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
 @@ -51,6 +51,8 @@ const source_field_1 = require("./source_field");
@@ -1022,7 +843,7 @@ index 89beb8d..2549c4b 100644
          // the substring is checked, but the type of the whole field is returned
          let substring = context;
          const offset = node.findDirectExpression(Expressions.FieldOffset);
-@@ -198,6 +210,28 @@ class Target {
+@@ -202,6 +214,28 @@ class Target {
          return context;
      }
      /////////////////////////////////
@@ -1252,109 +1073,11 @@ index 5d1d028..8645788 100644
  exports.When = When;
  //# sourceMappingURL=when.js.map
 \ No newline at end of file
-diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/structures/case.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/structures/case.js
-new file mode 100644
-index 0000000..8605d4e
---- /dev/null
-+++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/structures/case.js
-@@ -0,0 +1,74 @@
-+"use strict";
-+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-+    if (k2 === undefined) k2 = k;
-+    var desc = Object.getOwnPropertyDescriptor(m, k);
-+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-+      desc = { enumerable: true, get: function() { return m[k]; } };
-+    }
-+    Object.defineProperty(o, k2, desc);
-+}) : (function(o, m, k, k2) {
-+    if (k2 === undefined) k2 = k;
-+    o[k2] = m[k];
-+}));
-+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-+    Object.defineProperty(o, "default", { enumerable: true, value: v });
-+}) : function(o, v) {
-+    o["default"] = v;
-+});
-+var __importStar = (this && this.__importStar) || (function () {
-+    var ownKeys = function(o) {
-+        ownKeys = Object.getOwnPropertyNames || function (o) {
-+            var ar = [];
-+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-+            return ar;
-+        };
-+        return ownKeys(o);
-+    };
-+    return function (mod) {
-+        if (mod && mod.__esModule) return mod;
-+        var result = {};
-+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-+        __setModuleDefault(result, mod);
-+        return result;
-+    };
-+})();
-+Object.defineProperty(exports, "__esModule", { value: true });
-+exports.Case = void 0;
-+const Statements = __importStar(require("../../2_statements/statements"));
-+const Structures = __importStar(require("../../3_structures/structures"));
-+const _statement_1 = require("../../2_statements/statements/_statement");
-+const nodes_1 = require("../../nodes");
-+const _syntax_input_1 = require("../_syntax_input");
-+// in classes WHEN must follow CASE directly, outside of classes anything else there is only a warning
-+class Case {
-+    static runSyntax(node, input) {
-+        if (input.scope.getEnclosingClassName() === undefined) {
-+            return;
-+        }
-+        // the first child is the CASE statement, the last one is ENDCASE
-+        for (const child of node.getChildren().slice(1)) {
-+            const found = child instanceof nodes_1.StructureNode && child.get() instanceof Structures.Normal
-+                ? child.getChildren()[0]
-+                : child;
-+            const type = found.get();
-+            if (type instanceof Structures.When) {
-+                return;
-+            }
-+            else if (type instanceof Statements.SetExtendedCheck) {
-+                continue;
-+            }
-+            else if (type instanceof _statement_1.MacroCall
-+                || type instanceof Statements.Include
-+                || type instanceof Statements.EnhancementPoint
-+                || type instanceof Structures.Enhancement
-+                || type instanceof Structures.EnhancementSection) {
-+                // what these bring along is not known here, it might be the WHEN
-+                return;
-+            }
-+            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, found.getFirstToken(), `CASE must be followed directly by WHEN`));
-+            return;
-+        }
-+    }
-+}
-+exports.Case = Case;
-+//# sourceMappingURL=case.js.map
-\ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
-index f848b28..36afd47 100644
+index 2c765af..36afd47 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
-@@ -51,6 +51,7 @@ const types_1 = require("./structures/types");
- const statics_1 = require("./structures/statics");
- const constants_1 = require("./structures/constants");
- const cleanup_1 = require("./structures/cleanup");
-+const case_1 = require("./structures/case");
- const try_1 = require("./structures/try");
- const loop_group_by_1 = require("./expressions/loop_group_by");
- const class_definition_1 = require("../types/class_definition");
-@@ -97,7 +98,7 @@ const selection_screen_1 = require("./statements/selection_screen");
- const at_selection_screen_1 = require("./statements/at_selection_screen");
- const ranges_1 = require("./statements/ranges");
- const write_1 = require("./statements/write");
--const case_1 = require("./statements/case");
-+const case_2 = require("./statements/case");
- const case_type_1 = require("./statements/case_type");
- const create_object_1 = require("./statements/create_object");
- const do_1 = require("./statements/do");
-@@ -106,6 +107,7 @@ const call_function_1 = require("./statements/call_function");
+@@ -107,6 +107,7 @@ const call_function_1 = require("./statements/call_function");
  const clear_1 = require("./statements/clear");
  const refresh_1 = require("./statements/refresh");
  const return_1 = require("./statements/return");
@@ -1362,16 +1085,7 @@ index f848b28..36afd47 100644
  const free_1 = require("./statements/free");
  const replace_1 = require("./statements/replace");
  const get_bit_1 = require("./statements/get_bit");
-@@ -294,7 +296,7 @@ if (Object.keys(map).length === 0) {
-     addToMap(new create_object_1.CreateObject());
-     addToMap(new import_dynpro_1.ImportDynpro());
-     addToMap(new create_data_1.CreateData());
--    addToMap(new case_1.Case());
-+    addToMap(new case_2.Case());
-     addToMap(new shift_1.Shift());
-     addToMap(new raise_1.Raise());
-     addToMap(new concatenate_1.Concatenate());
-@@ -337,12 +339,15 @@ if (Object.keys(map).length === 0) {
+@@ -338,12 +339,15 @@ if (Object.keys(map).length === 0) {
      addToMap(new field_group_1.FieldGroup());
      addToMap(new editor_call_1.EditorCall());
      addToMap(new delete_memory_1.DeleteMemory());
@@ -1387,7 +1101,7 @@ index f848b28..36afd47 100644
          this.reg = reg;
          this.issues = [];
          this.deferred = [];
-@@ -362,6 +367,7 @@ class SyntaxLogic {
+@@ -363,6 +367,7 @@ class SyntaxLogic {
          this.deferred = [];
          this.loopTables = new _loop_table_change_1.LoopTableChange();
          this.loopDepth = 0;
@@ -1395,7 +1109,7 @@ index f848b28..36afd47 100644
          this.sortedLines = new _sorted_key_write_1.SortedKeyWrite();
          this.reg.getDDICReferences().clear(this.object);
          this.reg.getMSAGReferences().clear(this.object);
-@@ -428,6 +434,10 @@ class SyntaxLogic {
+@@ -429,6 +434,10 @@ class SyntaxLogic {
          this.issues.push(issue);
      }
      traverse(node) {
@@ -1406,7 +1120,7 @@ index f848b28..36afd47 100644
          const loop = node instanceof nodes_1.StructureNode
              && node.get() instanceof Structures.Loop
              && this.loopTables.push(node, this.scope);
-@@ -438,6 +448,13 @@ class SyntaxLogic {
+@@ -439,6 +448,13 @@ class SyntaxLogic {
          if (node instanceof nodes_1.StructureNode) {
              this.sortedLines.enter(node, this.currentFile.getFilename());
          }
@@ -1420,7 +1134,7 @@ index f848b28..36afd47 100644
          for (const child of node.getChildren()) {
              const isStructure = child instanceof nodes_1.StructureNode;
              const isStatement = child instanceof nodes_1.StatementNode;
-@@ -480,6 +497,7 @@ class SyntaxLogic {
+@@ -481,6 +497,7 @@ class SyntaxLogic {
                  this.traverse(child);
              }
          }
@@ -1428,7 +1142,7 @@ index f848b28..36afd47 100644
          if (loop === true) {
              this.loopTables.pop();
          }
-@@ -495,6 +513,9 @@ class SyntaxLogic {
+@@ -496,6 +513,9 @@ class SyntaxLogic {
          if (node instanceof nodes_1.StructureNode) {
              this.sortedLines.leave(node);
          }
@@ -1438,17 +1152,7 @@ index f848b28..36afd47 100644
      }
      /**
       * if this returns true, then the traversal should continue with next child
-@@ -557,6 +578,9 @@ class SyntaxLogic {
-         else if (stru instanceof Structures.Try) {
-             try_1.Try.runSyntax(node, input);
-         }
-+        else if (stru instanceof Structures.Case) {
-+            case_1.Case.runSyntax(node, input);
-+        }
-         else if (stru instanceof Structures.Method) {
-             this.currentMethod = node;
-         }
-@@ -568,10 +592,12 @@ class SyntaxLogic {
+@@ -572,10 +592,12 @@ class SyntaxLogic {
          this.updateSelectionEventScope(node);
          const input = {
              scope: this.scope,
@@ -1598,7 +1302,7 @@ index 1d7500b..5700325 100644
  }
  exports.MethodDefinitions = MethodDefinitions;
 diff --git a/node_modules/@abaplint/core/build/src/ddic.js b/node_modules/@abaplint/core/build/src/ddic.js
-index 806fab4..23baef6 100644
+index 2b6d5d5..c07e981 100644
 --- a/node_modules/@abaplint/core/build/src/ddic.js
 +++ b/node_modules/@abaplint/core/build/src/ddic.js
 @@ -431,7 +431,9 @@ class DDIC {
@@ -1625,421 +1329,6 @@ index adc939f..d9efafc 100644
      return first.toABAP() === second.toABAP();
  }
  ////////////////////////////////////////
-diff --git a/node_modules/@abaplint/core/build/src/rules/definitions_top.js b/node_modules/@abaplint/core/build/src/rules/definitions_top.js
-index 5df9e22..a523476 100644
---- a/node_modules/@abaplint/core/build/src/rules/definitions_top.js
-+++ b/node_modules/@abaplint/core/build/src/rules/definitions_top.js
-@@ -43,6 +43,7 @@ const _basic_rule_config_1 = require("./_basic_rule_config");
- const _irule_1 = require("./_irule");
- const edit_helper_1 = require("../edit_helper");
- const nodes_1 = require("../abap/nodes");
-+const position_1 = require("../position");
- class DefinitionsTopConf extends _basic_rule_config_1.BasicRuleConfig {
- }
- exports.DefinitionsTopConf = DefinitionsTopConf;
-@@ -109,6 +110,7 @@ ENDFORM.`,
-     //////////////////
-     walk(r, file) {
-         var _a, _b, _c, _d, _e, _f;
-+        var _g;
-         let previous = undefined;
-         for (const c of r.getChildren()) {
-             const get = c.get();
-@@ -143,7 +145,7 @@ ENDFORM.`,
-                         if (start && end) {
-                             let concat = c.concatTokens();
-                             concat = concat.replace(/,/g, ".\n");
--                            const fix1 = edit_helper_1.EditHelper.deleteRange(file, start, end);
-+                            const fix1 = (_g = this.deleteLines(file, start, end)) !== null && _g !== void 0 ? _g : edit_helper_1.EditHelper.deleteRange(file, start, end);
-                             const fix2 = edit_helper_1.EditHelper.insertAt(file, this.moveTo, "\n" + concat);
-                             fix = edit_helper_1.EditHelper.merge(fix1, fix2);
-                         }
-@@ -199,13 +201,35 @@ ENDFORM.`,
-         return undefined;
-     }
-     buildFix(file, statement, at) {
-+        var _a;
-         let concat = statement.concatTokens();
-         concat = concat.replace(/,$/, ".");
--        const fix1 = edit_helper_1.EditHelper.deleteStatement(file, statement);
-+        const fix1 = (_a = (statement.getColon() === undefined
-+            ? this.deleteLines(file, statement.getFirstToken().getStart(), statement.getLastToken().getEnd())
-+            : undefined)) !== null && _a !== void 0 ? _a : edit_helper_1.EditHelper.deleteStatement(file, statement);
-         const indentation = " ".repeat(statement.getFirstToken().getCol() - 1);
-         const fix2 = edit_helper_1.EditHelper.insertAt(file, at, "\n" + indentation + concat);
-         return edit_helper_1.EditHelper.merge(fix1, fix2);
-     }
-+    /**
-+     * Code that has its rows to itself is removed with them: deleting only the code
-+     * leaves a row holding nothing but its indentation, and that trailing whitespace
-+     * is what the next lint run reports. Undefined when the rows hold anything else.
-+     */
-+    deleteLines(file, start, end) {
-+        var _a, _b;
-+        var _c, _d;
-+        const rows = file.getRawRows();
-+        const before = (_c = (_a = rows[start.getRow() - 1]) === null || _a === void 0 ? void 0 : _a.substring(0, start.getCol() - 1)) !== null && _c !== void 0 ? _c : "";
-+        const after = (_d = (_b = rows[end.getRow() - 1]) === null || _b === void 0 ? void 0 : _b.substring(end.getCol() - 1)) !== null && _d !== void 0 ? _d : "";
-+        if (before.trim() !== "" || after.trim() !== "") {
-+            return undefined;
-+        }
-+        if (end.getRow() >= rows.length) {
-+            return undefined;
-+        }
-+        return edit_helper_1.EditHelper.deleteRange(file, new position_1.Position(start.getRow(), 1), new position_1.Position(end.getRow() + 1, 1));
-+    }
- }
- exports.DefinitionsTop = DefinitionsTop;
- //# sourceMappingURL=definitions_top.js.map
-\ No newline at end of file
-diff --git a/node_modules/@abaplint/core/build/src/rules/downport.js b/node_modules/@abaplint/core/build/src/rules/downport.js
-index a8e5132..fb77157 100644
---- a/node_modules/@abaplint/core/build/src/rules/downport.js
-+++ b/node_modules/@abaplint/core/build/src/rules/downport.js
-@@ -63,7 +63,18 @@ const _basic_rule_config_1 = require("./_basic_rule_config");
- const _irule_1 = require("./_irule");
- // todo: refactor each sub-rule to new classes?
- // todo: add configuration
-+const DEFAULT_NOT_FOUND = "RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.";
- class DownportConf extends _basic_rule_config_1.BasicRuleConfig {
-+    constructor() {
-+        super(...arguments);
-+        /** The statement a downported table expression runs when the row is not found, including the period.
-+         *
-+         * CX_SY_ITAB_LINE_NOT_FOUND is what a table expression raises, but the class came with the table
-+         * expressions in 7.40, so the default does not compile on a 7.02 system. Set this to something that
-+         * exists there, eg. "RAISE EXCEPTION TYPE zcx_my_line_not_found." or "ASSERT 1 = 0."
-+         */
-+        this.tableExpressionNotFound = DEFAULT_NOT_FOUND;
-+    }
- }
- exports.DownportConf = DownportConf;
- class SkipToNextFile extends Error {
-@@ -178,7 +189,7 @@ Current rules:
- * LOOP AT method_call( ) is outlined
- * VALUE # with structure fields
- * VALUE # with internal table lines
--* Table Expressions are outlined
-+* Table Expressions are outlined, what happens when the row is not found is set with tableExpressionNotFound
- * SELECT INTO @DATA definitions are outlined
- * Some occurrences of string template formatting option ALPHA changed to function module call
- * SELECT/INSERT/MODIFY/DELETE/UPDATE "," in field list removed, "@" in source/targets removed
-@@ -203,6 +214,10 @@ Make sure to test the downported code, it might not always be completely correct
-     setConfig(conf) {
-         this.conf = conf;
-     }
-+    tableExpressionNotFound() {
-+        var _a;
-+        return (_a = this.conf.tableExpressionNotFound) !== null && _a !== void 0 ? _a : DEFAULT_NOT_FOUND;
-+    }
-     initialize(reg) {
-         this.lowReg = reg;
-         const config = this.lowReg.getConfig();
-@@ -677,6 +692,10 @@ Make sure to test the downported code, it might not always be completely correct
-         if (found) {
-             return found;
-         }
-+        found = this.outlineReferenceIntoGenericTable(high, lowFile, highSyntax);
-+        if (found) {
-+            return found;
-+        }
-         found = this.outlineReadTableVoidTarget(high, lowFile, highSyntax);
-         if (found) {
-             return found;
-@@ -795,14 +814,46 @@ Make sure to test the downported code, it might not always be completely correct
-         // edits are applied in sequence, so delete the later one first
-         along.sort((a, b) => b.getFirstToken().getStart().isBefore(a.getFirstToken().getStart()) ? -1 : 1);
-         for (const e of along) {
--            fixes.push(edit_helper_1.EditHelper.deleteRange(lowFile, e.getFirstToken().getStart(), e.getLastToken().getEnd()));
-+            fixes.push(this.deleteWithWhitespaceBefore(lowFile, high, e));
-         }
-         // edits are applied in sequence, so work from the end of the statement towards the start
--        fixes.push(edit_helper_1.EditHelper.deleteRange(lowFile, into.getFirstToken().getStart(), into.getLastToken().getEnd()));
-+        fixes.push(this.deleteWithWhitespaceBefore(lowFile, high, into));
-         fixes.push(edit_helper_1.EditHelper.insertAt(lowFile, from.getLastToken().getEnd(), ` ` + move));
-         const fix = edit_helper_1.EditHelper.mergeList(fixes);
-         return issue_1.Issue.atToken(lowFile, low.getFirstToken(), "SQL, move INTO", this.getMetadata().key, this.conf.severity, fix);
-     }
-+    /**
-+     * Deletes the expression together with the whitespace in front of it. A clause moved away
-+     * otherwise leaves its row behind, holding only the indentation, or a gap in front of the period.
-+     * Anything else in front of it, ie. a comment, and only the expression is deleted.
-+     */
-+    deleteWithWhitespaceBefore(file, statement, expression) {
-+        var _a;
-+        const start = expression.getFirstToken().getStart();
-+        const end = expression.getLastToken().getEnd();
-+        let previous = undefined;
-+        for (const token of statement.getTokens()) {
-+            if (token.getStart().isBefore(start) === false) {
-+                break;
-+            }
-+            previous = token.getEnd();
-+        }
-+        if (previous === undefined) {
-+            return edit_helper_1.EditHelper.deleteRange(file, start, end);
-+        }
-+        const rows = file.getRawRows();
-+        let between = "";
-+        for (let row = previous.getRow(); row <= start.getRow(); row++) {
-+            const text = (_a = rows[row - 1]) !== null && _a !== void 0 ? _a : "";
-+            const from = row === previous.getRow() ? previous.getCol() - 1 : 0;
-+            const to = row === start.getRow() ? start.getCol() - 1 : text.length;
-+            between += text.substring(from, to);
-+        }
-+        if (between.trim() !== "") {
-+            return edit_helper_1.EditHelper.deleteRange(file, start, end);
-+        }
-+        return edit_helper_1.EditHelper.deleteRange(file, previous, end);
-+    }
-     /** the work area of INSERT/MODIFY/UPDATE/DELETE dbtab FROM @( ... ) takes its type from the
-      * database table, a "#" constructor cannot be outlined with DATA( ) as there is nothing to infer from */
-     sqlWorkAreaType(high, sqlSource) {
-@@ -1319,7 +1370,7 @@ ${indentation}${uniqueName} = ${source.concatTokensWithLinebreaks()}.\n${indenta
- READ TABLE ${pre} ${condition}ASSIGNING ${uniqueName}.
- sy-tabix = ${tabixBackup}.
- IF sy-subrc <> 0.
--  RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
-+  ${this.tableExpressionNotFound()}
- ENDIF.`;
-             if (guard.length > 0) {
-                 // the operands in front of the table expression are evaluated first and can stop the
-@@ -1934,7 +1985,7 @@ ${indentation}${uniqueName2}->if_t100_message~t100key = ${uniqueName1}.\n`;
-             const uniqueName = this.uniqueName(high.getFirstToken().getStart(), lowFile.getFilename(), highSyntax);
-             code = `ASSIGN ${sourceRef.concatTokens()} TO FIELD-SYMBOL(<${uniqueName}>).
- IF sy-subrc <> 0.
--  RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
-+  ${this.tableExpressionNotFound()}
- ENDIF.
- GET REFERENCE OF <${uniqueName}> INTO ${target.concatTokens()}`;
-         }
-@@ -2299,7 +2350,7 @@ ${indentation}${tabixBackup} = sy-tabix.
- ${indentation}READ TABLE ${tName} ${condition}ASSIGNING ${uniqueName}.
- ${indentation}sy-tabix = ${tabixBackup}.
- ${indentation}IF sy-subrc <> 0.
--${indentation}  RAISE EXCEPTION TYPE cx_sy_itab_line_not_found.
-+${indentation}  ${this.tableExpressionNotFound()}
- ${indentation}ENDIF.
- ${indentation}`;
-         const start = target.getFirstToken().getStart();
-@@ -2452,7 +2503,12 @@ ${indentation}    output = ${uniqueName}.\n`;
-         if (dataTarget) {
-             const targetName = ((_d = dataTarget.findDirectExpression(Expressions.TargetField)) === null || _d === void 0 ? void 0 : _d.concatTokens()) || "DOWNPORT_ERROR";
-             let code = `DATA ${targetName} LIKE LINE OF ${sourceName}.\n${indentation}`;
--            if (isReference) {
-+            const sourceType = foundType === null || foundType === void 0 ? void 0 : foundType.getType();
-+            if (isReference && sourceType instanceof basic_1.TableType && sourceType.isGeneric() === true) {
-+                // LIKE LINE OF a generically typed table does not compile, and the reference to its row is generic too
-+                code = `DATA ${targetName} TYPE REF TO data.\n${indentation}`;
-+            }
-+            else if (isReference) {
-                 const likeName = this.uniqueName(node.getFirstToken().getStart(), lowFile.getFilename(), highSyntax);
-                 code = `DATA ${likeName} LIKE LINE OF ${sourceName}.\n${indentation}DATA ${targetName} LIKE REF TO ${likeName}.\n${indentation}`;
-             }
-@@ -3160,6 +3216,7 @@ ${indentation}    output = ${uniqueName}.\n`;
-     }
-     outlineFS(low, high, lowFile, highSyntax) {
-         var _a, _b;
-+        var _c;
-         if (!(low.get() instanceof _statement_1.Unknown)
-             || (high.get() instanceof Statements.Loop)) {
-             return undefined;
-@@ -3172,7 +3229,7 @@ ${indentation}    output = ${uniqueName}.\n`;
-             const name = nameToken.getStr();
-             let type;
-             if (high.concatTokens().toUpperCase().startsWith("APPEND INITIAL LINE TO ")) {
--                type = "LIKE LINE OF " + ((_b = high.findFirstExpression(Expressions.Target)) === null || _b === void 0 ? void 0 : _b.concatTokens());
-+                type = this.rowOf((_c = (_b = high.findFirstExpression(Expressions.Target)) === null || _b === void 0 ? void 0 : _b.concatTokens()) !== null && _c !== void 0 ? _c : "", high, lowFile, highSyntax);
-             }
-             else {
-                 const spag = highSyntax.spaghetti.lookupPosition(nameToken.getStart(), lowFile.getFilename());
-@@ -3198,6 +3255,53 @@ ${indentation}    output = ${uniqueName}.\n`;
-         }
-         return undefined;
-     }
-+    /** READ TABLE, APPEND and INSERT ... REFERENCE INTO DATA( ) on a generically typed table: the row has no type to
-+     * name and LIKE LINE OF the table does not compile, the reference is generic like the row it points to */
-+    outlineReferenceIntoGenericTable(node, lowFile, highSyntax) {
-+        var _a, _b, _c;
-+        if (this.lowReg.getConfig().isOpenABAP()) {
-+            return undefined;
-+        }
-+        let table = undefined;
-+        let inline = undefined;
-+        if (node.get() instanceof Statements.ReadTable) {
-+            const target = node.findDirectExpression(Expressions.ReadTableTarget);
-+            if ((target === null || target === void 0 ? void 0 : target.findDirectTokenByText("REFERENCE")) === undefined) {
-+                return undefined;
-+            }
-+            table = node.findDirectExpression(Expressions.SimpleSource2);
-+            inline = (_a = target.findDirectExpression(Expressions.Target)) === null || _a === void 0 ? void 0 : _a.findDirectExpression(Expressions.InlineData);
-+        }
-+        else if (node.get() instanceof Statements.Append || node.get() instanceof Statements.InsertInternal) {
-+            if (node.findDirectTokenByText("REFERENCE") === undefined) {
-+                return undefined;
-+            }
-+            for (const target of node.findDirectExpressions(Expressions.Target)) {
-+                const found = target.findDirectExpression(Expressions.InlineData);
-+                if (found !== undefined) {
-+                    inline = found;
-+                }
-+                else if (table === undefined) {
-+                    table = target;
-+                }
-+            }
-+        }
-+        const nameToken = (_b = inline === null || inline === void 0 ? void 0 : inline.findDirectExpression(Expressions.TargetField)) === null || _b === void 0 ? void 0 : _b.getFirstToken();
-+        if (table === undefined || inline === undefined || nameToken === undefined) {
-+            return undefined;
-+        }
-+        const spag = highSyntax.spaghetti.lookupPosition(nameToken.getStart(), lowFile.getFilename());
-+        const type = (_c = spag === null || spag === void 0 ? void 0 : spag.findVariable(table.concatTokens())) === null || _c === void 0 ? void 0 : _c.getType();
-+        if (!(type instanceof basic_1.TableType) || type.isGeneric() === false) {
-+            return undefined;
-+        }
-+        const name = nameToken.getStr();
-+        const indentation = " ".repeat(node.getFirstToken().getStart().getCol() - 1);
-+        const fix1 = edit_helper_1.EditHelper.insertAt(lowFile, node.getFirstToken().getStart(), `DATA ${name} TYPE REF TO data.\n${indentation}`);
-+        const fix2 = edit_helper_1.EditHelper.replaceRange(lowFile, inline.getFirstToken().getStart(), inline.getLastToken().getEnd(), name);
-+        const fix = edit_helper_1.EditHelper.merge(fix2, fix1);
-+        return issue_1.Issue.atToken(lowFile, inline.getFirstToken(), "Outline DATA", this.getMetadata().key, this.conf.severity, fix);
-+    }
-     /** READ TABLE [REFERENCE] INTO DATA( ) where the row type is void, no TYPE can be written, use LIKE LINE OF like LOOP does */
-     outlineReadTableVoidTarget(node, lowFile, highSyntax) {
-         var _a, _b;
-diff --git a/node_modules/@abaplint/core/build/src/rules/implement_methods.js b/node_modules/@abaplint/core/build/src/rules/implement_methods.js
-index aa3c2ec..b7ee27f 100644
---- a/node_modules/@abaplint/core/build/src/rules/implement_methods.js
-+++ b/node_modules/@abaplint/core/build/src/rules/implement_methods.js
-@@ -106,7 +106,14 @@ class ImplementMethods extends _abap_rule_1.ABAPRule {
-     checkClass(def, impl) {
-         const ret = [];
-         for (const md of def.methods) {
--            const found = impl === null || impl === void 0 ? void 0 : impl.methods.find(m => m.getName().toUpperCase() === md.name.toUpperCase());
-+            let found = impl === null || impl === void 0 ? void 0 : impl.methods.find(m => m.getName().toUpperCase() === md.name.toUpperCase());
-+            if (found === undefined && md.name.includes("~")) {
-+                // "METHODS zif~m REDEFINITION" implemented as "METHOD alias", the alias declared in the class or a super class
-+                const alias = this.findAlias(def, md.name);
-+                if (alias !== undefined) {
-+                    found = impl === null || impl === void 0 ? void 0 : impl.methods.find(m => m.getName().toUpperCase() === alias.toUpperCase());
-+                }
-+            }
-             if (md.isAbstract === true) {
-                 if (found !== undefined) {
-                     const issue = issue_1.Issue.atIdentifier(found, "Do not implement abstract method \"" + md.name + "\"", this.getMetadata().key, this.conf.severity);
-diff --git a/node_modules/@abaplint/core/build/src/rules/inline_packed_computation.js b/node_modules/@abaplint/core/build/src/rules/inline_packed_computation.js
-index d29aa0d..09343d7 100644
---- a/node_modules/@abaplint/core/build/src/rules/inline_packed_computation.js
-+++ b/node_modules/@abaplint/core/build/src/rules/inline_packed_computation.js
-@@ -63,8 +63,10 @@ that a declaration could take over, so DATA( ) or FINAL( ) gets the type p LENGT
- syntax check warns "For the result of a computation with type P, the type P(8,0) is used here implicitly".
- Decimals of the operands are lost, and so are digits beyond the length.
- 
--Reported when at least one operand is packed and all other operands are of type i, int8 or p. Operands
--of other types, generic or unknown types, and the operator ** are not reported.
-+Reported when at least one operand is packed and all other operands are of type i, int8 or p, also with
-+brackets around the whole expression. VALUE, CONV and EXACT operands count with their type, VALUE # only with
-+a single operand, "VALUE #( itab[ 1 ]-comp OPTIONAL )". Operands of other types, generic or unknown types,
-+other constructor expressions like COND and SWITCH, and the operator ** are not reported.
- 
- Declare the variable with the operands' type, or name the type with CONV.`,
-             tags: [],
-@@ -104,7 +106,7 @@ diff = a - b.`,
-                 }
-                 const inline = (_a = statement.findDirectExpression(Expressions.Target)) === null || _a === void 0 ? void 0 : _a.findDirectExpression(Expressions.InlineData);
-                 const name = (_b = inline === null || inline === void 0 ? void 0 : inline.findDirectExpression(Expressions.TargetField)) === null || _b === void 0 ? void 0 : _b.getFirstToken();
--                const source = statement.findDirectExpression(Expressions.Source);
-+                const source = this.unwrapBrackets(statement.findDirectExpression(Expressions.Source));
-                 if (name === undefined
-                     || source === undefined
-                     || source.findDirectExpression(Expressions.ArithOperator) === undefined) {
-@@ -125,11 +127,38 @@ diff = a - b.`,
-         }
-         return issues;
-     }
-+    /** "( a + b )" around the whole right-hand side, the brackets do not change the calculation */
-+    unwrapBrackets(source) {
-+        while (source !== undefined) {
-+            const children = source.getChildren();
-+            if (children.length !== 3
-+                || children[0].getFirstToken().getStr() !== "("
-+                || !(children[1] instanceof nodes_1.ExpressionNode)
-+                || !(children[1].get() instanceof Expressions.Source)
-+                || children[2].getFirstToken().getStr() !== ")") {
-+                break;
-+            }
-+            source = children[1];
-+        }
-+        return source;
-+    }
-     /** The types of the operands of an arithmetic expression, undefined when an operand is not of type
-      *  i, int8 or p, or is not known */
-     operandTypes(source, scope) {
-         const ret = [];
--        for (const child of source.getChildren()) {
-+        let children = source.getChildren();
-+        const first = children[0];
-+        if (first instanceof nodes_1.TokenNode && ["VALUE", "CONV", "EXACT"].includes(first.getFirstToken().getStr().toUpperCase())) {
-+            // a constructor operand, followed by the rest of the chain after its closing parenthesis
-+            const close = children.findIndex((child, index) => index > 2 && child instanceof nodes_1.TokenNode);
-+            const found = this.constructorType(source, scope);
-+            if (close < 0 || found === undefined || this.isCalculationOperand(found) === false) {
-+                return undefined;
-+            }
-+            ret.push(found);
-+            children = children.slice(close + 1);
-+        }
-+        for (const child of children) {
-             let found = undefined;
-             if (child instanceof nodes_1.TokenNode) {
-                 // parentheses and a sign, anything else is a constructor expression or a string operator
-@@ -161,15 +190,43 @@ diff = a - b.`,
-             else if (child.get() instanceof Expressions.Constant) {
-                 found = constant_1.Constant.runSyntax(child);
-             }
--            if (found === undefined
--                || found.isGeneric()
--                || !(found instanceof basic_1.PackedType || found instanceof basic_1.IntegerType || found instanceof basic_1.Integer8Type)) {
-+            if (found === undefined || this.isCalculationOperand(found) === false) {
-                 return undefined;
-             }
-             ret.push(found);
-         }
-         return ret;
-     }
-+    isCalculationOperand(type) {
-+        return type.isGeneric() === false
-+            && (type instanceof basic_1.PackedType || type instanceof basic_1.IntegerType || type instanceof basic_1.Integer8Type);
-+    }
-+    /** The type of VALUE, CONV or EXACT as the syntax check inferred it, with # only VALUE with a single
-+     *  operand in the body, "VALUE #( itab[ 1 ]-comp OPTIONAL )" */
-+    constructorType(source, scope) {
-+        var _a;
-+        const typeName = source.findDirectExpression(Expressions.TypeNameOrInfer);
-+        if (typeName === undefined) {
-+            return undefined;
-+        }
-+        if (typeName.concatTokens() === "#") {
-+            // with DEFAULT the syntax check takes the type of the default value
-+            const body = source.findDirectExpression(Expressions.ValueBody);
-+            const children = (body === null || body === void 0 ? void 0 : body.getChildren()) || [];
-+            if (children.length === 0
-+                || children.length > 2
-+                || !(children[0].get() instanceof Expressions.Source)
-+                || (children.length === 2 && children[1].concatTokens().toUpperCase() !== "OPTIONAL")) {
-+                return undefined;
-+            }
-+        }
-+        const inferred = (_a = scope.getData().references.find(reference => reference.referenceType === _reference_1.ReferenceType.InferredType
-+            && reference.position.getStart().equals(typeName.getFirstToken().getStart()))) === null || _a === void 0 ? void 0 : _a.resolved;
-+        if (!(inferred instanceof _typed_identifier_1.TypedIdentifier)) {
-+            return undefined;
-+        }
-+        return inferred.getType();
-+    }
-     methodCallType(chain, scope) {
-         var _a, _b, _c;
-         const last = chain.getLastChild();
 diff --git a/node_modules/@abaplint/core/build/src/rules/redundant_conversion.js b/node_modules/@abaplint/core/build/src/rules/redundant_conversion.js
 index 68371c6..426039d 100644
 --- a/node_modules/@abaplint/core/build/src/rules/redundant_conversion.js

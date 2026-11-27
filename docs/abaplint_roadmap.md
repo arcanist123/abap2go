@@ -91,7 +91,8 @@ What is open in this file from before the decision is moved over as follows:
 - open upstream PRs stay as they are; the maintainer merges or declines them at his pace
 - upstream PRs and waiting PRs that only add checks for invalid code are ported to layer 2, and leave the patch as
   each port lands. Waiting PRs on the fork are then closed, so the chains end
-- upstream PRs that mix a type fix and new checks (#4832) are split: the type fix stays, the checks move to layer 2
+- upstream PRs that mix a type fix and new checks are split: the type fix stays, the checks move to layer 2 (#4832,
+  the first such PR, was released whole in 2.120.123 before it was split)
 - issues about invalid ABAP that abaplint accepts, upstream and on the fork, stay open and are linked from the layer
   2 check that covers them
 
@@ -225,17 +226,22 @@ layers"). The compiler still refuses six cases as syntax errors of its own, in i
 move out of the compiler"): `CONTINUE` outside a loop, a `utclong` in a calculation, a subfield of a `utclong`, a
 static length of 0, static bounds of `n`, `d`, `t`, and more than 31 digits. They move to `src/check/` as they are,
 with their tests, before any other work here; none of them waits for an abaplint PR or release any more. The PRs
-written for them stay open upstream, and the waiting PRs for them
-([arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21)) are closed once the check is in layer 2.
-No PR is written for [#4743](https://github.com/abaplint/abaplint/issues/4743) (more than 31 digits).
+written for them stay open upstream. The waiting PRs for them,
+[arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) and
+[arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21), are closed (2026-11-28): the compiler
+refuses both cases itself, so the patch does not need them. No PR is written for
+[#4743](https://github.com/abaplint/abaplint/issues/4743) (more than 31 digits). 2.120.123 reports three of the six:
+a `utclong` in a calculation, a subfield of a `utclong` and a static length of 0; each of these checks goes once
+that release is found to report its case in every form.
 
 After that the lowering has no syntax check; what it refuses beyond the findings of both layers is what it does not
-compile yet. With [PR #4830](https://github.com/abaplint/abaplint/pull/4830) in the patch, `i+0`, `i(*)` and `i(4)` become valid and reach the compiler, which has to refuse
+compile yet. With [PR #4830](https://github.com/abaplint/abaplint/pull/4830), in 2.120.123, `i+0`, `i(*)` and `i(4)` are valid and reach the compiler, which has to refuse
 a subfield of a numeric type as not supported yet (not as a syntax error) or compile it as the whole field; `p(5)`,
 which the release already accepts, needs the same look.
 
-Then valid code mistyped: [arcanist123/abaplint#16](https://github.com/arcanist123/abaplint/issues/16), a data element
-of data type `UTCL` typed `c LENGTH 27`, which the compiler would move, compare and write as text (see "Backlog").
+Valid code mistyped: [arcanist123/abaplint#16](https://github.com/arcanist123/abaplint/issues/16), a data element of
+data type `UTCL` typed `c LENGTH 27`, is fixed by [PR #4832](https://github.com/abaplint/abaplint/pull/4832), in
+2.120.123.
 
 Open abaplint issues beyond the compiler's scope wait for the compiler step that needs them (see "Later"). The first of those steps is next in line: before the compiler compiles `IS INITIAL`, `IN`
 and the string, byte and bit operators, take their operand checks.
@@ -330,7 +336,7 @@ then, as the record of what each fix covers.
   numeric built-in function on the right, here not after a bit expression on the left. Not covered: `WHERE` conditions
   - [ ] follow-up once #5 is on a `main` with #4766: tests for `bit-set( )` and `boolx( )` as bit expressions
 - [ ] [#4802](https://github.com/abaplint/abaplint/issues/4802) a calculation before `IS [NOT] INITIAL` is accepted.
-  Fixed in [PR #4811](https://github.com/abaplint/abaplint/pull/4811), in the patch: no arithmetic, string or bit
+  Fixed in [PR #4811](https://github.com/abaplint/abaplint/pull/4811), in 2.120.123: no arithmetic, string or bit
   expression and no string template, also in parentheses; of the built-in functions only the numeric and length
   functions and `lines( )`, of a data object, and those with a `utclong` result (`utclong_add( )` also with a calculated
   argument). `abs( ( i ) )` is left to #4749. It went upstream although it changes `compare.ts`: the logic is in a file
@@ -344,8 +350,7 @@ Fixes that need the code of an open upstream PR (see "How a fix gets in"): open 
 [arcanist123/abaplint](https://github.com/arcanist123/abaplint/pulls), never merged there, all in the patch. Listed by
 `gh pr list -R arcanist123/abaplint`; in order, each chain from the bottom up. Since 2026-11-27 (see "Two layers")
 the ones below, which add checks for invalid code, are ported to layer 2 instead of going up; each is closed once its
-port lands. #14, the copy of another author's PR, stays until a release has that PR. New waiting PRs are only for
-layer 1 fixes.
+port lands. New waiting PRs are only for layer 1 fixes.
 
 Chain on `when.ts` and `compare.ts`, which starts going up once
 [PR #4741](https://github.com/abaplint/abaplint/pull/4741) is merged:
@@ -370,28 +375,11 @@ The fix for [#4801](https://github.com/abaplint/abaplint/issues/4801) changes `c
 is a waiting PR on the end of this chain, based on `string-expression-numeric-function-4799`, unless its code can be
 kept apart, as for #4802.
 
-Chain on the flags of `SyntaxInput` and `SyntaxLogic`, on [PR #4739](https://github.com/abaplint/abaplint/pull/4739):
-
-| Order | PR | Branch | Base | Fixes |
-|---|---|---|---|---|
-| 1 | [abaplint#4739](https://github.com/abaplint/abaplint/pull/4739) (upstream) | `retry-outside-catch-4723` | upstream `main` | [#4723](https://github.com/abaplint/abaplint/issues/4723) |
-| 2 | [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) | `continue-outside-loop` | `retry-outside-catch-4723` | [#3660](https://github.com/abaplint/abaplint/issues/3660) |
-
-#14 is of another kind (2026-11-27): a copy of an open upstream PR by another author,
-[PR #4653](https://github.com/abaplint/abaplint/pull/4653), taken at its head with the author's commits unchanged, so
-that the patch has it and the compiler's `CONTINUE` check can go. No upstream PR is opened from it. It follows #4653:
-take the author's new pushes, and close it once a release has #4653. If #4653 is merged before #4739, rebase #4739
-onto it.
-
-Chain on the substring check of `_substring.ts`, on [PR #4830](https://github.com/abaplint/abaplint/pull/4830):
-
-| Order | PR | Branch | Base | Fixes |
-|---|---|---|---|---|
-| 1 | [abaplint#4830](https://github.com/abaplint/abaplint/pull/4830) (upstream) | `substring-whole-numeric-15` | upstream `main` | arcanist123/abaplint#15 |
-| 2 | [arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21) | `substring-bounds-ndt-4746` | `substring-whole-numeric-15` | [#4746](https://github.com/abaplint/abaplint/issues/4746) |
-
-#21 also merges cleanly with [PR #4829](https://github.com/abaplint/abaplint/pull/4829), which changes the same file:
-keep it so when rebasing. The upstream PR from it says `closes #4746`.
+Closed 2026-11-28, since the compiler refuses their cases itself:
+[arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) (`CONTINUE` outside a loop, a copy of
+[PR #4653](https://github.com/abaplint/abaplint/pull/4653) by another author, on `retry-outside-catch-4723`) and
+[arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21) (static bounds of `n`, `d` and `t`, rebased
+onto 2.120.123 first, branch `substring-bounds-ndt-4746`). Both branches stay on the fork.
 
 ### Syntax checks to move out of the compiler
 
@@ -419,7 +407,7 @@ warning. [#4724](https://github.com/abaplint/abaplint/issues/4724), which asked 
 Removed 2026-11-27, since abaplint reports them:
 - in a class, `CASE` without any `WHEN`, or with statements before the first one
   ([#4744](https://github.com/abaplint/abaplint/issues/4744),
-  [PR #4784](https://github.com/abaplint/abaplint/pull/4784), in the patch). A macro call, an `INCLUDE` or an
+  [PR #4784](https://github.com/abaplint/abaplint/pull/4784), in 2.120.123). A macro call, an `INCLUDE` or an
   enhancement before the first `WHEN` is not reported, as it might supply the `WHEN`; the compiler supports none of
   these in a class
 - a subfield of a type without subfields (`i+1(1)`), except of a `utclong` (below)
@@ -429,40 +417,41 @@ Removed 2026-11-27, since abaplint reports them:
 abaplint accepts these, in every form or in some, or the release and the patch do not report them yet, so the fix goes
 into abaplint. These six are the first priority (see "Now").
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
-  with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-27). Not ours,
-  so it is copied as waiting PR [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) (see "Waiting
-  PRs on the fork"), which brings it into the patch; the compiler's check goes once the patch contains it
+  with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-27). Its copy,
+  waiting PR [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14), is closed (2026-11-28): the
+  check moves to layer 2
 - [ ] [#4729](https://github.com/abaplint/abaplint/issues/4729) `utclong` in an arithmetic expression, `u + 1`
   (`src/lower_arith.ts`). Some forms were reported (`abs( u )`, `i += u`), `i = u + 1` was not. Fixed in
-  [PR #4828](https://github.com/abaplint/abaplint/pull/4828), merged 2026-11-27, not in the release or the patch yet:
+  [PR #4828](https://github.com/abaplint/abaplint/pull/4828), in 2.120.123:
   arithmetic expressions and signs, `+=`, `-=`, `*=` and `/=` (also after `NEXT`), `ADD`, `SUBTRACT`, `MULTIPLY`,
   `DIVIDE`, `nmax( )` and `nmin( )`. The comparison `u = i + 1` is reported by
-  [PR #4741](https://github.com/abaplint/abaplint/pull/4741). Not covered: a dictionary type `UTCL`, and an operand
+  [PR #4741](https://github.com/abaplint/abaplint/pull/4741). A dictionary type `UTCL` is covered since
+  [PR #4832](https://github.com/abaplint/abaplint/pull/4832). Not covered: an operand
   after a constructor expression (see "Backlog"). #4828 only says "part of #4729": close the issue once #4741 is
-  merged too. The compiler's check goes once the patch contains #4828
+  merged too. The compiler's check goes once 2.120.123 is found to report every form
 - [ ] [#4730](https://github.com/abaplint/abaplint/issues/4730) a subfield of length 0 of a flat field, `c+1(0)`
-  (`src/lower_common.ts`). Fixed in [PR #4829](https://github.com/abaplint/abaplint/pull/4829), open, not in the
-  patch yet: a literal length of 0 on a `c`, `n`, `d`, `t` or `x` field, a structure, and the generic types `c`, `n`,
+  (`src/lower_common.ts`). Fixed in [PR #4829](https://github.com/abaplint/abaplint/pull/4829), in 2.120.123: a
+  literal length of 0 on a `c`, `n`, `d`, `t` or `x` field, a structure, and the generic types `c`, `n`,
   `x`, `clike`, `csequence`, `xsequence` and `simple`. A `string`, an `xstring`, `any` and `data` stay valid, and so
   are two positions: the source of `ASSIGN` (`ASSIGN c+1(0) TO <fs>.`) and the target of `WRITE … TO`. A refusal of
   these two in the compiler is a form it does not compile, not a syntax check. Not covered: a constant of value 0 as
-  the length (arcanist123/abaplint#18, see "Later"). The compiler's check of the invalid forms goes once the patch
-  contains #4829
+  the length (arcanist123/abaplint#18, see "Later"). The compiler's check of the invalid forms goes once 2.120.123
+  is found to report every form
 - [ ] [#4743](https://github.com/abaplint/abaplint/issues/4743) a number literal of more than 31 digits
   (`src/lower_common.ts`): leading zeros are expected to count and the sign not, while the compiler strips leading
   zeros before counting. Also in a `VALUE` addition, which `Constant.runSyntax` does not see
 - [ ] [#4745](https://github.com/abaplint/abaplint/issues/4745) a subfield of a `utclong`, `s = u+1(1)`, `u(1) = s`
-  (`src/lower_common.ts`). Fixed in [PR #4828](https://github.com/abaplint/abaplint/pull/4828), merged 2026-11-27, not
-  in the release or the patch yet, also for a field symbol of type `utclong`. The offset `0` and the length `*` take
-  the whole field and stay valid (`u+0`, `u(*)`, `u+0(*)`). The compiler's check, which also refuses these valid
-  forms, goes once the patch contains #4828. Not covered: a dictionary type `UTCL` (see "Backlog")
+  (`src/lower_common.ts`). Fixed in [PR #4828](https://github.com/abaplint/abaplint/pull/4828), in 2.120.123, also
+  for a field symbol of type `utclong`. The offset `0` and the length `*` take the whole field and stay valid (`u+0`,
+  `u(*)`, `u+0(*)`). The compiler's check, which also refuses these valid forms, goes once 2.120.123 is found to report
+  every invalid form. A dictionary type `UTCL` is covered since
+  [PR #4832](https://github.com/abaplint/abaplint/pull/4832)
 - [ ] [#4746](https://github.com/abaplint/abaplint/issues/4746) static bounds outside a flat field of type `n`, `d`
   or `t`, `d+8`, `n(6)` (`src/lower_common.ts`). Fixed in waiting PR
-  [arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21), not in the patch yet, which goes up once
-  [PR #4830](https://github.com/abaplint/abaplint/pull/4830) is merged. As for `c` and `x`, field symbols are not
+  [arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21), closed 2026-11-28: the check moves to
+  layer 2. As for `c` and `x`, field symbols are not
   checked, and with a variable offset or length the other one is not checked against the field. A generic `n` parameter
-  is not checked. A constant as offset or length beyond the field is arcanist123/abaplint#18 (see "Later"). The
-  compiler's check goes once the patch contains #21
+  is not checked. A constant as offset or length beyond the field is arcanist123/abaplint#18 (see "Later")
 
 Dropped 2026-11-27, since it is no syntax error: a `utclong` value after `WHEN` when the operand of `CASE` is an
 arithmetic expression, `CASE i + 1. WHEN u.`, is expected to be valid, unlike `CASE i. WHEN u.`, so abaplint is right
@@ -504,15 +493,14 @@ Invalid ABAP that abaplint accepts:
 | [arcanist123/abaplint#11](https://github.com/arcanist123/abaplint/issues/11) | an operand after `WHEN` in `SWITCH` that is not constant (a variable, a method call, a function, a calculation) is accepted | `SWITCH` |
 | [arcanist123/abaplint#12](https://github.com/arcanist123/abaplint/issues/12) | a bit expression compared with an operand that is not byte-like (`x BIT-AND x = c`) is accepted; with a numeric operand `=`, `<>` and `<` are already reported next to `BIT-AND` | bit expressions |
 | [arcanist123/abaplint#13](https://github.com/arcanist123/abaplint/issues/13) | a bit expression used as a number (`i = BIT-NOT x.`, as the argument of a numeric function, as a numeric actual parameter) is accepted. `c` and `string` targets are expected to be valid | bit expressions |
-| [#4785](https://github.com/abaplint/abaplint/issues/4785) | in a class, `CASE TYPE OF` without any `WHEN`, or with `DATA` before the first one, is accepted; outside classes only a warning is expected. It builds on the check of [PR #4784](https://github.com/abaplint/abaplint/pull/4784), so a waiting PR on `case-without-when-4744` while that is open | objects and `CASE TYPE OF` |
+| [#4785](https://github.com/abaplint/abaplint/issues/4785) | in a class, `CASE TYPE OF` without any `WHEN`, or with `DATA` before the first one, is accepted; outside classes only a warning is expected. It builds on the check of [PR #4784](https://github.com/abaplint/abaplint/pull/4784), in 2.120.123 | objects and `CASE TYPE OF` |
 | [arcanist123/abaplint#18](https://github.com/arcanist123/abaplint/issues/18) | a constant as offset or length is not checked against the field: beyond it (`c+lc_off`, `c(lc_len)`) and a length of value 0 are accepted, also after [PR #4829](https://github.com/abaplint/abaplint/pull/4829). With a variable offset a constant length beyond the field is expected to be valid. [PR #4759](https://github.com/abaplint/abaplint/pull/4759) also accepts `c+5(ref->lc_len)`, a constant behind `->`, as if it were a variable, which the issue does not cover. The test "ok, offset given by a constant" expects no error | `CONSTANTS`, before a constant is an offset or length |
 | [arcanist123/abaplint#19](https://github.com/arcanist123/abaplint/issues/19) | an offset or length on the source of `ASSIGN` to an inline declared field symbol (`ASSIGN c+1(2) TO FIELD-SYMBOL(<fs>).`) is accepted. With a declared field symbol it is expected to be valid | field symbols and `ASSIGN` |
 | [arcanist123/abaplint#20](https://github.com/arcanist123/abaplint/issues/20) | `ASSIGN` of a data object with an offset but without a length (`ASSIGN c+2 TO <fs>.`) is accepted. With a length or `*`, and with a source which starts with a field symbol (`<c>+2`), it is expected to be valid | field symbols and `ASSIGN` |
 
-arcanist123/abaplint#18 to #20 change code which [PR #4829](https://github.com/abaplint/abaplint/pull/4829) changes
-(`_substring.ts`, `assign.ts`): while it is open, their fixes are waiting PRs on `substring-length-zero-4730`. A fix
-for #18 also changes the bounds check which arcanist123/abaplint#21 changes (see "Waiting PRs on the fork"): while #21
-or #4830 is open, check which of the two branches it has to build on.
+arcanist123/abaplint#18 to #20 change code which [PR #4829](https://github.com/abaplint/abaplint/pull/4829) and
+[PR #4830](https://github.com/abaplint/abaplint/pull/4830) changed (`_substring.ts`, `assign.ts`), both in 2.120.123,
+so their fixes build on upstream `main`.
 
 ## Parked
 
@@ -551,28 +539,12 @@ HTML tag in ABAP Doc is expected to give warnings only ([#4655](https://github.c
 
 ## In the patch
 
-PRs that the pinned release, 2.120.122, does not contain, as of 2026-11-27. The patch also holds waiting PRs
+PRs that the pinned release, 2.120.123, does not contain, as of 2026-11-28. The patch also holds waiting PRs
 arcanist123/abaplint#1 to #6, which are not in this table (see "Waiting PRs on the fork").
 
-Merged since the patch was generated and not in a release yet, in the patch from the next run of the script on:
-[#4828](https://github.com/abaplint/abaplint/pull/4828), a `utclong` in a calculation or with an offset or length is an
-error ([#4745](https://github.com/abaplint/abaplint/issues/4745), part of
-[#4729](https://github.com/abaplint/abaplint/issues/4729)).
-
-Opened since the patch was generated, not in it yet:
-[PR #4829](https://github.com/abaplint/abaplint/pull/4829), a substring length of 0 on a flat field is an error
-([#4730](https://github.com/abaplint/abaplint/issues/4730)),
-[PR #4830](https://github.com/abaplint/abaplint/pull/4830), an offset or length taking a whole numeric field is valid
-(arcanist123/abaplint#15), waiting PR [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14),
-`CONTINUE` outside a loop is an error ([#3660](https://github.com/abaplint/abaplint/issues/3660), a copy of
-[PR #4653](https://github.com/abaplint/abaplint/pull/4653)), and waiting PR
-[arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21), static substring bounds of `n`, `d` and `t`
-([#4746](https://github.com/abaplint/abaplint/issues/4746)).
-
-The script cannot regenerate the patch until a release contains #4828 (2026-11-27, 2.120.122 is the latest): #4829,
-#4830 and arcanist123/abaplint#21 on it branch from a `main` with the squashed commit of #4828, and their merges
-conflict with its original commits, which the script merges first (see "Moving to a newer release"). Then pin that
-release and run the script.
+The checks among them move to layer 2 (see "Two layers"), each leaving the patch once its port lands. #4684 leaves
+as well, since abap2go refuses `EXEC SQL` and does not compile AMDP. That leaves #4631 as the patch's only PR, a
+layer 1 fix the compiler needs for `b` and `s`; the patch stays for it until a release has it.
 
 | PR | What | State |
 |---|---|---|
@@ -583,10 +555,19 @@ release and run the script.
 | [#4739](https://github.com/abaplint/abaplint/pull/4739) | `RETRY` outside a `CATCH` block is an error ([#4723](https://github.com/abaplint/abaplint/issues/4723)) | open |
 | [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
 | [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | draft, waits for #4741 |
-| [#4784](https://github.com/abaplint/abaplint/pull/4784) | in a class, `CASE` without any `WHEN`, or with statements before the first one, is an error ([#4744](https://github.com/abaplint/abaplint/issues/4744)) | open |
-| [#4811](https://github.com/abaplint/abaplint/pull/4811) | a calculation before `IS [NOT] INITIAL` is an error ([#4802](https://github.com/abaplint/abaplint/issues/4802)) | open |
 
 Released and out of the patch:
+- in 2.120.123: [PR #4784](https://github.com/abaplint/abaplint/pull/4784) (in a class, `CASE` without `WHEN`,
+  [#4744](https://github.com/abaplint/abaplint/issues/4744)), [PR #4811](https://github.com/abaplint/abaplint/pull/4811)
+  (a calculation before `IS [NOT] INITIAL`, [#4802](https://github.com/abaplint/abaplint/issues/4802)),
+  [PR #4828](https://github.com/abaplint/abaplint/pull/4828) (a `utclong` in a calculation or with an offset or length,
+  [#4745](https://github.com/abaplint/abaplint/issues/4745), part of
+  [#4729](https://github.com/abaplint/abaplint/issues/4729)), [PR #4829](https://github.com/abaplint/abaplint/pull/4829)
+  (a substring length of 0, [#4730](https://github.com/abaplint/abaplint/issues/4730)),
+  [PR #4830](https://github.com/abaplint/abaplint/pull/4830) (an offset or length taking a whole numeric field,
+  arcanist123/abaplint#15), [PR #4832](https://github.com/abaplint/abaplint/pull/4832) (a dictionary type of data type
+  `UTCL` is a `utclong`, arcanist123/abaplint#16), [PR #4836](https://github.com/abaplint/abaplint/pull/4836) (the
+  character-like initial part of a flat structure)
 - in 2.120.122: [PR #4766](https://github.com/abaplint/abaplint/pull/4766) (`bit-set( )` and `boolx( )` parse,
   [#4764](https://github.com/abaplint/abaplint/issues/4764)), [PR #4767](https://github.com/abaplint/abaplint/pull/4767)
   (a named argument of `abs( )`, [#4750](https://github.com/abaplint/abaplint/issues/4750)),
@@ -664,10 +645,9 @@ No error from check_syntax where ABAP is expected to give one:
 - [ ] [#3041](https://github.com/abaplint/abaplint/issues/3041) `APPEND INITIAL LINE TO sorted_tab`: the docs suggest
   a runtime check (ITAB_ILLEGAL_SORT_ORDER); work out the expected behaviour before any PR, ask to close if runtime
   only
-- [ ] [arcanist123/abaplint#16](https://github.com/arcanist123/abaplint/issues/16) a dictionary type of data type
-  `UTCL` is read as `c LENGTH 27` (`ddic.ts`) instead of `utclong`, so calculations, subfields, conversions and
-  character statements on such a field, expected to be errors, are accepted. The type is wrong for valid code too
-  (`DATA(x) = z.` gives a `c`), which the compiler takes over. Found 2026-11-27 while fixing #4729
+- [x] [arcanist123/abaplint#16](https://github.com/arcanist123/abaplint/issues/16) a dictionary type of data type
+  `UTCL` was read as `c LENGTH 27` (`ddic.ts`) instead of `utclong`. Fixed by
+  [PR #4832](https://github.com/abaplint/abaplint/pull/4832), in 2.120.123
 - [ ] [arcanist123/abaplint#17](https://github.com/arcanist123/abaplint/issues/17) in a calculation, the operand after
   a constructor expression (`CONV`, `COND`, `SWITCH`, `VALUE`, `EXACT`, `REDUCE`) is not checked as an operand of it: a
   reference or a `utclong` there is accepted, and after `SWITCH`, `VALUE` and `EXACT` an unknown field too. The type is
