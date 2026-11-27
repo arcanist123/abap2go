@@ -25,7 +25,9 @@ its siblings, string templates, `CONV`, `EXACT`, inline declarations, the result
 [`testdata/calculation_contexts.tsv`](../../runtime/go/abap/testdata/calculation_contexts.tsv) (699 cells; specified,
 not run by the tests yet).
 
-Throughout, **rounding** is half away from zero (commercial rounding), as in [conversion.md](conversion.md).
+Throughout, **rounding** is half away from zero (commercial rounding), as in [conversion.md](conversion.md). The
+rules below are for finite operands; what the operators do with an infinity or a NaN is in
+[special_values.md](special_values.md).
 
 ## 1. The calculation type
 

@@ -62,8 +62,9 @@ means the two cannot be compared (section *Syntax errors*).
 larger number of decimals of the `p` operands (0 if none is a `p`).
 
 **Generic operands** (`TYPE any`, `TYPE data`, …) take part with the type of the data object behind them at run time,
-with the same results as the same types written statically; only a pair without a comparison type behaves
-differently (a runtime error instead of a syntax error).
+with the same results as the same types written statically; only two cases behave differently: a pair without a
+comparison type (a runtime error instead of a syntax error) and an `f` NaN compared with an `f`
+([special_values.md](special_values.md), which also has the rules for infinities and NaN).
 
 ## 2. Numeric comparison types
 

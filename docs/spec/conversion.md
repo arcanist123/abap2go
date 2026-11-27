@@ -256,13 +256,13 @@ calculation itself, and every exception under `EXACT`, keeps the result field (s
   that convert (parameter passing, `MOVE-CORRESPONDING`, table keys, string templates) follow as those statements
   are compiled; they call the same `abap.Convert`.
 - **Special values after an exception.** An f target can be left holding `+Inf`, `-Inf` or NaN and a decfloat16
-  target `+Infinity` or `-Infinity` (see *The target after an exception*). What `WRITE`, the conversions,
-  comparisons and arithmetic do with these values is not specified yet, and a decfloat value cannot hold an
-  infinity yet. So the runtime does not store them: when a `TRY` catches such an exception, or a `CLEANUP` block
-  would run for it, the program ends with the run-time error `SPECIAL_VALUE_NOT_SUPPORTED` instead of going on with
-  the target (an exception to the guiding principle, see [aot_for_abap.md](../aot_for_abap.md)); uncaught, the
-  exception ends the program as it does in ABAP. Closing the gap means a decfloat value that holds an infinity and
-  specified behaviour for `+Inf`, `-Inf` and NaN.
+  target `+Infinity` or `-Infinity` (see *The target after an exception*). What the conversions, comparisons,
+  arithmetic and string templates do with these values is specified in [special_values.md](special_values.md), not
+  implemented yet, and a decfloat value cannot hold an infinity yet. So the runtime does not store them: when a
+  `TRY` catches such an exception, or a `CLEANUP` block would run for it, the program ends with the run-time error
+  `SPECIAL_VALUE_NOT_SUPPORTED` instead of going on with the target (an exception to the guiding principle, see
+  [aot_for_abap.md](../aot_for_abap.md)); uncaught, the exception ends the program as it does in ABAP. Closing the
+  gap is a matter of implementation.
 - The value left in a target is stored for `=` and `result = expression` (`abap.Move` and `abap.Compute`). Other
   places that convert follow as those statements are compiled.
 - Speed: the cell is chosen at run time, also for static operands, and every numeric cell goes through exact
