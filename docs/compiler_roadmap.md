@@ -226,8 +226,8 @@ Done:
 - `CASE` in a program outside classes without any `WHEN`, or with statements before the first one (2026-11-27,
   `src/lower_block.ts`, `test/control_flow.test.ts`; before it was refused): ABAP is expected to give only a warning
   there. The statements run after the operand is evaluated and before it is compared; what they can change in it is in
-  [spec/comparison.md](spec/comparison.md), "CASE". In classes both are syntax errors; the compiler keeps its own
-  check for them until abaplint has one (abaplint#4744)
+  [spec/comparison.md](spec/comparison.md), "CASE". In classes both are syntax errors, which abaplint reports
+  (abaplint#4744, in the abaplint patch)
 
 Next:
 - [ ] control flow, the rest: `IS INITIAL` and the other predicates once the comparison table has them; `CONV`,

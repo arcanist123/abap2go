@@ -17,7 +17,6 @@ export class BlockLowerer {
   private loops = 0;
 
   constructor(private readonly file: abaplint.ABAPFile, private readonly variables: Variables,
-      private readonly context: "class" | "program",
       private readonly leaf: (statement: abaplint.Nodes.StatementNode, where: Where) => IRStatement | undefined) {}
 
   /** The statements and structures of nodes, in order. */
@@ -119,13 +118,7 @@ export class BlockLowerer {
     const caseStatement = node.findDirectStatement(Statements.Case)!;
     const where = this.where(caseStatement);
     const operand = caseOperand(caseStatement.findDirectExpression(Expressions.Source)!, this.variables, where);
-    const before = node.findDirectStructures(Structures.Normal);
-    // a syntax error in a class, only a warning outside; abaplint accepts both (abaplint#4744)
-    if (this.context === "class" && (node.findDirectStructure(Structures.When) === undefined
-        || before.some(n => n.findAllStatementNodes().some(s => !isNoop(s))))) {
-      throw new BuildError("in a class, WHEN must be the first statement after CASE", where);
-    }
-    const first = this.lower(before);
+    const first = this.lower(node.findDirectStructures(Structures.Normal));
     const branches: IRCase["branches"] = [];
     let otherwise: IRStatement[] | undefined;
     for (const child of node.getChildren()) {

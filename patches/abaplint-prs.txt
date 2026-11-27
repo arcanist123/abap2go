@@ -10,6 +10,7 @@ abaplint#4767
 abaplint#4768
 abaplint#4773
 abaplint#4774
+abaplint#4784
 arcanist123/abaplint#1
 arcanist123/abaplint#2
 arcanist123/abaplint#3

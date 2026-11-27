@@ -1731,11 +1731,109 @@ index 5d1d028..8645788 100644
  exports.When = When;
  //# sourceMappingURL=when.js.map
 \ No newline at end of file
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/structures/case.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/structures/case.js
+new file mode 100644
+index 0000000..8605d4e
+--- /dev/null
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/structures/case.js
+@@ -0,0 +1,74 @@
++"use strict";
++var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    var desc = Object.getOwnPropertyDescriptor(m, k);
++    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
++      desc = { enumerable: true, get: function() { return m[k]; } };
++    }
++    Object.defineProperty(o, k2, desc);
++}) : (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    o[k2] = m[k];
++}));
++var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
++    Object.defineProperty(o, "default", { enumerable: true, value: v });
++}) : function(o, v) {
++    o["default"] = v;
++});
++var __importStar = (this && this.__importStar) || (function () {
++    var ownKeys = function(o) {
++        ownKeys = Object.getOwnPropertyNames || function (o) {
++            var ar = [];
++            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
++            return ar;
++        };
++        return ownKeys(o);
++    };
++    return function (mod) {
++        if (mod && mod.__esModule) return mod;
++        var result = {};
++        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
++        __setModuleDefault(result, mod);
++        return result;
++    };
++})();
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.Case = void 0;
++const Statements = __importStar(require("../../2_statements/statements"));
++const Structures = __importStar(require("../../3_structures/structures"));
++const _statement_1 = require("../../2_statements/statements/_statement");
++const nodes_1 = require("../../nodes");
++const _syntax_input_1 = require("../_syntax_input");
++// in classes WHEN must follow CASE directly, outside of classes anything else there is only a warning
++class Case {
++    static runSyntax(node, input) {
++        if (input.scope.getEnclosingClassName() === undefined) {
++            return;
++        }
++        // the first child is the CASE statement, the last one is ENDCASE
++        for (const child of node.getChildren().slice(1)) {
++            const found = child instanceof nodes_1.StructureNode && child.get() instanceof Structures.Normal
++                ? child.getChildren()[0]
++                : child;
++            const type = found.get();
++            if (type instanceof Structures.When) {
++                return;
++            }
++            else if (type instanceof Statements.SetExtendedCheck) {
++                continue;
++            }
++            else if (type instanceof _statement_1.MacroCall
++                || type instanceof Statements.Include
++                || type instanceof Statements.EnhancementPoint
++                || type instanceof Structures.Enhancement
++                || type instanceof Structures.EnhancementSection) {
++                // what these bring along is not known here, it might be the WHEN
++                return;
++            }
++            input.issues.push((0, _syntax_input_1.syntaxIssue)(input, found.getFirstToken(), `CASE must be followed directly by WHEN`));
++            return;
++        }
++    }
++}
++exports.Case = Case;
++//# sourceMappingURL=case.js.map
+\ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
-index f848b28..f74d39e 100644
+index f848b28..36afd47 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
 +++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/syntax.js
-@@ -106,6 +106,7 @@ const call_function_1 = require("./statements/call_function");
+@@ -51,6 +51,7 @@ const types_1 = require("./structures/types");
+ const statics_1 = require("./structures/statics");
+ const constants_1 = require("./structures/constants");
+ const cleanup_1 = require("./structures/cleanup");
++const case_1 = require("./structures/case");
+ const try_1 = require("./structures/try");
+ const loop_group_by_1 = require("./expressions/loop_group_by");
+ const class_definition_1 = require("../types/class_definition");
+@@ -97,7 +98,7 @@ const selection_screen_1 = require("./statements/selection_screen");
+ const at_selection_screen_1 = require("./statements/at_selection_screen");
+ const ranges_1 = require("./statements/ranges");
+ const write_1 = require("./statements/write");
+-const case_1 = require("./statements/case");
++const case_2 = require("./statements/case");
+ const case_type_1 = require("./statements/case_type");
+ const create_object_1 = require("./statements/create_object");
+ const do_1 = require("./statements/do");
+@@ -106,6 +107,7 @@ const call_function_1 = require("./statements/call_function");
  const clear_1 = require("./statements/clear");
  const refresh_1 = require("./statements/refresh");
  const return_1 = require("./statements/return");
@@ -1743,7 +1841,16 @@ index f848b28..f74d39e 100644
  const free_1 = require("./statements/free");
  const replace_1 = require("./statements/replace");
  const get_bit_1 = require("./statements/get_bit");
-@@ -337,12 +338,15 @@ if (Object.keys(map).length === 0) {
+@@ -294,7 +296,7 @@ if (Object.keys(map).length === 0) {
+     addToMap(new create_object_1.CreateObject());
+     addToMap(new import_dynpro_1.ImportDynpro());
+     addToMap(new create_data_1.CreateData());
+-    addToMap(new case_1.Case());
++    addToMap(new case_2.Case());
+     addToMap(new shift_1.Shift());
+     addToMap(new raise_1.Raise());
+     addToMap(new concatenate_1.Concatenate());
+@@ -337,12 +339,15 @@ if (Object.keys(map).length === 0) {
      addToMap(new field_group_1.FieldGroup());
      addToMap(new editor_call_1.EditorCall());
      addToMap(new delete_memory_1.DeleteMemory());
@@ -1759,7 +1866,7 @@ index f848b28..f74d39e 100644
          this.reg = reg;
          this.issues = [];
          this.deferred = [];
-@@ -362,6 +366,7 @@ class SyntaxLogic {
+@@ -362,6 +367,7 @@ class SyntaxLogic {
          this.deferred = [];
          this.loopTables = new _loop_table_change_1.LoopTableChange();
          this.loopDepth = 0;
@@ -1767,7 +1874,7 @@ index f848b28..f74d39e 100644
          this.sortedLines = new _sorted_key_write_1.SortedKeyWrite();
          this.reg.getDDICReferences().clear(this.object);
          this.reg.getMSAGReferences().clear(this.object);
-@@ -428,6 +433,10 @@ class SyntaxLogic {
+@@ -428,6 +434,10 @@ class SyntaxLogic {
          this.issues.push(issue);
      }
      traverse(node) {
@@ -1778,7 +1885,7 @@ index f848b28..f74d39e 100644
          const loop = node instanceof nodes_1.StructureNode
              && node.get() instanceof Structures.Loop
              && this.loopTables.push(node, this.scope);
-@@ -438,6 +447,13 @@ class SyntaxLogic {
+@@ -438,6 +448,13 @@ class SyntaxLogic {
          if (node instanceof nodes_1.StructureNode) {
              this.sortedLines.enter(node, this.currentFile.getFilename());
          }
@@ -1792,7 +1899,7 @@ index f848b28..f74d39e 100644
          for (const child of node.getChildren()) {
              const isStructure = child instanceof nodes_1.StructureNode;
              const isStatement = child instanceof nodes_1.StatementNode;
-@@ -480,6 +496,7 @@ class SyntaxLogic {
+@@ -480,6 +497,7 @@ class SyntaxLogic {
                  this.traverse(child);
              }
          }
@@ -1800,7 +1907,7 @@ index f848b28..f74d39e 100644
          if (loop === true) {
              this.loopTables.pop();
          }
-@@ -495,6 +512,9 @@ class SyntaxLogic {
+@@ -495,6 +513,9 @@ class SyntaxLogic {
          if (node instanceof nodes_1.StructureNode) {
              this.sortedLines.leave(node);
          }
@@ -1810,7 +1917,17 @@ index f848b28..f74d39e 100644
      }
      /**
       * if this returns true, then the traversal should continue with next child
-@@ -568,10 +588,12 @@ class SyntaxLogic {
+@@ -557,6 +578,9 @@ class SyntaxLogic {
+         else if (stru instanceof Structures.Try) {
+             try_1.Try.runSyntax(node, input);
+         }
++        else if (stru instanceof Structures.Case) {
++            case_1.Case.runSyntax(node, input);
++        }
+         else if (stru instanceof Structures.Method) {
+             this.currentMethod = node;
+         }
+@@ -568,10 +592,12 @@ class SyntaxLogic {
          this.updateSelectionEventScope(node);
          const input = {
              scope: this.scope,
