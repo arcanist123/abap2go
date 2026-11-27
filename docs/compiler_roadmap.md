@@ -36,7 +36,7 @@ Priority, when choosing what to pick up next:
 
 This file is the source of the compiler's status.
 
-## The compiler (status 2026-11-26)
+## The compiler (status 2026-11-27)
 
 TypeScript on `@abaplint/core`, emitting Go (`src/`, runtime in `runtime/go`); `npm test` builds and runs small
 programs end to end and runs the Go runtime's tests. No CI yet.
@@ -230,6 +230,22 @@ Done:
   (abaplint#4744, in the abaplint patch)
 
 Next:
+- [ ] **first: the compiler's last syntax checks go** (priority set 2026-11-27, before every other item here). The
+  compiler is not to have a syntax check of its own ([aot_for_abap.md](aot_for_abap.md), "No syntax check of its
+  own"), and six are left. Each goes once the abaplint patch reports its case in every form; the cases, their issues
+  and PRs are in [abaplint_roadmap.md](abaplint_roadmap.md), "Syntax checks to move out of the compiler"
+  - fix ready, waiting for the patch: `CONTINUE` outside a loop (`src/lower_block.ts`), a `utclong` as an operand of a
+    calculation (`checkOperands` in `src/lower_arith.ts`) and with a subfield, a static length of 0 on a flat field
+    (both `lowerSubstring` in `src/lower_common.ts`). The patch can be regenerated once a release contains
+    abaplint#4828 (see "In the patch" there)
+  - PRs to write: static bounds outside an `n`, `d` or `t` field (`lowerSubstring`), a number literal of more than 31
+    digits (`integerLiteral` in `src/lower_common.ts`)
+  - the refusal of a `utclong` after `WHEN` against a calculated `CASE` operand (`caseValue` in `src/lower_cond.ts`)
+    is no syntax check: that code is expected to be valid, and the compiler does not compile it yet
+  - with PR abaplint#4830 in the patch, `i+0`, `i(*)` and `i(4)` become valid and reach `lowerSubstring`: refuse a
+    subfield of a numeric type as not supported yet, or compile it as the whole field. `p(5)`, which the release
+    already accepts, needs the same look
+  - each removed check's test cases stay, and expect the build to refuse through abaplint's finding
 - [ ] control flow, the rest: `IS INITIAL`, `IN` and the string, byte and bit operators with `sy-fdpos`
   ([spec/comparison.md](spec/comparison.md), "Predicate expressions and comparison operators"; `IN` once ranges
   tables are compiled), their cells run by the tests; the other predicates once the comparison table has them;
