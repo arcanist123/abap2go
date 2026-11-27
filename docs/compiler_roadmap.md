@@ -214,8 +214,9 @@ Done:
 - `WRITE sy-index` (2026-11-26, `src/lower_report.ts`, `test/control_flow.test.ts`): its data element,
   `SYST_INDEX`, is expected to have the output length of `i` and no conversion exit, so it is written as an `i` (see
   "Output length" in [spec/write.md](spec/write.md))
-- syntax checks removed from the compiler (2026-11-26 and 2026-11-27) where abaplint reports the case; the others are
-  listed in [abaplint_roadmap.md](abaplint_roadmap.md), "Syntax checks to move out of the compiler"
+- syntax checks removed from the compiler (2026-11-26 and 2026-11-27) where abaplint reports the case; the others
+  move to layer 2 (see "Next"), and are listed in [abaplint_roadmap.md](abaplint_roadmap.md), "Syntax checks to move
+  out of the compiler"
 - parentheses around a single data object (2026-11-26): `( c )` is the data object `c`, not an arithmetic
   expression, in moves and comparisons. Before, it was calculated, so `n = ( c )` and `( c ) = i` could give another
   result, and `( c ) = c2` was refused
@@ -230,22 +231,36 @@ Done:
   (abaplint#4744, in the abaplint patch)
 
 Next:
-- [ ] **first: the compiler's last syntax checks go** (priority set 2026-11-27, before every other item here). The
-  compiler is not to have a syntax check of its own ([aot_for_abap.md](aot_for_abap.md), "No syntax check of its
-  own"), and six are left. Each goes once the abaplint patch reports its case in every form; the cases, their issues
-  and PRs are in [abaplint_roadmap.md](abaplint_roadmap.md), "Syntax checks to move out of the compiler"
-  - fix ready, waiting for the patch: `CONTINUE` outside a loop (`src/lower_block.ts`), a `utclong` as an operand of a
-    calculation (`checkOperands` in `src/lower_arith.ts`) and with a subfield, a static length of 0 on a flat field
-    (both `lowerSubstring` in `src/lower_common.ts`). The patch can be regenerated once a release contains
-    abaplint#4828 (see "In the patch" there)
-  - PRs to write: static bounds outside an `n`, `d` or `t` field (`lowerSubstring`), a number literal of more than 31
-    digits (`integerLiteral` in `src/lower_common.ts`)
-  - the refusal of a `utclong` after `WHEN` against a calculated `CASE` operand (`caseValue` in `src/lower_cond.ts`)
-    is no syntax check: that code is expected to be valid, and the compiler does not compile it yet
-  - with PR abaplint#4830 in the patch, `i+0`, `i(*)` and `i(4)` become valid and reach `lowerSubstring`: refuse a
-    subfield of a numeric type as not supported yet, or compile it as the whole field. `p(5)`, which the release
-    already accepts, needs the same look
-  - each removed check's test cases stay, and expect the build to refuse through abaplint's finding
+- [ ] **first: layer 2 of the syntax check, `src/check/`** (priority set 2026-11-27, before every other item here;
+  the design is [aot_for_abap.md](aot_for_abap.md), "The syntax check in two layers", the rules are
+  [abaplint_roadmap.md](abaplint_roadmap.md), "Two layers")
+  - the pass: `check(registry): Issue[]` in `src/check/index.ts`, called in `src/load.ts` right after `validate()`,
+    so every finding of both layers is reported before any lowering. It takes the scopes from the same syntax run as
+    `src/validation.ts` and `src/lower_common.ts` (abaplint caches it on the object), uses only abaplint's public
+    API, and reports in abaplint's `Issue` format. One file per group of checks, one test file per check file in
+    `test/check/`
+  - move the lowering's six syntax checks there, as they are, with their tests: `CONTINUE` outside a loop
+    (`src/lower_block.ts`), a `utclong` as an operand of a calculation (`checkOperands` in `src/lower_arith.ts`) and
+    with a subfield, a static length of 0 on a flat field, static bounds outside an `n`, `d` or `t` field (all
+    `lowerSubstring` in `src/lower_common.ts`), and a number literal of more than 31 digits (`integerLiteral` in
+    `src/lower_common.ts`). None waits for an abaplint PR or release any more
+  - port the checks of the waiting PRs on the abaplint fork and of the abaplint PRs that only add checks (listed in
+    [abaplint_roadmap.md](abaplint_roadmap.md), "Invalid syntax to fix, without a check in the compiler"), each
+    leaving the abaplint patch as its port lands
+  - the Unicode flag: read `UCCHECK` from each program's XML, refuse a program without it as not supported, and
+    check the non-Unicode-only forms in the rest ([abaplint_roadmap.md](abaplint_roadmap.md), "Non-Unicode-only
+    syntax")
+  - `b` and `s`: the size, value range and overflow of `INT1` and `INT2`, once abaplint gives the size on the type
+    (abaplint#4631, in the patch); the overflow at run time belongs to the lowering, the static range checks here
+  - macros: map each expanded token back to its absolute position, in the `DEFINE` body or in an argument at the
+    call, by rebuilding the text abaplint lexes for the expansion; a test fails if abaplint changes how it expands
+  - a layer 2 check goes once an abaplint release reports its case in every form; its tests then expect abaplint's
+    finding
+  - not syntax checks, so they stay in the lowering: the refusal of a `utclong` after `WHEN` against a calculated
+    `CASE` operand (`caseValue` in `src/lower_cond.ts`), valid code not compiled yet; and with PR abaplint#4830 in the
+    patch, `i+0`, `i(*)` and `i(4)` become valid and reach `lowerSubstring`: refuse a subfield of a numeric type as
+    not supported yet, or compile it as the whole field. `p(5)`, which the release already accepts, needs the same
+    look
 - [ ] control flow, the rest: `IS INITIAL`, `IN` and the string, byte and bit operators with `sy-fdpos`
   ([spec/comparison.md](spec/comparison.md), "Predicate expressions and comparison operators"; `IN` once ranges
   tables are compiled), their cells run by the tests; the other predicates once the comparison table has them;
