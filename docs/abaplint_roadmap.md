@@ -2,8 +2,9 @@
 
 The work abap2go does in [abaplint](https://github.com/abaplint/abaplint) (parser, check_syntax): a line of work of
 its own, next to the compiler's in [compiler_roadmap.md](compiler_roadmap.md). This file is the source of its status:
-what to pick up next, in order, and why. Issue and PR numbers belong to abaplint/abaplint and link there. Open issues
-and PRs are listed by `gh issue list -R abaplint/abaplint --author @me` and
+what to pick up next, in order, and why. A bare issue or PR number (`#N`) belongs to abaplint/abaplint and links
+there; issues and PRs on the fork are written `arcanist123/abaplint#N`. Open issues and PRs are listed by
+`gh issue list -R arcanist123/abaplint`, `gh issue list -R abaplint/abaplint --author @me` and
 `gh pr list -R abaplint/abaplint --author @me`; this file records their priority and what they mean for abap2go, not a
 copy of their state.
 
@@ -78,13 +79,14 @@ Waiting PRs merge cleanly into the patch after the upstream PRs, as each one con
 
 ### Steps for a fix
 
-1. Work out the expected behaviour, and raise an issue.
+1. Work out the expected behaviour, and raise an issue on the fork (see "Where issues go").
 2. Is the code it needs on upstream `main` already, with no open PR changing the same code?
    - yes: branch from upstream `main`
    - no: branch from the branch of the open PR it builds on (the last one in the queue for that code)
 3. Write the fix and its tests, run abaplint's tests (see "Testing in abaplint"), push the branch to the fork.
 4. Open the PR:
-   - branched from `main`: upstream, saying `closes #N` for the issues it fixes
+   - branched from `main`: upstream, with the snippets and the expected behaviour in its body, and `closes #N` for
+     the upstream issues it fixes. It does not link fork issues
    - branched from another PR's branch: a waiting PR on the fork with that branch as base; add it to "Waiting PRs on
      the fork"
 5. Regenerate the patch with `scripts/abaplint-patch.sh`, run `npm test` here, and commit the patch,
@@ -96,13 +98,25 @@ Once the PR it builds on is merged upstream:
 
 1. Rebase its branch onto upstream `main` so that only its own commits are left
    (`git rebase --onto upstream/main <old base> <branch>`), run abaplint's tests again, force-push to the fork.
-2. Open the upstream PR from that branch, saying `closes #N`.
+2. Open the upstream PR from that branch, as in step 4 above.
 3. Close the waiting PR with a link to the upstream one.
 4. The waiting PRs on top of it keep the same base branch name, so GitHub shows them against the rebased branch;
    rebase each one too when its diff shows more than its own change.
 5. Update "Waiting PRs on the fork" and the issue entries, and regenerate the patch.
 
 One waiting PR goes up at a time per chain, in the order listed; independent chains go up independently.
+
+### Where issues go
+
+New issues are raised on the fork, `arcanist123/abaplint` (2026-11-27), not upstream. In the upstream tracker the
+issues by the author already outnumber everyone else's, and a fix arrives upstream as a PR that explains itself, so
+an upstream issue next to it only adds to the maintainer's queue. The fork's issues are the backlog: public, worded
+by the same rules as upstream text, and closed by us when the fix is merged upstream, or as not needed.
+
+- the issues already raised upstream stay there, and PRs keep closing them with `closes #N`
+- an issue goes upstream only when it needs the maintainer: a design question (like
+  [#4755](https://github.com/abaplint/abaplint/issues/4755)), or a gap we are not going to fix ourselves
+- this may change if the maintainer says he would rather have the issues upstream
 
 ### When upstream changes or rejects a PR
 
