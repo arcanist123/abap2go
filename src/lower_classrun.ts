@@ -45,7 +45,7 @@ export function lowerClassrun(registry: abaplint.IRegistry, obj: abaplint.Object
   }
 
   const variables = new Variables(registry, obj, file, new Set(definition.methods.map(m => m.name.toLowerCase())));
-  const lowerer = new BlockLowerer(file, variables, "class", (statement, where) => {
+  const lowerer = new BlockLowerer(file, variables, (statement, where) => {
     if (statement.get() instanceof Statements.Call) {
       return lowerOutWrite(statement, variables, where);
     }

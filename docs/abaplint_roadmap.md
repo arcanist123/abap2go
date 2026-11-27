@@ -256,6 +256,13 @@ Removed that day, since abaplint reports them:
 Removed that day, since it was no syntax error: a `TRY` without `CATCH` or `CLEANUP` is expected to give only a
 warning. [#4724](https://github.com/abaplint/abaplint/issues/4724), which asked abaplint to report it, is closed.
 
+Removed 2026-11-27, since abaplint reports it:
+- in a class, `CASE` without any `WHEN`, or with statements before the first one
+  ([#4744](https://github.com/abaplint/abaplint/issues/4744),
+  [PR #4784](https://github.com/abaplint/abaplint/pull/4784), in the patch). A macro call, an `INCLUDE` or an
+  enhancement before the first `WHEN` is not reported, as it might supply the `WHEN`; the compiler supports none of
+  these in a class
+
 abaplint accepts these, so the fix goes into abaplint. #4730, #4745 and #4746 change the same code
 (`_substring.ts`) as the merged [PR #4759](https://github.com/abaplint/abaplint/pull/4759): branch from a `main` that
 has it.
@@ -269,9 +276,6 @@ has it.
 - [ ] [#4743](https://github.com/abaplint/abaplint/issues/4743) a number literal of more than 31 digits
   (`src/lower_common.ts`): leading zeros are expected to count and the sign not, while the compiler strips leading
   zeros before counting. Also in a `VALUE` addition, which `Constant.runSyntax` does not see
-- [ ] [#4744](https://github.com/abaplint/abaplint/issues/4744) `CASE` without any `WHEN`, or with statements
-  before the first one (`src/lower_block.ts`): a syntax error is expected in classes, only a warning in a program
-  outside classes, so the check applies to classes only
 - [ ] [#4745](https://github.com/abaplint/abaplint/issues/4745) a subfield of a `utclong` in a reading position,
   `s = u+1(1)` (`src/lower_common.ts`)
 - [ ] [#4746](https://github.com/abaplint/abaplint/issues/4746) static bounds outside a flat field of type `n`, `d`
@@ -304,6 +308,7 @@ Invalid ABAP that abaplint accepts:
 | [#4780](https://github.com/abaplint/abaplint/issues/4780) | a built-in function as the work area of `COLLECT`, `READ TABLE` and `DELETE TABLE` | internal tables |
 | [#4777](https://github.com/abaplint/abaplint/issues/4777) | parentheses around a single operand as the whole source of an inline declaration | inline declarations |
 | [#4778](https://github.com/abaplint/abaplint/issues/4778) | parentheses around a string expression or a string template | `&&` and string templates |
+| [#4785](https://github.com/abaplint/abaplint/issues/4785) | in a class, `CASE TYPE OF` without any `WHEN`, or with `DATA` before the first one, is accepted; outside classes only a warning is expected. It builds on the check of [PR #4784](https://github.com/abaplint/abaplint/pull/4784), so a waiting PR on `case-without-when-4744` while that is open | objects and `CASE TYPE OF` |
 
 ## Parked
 
@@ -342,7 +347,7 @@ HTML tag in ABAP Doc is expected to give warnings only ([#4655](https://github.c
 
 ## In the patch
 
-PRs that the pinned release, 2.120.121, does not contain, as of 2026-11-26. The patch also holds waiting PRs
+PRs that the pinned release, 2.120.121, does not contain, as of 2026-11-27. The patch also holds waiting PRs
 arcanist123/abaplint#1 to #3, which are not in this table (see "Waiting PRs on the fork").
 
 | PR | What | State |
@@ -359,6 +364,7 @@ arcanist123/abaplint#1 to #3, which are not in this table (see "Waiting PRs on t
 | [#4768](https://github.com/abaplint/abaplint/pull/4768) | parentheses in a character-like, byte-like, table or `utclong` argument of a built-in function are an error (part of [#4749](https://github.com/abaplint/abaplint/issues/4749)) | merged, not released |
 | [#4773](https://github.com/abaplint/abaplint/pull/4773) | `sep` of `from_mixed( )` is character-like ([#4769](https://github.com/abaplint/abaplint/issues/4769)) | merged, not released |
 | [#4774](https://github.com/abaplint/abaplint/pull/4774) | parentheses around a single operand of `&&`, in a string template, a constructor expression and the source of `APPEND` and `INSERT` are an error ([#4771](https://github.com/abaplint/abaplint/issues/4771)) | merged, not released |
+| [#4784](https://github.com/abaplint/abaplint/pull/4784) | in a class, `CASE` without any `WHEN`, or with statements before the first one, is an error ([#4744](https://github.com/abaplint/abaplint/issues/4744)) | open |
 
 Released and out of the patch:
 - in 2.120.121: [PR #4716](https://github.com/abaplint/abaplint/pull/4716) (`NOT NOT`,
