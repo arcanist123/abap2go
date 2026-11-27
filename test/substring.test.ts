@@ -21,6 +21,7 @@ DATA r TYPE string.
 DATA i TYPE i.
 DATA off TYPE i.
 DATA len TYPE i.
+DATA u TYPE utclong.
 `;
 
 const cases: [string, string, string][] = [
@@ -83,12 +84,18 @@ test("substring: WRITE of subfields has their length", () => {
 
 // What ABAP rejects as a syntax error is refused at build time, whether abaplint reports it or the compiler does.
 const refusals: [string, string, RegExp][] = [
-  ["a static offset at the end of a flat field", "r = c5+5.", /offset 5 is not within|syntax check/],
-  ["a static offset beyond a flat field", "r = c5+6.", /offset 6 is not within|syntax check/],
-  ["a static offset at the end with a static length", "r = c5+5(1).", /offset 5 is not within|syntax check/],
-  ["static bounds beyond a flat field", "r = c5+4(2).", /exceed the length 5|syntax check/],
+  ["a static offset at the end of a flat field", "r = c5+5.", /syntax check/],
+  ["a static offset beyond a flat field", "r = c5+6.", /syntax check/],
+  ["a static offset at the end with a static length", "r = c5+5(1).", /syntax check/],
+  ["static bounds beyond a flat field", "r = c5+4(2).", /syntax check/],
+  ["static bounds beyond an x", "r = x4+3(2).", /syntax check/],
+  ["a static offset at the end of an n", "r = n4+4.", /offset 4 is not within|syntax check/],
+  ["a static offset at the end of a d", "r = d+8(1).", /offset 8 is not within|syntax check/],
+  ["static bounds beyond a t", "r = t+5(2).", /exceed the length 6|syntax check/],
   ["a static length of 0", "r = c5+1(0).", /greater than 0|syntax check/],
-  ["a subfield of an i", "r = i+1(2).", /does not permit subfields|syntax check/],
+  ["a subfield of an i", "r = i+1(2).", /syntax check/],
+  ["a subfield of a utclong", "r = u+1(1).", /does not permit subfields|syntax check/],
+  ["writing a subfield of a utclong", "u(1) = r.", /does not permit subfields|syntax check/],
   ["writing a subfield of a string", "s+1(1) = r.", /syntax check/],
   ["strlen( ) of an i", "i = strlen( i ).", /syntax check/],
   ["strlen( ) of an x", "i = strlen( x4 ).", /syntax check/],

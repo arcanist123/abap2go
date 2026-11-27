@@ -82,7 +82,7 @@ export function lowerArithmetic(source: abaplint.Nodes.ExpressionNode, variables
   return expression;
 }
 
-/** An operand of utclong is a syntax error in ABAP; abaplint is not relied upon to report it. */
+/** An operand of utclong is a syntax error in ABAP, which abaplint does not report in every form yet. */
 function checkOperands(e: IRExpr, where: Where): void {
   switch (e.kind) {
     case "operand":
@@ -282,29 +282,14 @@ function lowerFunction(node: abaplint.Nodes.ExpressionNode, variables: Variables
       args.set(pName, pSource);
     }
   }
-  const arg = (n: string): IRExpr => {
-    const s = args.get(n);
-    if (s === undefined) {
-      throw new BuildError(`${node.concatTokens()}: parameter ${n} missing`, where);
-    }
-    return lowerExpression(s, variables, where);
-  };
+  // abaplint reports missing, unknown and repeated arguments, so each one asked for is there
+  const arg = (n: string): IRExpr => lowerExpression(args.get(n)!, variables, where);
   if (name === "strlen") {
     // a character-like expression position: the argument is not calculated
-    const source = args.get("val");
-    if (source === undefined || args.size !== 1) {
-      throw new BuildError(`${node.concatTokens()}: strlen( ) takes one argument`, where);
-    }
-    return { kind: "strlen", arg: lowerSource(source, variables, where, "strlen( ) of") };
+    return { kind: "strlen", arg: lowerSource(args.get("val")!, variables, where, "strlen( ) of") };
   }
   if (name === "ipow") {
-    if (args.size !== 2) {
-      throw new BuildError(`${node.concatTokens()}: ipow( base = ... exp = ... ) expected`, where);
-    }
     return { kind: "ipow", base: arg("base"), exp: arg("exp") };
-  }
-  if (args.size !== 1) {
-    throw new BuildError(`${node.concatTokens()}: ${name}( ) takes one argument`, where);
   }
   return { kind: "unary", fn: name as "abs" | "sqrt", operand: arg("val") };
 }

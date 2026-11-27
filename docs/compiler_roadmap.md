@@ -214,8 +214,8 @@ Done:
 - `WRITE sy-index` (2026-11-26, `src/lower_report.ts`, `test/control_flow.test.ts`): its data element,
   `SYST_INDEX`, is expected to have the output length of `i` and no conversion exit, so it is written as an `i` (see
   "Output length" in [spec/write.md](spec/write.md))
-- syntax checks removed from the compiler (2026-11-26) where abaplint reports the case; the others are listed in
-  [abaplint_roadmap.md](abaplint_roadmap.md), "Syntax checks to move out of the compiler"
+- syntax checks removed from the compiler (2026-11-26 and 2026-11-27) where abaplint reports the case; the others are
+  listed in [abaplint_roadmap.md](abaplint_roadmap.md), "Syntax checks to move out of the compiler"
 - parentheses around a single data object (2026-11-26): `( c )` is the data object `c`, not an arithmetic
   expression, in moves and comparisons. Before, it was calculated, so `n = ( c )` and `( c ) = i` could give another
   result, and `( c ) = c2` was refused
