@@ -357,11 +357,21 @@ from the program.
     itself (frontend, IR, emitter, value model) is not taken over as a whole: this design changes its value model,
     its refusal model (build time instead of run time) and its closure model (one root). Its parts are ported one
     by one under the next decision.
-  - *Why not a fork (2026-11-25):* building abap2go on gogen as a base was weighed again. There is no route to send
-    changes upstream, so a base would be a hard fork: one snapshot of a frontend of about 46,000 lines, owned from
-    then on and drifting from an upstream that changes daily. The parts where this design differs (the generic
-    rules, build-time refusal, the value model) are the core of that frontend and runtime, and every part taken over
-    has to meet the guiding principle anyway. Porting part by part gets most of the same work without that.
+  - *Why not a fork (2026-11-25, revised 2026-11-27):* building abap2go on gogen as a base was weighed again. The
+    two projects aim at different things: open-steamgate at coverage, running as much existing ABAP as it can and
+    refusing the rest at run time; abap2go at precision and speed. The parts where this design differs (the generic
+    rules, build-time refusal, the value model, one root per compilation) are the core of gogen's frontend and
+    runtime, not an option it could add. A base would therefore be a hard fork: one snapshot of a frontend of about
+    46,000 lines, owned from then on and drifting from an upstream that changes daily. Every part taken over has to
+    meet the guiding principle anyway, and porting part by part gets most of the same work without that.
+    *Superseded:* the 2026-11-25 version also said there was no route to send changes upstream. Reports and
+    fixes do reach open-steamgate now ([#1012](https://github.com/oisee/open-steamgate/issues/1012) was answered
+    with a fix), so that reason is gone; the decision stands on the difference in aims.
+  - *Upstream where the aims overlap (2026-11-27):* correctness bugs found while porting go to open-steamgate as
+    issues with a minimal reproducer, and fixes that help its coverage or speed as they are (keyed tables, the cost
+    of `p`, the environment pieces taken over) are offered as PRs. A strict mode inside open-steamgate is not
+    proposed: it would be a second meaning of ABAP in a project whose aim is coverage, so precision stays
+    abap2go's own and nothing here waits on an answer from upstream.
 
 - **Reuse open-steamgate as far as the guiding principle allows (2026-11-25).** Before building something, look
   at how open-steamgate (MIT) does it, and take its code, its rules and its test cases where they fit. What is
