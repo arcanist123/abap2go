@@ -142,8 +142,11 @@ describes.
 
 Nothing in abaplint blocks the compiler's current scope (2026-11-26), so the compiler's own work comes next
 ([compiler_roadmap.md](compiler_roadmap.md), "Next"). Open abaplint issues beyond that scope wait for the compiler step
-that needs them (see "Later"). Alongside: keep the patch current, and send up the waiting PRs as
-[PR #4741](https://github.com/abaplint/abaplint/pull/4741), which four changes wait for, and then
+that needs them (see "Later"). The first of those steps is next in line: before the compiler compiles `IS INITIAL`,
+`IN` and the string, byte and bit operators, take their operand checks
+([#4799](https://github.com/abaplint/abaplint/issues/4799) to
+[#4802](https://github.com/abaplint/abaplint/issues/4802), see "Later"). Alongside: keep the patch current, and send up
+the waiting PRs as [PR #4741](https://github.com/abaplint/abaplint/pull/4741), which four changes wait for, and then
 [PR #4761](https://github.com/abaplint/abaplint/pull/4761) are merged.
 
 Valid code rejected: nothing open that abap2go has run into. The last case, a static offset or length beyond a `c` or
@@ -234,6 +237,11 @@ merged, rebase it onto `main` (which drops the #4741 commit) and mark it ready. 
 "When a waiting PR goes up", #2 once #1 is merged, and #3 once #2 is merged. #4768 only says "part of #4749", so the
 upstream PR from #3 says `closes #4749`.
 
+[#4799](https://github.com/abaplint/abaplint/issues/4799) to
+[#4802](https://github.com/abaplint/abaplint/issues/4802) change `compare.ts` too, which #4741, #4761 and
+arcanist123/abaplint#3 change, so by the rules above their fixes are waiting PRs on the end of this chain, based on
+`comparison-argument-parentheses-4749`.
+
 ### Syntax checks to move out of the compiler
 
 The compiler still has syntax checks of its own, from before the decision that it does not reimplement the syntax
@@ -300,6 +308,10 @@ Invalid ABAP that abaplint accepts:
 
 | Issue | What | Pick up with |
 |---|---|---|
+| [#4799](https://github.com/abaplint/abaplint/issues/4799) | operands of `CO`, `CN`, `CA`, `NA`, `NS`, `CP`, `NP` that are not character-like (`i CO c`, `c CP 5`) are accepted: only `CS` checks its operand types, and lets a structure with a `string` component through. A numeric built-in function on the right is expected to pass the syntax check, while `c CS strlen( s )` is reported today; the compiler is to refuse that form ([spec/comparison.md](spec/comparison.md), "Open points") | predicates and operators |
+| [#4800](https://github.com/abaplint/abaplint/issues/4800) | operands of `BYTE-…`, `O`, `Z` and `M` that are not byte-like (`c BYTE-CO x`, `x O '01'`) are accepted: no operand check. The same exception for a numeric built-in function on the right | predicates and operators |
+| [#4801](https://github.com/abaplint/abaplint/issues/4801) | `IN` with a right operand that is not a ranges table (`i IN c`, another line type, `( r )`, `VALUE #( )`), and an arithmetic expression before a table with a character-like `low`, are accepted | predicates and operators, `IN` once ranges tables are compiled |
+| [#4802](https://github.com/abaplint/abaplint/issues/4802) | an arithmetic, string or bit expression, a string template, `count( )`, `find( )`, `distance( )` and a function of a function before `IS INITIAL` are accepted; built-in functions with a character-like result are already reported | predicates and operators |
 | [#4712](https://github.com/abaplint/abaplint/issues/4712) | the literal of a `VALUE` addition that does not convert to a numeric type (`DATA i TYPE i VALUE 'abc'.`, a number outside the range) is accepted. A move of such a literal (`i = 'abc'.`) is expected to give only a warning: valid code, the conversion fails at run time | `CONSTANTS` and `DATA … VALUE` with static operands |
 | [#4642](https://github.com/abaplint/abaplint/issues/4642) | an assignment between flat structures with non-matching fragment views is accepted | structure assignments |
 | [#4772](https://github.com/abaplint/abaplint/issues/4772) | parentheses around an actual parameter of a method are accepted when the formal parameter is character-like, a date, a table or of type `data`; with a numeric parameter they are valid | method calls with parameters |
