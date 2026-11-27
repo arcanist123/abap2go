@@ -260,6 +260,13 @@ Then:
   other operands (`sy-index` and number literals included) are rewritten to `WRITE |{ x }|`, which changes their
   expected output. `abap.Format` and [spec/write.md](spec/write.md) stay in the runtime only as far as the string
   templates reuse them
+- [ ] special values ([spec/special_values.md](spec/special_values.md), "Implementation"): a decfloat value that
+  holds infinities and NaN, the sign of a NaN set by the runtime, the cells of the `special_*.tsv` files run by the
+  tests, and the comparisons of a statically typed `f` pair, other data objects and arithmetic operands told apart.
+  Then `SPECIAL_VALUE_NOT_SUPPORTED` goes, with its exception in [aot_for_abap.md](aot_for_abap.md). Decide first
+  how an executable ends where ABAP is expected to raise an internal runtime error (`MOD` of two decimal infinities)
+  or not to finish (`ipow( )` with base 1 and an infinite `f` exponent). The cells of string templates follow with
+  string templates
 - [ ] `out->write( )` of structures and tables (open-steamgate's format: a structure as one
   `field: value, field: value` line, a table as a header row and tab-separated rows)
 - [ ] the cells of `conversion_target.tsv` and `conversion_edges.tsv` end to end through `TRY … CATCH`, as the
@@ -323,6 +330,11 @@ Done:
   the fitted text of a decfloat in n), every other cell keeps its target. 2,217 cells over all sources and targets
   (`conversion_target.tsv`) and 2,102 more cells at the edges of the integer, p and n targets
   (`conversion_edges.tsv`); `abap.Convert` and `abap.Calculate` return the value with the exception
+- special values, [spec/special_values.md](spec/special_values.md) (2026-11-27): what the conversions, arithmetic,
+  functions, comparisons, string templates, `CASE`, `DO` and subfields do with an `f` holding `+Inf`, `-Inf` or NaN
+  and a decimal floating point number holding an infinity or a NaN; 8,407 cells (`special_*.tsv`, specified, not
+  run by the tests yet). Open: `SORT` and table statements, parameters, Open SQL, `out->write( )`, the other
+  built-in functions. The implementation is under "The compiler", "Next"
 
 What the tables have to settle, by example: the issues raised in abaplint/transpiler from #2019 on are one-off
 findings of exactly these rules. Of 73, 57 fall inside the four tables or the structure rules (conversion 17,
@@ -332,11 +344,6 @@ value and context), not one issue at a time; the snippets of those issues and PR
 whose expected behaviour contradicts a spec is reopened there.
 
 Next:
-- [ ] special values left after an exception: what string templates, the conversions, comparisons and arithmetic
-  do with an f holding `+Inf`, `-Inf` or NaN and a decfloat16 holding an infinity; the runtime keeps a decfloat16
-  target instead of storing an infinity until its decfloat value can hold one. `TRY` came first (2026-11-26), so where a
-  `TRY` could read such a target the program ends with the run-time error `SPECIAL_VALUE_NOT_SUPPORTED`, listed
-  as an exception in [aot_for_abap.md](aot_for_abap.md); closing this gap removes it
 - [ ] the rest of the comparison table: the string and byte operators (`CO`, `CN`, `CA`, `NA`, `CS`, `NS`, `CP`,
   `NP`, `BYTE-…`, `O`, `Z`, `M`), predicate expressions (`IS INITIAL`, `IS ASSIGNED`, `IN` ranges), structures,
   internal tables and references, and the comparisons inside statements (`READ TABLE … WITH KEY`, table keys,

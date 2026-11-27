@@ -1,0 +1,3903 @@
+# Logical expressions and statements that read a special value, with statically typed operands, see
+# docs/spec/special_values.md. Not run by the tests yet. Columns as in comparison_expr.tsv: expression or
+# statement, operands name=type[value], expected: T or F, EXC:<class>, passes:<number of loop passes> for DO, or
+# the content of r. Special values are written as in special_conversion.tsv.
+a = b	a=f[@NaN] b=f[0]	F
+a <> b	a=f[@NaN] b=f[0]	T
+a < b	a=f[@NaN] b=f[0]	F
+a > b	a=f[@NaN] b=f[0]	T
+a <= b	a=f[@NaN] b=f[0]	F
+a >= b	a=f[@NaN] b=f[0]	T
+a = b	a=f[0] b=f[@NaN]	F
+a <> b	a=f[0] b=f[@NaN]	T
+a < b	a=f[0] b=f[@NaN]	F
+a > b	a=f[0] b=f[@NaN]	T
+a <= b	a=f[0] b=f[@NaN]	F
+a >= b	a=f[0] b=f[@NaN]	T
+a = b	a=f[@NaN] b=f[@NaN]	F
+a <> b	a=f[@NaN] b=f[@NaN]	T
+a < b	a=f[@NaN] b=f[@NaN]	F
+a > b	a=f[@NaN] b=f[@NaN]	T
+a <= b	a=f[@NaN] b=f[@NaN]	F
+a >= b	a=f[@NaN] b=f[@NaN]	T
+a = b	a=f[@NaN] b=f[@-NaN]	F
+a <> b	a=f[@NaN] b=f[@-NaN]	T
+a < b	a=f[@NaN] b=f[@-NaN]	F
+a > b	a=f[@NaN] b=f[@-NaN]	T
+a <= b	a=f[@NaN] b=f[@-NaN]	F
+a >= b	a=f[@NaN] b=f[@-NaN]	T
+a = b	a=f[@-NaN] b=f[@NaN]	F
+a <> b	a=f[@-NaN] b=f[@NaN]	T
+a < b	a=f[@-NaN] b=f[@NaN]	F
+a > b	a=f[@-NaN] b=f[@NaN]	T
+a <= b	a=f[@-NaN] b=f[@NaN]	F
+a >= b	a=f[@-NaN] b=f[@NaN]	T
+a = b	a=f[@NaN] b=f[@+Inf]	F
+a <> b	a=f[@NaN] b=f[@+Inf]	T
+a < b	a=f[@NaN] b=f[@+Inf]	F
+a > b	a=f[@NaN] b=f[@+Inf]	T
+a <= b	a=f[@NaN] b=f[@+Inf]	F
+a >= b	a=f[@NaN] b=f[@+Inf]	T
+a = b	a=f[@+Inf] b=f[@NaN]	F
+a <> b	a=f[@+Inf] b=f[@NaN]	T
+a < b	a=f[@+Inf] b=f[@NaN]	F
+a > b	a=f[@+Inf] b=f[@NaN]	T
+a <= b	a=f[@+Inf] b=f[@NaN]	F
+a >= b	a=f[@+Inf] b=f[@NaN]	T
+a = b	a=f[@NaN] b=f[@-Inf]	F
+a <> b	a=f[@NaN] b=f[@-Inf]	T
+a < b	a=f[@NaN] b=f[@-Inf]	F
+a > b	a=f[@NaN] b=f[@-Inf]	T
+a <= b	a=f[@NaN] b=f[@-Inf]	F
+a >= b	a=f[@NaN] b=f[@-Inf]	T
+a = b	a=f[@-Inf] b=f[@NaN]	F
+a <> b	a=f[@-Inf] b=f[@NaN]	T
+a < b	a=f[@-Inf] b=f[@NaN]	F
+a > b	a=f[@-Inf] b=f[@NaN]	T
+a <= b	a=f[@-Inf] b=f[@NaN]	F
+a >= b	a=f[@-Inf] b=f[@NaN]	T
+a = 0	a=f[@NaN]	F
+a <> 0	a=f[@NaN]	T
+a < 0	a=f[@NaN]	T
+a > 0	a=f[@NaN]	F
+a <= 0	a=f[@NaN]	T
+a >= 0	a=f[@NaN]	F
+0 = a	a=f[@NaN]	F
+0 <> a	a=f[@NaN]	T
+0 < a	a=f[@NaN]	T
+0 > a	a=f[@NaN]	F
+0 <= a	a=f[@NaN]	T
+0 >= a	a=f[@NaN]	F
+a + a = a	a=f[@NaN]	F
+a + a < a	a=f[@NaN]	T
+a + a > a	a=f[@NaN]	F
+a * 1 <> a	a=f[@NaN]	T
+a = b	a=f[@-NaN] b=f[0]	F
+a <> b	a=f[@-NaN] b=f[0]	T
+a < b	a=f[@-NaN] b=f[0]	F
+a > b	a=f[@-NaN] b=f[0]	T
+a <= b	a=f[@-NaN] b=f[0]	F
+a >= b	a=f[@-NaN] b=f[0]	T
+a = b	a=f[0] b=f[@-NaN]	F
+a <> b	a=f[0] b=f[@-NaN]	T
+a < b	a=f[0] b=f[@-NaN]	F
+a > b	a=f[0] b=f[@-NaN]	T
+a <= b	a=f[0] b=f[@-NaN]	F
+a >= b	a=f[0] b=f[@-NaN]	T
+a = b	a=f[@-NaN] b=f[@-NaN]	F
+a <> b	a=f[@-NaN] b=f[@-NaN]	T
+a < b	a=f[@-NaN] b=f[@-NaN]	F
+a > b	a=f[@-NaN] b=f[@-NaN]	T
+a <= b	a=f[@-NaN] b=f[@-NaN]	F
+a >= b	a=f[@-NaN] b=f[@-NaN]	T
+a = b	a=f[@-NaN] b=f[@+Inf]	F
+a <> b	a=f[@-NaN] b=f[@+Inf]	T
+a < b	a=f[@-NaN] b=f[@+Inf]	F
+a > b	a=f[@-NaN] b=f[@+Inf]	T
+a <= b	a=f[@-NaN] b=f[@+Inf]	F
+a >= b	a=f[@-NaN] b=f[@+Inf]	T
+a = b	a=f[@+Inf] b=f[@-NaN]	F
+a <> b	a=f[@+Inf] b=f[@-NaN]	T
+a < b	a=f[@+Inf] b=f[@-NaN]	F
+a > b	a=f[@+Inf] b=f[@-NaN]	T
+a <= b	a=f[@+Inf] b=f[@-NaN]	F
+a >= b	a=f[@+Inf] b=f[@-NaN]	T
+a = b	a=f[@-NaN] b=f[@-Inf]	F
+a <> b	a=f[@-NaN] b=f[@-Inf]	T
+a < b	a=f[@-NaN] b=f[@-Inf]	F
+a > b	a=f[@-NaN] b=f[@-Inf]	T
+a <= b	a=f[@-NaN] b=f[@-Inf]	F
+a >= b	a=f[@-NaN] b=f[@-Inf]	T
+a = b	a=f[@-Inf] b=f[@-NaN]	F
+a <> b	a=f[@-Inf] b=f[@-NaN]	T
+a < b	a=f[@-Inf] b=f[@-NaN]	F
+a > b	a=f[@-Inf] b=f[@-NaN]	T
+a <= b	a=f[@-Inf] b=f[@-NaN]	F
+a >= b	a=f[@-Inf] b=f[@-NaN]	T
+a = 0	a=f[@-NaN]	F
+a <> 0	a=f[@-NaN]	T
+a < 0	a=f[@-NaN]	T
+a > 0	a=f[@-NaN]	F
+a <= 0	a=f[@-NaN]	T
+a >= 0	a=f[@-NaN]	F
+0 = a	a=f[@-NaN]	F
+0 <> a	a=f[@-NaN]	T
+0 < a	a=f[@-NaN]	T
+0 > a	a=f[@-NaN]	F
+0 <= a	a=f[@-NaN]	T
+0 >= a	a=f[@-NaN]	F
+a + a = a	a=f[@-NaN]	F
+a + a < a	a=f[@-NaN]	T
+a + a > a	a=f[@-NaN]	F
+a * 1 <> a	a=f[@-NaN]	T
+a = 0	a=decfloat34[@NaN]	T
+a <> 0	a=decfloat34[@NaN]	F
+a < 0	a=decfloat34[@NaN]	F
+a > 0	a=decfloat34[@NaN]	F
+a <= 0	a=decfloat34[@NaN]	T
+a >= 0	a=decfloat34[@NaN]	T
+0 = a	a=decfloat34[@NaN]	T
+0 <> a	a=decfloat34[@NaN]	F
+0 < a	a=decfloat34[@NaN]	F
+0 > a	a=decfloat34[@NaN]	F
+0 <= a	a=decfloat34[@NaN]	T
+0 >= a	a=decfloat34[@NaN]	T
+a + a = a	a=decfloat34[@NaN]	T
+a + a < a	a=decfloat34[@NaN]	F
+a + a > a	a=decfloat34[@NaN]	F
+a * 1 <> a	a=decfloat34[@NaN]	F
+a = 0	a=decfloat34[@-NaN]	T
+a <> 0	a=decfloat34[@-NaN]	F
+a < 0	a=decfloat34[@-NaN]	F
+a > 0	a=decfloat34[@-NaN]	F
+a <= 0	a=decfloat34[@-NaN]	T
+a >= 0	a=decfloat34[@-NaN]	T
+0 = a	a=decfloat34[@-NaN]	T
+0 <> a	a=decfloat34[@-NaN]	F
+0 < a	a=decfloat34[@-NaN]	F
+0 > a	a=decfloat34[@-NaN]	F
+0 <= a	a=decfloat34[@-NaN]	T
+0 >= a	a=decfloat34[@-NaN]	T
+a + a = a	a=decfloat34[@-NaN]	T
+a + a < a	a=decfloat34[@-NaN]	F
+a + a > a	a=decfloat34[@-NaN]	F
+a * 1 <> a	a=decfloat34[@-NaN]	F
+a = 0	a=decfloat16[@-NaN]	T
+a <> 0	a=decfloat16[@-NaN]	F
+a < 0	a=decfloat16[@-NaN]	F
+a > 0	a=decfloat16[@-NaN]	F
+a <= 0	a=decfloat16[@-NaN]	T
+a >= 0	a=decfloat16[@-NaN]	T
+0 = a	a=decfloat16[@-NaN]	T
+0 <> a	a=decfloat16[@-NaN]	F
+0 < a	a=decfloat16[@-NaN]	F
+0 > a	a=decfloat16[@-NaN]	F
+0 <= a	a=decfloat16[@-NaN]	T
+0 >= a	a=decfloat16[@-NaN]	T
+a + a = a	a=decfloat16[@-NaN]	T
+a + a < a	a=decfloat16[@-NaN]	F
+a + a > a	a=decfloat16[@-NaN]	F
+a * 1 <> a	a=decfloat16[@-NaN]	F
+a = a	a=f[@+Inf]	T
+a <> a	a=f[@+Inf]	F
+a < a	a=f[@+Inf]	F
+a > a	a=f[@+Inf]	F
+a <= a	a=f[@+Inf]	T
+a >= a	a=f[@+Inf]	T
+a IS INITIAL	a=f[@+Inf]	F
+a IS NOT INITIAL	a=f[@+Inf]	T
+a BETWEEN 0 AND 1	a=f[@+Inf]	F
+0 BETWEEN a AND 1	a=f[@+Inf]	F
+0 BETWEEN -1 AND a	a=f[@+Inf]	T
+a BETWEEN a AND a	a=f[@+Inf]	T
+1 BETWEEN 2 AND a	a=f[@+Inf]	F
+a NOT BETWEEN 0 AND 1	a=f[@+Inf]	T
+NOT a = 0	a=f[@+Inf]	T
+a + 0 = 0	a=f[@+Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a + 0 <> 0	a=f[@+Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a + 0 < 0	a=f[@+Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a + 0 > 0	a=f[@+Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a + 0 = a	a=f[@+Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a = a + 0	a=f[@+Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+- a = a	a=f[@+Inf]	F
+abs( a ) = a	a=f[@+Inf]	T
+abs( a ) > 0	a=f[@+Inf]	T
+abs( a ) = 0	a=f[@+Inf]	F
+sqrt( a ) = a	a=f[@+Inf]	T
+sqrt( a ) > 0	a=f[@+Inf]	T
+( a ) = a	a=f[@+Inf]	T
+CASE a. WHEN b.	a=f[@+Inf] b=i[0]	F
+CASE b. WHEN a.	a=f[@+Inf] b=i[0]	F
+CASE a. WHEN b.	a=f[@+Inf] b=i[-2147483648]	F
+CASE b. WHEN a.	a=f[@+Inf] b=i[-2147483648]	F
+CASE a. WHEN b.	a=f[@+Inf] b=f[0]	F
+CASE b. WHEN a.	a=f[@+Inf] b=f[0]	F
+CASE a. WHEN b.	a=f[@+Inf] b=decfloat34[0]	F
+CASE b. WHEN a.	a=f[@+Inf] b=decfloat34[0]	F
+CASE a. WHEN b.	a=f[@+Inf] b=string[1]	F
+CASE b. WHEN a.	a=f[@+Inf] b=string[1]	F
+CASE a. WHEN b.	a=f[@+Inf] b=f[@+Inf]	T
+CASE b. WHEN a.	a=f[@+Inf] b=f[@+Inf]	T
+DO a TIMES.	a=f[@+Inf]	passes:0
+r = c+a. (c TYPE c LENGTH 5 VALUE 'abcde')	a=f[@+Inf]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+r = c(a). (c TYPE c LENGTH 5 VALUE 'abcde')	a=f[@+Inf]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+a = a	a=f[@-Inf]	T
+a <> a	a=f[@-Inf]	F
+a < a	a=f[@-Inf]	F
+a > a	a=f[@-Inf]	F
+a <= a	a=f[@-Inf]	T
+a >= a	a=f[@-Inf]	T
+a IS INITIAL	a=f[@-Inf]	F
+a IS NOT INITIAL	a=f[@-Inf]	T
+a BETWEEN 0 AND 1	a=f[@-Inf]	F
+0 BETWEEN a AND 1	a=f[@-Inf]	T
+0 BETWEEN -1 AND a	a=f[@-Inf]	F
+a BETWEEN a AND a	a=f[@-Inf]	T
+1 BETWEEN 2 AND a	a=f[@-Inf]	F
+a NOT BETWEEN 0 AND 1	a=f[@-Inf]	T
+NOT a = 0	a=f[@-Inf]	T
+a + 0 = 0	a=f[@-Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a + 0 <> 0	a=f[@-Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a + 0 < 0	a=f[@-Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a + 0 > 0	a=f[@-Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a + 0 = a	a=f[@-Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a = a + 0	a=f[@-Inf]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+- a = a	a=f[@-Inf]	F
+abs( a ) = a	a=f[@-Inf]	F
+abs( a ) > 0	a=f[@-Inf]	T
+abs( a ) = 0	a=f[@-Inf]	F
+sqrt( a ) = a	a=f[@-Inf]	EXC:CX_SY_ARG_OUT_OF_DOMAIN
+sqrt( a ) > 0	a=f[@-Inf]	EXC:CX_SY_ARG_OUT_OF_DOMAIN
+( a ) = a	a=f[@-Inf]	T
+CASE a. WHEN b.	a=f[@-Inf] b=i[0]	F
+CASE b. WHEN a.	a=f[@-Inf] b=i[0]	F
+CASE a. WHEN b.	a=f[@-Inf] b=i[-2147483648]	F
+CASE b. WHEN a.	a=f[@-Inf] b=i[-2147483648]	F
+CASE a. WHEN b.	a=f[@-Inf] b=f[0]	F
+CASE b. WHEN a.	a=f[@-Inf] b=f[0]	F
+CASE a. WHEN b.	a=f[@-Inf] b=decfloat34[0]	F
+CASE b. WHEN a.	a=f[@-Inf] b=decfloat34[0]	F
+CASE a. WHEN b.	a=f[@-Inf] b=string[1]	F
+CASE b. WHEN a.	a=f[@-Inf] b=string[1]	F
+CASE a. WHEN b.	a=f[@-Inf] b=f[@-Inf]	T
+CASE b. WHEN a.	a=f[@-Inf] b=f[@-Inf]	T
+DO a TIMES.	a=f[@-Inf]	passes:0
+r = c+a. (c TYPE c LENGTH 5 VALUE 'abcde')	a=f[@-Inf]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+r = c(a). (c TYPE c LENGTH 5 VALUE 'abcde')	a=f[@-Inf]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+a = a	a=f[@NaN]	F
+a <> a	a=f[@NaN]	T
+a < a	a=f[@NaN]	F
+a > a	a=f[@NaN]	T
+a <= a	a=f[@NaN]	F
+a >= a	a=f[@NaN]	T
+a IS INITIAL	a=f[@NaN]	F
+a IS NOT INITIAL	a=f[@NaN]	T
+a BETWEEN 0 AND 1	a=f[@NaN]	F
+0 BETWEEN a AND 1	a=f[@NaN]	F
+0 BETWEEN -1 AND a	a=f[@NaN]	T
+a BETWEEN a AND a	a=f[@NaN]	F
+1 BETWEEN 2 AND a	a=f[@NaN]	F
+a NOT BETWEEN 0 AND 1	a=f[@NaN]	T
+NOT a = 0	a=f[@NaN]	T
+a + 0 = 0	a=f[@NaN]	F
+a + 0 <> 0	a=f[@NaN]	T
+a + 0 < 0	a=f[@NaN]	T
+a + 0 > 0	a=f[@NaN]	F
+a + 0 = a	a=f[@NaN]	F
+a = a + 0	a=f[@NaN]	F
+- a = a	a=f[@NaN]	F
+abs( a ) = a	a=f[@NaN]	F
+abs( a ) > 0	a=f[@NaN]	F
+abs( a ) = 0	a=f[@NaN]	F
+sqrt( a ) = a	a=f[@NaN]	F
+sqrt( a ) > 0	a=f[@NaN]	F
+( a ) = a	a=f[@NaN]	F
+CASE a. WHEN b.	a=f[@NaN] b=i[0]	F
+CASE b. WHEN a.	a=f[@NaN] b=i[0]	F
+CASE a. WHEN b.	a=f[@NaN] b=i[-2147483648]	F
+CASE b. WHEN a.	a=f[@NaN] b=i[-2147483648]	F
+CASE a. WHEN b.	a=f[@NaN] b=f[0]	F
+CASE b. WHEN a.	a=f[@NaN] b=f[0]	F
+CASE a. WHEN b.	a=f[@NaN] b=decfloat34[0]	T
+CASE b. WHEN a.	a=f[@NaN] b=decfloat34[0]	T
+CASE a. WHEN b.	a=f[@NaN] b=string[1]	F
+CASE b. WHEN a.	a=f[@NaN] b=string[1]	F
+CASE a. WHEN b.	a=f[@NaN] b=f[@NaN]	F
+CASE b. WHEN a.	a=f[@NaN] b=f[@NaN]	F
+DO a TIMES.	a=f[@NaN]	passes:0
+r = c+a. (c TYPE c LENGTH 5 VALUE 'abcde')	a=f[@NaN]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+r = c(a). (c TYPE c LENGTH 5 VALUE 'abcde')	a=f[@NaN]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+a = a	a=decfloat16[@+Inf]	T
+a <> a	a=decfloat16[@+Inf]	F
+a < a	a=decfloat16[@+Inf]	F
+a > a	a=decfloat16[@+Inf]	F
+a <= a	a=decfloat16[@+Inf]	T
+a >= a	a=decfloat16[@+Inf]	T
+a IS INITIAL	a=decfloat16[@+Inf]	F
+a IS NOT INITIAL	a=decfloat16[@+Inf]	T
+a BETWEEN 0 AND 1	a=decfloat16[@+Inf]	F
+0 BETWEEN a AND 1	a=decfloat16[@+Inf]	F
+0 BETWEEN -1 AND a	a=decfloat16[@+Inf]	T
+a BETWEEN a AND a	a=decfloat16[@+Inf]	T
+1 BETWEEN 2 AND a	a=decfloat16[@+Inf]	F
+a NOT BETWEEN 0 AND 1	a=decfloat16[@+Inf]	T
+NOT a = 0	a=decfloat16[@+Inf]	T
+a + 0 = 0	a=decfloat16[@+Inf]	F
+a + 0 <> 0	a=decfloat16[@+Inf]	T
+a + 0 < 0	a=decfloat16[@+Inf]	F
+a + 0 > 0	a=decfloat16[@+Inf]	T
+a + 0 = a	a=decfloat16[@+Inf]	T
+a = a + 0	a=decfloat16[@+Inf]	T
+- a = a	a=decfloat16[@+Inf]	F
+abs( a ) = a	a=decfloat16[@+Inf]	T
+abs( a ) > 0	a=decfloat16[@+Inf]	T
+abs( a ) = 0	a=decfloat16[@+Inf]	F
+sqrt( a ) = a	a=decfloat16[@+Inf]	T
+sqrt( a ) > 0	a=decfloat16[@+Inf]	T
+( a ) = a	a=decfloat16[@+Inf]	T
+CASE a. WHEN b.	a=decfloat16[@+Inf] b=i[0]	F
+CASE b. WHEN a.	a=decfloat16[@+Inf] b=i[0]	F
+CASE a. WHEN b.	a=decfloat16[@+Inf] b=i[-2147483648]	F
+CASE b. WHEN a.	a=decfloat16[@+Inf] b=i[-2147483648]	F
+CASE a. WHEN b.	a=decfloat16[@+Inf] b=f[0]	F
+CASE b. WHEN a.	a=decfloat16[@+Inf] b=f[0]	F
+CASE a. WHEN b.	a=decfloat16[@+Inf] b=decfloat34[0]	F
+CASE b. WHEN a.	a=decfloat16[@+Inf] b=decfloat34[0]	F
+CASE a. WHEN b.	a=decfloat16[@+Inf] b=string[1]	F
+CASE b. WHEN a.	a=decfloat16[@+Inf] b=string[1]	F
+CASE a. WHEN b.	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+CASE b. WHEN a.	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+DO a TIMES.	a=decfloat16[@+Inf]	passes:0
+r = c+a. (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat16[@+Inf]	[abcde]
+r = c(a). (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat16[@+Inf]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+a = a	a=decfloat16[@-Inf]	T
+a <> a	a=decfloat16[@-Inf]	F
+a < a	a=decfloat16[@-Inf]	F
+a > a	a=decfloat16[@-Inf]	F
+a <= a	a=decfloat16[@-Inf]	T
+a >= a	a=decfloat16[@-Inf]	T
+a IS INITIAL	a=decfloat16[@-Inf]	F
+a IS NOT INITIAL	a=decfloat16[@-Inf]	T
+a BETWEEN 0 AND 1	a=decfloat16[@-Inf]	F
+0 BETWEEN a AND 1	a=decfloat16[@-Inf]	T
+0 BETWEEN -1 AND a	a=decfloat16[@-Inf]	F
+a BETWEEN a AND a	a=decfloat16[@-Inf]	T
+1 BETWEEN 2 AND a	a=decfloat16[@-Inf]	F
+a NOT BETWEEN 0 AND 1	a=decfloat16[@-Inf]	T
+NOT a = 0	a=decfloat16[@-Inf]	T
+a + 0 = 0	a=decfloat16[@-Inf]	F
+a + 0 <> 0	a=decfloat16[@-Inf]	T
+a + 0 < 0	a=decfloat16[@-Inf]	T
+a + 0 > 0	a=decfloat16[@-Inf]	F
+a + 0 = a	a=decfloat16[@-Inf]	T
+a = a + 0	a=decfloat16[@-Inf]	T
+- a = a	a=decfloat16[@-Inf]	F
+abs( a ) = a	a=decfloat16[@-Inf]	F
+abs( a ) > 0	a=decfloat16[@-Inf]	T
+abs( a ) = 0	a=decfloat16[@-Inf]	F
+sqrt( a ) = a	a=decfloat16[@-Inf]	EXC:CX_SY_ARG_OUT_OF_DOMAIN
+sqrt( a ) > 0	a=decfloat16[@-Inf]	EXC:CX_SY_ARG_OUT_OF_DOMAIN
+( a ) = a	a=decfloat16[@-Inf]	T
+CASE a. WHEN b.	a=decfloat16[@-Inf] b=i[0]	F
+CASE b. WHEN a.	a=decfloat16[@-Inf] b=i[0]	F
+CASE a. WHEN b.	a=decfloat16[@-Inf] b=i[-2147483648]	F
+CASE b. WHEN a.	a=decfloat16[@-Inf] b=i[-2147483648]	F
+CASE a. WHEN b.	a=decfloat16[@-Inf] b=f[0]	F
+CASE b. WHEN a.	a=decfloat16[@-Inf] b=f[0]	F
+CASE a. WHEN b.	a=decfloat16[@-Inf] b=decfloat34[0]	F
+CASE b. WHEN a.	a=decfloat16[@-Inf] b=decfloat34[0]	F
+CASE a. WHEN b.	a=decfloat16[@-Inf] b=string[1]	F
+CASE b. WHEN a.	a=decfloat16[@-Inf] b=string[1]	F
+CASE a. WHEN b.	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+CASE b. WHEN a.	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+DO a TIMES.	a=decfloat16[@-Inf]	passes:0
+r = c+a. (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat16[@-Inf]	[abcde]
+r = c(a). (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat16[@-Inf]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+a = a	a=decfloat16[@NaN]	T
+a <> a	a=decfloat16[@NaN]	F
+a < a	a=decfloat16[@NaN]	F
+a > a	a=decfloat16[@NaN]	F
+a <= a	a=decfloat16[@NaN]	T
+a >= a	a=decfloat16[@NaN]	T
+a IS INITIAL	a=decfloat16[@NaN]	F
+a IS NOT INITIAL	a=decfloat16[@NaN]	T
+a BETWEEN 0 AND 1	a=decfloat16[@NaN]	T
+0 BETWEEN a AND 1	a=decfloat16[@NaN]	T
+0 BETWEEN -1 AND a	a=decfloat16[@NaN]	T
+a BETWEEN a AND a	a=decfloat16[@NaN]	T
+1 BETWEEN 2 AND a	a=decfloat16[@NaN]	F
+a NOT BETWEEN 0 AND 1	a=decfloat16[@NaN]	F
+NOT a = 0	a=decfloat16[@NaN]	F
+a + 0 = 0	a=decfloat16[@NaN]	F
+a + 0 <> 0	a=decfloat16[@NaN]	T
+a + 0 < 0	a=decfloat16[@NaN]	F
+a + 0 > 0	a=decfloat16[@NaN]	T
+a + 0 = a	a=decfloat16[@NaN]	T
+a = a + 0	a=decfloat16[@NaN]	T
+- a = a	a=decfloat16[@NaN]	F
+abs( a ) = a	a=decfloat16[@NaN]	T
+abs( a ) > 0	a=decfloat16[@NaN]	F
+abs( a ) = 0	a=decfloat16[@NaN]	T
+sqrt( a ) = a	a=decfloat16[@NaN]	T
+sqrt( a ) > 0	a=decfloat16[@NaN]	F
+( a ) = a	a=decfloat16[@NaN]	T
+CASE a. WHEN b.	a=decfloat16[@NaN] b=i[0]	T
+CASE b. WHEN a.	a=decfloat16[@NaN] b=i[0]	T
+CASE a. WHEN b.	a=decfloat16[@NaN] b=i[-2147483648]	T
+CASE b. WHEN a.	a=decfloat16[@NaN] b=i[-2147483648]	T
+CASE a. WHEN b.	a=decfloat16[@NaN] b=f[0]	T
+CASE b. WHEN a.	a=decfloat16[@NaN] b=f[0]	T
+CASE a. WHEN b.	a=decfloat16[@NaN] b=decfloat34[0]	T
+CASE b. WHEN a.	a=decfloat16[@NaN] b=decfloat34[0]	T
+CASE a. WHEN b.	a=decfloat16[@NaN] b=string[1]	T
+CASE b. WHEN a.	a=decfloat16[@NaN] b=string[1]	T
+CASE a. WHEN b.	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+CASE b. WHEN a.	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+DO a TIMES.	a=decfloat16[@NaN]	passes:0
+r = c+a. (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat16[@NaN]	[abcde]
+r = c(a). (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat16[@NaN]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+a = a	a=decfloat34[@+Inf]	T
+a <> a	a=decfloat34[@+Inf]	F
+a < a	a=decfloat34[@+Inf]	F
+a > a	a=decfloat34[@+Inf]	F
+a <= a	a=decfloat34[@+Inf]	T
+a >= a	a=decfloat34[@+Inf]	T
+a IS INITIAL	a=decfloat34[@+Inf]	F
+a IS NOT INITIAL	a=decfloat34[@+Inf]	T
+a BETWEEN 0 AND 1	a=decfloat34[@+Inf]	F
+0 BETWEEN a AND 1	a=decfloat34[@+Inf]	F
+0 BETWEEN -1 AND a	a=decfloat34[@+Inf]	T
+a BETWEEN a AND a	a=decfloat34[@+Inf]	T
+1 BETWEEN 2 AND a	a=decfloat34[@+Inf]	F
+a NOT BETWEEN 0 AND 1	a=decfloat34[@+Inf]	T
+NOT a = 0	a=decfloat34[@+Inf]	T
+a + 0 = 0	a=decfloat34[@+Inf]	F
+a + 0 <> 0	a=decfloat34[@+Inf]	T
+a + 0 < 0	a=decfloat34[@+Inf]	F
+a + 0 > 0	a=decfloat34[@+Inf]	T
+a + 0 = a	a=decfloat34[@+Inf]	T
+a = a + 0	a=decfloat34[@+Inf]	T
+- a = a	a=decfloat34[@+Inf]	F
+abs( a ) = a	a=decfloat34[@+Inf]	T
+abs( a ) > 0	a=decfloat34[@+Inf]	T
+abs( a ) = 0	a=decfloat34[@+Inf]	F
+sqrt( a ) = a	a=decfloat34[@+Inf]	T
+sqrt( a ) > 0	a=decfloat34[@+Inf]	T
+( a ) = a	a=decfloat34[@+Inf]	T
+CASE a. WHEN b.	a=decfloat34[@+Inf] b=i[0]	F
+CASE b. WHEN a.	a=decfloat34[@+Inf] b=i[0]	F
+CASE a. WHEN b.	a=decfloat34[@+Inf] b=i[-2147483648]	F
+CASE b. WHEN a.	a=decfloat34[@+Inf] b=i[-2147483648]	F
+CASE a. WHEN b.	a=decfloat34[@+Inf] b=f[0]	F
+CASE b. WHEN a.	a=decfloat34[@+Inf] b=f[0]	F
+CASE a. WHEN b.	a=decfloat34[@+Inf] b=decfloat34[0]	F
+CASE b. WHEN a.	a=decfloat34[@+Inf] b=decfloat34[0]	F
+CASE a. WHEN b.	a=decfloat34[@+Inf] b=string[1]	F
+CASE b. WHEN a.	a=decfloat34[@+Inf] b=string[1]	F
+CASE a. WHEN b.	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+CASE b. WHEN a.	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+DO a TIMES.	a=decfloat34[@+Inf]	passes:0
+r = c+a. (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat34[@+Inf]	[abcde]
+r = c(a). (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat34[@+Inf]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+a = a	a=decfloat34[@-Inf]	T
+a <> a	a=decfloat34[@-Inf]	F
+a < a	a=decfloat34[@-Inf]	F
+a > a	a=decfloat34[@-Inf]	F
+a <= a	a=decfloat34[@-Inf]	T
+a >= a	a=decfloat34[@-Inf]	T
+a IS INITIAL	a=decfloat34[@-Inf]	F
+a IS NOT INITIAL	a=decfloat34[@-Inf]	T
+a BETWEEN 0 AND 1	a=decfloat34[@-Inf]	F
+0 BETWEEN a AND 1	a=decfloat34[@-Inf]	T
+0 BETWEEN -1 AND a	a=decfloat34[@-Inf]	F
+a BETWEEN a AND a	a=decfloat34[@-Inf]	T
+1 BETWEEN 2 AND a	a=decfloat34[@-Inf]	F
+a NOT BETWEEN 0 AND 1	a=decfloat34[@-Inf]	T
+NOT a = 0	a=decfloat34[@-Inf]	T
+a + 0 = 0	a=decfloat34[@-Inf]	F
+a + 0 <> 0	a=decfloat34[@-Inf]	T
+a + 0 < 0	a=decfloat34[@-Inf]	T
+a + 0 > 0	a=decfloat34[@-Inf]	F
+a + 0 = a	a=decfloat34[@-Inf]	T
+a = a + 0	a=decfloat34[@-Inf]	T
+- a = a	a=decfloat34[@-Inf]	F
+abs( a ) = a	a=decfloat34[@-Inf]	F
+abs( a ) > 0	a=decfloat34[@-Inf]	T
+abs( a ) = 0	a=decfloat34[@-Inf]	F
+sqrt( a ) = a	a=decfloat34[@-Inf]	EXC:CX_SY_ARG_OUT_OF_DOMAIN
+sqrt( a ) > 0	a=decfloat34[@-Inf]	EXC:CX_SY_ARG_OUT_OF_DOMAIN
+( a ) = a	a=decfloat34[@-Inf]	T
+CASE a. WHEN b.	a=decfloat34[@-Inf] b=i[0]	F
+CASE b. WHEN a.	a=decfloat34[@-Inf] b=i[0]	F
+CASE a. WHEN b.	a=decfloat34[@-Inf] b=i[-2147483648]	F
+CASE b. WHEN a.	a=decfloat34[@-Inf] b=i[-2147483648]	F
+CASE a. WHEN b.	a=decfloat34[@-Inf] b=f[0]	F
+CASE b. WHEN a.	a=decfloat34[@-Inf] b=f[0]	F
+CASE a. WHEN b.	a=decfloat34[@-Inf] b=decfloat34[0]	F
+CASE b. WHEN a.	a=decfloat34[@-Inf] b=decfloat34[0]	F
+CASE a. WHEN b.	a=decfloat34[@-Inf] b=string[1]	F
+CASE b. WHEN a.	a=decfloat34[@-Inf] b=string[1]	F
+CASE a. WHEN b.	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+CASE b. WHEN a.	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+DO a TIMES.	a=decfloat34[@-Inf]	passes:0
+r = c+a. (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat34[@-Inf]	[abcde]
+r = c(a). (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat34[@-Inf]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+a = a	a=decfloat34[@NaN]	T
+a <> a	a=decfloat34[@NaN]	F
+a < a	a=decfloat34[@NaN]	F
+a > a	a=decfloat34[@NaN]	F
+a <= a	a=decfloat34[@NaN]	T
+a >= a	a=decfloat34[@NaN]	T
+a IS INITIAL	a=decfloat34[@NaN]	F
+a IS NOT INITIAL	a=decfloat34[@NaN]	T
+a BETWEEN 0 AND 1	a=decfloat34[@NaN]	T
+0 BETWEEN a AND 1	a=decfloat34[@NaN]	T
+0 BETWEEN -1 AND a	a=decfloat34[@NaN]	T
+a BETWEEN a AND a	a=decfloat34[@NaN]	T
+1 BETWEEN 2 AND a	a=decfloat34[@NaN]	F
+a NOT BETWEEN 0 AND 1	a=decfloat34[@NaN]	F
+NOT a = 0	a=decfloat34[@NaN]	F
+a + 0 = 0	a=decfloat34[@NaN]	F
+a + 0 <> 0	a=decfloat34[@NaN]	T
+a + 0 < 0	a=decfloat34[@NaN]	F
+a + 0 > 0	a=decfloat34[@NaN]	T
+a + 0 = a	a=decfloat34[@NaN]	T
+a = a + 0	a=decfloat34[@NaN]	T
+- a = a	a=decfloat34[@NaN]	F
+abs( a ) = a	a=decfloat34[@NaN]	T
+abs( a ) > 0	a=decfloat34[@NaN]	F
+abs( a ) = 0	a=decfloat34[@NaN]	T
+sqrt( a ) = a	a=decfloat34[@NaN]	T
+sqrt( a ) > 0	a=decfloat34[@NaN]	F
+( a ) = a	a=decfloat34[@NaN]	T
+CASE a. WHEN b.	a=decfloat34[@NaN] b=i[0]	T
+CASE b. WHEN a.	a=decfloat34[@NaN] b=i[0]	T
+CASE a. WHEN b.	a=decfloat34[@NaN] b=i[-2147483648]	T
+CASE b. WHEN a.	a=decfloat34[@NaN] b=i[-2147483648]	T
+CASE a. WHEN b.	a=decfloat34[@NaN] b=f[0]	T
+CASE b. WHEN a.	a=decfloat34[@NaN] b=f[0]	T
+CASE a. WHEN b.	a=decfloat34[@NaN] b=decfloat34[0]	T
+CASE b. WHEN a.	a=decfloat34[@NaN] b=decfloat34[0]	T
+CASE a. WHEN b.	a=decfloat34[@NaN] b=string[1]	T
+CASE b. WHEN a.	a=decfloat34[@NaN] b=string[1]	T
+CASE a. WHEN b.	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+CASE b. WHEN a.	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+DO a TIMES.	a=decfloat34[@NaN]	passes:0
+r = c+a. (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat34[@NaN]	[abcde]
+r = c(a). (c TYPE c LENGTH 5 VALUE 'abcde')	a=decfloat34[@NaN]	EXC:CX_SY_RANGE_OUT_OF_BOUNDS
+a + 0 > z	a=f[@NaN] z=f[0] o=f[1]	F
+a + 0 < z	a=f[@NaN] z=f[0] o=f[1]	T
+z + 0 > a	a=f[@NaN] z=f[0] o=f[1]	F
+z + 0 < a	a=f[@NaN] z=f[0] o=f[1]	T
+a > z + 0	a=f[@NaN] z=f[0] o=f[1]	F
+a < z + 0	a=f[@NaN] z=f[0] o=f[1]	T
+a > CONV f( 0 )	a=f[@NaN] z=f[0] o=f[1]	T
+a < CONV f( 0 )	a=f[@NaN] z=f[0] o=f[1]	F
+abs( a ) > z	a=f[@NaN] z=f[0] o=f[1]	F
+abs( a ) < z	a=f[@NaN] z=f[0] o=f[1]	T
+a > abs( z )	a=f[@NaN] z=f[0] o=f[1]	F
+a < abs( z )	a=f[@NaN] z=f[0] o=f[1]	T
+a BETWEEN z AND o	a=f[@NaN] z=f[0] o=f[1]	F
+z BETWEEN a AND o	a=f[@NaN] z=f[0] o=f[1]	T
+o BETWEEN z AND a	a=f[@NaN] z=f[0] o=f[1]	F
+a > '0'	a=f[@NaN] z=f[0] o=f[1]	F
+a < '0'	a=f[@NaN] z=f[0] o=f[1]	T
+a > 0	a=f[@NaN] z=f[0] o=f[1]	F
+a < 0	a=f[@NaN] z=f[0] o=f[1]	T
+a > z AND a >= z	a=f[@NaN] z=f[0] o=f[1]	T
+NOT a <= z	a=f[@NaN] z=f[0] o=f[1]	T
+a + 0 > z	a=f[@+Inf] z=f[0] o=f[1]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+a + 0 < z	a=f[@+Inf] z=f[0] o=f[1]	EXC:CX_SY_ARITHMETIC_OVERFLOW
+z + 0 > a	a=f[@+Inf] z=f[0] o=f[1]	F
+z + 0 < a	a=f[@+Inf] z=f[0] o=f[1]	T
+a > z + 0	a=f[@+Inf] z=f[0] o=f[1]	T
+a < z + 0	a=f[@+Inf] z=f[0] o=f[1]	F
+a > CONV f( 0 )	a=f[@+Inf] z=f[0] o=f[1]	T
+a < CONV f( 0 )	a=f[@+Inf] z=f[0] o=f[1]	F
+abs( a ) > z	a=f[@+Inf] z=f[0] o=f[1]	T
+abs( a ) < z	a=f[@+Inf] z=f[0] o=f[1]	F
+a > abs( z )	a=f[@+Inf] z=f[0] o=f[1]	T
+a < abs( z )	a=f[@+Inf] z=f[0] o=f[1]	F
+a BETWEEN z AND o	a=f[@+Inf] z=f[0] o=f[1]	F
+z BETWEEN a AND o	a=f[@+Inf] z=f[0] o=f[1]	F
+o BETWEEN z AND a	a=f[@+Inf] z=f[0] o=f[1]	T
+a > '0'	a=f[@+Inf] z=f[0] o=f[1]	T
+a < '0'	a=f[@+Inf] z=f[0] o=f[1]	F
+a > 0	a=f[@+Inf] z=f[0] o=f[1]	T
+a < 0	a=f[@+Inf] z=f[0] o=f[1]	F
+a > z AND a >= z	a=f[@+Inf] z=f[0] o=f[1]	T
+NOT a <= z	a=f[@+Inf] z=f[0] o=f[1]	T
+- a = b	a=f[@+Inf] b=f[0]	F
+- a <> b	a=f[@+Inf] b=f[0]	T
+- a < b	a=f[@+Inf] b=f[0]	T
+- a > b	a=f[@+Inf] b=f[0]	F
+- a <= b	a=f[@+Inf] b=f[0]	T
+- a >= b	a=f[@+Inf] b=f[0]	F
+b = - a	a=f[@+Inf] b=f[0]	F
+b <> - a	a=f[@+Inf] b=f[0]	T
+b < - a	a=f[@+Inf] b=f[0]	F
+b > - a	a=f[@+Inf] b=f[0]	T
+b <= - a	a=f[@+Inf] b=f[0]	F
+b >= - a	a=f[@+Inf] b=f[0]	T
+- a = b + 0	a=f[@+Inf] b=f[0]	F
+- a <> b + 0	a=f[@+Inf] b=f[0]	T
+- a < b + 0	a=f[@+Inf] b=f[0]	T
+- a > b + 0	a=f[@+Inf] b=f[0]	F
+- a <= b + 0	a=f[@+Inf] b=f[0]	T
+- a >= b + 0	a=f[@+Inf] b=f[0]	F
+a = b + 0	a=f[@+Inf] b=f[0]	F
+a <> b + 0	a=f[@+Inf] b=f[0]	T
+a < b + 0	a=f[@+Inf] b=f[0]	F
+a > b + 0	a=f[@+Inf] b=f[0]	T
+a <= b + 0	a=f[@+Inf] b=f[0]	F
+a >= b + 0	a=f[@+Inf] b=f[0]	T
+b + 0 = a	a=f[@+Inf] b=f[0]	F
+b + 0 <> a	a=f[@+Inf] b=f[0]	T
+b + 0 < a	a=f[@+Inf] b=f[0]	T
+b + 0 > a	a=f[@+Inf] b=f[0]	F
+b + 0 <= a	a=f[@+Inf] b=f[0]	T
+b + 0 >= a	a=f[@+Inf] b=f[0]	F
+- a = b	a=f[@+Inf] b=f[1]	F
+- a <> b	a=f[@+Inf] b=f[1]	T
+- a < b	a=f[@+Inf] b=f[1]	T
+- a > b	a=f[@+Inf] b=f[1]	F
+- a <= b	a=f[@+Inf] b=f[1]	T
+- a >= b	a=f[@+Inf] b=f[1]	F
+b = - a	a=f[@+Inf] b=f[1]	F
+b <> - a	a=f[@+Inf] b=f[1]	T
+b < - a	a=f[@+Inf] b=f[1]	F
+b > - a	a=f[@+Inf] b=f[1]	T
+b <= - a	a=f[@+Inf] b=f[1]	F
+b >= - a	a=f[@+Inf] b=f[1]	T
+- a = b + 0	a=f[@+Inf] b=f[1]	F
+- a <> b + 0	a=f[@+Inf] b=f[1]	T
+- a < b + 0	a=f[@+Inf] b=f[1]	T
+- a > b + 0	a=f[@+Inf] b=f[1]	F
+- a <= b + 0	a=f[@+Inf] b=f[1]	T
+- a >= b + 0	a=f[@+Inf] b=f[1]	F
+a = b + 0	a=f[@+Inf] b=f[1]	F
+a <> b + 0	a=f[@+Inf] b=f[1]	T
+a < b + 0	a=f[@+Inf] b=f[1]	F
+a > b + 0	a=f[@+Inf] b=f[1]	T
+a <= b + 0	a=f[@+Inf] b=f[1]	F
+a >= b + 0	a=f[@+Inf] b=f[1]	T
+b + 0 = a	a=f[@+Inf] b=f[1]	F
+b + 0 <> a	a=f[@+Inf] b=f[1]	T
+b + 0 < a	a=f[@+Inf] b=f[1]	T
+b + 0 > a	a=f[@+Inf] b=f[1]	F
+b + 0 <= a	a=f[@+Inf] b=f[1]	T
+b + 0 >= a	a=f[@+Inf] b=f[1]	F
+- a = b	a=f[@+Inf] b=i[0]	F
+- a <> b	a=f[@+Inf] b=i[0]	T
+- a < b	a=f[@+Inf] b=i[0]	T
+- a > b	a=f[@+Inf] b=i[0]	F
+- a <= b	a=f[@+Inf] b=i[0]	T
+- a >= b	a=f[@+Inf] b=i[0]	F
+b = - a	a=f[@+Inf] b=i[0]	F
+b <> - a	a=f[@+Inf] b=i[0]	T
+b < - a	a=f[@+Inf] b=i[0]	F
+b > - a	a=f[@+Inf] b=i[0]	T
+b <= - a	a=f[@+Inf] b=i[0]	F
+b >= - a	a=f[@+Inf] b=i[0]	T
+- a = b + 0	a=f[@+Inf] b=i[0]	F
+- a <> b + 0	a=f[@+Inf] b=i[0]	T
+- a < b + 0	a=f[@+Inf] b=i[0]	T
+- a > b + 0	a=f[@+Inf] b=i[0]	F
+- a <= b + 0	a=f[@+Inf] b=i[0]	T
+- a >= b + 0	a=f[@+Inf] b=i[0]	F
+a = b + 0	a=f[@+Inf] b=i[0]	F
+a <> b + 0	a=f[@+Inf] b=i[0]	T
+a < b + 0	a=f[@+Inf] b=i[0]	F
+a > b + 0	a=f[@+Inf] b=i[0]	T
+a <= b + 0	a=f[@+Inf] b=i[0]	F
+a >= b + 0	a=f[@+Inf] b=i[0]	T
+b + 0 = a	a=f[@+Inf] b=i[0]	F
+b + 0 <> a	a=f[@+Inf] b=i[0]	T
+b + 0 < a	a=f[@+Inf] b=i[0]	T
+b + 0 > a	a=f[@+Inf] b=i[0]	F
+b + 0 <= a	a=f[@+Inf] b=i[0]	T
+b + 0 >= a	a=f[@+Inf] b=i[0]	F
+- a = b	a=f[@+Inf] b=f[@+Inf]	F
+- a <> b	a=f[@+Inf] b=f[@+Inf]	T
+- a < b	a=f[@+Inf] b=f[@+Inf]	T
+- a > b	a=f[@+Inf] b=f[@+Inf]	F
+- a <= b	a=f[@+Inf] b=f[@+Inf]	T
+- a >= b	a=f[@+Inf] b=f[@+Inf]	F
+b = - a	a=f[@+Inf] b=f[@+Inf]	F
+b <> - a	a=f[@+Inf] b=f[@+Inf]	T
+b < - a	a=f[@+Inf] b=f[@+Inf]	F
+b > - a	a=f[@+Inf] b=f[@+Inf]	T
+b <= - a	a=f[@+Inf] b=f[@+Inf]	F
+b >= - a	a=f[@+Inf] b=f[@+Inf]	T
+- a = b	a=f[@+Inf] b=f[@-Inf]	T
+- a <> b	a=f[@+Inf] b=f[@-Inf]	F
+- a < b	a=f[@+Inf] b=f[@-Inf]	F
+- a > b	a=f[@+Inf] b=f[@-Inf]	F
+- a <= b	a=f[@+Inf] b=f[@-Inf]	T
+- a >= b	a=f[@+Inf] b=f[@-Inf]	T
+b = - a	a=f[@+Inf] b=f[@-Inf]	T
+b <> - a	a=f[@+Inf] b=f[@-Inf]	F
+b < - a	a=f[@+Inf] b=f[@-Inf]	F
+b > - a	a=f[@+Inf] b=f[@-Inf]	F
+b <= - a	a=f[@+Inf] b=f[@-Inf]	T
+b >= - a	a=f[@+Inf] b=f[@-Inf]	T
+- a = b	a=f[@+Inf] b=f[@NaN]	F
+- a <> b	a=f[@+Inf] b=f[@NaN]	T
+- a < b	a=f[@+Inf] b=f[@NaN]	T
+- a > b	a=f[@+Inf] b=f[@NaN]	F
+- a <= b	a=f[@+Inf] b=f[@NaN]	T
+- a >= b	a=f[@+Inf] b=f[@NaN]	F
+b = - a	a=f[@+Inf] b=f[@NaN]	F
+b <> - a	a=f[@+Inf] b=f[@NaN]	T
+b < - a	a=f[@+Inf] b=f[@NaN]	T
+b > - a	a=f[@+Inf] b=f[@NaN]	F
+b <= - a	a=f[@+Inf] b=f[@NaN]	T
+b >= - a	a=f[@+Inf] b=f[@NaN]	F
+- a = b + 0	a=f[@+Inf] b=f[@NaN]	F
+- a <> b + 0	a=f[@+Inf] b=f[@NaN]	T
+- a < b + 0	a=f[@+Inf] b=f[@NaN]	T
+- a > b + 0	a=f[@+Inf] b=f[@NaN]	F
+- a <= b + 0	a=f[@+Inf] b=f[@NaN]	T
+- a >= b + 0	a=f[@+Inf] b=f[@NaN]	F
+a = b + 0	a=f[@+Inf] b=f[@NaN]	F
+a <> b + 0	a=f[@+Inf] b=f[@NaN]	T
+a < b + 0	a=f[@+Inf] b=f[@NaN]	T
+a > b + 0	a=f[@+Inf] b=f[@NaN]	F
+a <= b + 0	a=f[@+Inf] b=f[@NaN]	T
+a >= b + 0	a=f[@+Inf] b=f[@NaN]	F
+b + 0 = a	a=f[@+Inf] b=f[@NaN]	F
+b + 0 <> a	a=f[@+Inf] b=f[@NaN]	T
+b + 0 < a	a=f[@+Inf] b=f[@NaN]	T
+b + 0 > a	a=f[@+Inf] b=f[@NaN]	F
+b + 0 <= a	a=f[@+Inf] b=f[@NaN]	T
+b + 0 >= a	a=f[@+Inf] b=f[@NaN]	F
+- a = b	a=f[@+Inf] b=f[@-NaN]	F
+- a <> b	a=f[@+Inf] b=f[@-NaN]	T
+- a < b	a=f[@+Inf] b=f[@-NaN]	T
+- a > b	a=f[@+Inf] b=f[@-NaN]	F
+- a <= b	a=f[@+Inf] b=f[@-NaN]	T
+- a >= b	a=f[@+Inf] b=f[@-NaN]	F
+b = - a	a=f[@+Inf] b=f[@-NaN]	F
+b <> - a	a=f[@+Inf] b=f[@-NaN]	T
+b < - a	a=f[@+Inf] b=f[@-NaN]	T
+b > - a	a=f[@+Inf] b=f[@-NaN]	F
+b <= - a	a=f[@+Inf] b=f[@-NaN]	T
+b >= - a	a=f[@+Inf] b=f[@-NaN]	F
+- a = b + 0	a=f[@+Inf] b=f[@-NaN]	F
+- a <> b + 0	a=f[@+Inf] b=f[@-NaN]	T
+- a < b + 0	a=f[@+Inf] b=f[@-NaN]	T
+- a > b + 0	a=f[@+Inf] b=f[@-NaN]	F
+- a <= b + 0	a=f[@+Inf] b=f[@-NaN]	T
+- a >= b + 0	a=f[@+Inf] b=f[@-NaN]	F
+a = b + 0	a=f[@+Inf] b=f[@-NaN]	F
+a <> b + 0	a=f[@+Inf] b=f[@-NaN]	T
+a < b + 0	a=f[@+Inf] b=f[@-NaN]	T
+a > b + 0	a=f[@+Inf] b=f[@-NaN]	F
+a <= b + 0	a=f[@+Inf] b=f[@-NaN]	T
+a >= b + 0	a=f[@+Inf] b=f[@-NaN]	F
+b + 0 = a	a=f[@+Inf] b=f[@-NaN]	F
+b + 0 <> a	a=f[@+Inf] b=f[@-NaN]	T
+b + 0 < a	a=f[@+Inf] b=f[@-NaN]	T
+b + 0 > a	a=f[@+Inf] b=f[@-NaN]	F
+b + 0 <= a	a=f[@+Inf] b=f[@-NaN]	T
+b + 0 >= a	a=f[@+Inf] b=f[@-NaN]	F
+- a = b	a=f[@-Inf] b=f[0]	F
+- a <> b	a=f[@-Inf] b=f[0]	T
+- a < b	a=f[@-Inf] b=f[0]	F
+- a > b	a=f[@-Inf] b=f[0]	T
+- a <= b	a=f[@-Inf] b=f[0]	F
+- a >= b	a=f[@-Inf] b=f[0]	T
+b = - a	a=f[@-Inf] b=f[0]	F
+b <> - a	a=f[@-Inf] b=f[0]	T
+b < - a	a=f[@-Inf] b=f[0]	T
+b > - a	a=f[@-Inf] b=f[0]	F
+b <= - a	a=f[@-Inf] b=f[0]	T
+b >= - a	a=f[@-Inf] b=f[0]	F
+- a = b + 0	a=f[@-Inf] b=f[0]	F
+- a <> b + 0	a=f[@-Inf] b=f[0]	T
+- a < b + 0	a=f[@-Inf] b=f[0]	F
+- a > b + 0	a=f[@-Inf] b=f[0]	T
+- a <= b + 0	a=f[@-Inf] b=f[0]	F
+- a >= b + 0	a=f[@-Inf] b=f[0]	T
+a = b + 0	a=f[@-Inf] b=f[0]	F
+a <> b + 0	a=f[@-Inf] b=f[0]	T
+a < b + 0	a=f[@-Inf] b=f[0]	T
+a > b + 0	a=f[@-Inf] b=f[0]	F
+a <= b + 0	a=f[@-Inf] b=f[0]	T
+a >= b + 0	a=f[@-Inf] b=f[0]	F
+b + 0 = a	a=f[@-Inf] b=f[0]	F
+b + 0 <> a	a=f[@-Inf] b=f[0]	T
+b + 0 < a	a=f[@-Inf] b=f[0]	F
+b + 0 > a	a=f[@-Inf] b=f[0]	T
+b + 0 <= a	a=f[@-Inf] b=f[0]	F
+b + 0 >= a	a=f[@-Inf] b=f[0]	T
+- a = b	a=f[@-Inf] b=f[1]	F
+- a <> b	a=f[@-Inf] b=f[1]	T
+- a < b	a=f[@-Inf] b=f[1]	F
+- a > b	a=f[@-Inf] b=f[1]	T
+- a <= b	a=f[@-Inf] b=f[1]	F
+- a >= b	a=f[@-Inf] b=f[1]	T
+b = - a	a=f[@-Inf] b=f[1]	F
+b <> - a	a=f[@-Inf] b=f[1]	T
+b < - a	a=f[@-Inf] b=f[1]	T
+b > - a	a=f[@-Inf] b=f[1]	F
+b <= - a	a=f[@-Inf] b=f[1]	T
+b >= - a	a=f[@-Inf] b=f[1]	F
+- a = b + 0	a=f[@-Inf] b=f[1]	F
+- a <> b + 0	a=f[@-Inf] b=f[1]	T
+- a < b + 0	a=f[@-Inf] b=f[1]	F
+- a > b + 0	a=f[@-Inf] b=f[1]	T
+- a <= b + 0	a=f[@-Inf] b=f[1]	F
+- a >= b + 0	a=f[@-Inf] b=f[1]	T
+a = b + 0	a=f[@-Inf] b=f[1]	F
+a <> b + 0	a=f[@-Inf] b=f[1]	T
+a < b + 0	a=f[@-Inf] b=f[1]	T
+a > b + 0	a=f[@-Inf] b=f[1]	F
+a <= b + 0	a=f[@-Inf] b=f[1]	T
+a >= b + 0	a=f[@-Inf] b=f[1]	F
+b + 0 = a	a=f[@-Inf] b=f[1]	F
+b + 0 <> a	a=f[@-Inf] b=f[1]	T
+b + 0 < a	a=f[@-Inf] b=f[1]	F
+b + 0 > a	a=f[@-Inf] b=f[1]	T
+b + 0 <= a	a=f[@-Inf] b=f[1]	F
+b + 0 >= a	a=f[@-Inf] b=f[1]	T
+- a = b	a=f[@-Inf] b=i[0]	F
+- a <> b	a=f[@-Inf] b=i[0]	T
+- a < b	a=f[@-Inf] b=i[0]	F
+- a > b	a=f[@-Inf] b=i[0]	T
+- a <= b	a=f[@-Inf] b=i[0]	F
+- a >= b	a=f[@-Inf] b=i[0]	T
+b = - a	a=f[@-Inf] b=i[0]	F
+b <> - a	a=f[@-Inf] b=i[0]	T
+b < - a	a=f[@-Inf] b=i[0]	T
+b > - a	a=f[@-Inf] b=i[0]	F
+b <= - a	a=f[@-Inf] b=i[0]	T
+b >= - a	a=f[@-Inf] b=i[0]	F
+- a = b + 0	a=f[@-Inf] b=i[0]	F
+- a <> b + 0	a=f[@-Inf] b=i[0]	T
+- a < b + 0	a=f[@-Inf] b=i[0]	F
+- a > b + 0	a=f[@-Inf] b=i[0]	T
+- a <= b + 0	a=f[@-Inf] b=i[0]	F
+- a >= b + 0	a=f[@-Inf] b=i[0]	T
+a = b + 0	a=f[@-Inf] b=i[0]	F
+a <> b + 0	a=f[@-Inf] b=i[0]	T
+a < b + 0	a=f[@-Inf] b=i[0]	T
+a > b + 0	a=f[@-Inf] b=i[0]	F
+a <= b + 0	a=f[@-Inf] b=i[0]	T
+a >= b + 0	a=f[@-Inf] b=i[0]	F
+b + 0 = a	a=f[@-Inf] b=i[0]	F
+b + 0 <> a	a=f[@-Inf] b=i[0]	T
+b + 0 < a	a=f[@-Inf] b=i[0]	F
+b + 0 > a	a=f[@-Inf] b=i[0]	T
+b + 0 <= a	a=f[@-Inf] b=i[0]	F
+b + 0 >= a	a=f[@-Inf] b=i[0]	T
+- a = b	a=f[@-Inf] b=f[@+Inf]	T
+- a <> b	a=f[@-Inf] b=f[@+Inf]	F
+- a < b	a=f[@-Inf] b=f[@+Inf]	F
+- a > b	a=f[@-Inf] b=f[@+Inf]	F
+- a <= b	a=f[@-Inf] b=f[@+Inf]	T
+- a >= b	a=f[@-Inf] b=f[@+Inf]	T
+b = - a	a=f[@-Inf] b=f[@+Inf]	T
+b <> - a	a=f[@-Inf] b=f[@+Inf]	F
+b < - a	a=f[@-Inf] b=f[@+Inf]	F
+b > - a	a=f[@-Inf] b=f[@+Inf]	F
+b <= - a	a=f[@-Inf] b=f[@+Inf]	T
+b >= - a	a=f[@-Inf] b=f[@+Inf]	T
+- a = b	a=f[@-Inf] b=f[@-Inf]	F
+- a <> b	a=f[@-Inf] b=f[@-Inf]	T
+- a < b	a=f[@-Inf] b=f[@-Inf]	F
+- a > b	a=f[@-Inf] b=f[@-Inf]	T
+- a <= b	a=f[@-Inf] b=f[@-Inf]	F
+- a >= b	a=f[@-Inf] b=f[@-Inf]	T
+b = - a	a=f[@-Inf] b=f[@-Inf]	F
+b <> - a	a=f[@-Inf] b=f[@-Inf]	T
+b < - a	a=f[@-Inf] b=f[@-Inf]	T
+b > - a	a=f[@-Inf] b=f[@-Inf]	F
+b <= - a	a=f[@-Inf] b=f[@-Inf]	T
+b >= - a	a=f[@-Inf] b=f[@-Inf]	F
+- a = b	a=f[@-Inf] b=f[@NaN]	F
+- a <> b	a=f[@-Inf] b=f[@NaN]	T
+- a < b	a=f[@-Inf] b=f[@NaN]	T
+- a > b	a=f[@-Inf] b=f[@NaN]	F
+- a <= b	a=f[@-Inf] b=f[@NaN]	T
+- a >= b	a=f[@-Inf] b=f[@NaN]	F
+b = - a	a=f[@-Inf] b=f[@NaN]	F
+b <> - a	a=f[@-Inf] b=f[@NaN]	T
+b < - a	a=f[@-Inf] b=f[@NaN]	T
+b > - a	a=f[@-Inf] b=f[@NaN]	F
+b <= - a	a=f[@-Inf] b=f[@NaN]	T
+b >= - a	a=f[@-Inf] b=f[@NaN]	F
+- a = b + 0	a=f[@-Inf] b=f[@NaN]	F
+- a <> b + 0	a=f[@-Inf] b=f[@NaN]	T
+- a < b + 0	a=f[@-Inf] b=f[@NaN]	T
+- a > b + 0	a=f[@-Inf] b=f[@NaN]	F
+- a <= b + 0	a=f[@-Inf] b=f[@NaN]	T
+- a >= b + 0	a=f[@-Inf] b=f[@NaN]	F
+a = b + 0	a=f[@-Inf] b=f[@NaN]	F
+a <> b + 0	a=f[@-Inf] b=f[@NaN]	T
+a < b + 0	a=f[@-Inf] b=f[@NaN]	T
+a > b + 0	a=f[@-Inf] b=f[@NaN]	F
+a <= b + 0	a=f[@-Inf] b=f[@NaN]	T
+a >= b + 0	a=f[@-Inf] b=f[@NaN]	F
+b + 0 = a	a=f[@-Inf] b=f[@NaN]	F
+b + 0 <> a	a=f[@-Inf] b=f[@NaN]	T
+b + 0 < a	a=f[@-Inf] b=f[@NaN]	T
+b + 0 > a	a=f[@-Inf] b=f[@NaN]	F
+b + 0 <= a	a=f[@-Inf] b=f[@NaN]	T
+b + 0 >= a	a=f[@-Inf] b=f[@NaN]	F
+- a = b	a=f[@-Inf] b=f[@-NaN]	F
+- a <> b	a=f[@-Inf] b=f[@-NaN]	T
+- a < b	a=f[@-Inf] b=f[@-NaN]	T
+- a > b	a=f[@-Inf] b=f[@-NaN]	F
+- a <= b	a=f[@-Inf] b=f[@-NaN]	T
+- a >= b	a=f[@-Inf] b=f[@-NaN]	F
+b = - a	a=f[@-Inf] b=f[@-NaN]	F
+b <> - a	a=f[@-Inf] b=f[@-NaN]	T
+b < - a	a=f[@-Inf] b=f[@-NaN]	T
+b > - a	a=f[@-Inf] b=f[@-NaN]	F
+b <= - a	a=f[@-Inf] b=f[@-NaN]	T
+b >= - a	a=f[@-Inf] b=f[@-NaN]	F
+- a = b + 0	a=f[@-Inf] b=f[@-NaN]	F
+- a <> b + 0	a=f[@-Inf] b=f[@-NaN]	T
+- a < b + 0	a=f[@-Inf] b=f[@-NaN]	T
+- a > b + 0	a=f[@-Inf] b=f[@-NaN]	F
+- a <= b + 0	a=f[@-Inf] b=f[@-NaN]	T
+- a >= b + 0	a=f[@-Inf] b=f[@-NaN]	F
+a = b + 0	a=f[@-Inf] b=f[@-NaN]	F
+a <> b + 0	a=f[@-Inf] b=f[@-NaN]	T
+a < b + 0	a=f[@-Inf] b=f[@-NaN]	T
+a > b + 0	a=f[@-Inf] b=f[@-NaN]	F
+a <= b + 0	a=f[@-Inf] b=f[@-NaN]	T
+a >= b + 0	a=f[@-Inf] b=f[@-NaN]	F
+b + 0 = a	a=f[@-Inf] b=f[@-NaN]	F
+b + 0 <> a	a=f[@-Inf] b=f[@-NaN]	T
+b + 0 < a	a=f[@-Inf] b=f[@-NaN]	T
+b + 0 > a	a=f[@-Inf] b=f[@-NaN]	F
+b + 0 <= a	a=f[@-Inf] b=f[@-NaN]	T
+b + 0 >= a	a=f[@-Inf] b=f[@-NaN]	F
+a + 0 = b	a=f[@NaN] b=f[0]	F
+a + 0 <> b	a=f[@NaN] b=f[0]	T
+a + 0 < b	a=f[@NaN] b=f[0]	T
+a + 0 > b	a=f[@NaN] b=f[0]	F
+a + 0 <= b	a=f[@NaN] b=f[0]	T
+a + 0 >= b	a=f[@NaN] b=f[0]	F
+b = a + 0	a=f[@NaN] b=f[0]	F
+b <> a + 0	a=f[@NaN] b=f[0]	T
+b < a + 0	a=f[@NaN] b=f[0]	T
+b > a + 0	a=f[@NaN] b=f[0]	F
+b <= a + 0	a=f[@NaN] b=f[0]	T
+b >= a + 0	a=f[@NaN] b=f[0]	F
+- a = b	a=f[@NaN] b=f[0]	F
+- a <> b	a=f[@NaN] b=f[0]	T
+- a < b	a=f[@NaN] b=f[0]	T
+- a > b	a=f[@NaN] b=f[0]	F
+- a <= b	a=f[@NaN] b=f[0]	T
+- a >= b	a=f[@NaN] b=f[0]	F
+b = - a	a=f[@NaN] b=f[0]	F
+b <> - a	a=f[@NaN] b=f[0]	T
+b < - a	a=f[@NaN] b=f[0]	T
+b > - a	a=f[@NaN] b=f[0]	F
+b <= - a	a=f[@NaN] b=f[0]	T
+b >= - a	a=f[@NaN] b=f[0]	F
+a + 0 = b + 0	a=f[@NaN] b=f[0]	F
+a + 0 <> b + 0	a=f[@NaN] b=f[0]	T
+a + 0 < b + 0	a=f[@NaN] b=f[0]	T
+a + 0 > b + 0	a=f[@NaN] b=f[0]	F
+a + 0 <= b + 0	a=f[@NaN] b=f[0]	T
+a + 0 >= b + 0	a=f[@NaN] b=f[0]	F
+a = b + 0	a=f[@NaN] b=f[0]	F
+a <> b + 0	a=f[@NaN] b=f[0]	T
+a < b + 0	a=f[@NaN] b=f[0]	T
+a > b + 0	a=f[@NaN] b=f[0]	F
+a <= b + 0	a=f[@NaN] b=f[0]	T
+a >= b + 0	a=f[@NaN] b=f[0]	F
+b + 0 = a	a=f[@NaN] b=f[0]	F
+b + 0 <> a	a=f[@NaN] b=f[0]	T
+b + 0 < a	a=f[@NaN] b=f[0]	T
+b + 0 > a	a=f[@NaN] b=f[0]	F
+b + 0 <= a	a=f[@NaN] b=f[0]	T
+b + 0 >= a	a=f[@NaN] b=f[0]	F
+a + 0 = b	a=f[@NaN] b=f[1]	F
+a + 0 <> b	a=f[@NaN] b=f[1]	T
+a + 0 < b	a=f[@NaN] b=f[1]	T
+a + 0 > b	a=f[@NaN] b=f[1]	F
+a + 0 <= b	a=f[@NaN] b=f[1]	T
+a + 0 >= b	a=f[@NaN] b=f[1]	F
+b = a + 0	a=f[@NaN] b=f[1]	F
+b <> a + 0	a=f[@NaN] b=f[1]	T
+b < a + 0	a=f[@NaN] b=f[1]	T
+b > a + 0	a=f[@NaN] b=f[1]	F
+b <= a + 0	a=f[@NaN] b=f[1]	T
+b >= a + 0	a=f[@NaN] b=f[1]	F
+- a = b	a=f[@NaN] b=f[1]	F
+- a <> b	a=f[@NaN] b=f[1]	T
+- a < b	a=f[@NaN] b=f[1]	T
+- a > b	a=f[@NaN] b=f[1]	F
+- a <= b	a=f[@NaN] b=f[1]	T
+- a >= b	a=f[@NaN] b=f[1]	F
+b = - a	a=f[@NaN] b=f[1]	F
+b <> - a	a=f[@NaN] b=f[1]	T
+b < - a	a=f[@NaN] b=f[1]	T
+b > - a	a=f[@NaN] b=f[1]	F
+b <= - a	a=f[@NaN] b=f[1]	T
+b >= - a	a=f[@NaN] b=f[1]	F
+a + 0 = b + 0	a=f[@NaN] b=f[1]	F
+a + 0 <> b + 0	a=f[@NaN] b=f[1]	T
+a + 0 < b + 0	a=f[@NaN] b=f[1]	T
+a + 0 > b + 0	a=f[@NaN] b=f[1]	F
+a + 0 <= b + 0	a=f[@NaN] b=f[1]	T
+a + 0 >= b + 0	a=f[@NaN] b=f[1]	F
+a = b + 0	a=f[@NaN] b=f[1]	F
+a <> b + 0	a=f[@NaN] b=f[1]	T
+a < b + 0	a=f[@NaN] b=f[1]	T
+a > b + 0	a=f[@NaN] b=f[1]	F
+a <= b + 0	a=f[@NaN] b=f[1]	T
+a >= b + 0	a=f[@NaN] b=f[1]	F
+b + 0 = a	a=f[@NaN] b=f[1]	F
+b + 0 <> a	a=f[@NaN] b=f[1]	T
+b + 0 < a	a=f[@NaN] b=f[1]	T
+b + 0 > a	a=f[@NaN] b=f[1]	F
+b + 0 <= a	a=f[@NaN] b=f[1]	T
+b + 0 >= a	a=f[@NaN] b=f[1]	F
+a + 0 = b	a=f[@NaN] b=i[0]	F
+a + 0 <> b	a=f[@NaN] b=i[0]	T
+a + 0 < b	a=f[@NaN] b=i[0]	T
+a + 0 > b	a=f[@NaN] b=i[0]	F
+a + 0 <= b	a=f[@NaN] b=i[0]	T
+a + 0 >= b	a=f[@NaN] b=i[0]	F
+b = a + 0	a=f[@NaN] b=i[0]	F
+b <> a + 0	a=f[@NaN] b=i[0]	T
+b < a + 0	a=f[@NaN] b=i[0]	T
+b > a + 0	a=f[@NaN] b=i[0]	F
+b <= a + 0	a=f[@NaN] b=i[0]	T
+b >= a + 0	a=f[@NaN] b=i[0]	F
+- a = b	a=f[@NaN] b=i[0]	F
+- a <> b	a=f[@NaN] b=i[0]	T
+- a < b	a=f[@NaN] b=i[0]	T
+- a > b	a=f[@NaN] b=i[0]	F
+- a <= b	a=f[@NaN] b=i[0]	T
+- a >= b	a=f[@NaN] b=i[0]	F
+b = - a	a=f[@NaN] b=i[0]	F
+b <> - a	a=f[@NaN] b=i[0]	T
+b < - a	a=f[@NaN] b=i[0]	T
+b > - a	a=f[@NaN] b=i[0]	F
+b <= - a	a=f[@NaN] b=i[0]	T
+b >= - a	a=f[@NaN] b=i[0]	F
+a + 0 = b + 0	a=f[@NaN] b=i[0]	F
+a + 0 <> b + 0	a=f[@NaN] b=i[0]	T
+a + 0 < b + 0	a=f[@NaN] b=i[0]	T
+a + 0 > b + 0	a=f[@NaN] b=i[0]	F
+a + 0 <= b + 0	a=f[@NaN] b=i[0]	T
+a + 0 >= b + 0	a=f[@NaN] b=i[0]	F
+a = b + 0	a=f[@NaN] b=i[0]	F
+a <> b + 0	a=f[@NaN] b=i[0]	T
+a < b + 0	a=f[@NaN] b=i[0]	T
+a > b + 0	a=f[@NaN] b=i[0]	F
+a <= b + 0	a=f[@NaN] b=i[0]	T
+a >= b + 0	a=f[@NaN] b=i[0]	F
+b + 0 = a	a=f[@NaN] b=i[0]	F
+b + 0 <> a	a=f[@NaN] b=i[0]	T
+b + 0 < a	a=f[@NaN] b=i[0]	T
+b + 0 > a	a=f[@NaN] b=i[0]	F
+b + 0 <= a	a=f[@NaN] b=i[0]	T
+b + 0 >= a	a=f[@NaN] b=i[0]	F
+a + 0 = b	a=f[@NaN] b=f[@+Inf]	F
+a + 0 <> b	a=f[@NaN] b=f[@+Inf]	T
+a + 0 < b	a=f[@NaN] b=f[@+Inf]	T
+a + 0 > b	a=f[@NaN] b=f[@+Inf]	F
+a + 0 <= b	a=f[@NaN] b=f[@+Inf]	T
+a + 0 >= b	a=f[@NaN] b=f[@+Inf]	F
+b = a + 0	a=f[@NaN] b=f[@+Inf]	F
+b <> a + 0	a=f[@NaN] b=f[@+Inf]	T
+b < a + 0	a=f[@NaN] b=f[@+Inf]	T
+b > a + 0	a=f[@NaN] b=f[@+Inf]	F
+b <= a + 0	a=f[@NaN] b=f[@+Inf]	T
+b >= a + 0	a=f[@NaN] b=f[@+Inf]	F
+- a = b	a=f[@NaN] b=f[@+Inf]	F
+- a <> b	a=f[@NaN] b=f[@+Inf]	T
+- a < b	a=f[@NaN] b=f[@+Inf]	T
+- a > b	a=f[@NaN] b=f[@+Inf]	F
+- a <= b	a=f[@NaN] b=f[@+Inf]	T
+- a >= b	a=f[@NaN] b=f[@+Inf]	F
+b = - a	a=f[@NaN] b=f[@+Inf]	F
+b <> - a	a=f[@NaN] b=f[@+Inf]	T
+b < - a	a=f[@NaN] b=f[@+Inf]	T
+b > - a	a=f[@NaN] b=f[@+Inf]	F
+b <= - a	a=f[@NaN] b=f[@+Inf]	T
+b >= - a	a=f[@NaN] b=f[@+Inf]	F
+a + 0 = b	a=f[@NaN] b=f[@-Inf]	F
+a + 0 <> b	a=f[@NaN] b=f[@-Inf]	T
+a + 0 < b	a=f[@NaN] b=f[@-Inf]	T
+a + 0 > b	a=f[@NaN] b=f[@-Inf]	F
+a + 0 <= b	a=f[@NaN] b=f[@-Inf]	T
+a + 0 >= b	a=f[@NaN] b=f[@-Inf]	F
+b = a + 0	a=f[@NaN] b=f[@-Inf]	F
+b <> a + 0	a=f[@NaN] b=f[@-Inf]	T
+b < a + 0	a=f[@NaN] b=f[@-Inf]	T
+b > a + 0	a=f[@NaN] b=f[@-Inf]	F
+b <= a + 0	a=f[@NaN] b=f[@-Inf]	T
+b >= a + 0	a=f[@NaN] b=f[@-Inf]	F
+- a = b	a=f[@NaN] b=f[@-Inf]	F
+- a <> b	a=f[@NaN] b=f[@-Inf]	T
+- a < b	a=f[@NaN] b=f[@-Inf]	T
+- a > b	a=f[@NaN] b=f[@-Inf]	F
+- a <= b	a=f[@NaN] b=f[@-Inf]	T
+- a >= b	a=f[@NaN] b=f[@-Inf]	F
+b = - a	a=f[@NaN] b=f[@-Inf]	F
+b <> - a	a=f[@NaN] b=f[@-Inf]	T
+b < - a	a=f[@NaN] b=f[@-Inf]	T
+b > - a	a=f[@NaN] b=f[@-Inf]	F
+b <= - a	a=f[@NaN] b=f[@-Inf]	T
+b >= - a	a=f[@NaN] b=f[@-Inf]	F
+a + 0 = b	a=f[@NaN] b=f[@NaN]	F
+a + 0 <> b	a=f[@NaN] b=f[@NaN]	T
+a + 0 < b	a=f[@NaN] b=f[@NaN]	T
+a + 0 > b	a=f[@NaN] b=f[@NaN]	F
+a + 0 <= b	a=f[@NaN] b=f[@NaN]	T
+a + 0 >= b	a=f[@NaN] b=f[@NaN]	F
+b = a + 0	a=f[@NaN] b=f[@NaN]	F
+b <> a + 0	a=f[@NaN] b=f[@NaN]	T
+b < a + 0	a=f[@NaN] b=f[@NaN]	T
+b > a + 0	a=f[@NaN] b=f[@NaN]	F
+b <= a + 0	a=f[@NaN] b=f[@NaN]	T
+b >= a + 0	a=f[@NaN] b=f[@NaN]	F
+- a = b	a=f[@NaN] b=f[@NaN]	F
+- a <> b	a=f[@NaN] b=f[@NaN]	T
+- a < b	a=f[@NaN] b=f[@NaN]	T
+- a > b	a=f[@NaN] b=f[@NaN]	F
+- a <= b	a=f[@NaN] b=f[@NaN]	T
+- a >= b	a=f[@NaN] b=f[@NaN]	F
+b = - a	a=f[@NaN] b=f[@NaN]	F
+b <> - a	a=f[@NaN] b=f[@NaN]	T
+b < - a	a=f[@NaN] b=f[@NaN]	T
+b > - a	a=f[@NaN] b=f[@NaN]	F
+b <= - a	a=f[@NaN] b=f[@NaN]	T
+b >= - a	a=f[@NaN] b=f[@NaN]	F
+a + 0 = b + 0	a=f[@NaN] b=f[@NaN]	F
+a + 0 <> b + 0	a=f[@NaN] b=f[@NaN]	T
+a + 0 < b + 0	a=f[@NaN] b=f[@NaN]	T
+a + 0 > b + 0	a=f[@NaN] b=f[@NaN]	F
+a + 0 <= b + 0	a=f[@NaN] b=f[@NaN]	T
+a + 0 >= b + 0	a=f[@NaN] b=f[@NaN]	F
+a = b + 0	a=f[@NaN] b=f[@NaN]	F
+a <> b + 0	a=f[@NaN] b=f[@NaN]	T
+a < b + 0	a=f[@NaN] b=f[@NaN]	T
+a > b + 0	a=f[@NaN] b=f[@NaN]	F
+a <= b + 0	a=f[@NaN] b=f[@NaN]	T
+a >= b + 0	a=f[@NaN] b=f[@NaN]	F
+b + 0 = a	a=f[@NaN] b=f[@NaN]	F
+b + 0 <> a	a=f[@NaN] b=f[@NaN]	T
+b + 0 < a	a=f[@NaN] b=f[@NaN]	T
+b + 0 > a	a=f[@NaN] b=f[@NaN]	F
+b + 0 <= a	a=f[@NaN] b=f[@NaN]	T
+b + 0 >= a	a=f[@NaN] b=f[@NaN]	F
+a + 0 = b	a=f[@NaN] b=f[@-NaN]	F
+a + 0 <> b	a=f[@NaN] b=f[@-NaN]	T
+a + 0 < b	a=f[@NaN] b=f[@-NaN]	T
+a + 0 > b	a=f[@NaN] b=f[@-NaN]	F
+a + 0 <= b	a=f[@NaN] b=f[@-NaN]	T
+a + 0 >= b	a=f[@NaN] b=f[@-NaN]	F
+b = a + 0	a=f[@NaN] b=f[@-NaN]	F
+b <> a + 0	a=f[@NaN] b=f[@-NaN]	T
+b < a + 0	a=f[@NaN] b=f[@-NaN]	T
+b > a + 0	a=f[@NaN] b=f[@-NaN]	F
+b <= a + 0	a=f[@NaN] b=f[@-NaN]	T
+b >= a + 0	a=f[@NaN] b=f[@-NaN]	F
+- a = b	a=f[@NaN] b=f[@-NaN]	F
+- a <> b	a=f[@NaN] b=f[@-NaN]	T
+- a < b	a=f[@NaN] b=f[@-NaN]	T
+- a > b	a=f[@NaN] b=f[@-NaN]	F
+- a <= b	a=f[@NaN] b=f[@-NaN]	T
+- a >= b	a=f[@NaN] b=f[@-NaN]	F
+b = - a	a=f[@NaN] b=f[@-NaN]	F
+b <> - a	a=f[@NaN] b=f[@-NaN]	T
+b < - a	a=f[@NaN] b=f[@-NaN]	T
+b > - a	a=f[@NaN] b=f[@-NaN]	F
+b <= - a	a=f[@NaN] b=f[@-NaN]	T
+b >= - a	a=f[@NaN] b=f[@-NaN]	F
+a + 0 = b + 0	a=f[@NaN] b=f[@-NaN]	F
+a + 0 <> b + 0	a=f[@NaN] b=f[@-NaN]	T
+a + 0 < b + 0	a=f[@NaN] b=f[@-NaN]	T
+a + 0 > b + 0	a=f[@NaN] b=f[@-NaN]	F
+a + 0 <= b + 0	a=f[@NaN] b=f[@-NaN]	T
+a + 0 >= b + 0	a=f[@NaN] b=f[@-NaN]	F
+a = b + 0	a=f[@NaN] b=f[@-NaN]	F
+a <> b + 0	a=f[@NaN] b=f[@-NaN]	T
+a < b + 0	a=f[@NaN] b=f[@-NaN]	T
+a > b + 0	a=f[@NaN] b=f[@-NaN]	F
+a <= b + 0	a=f[@NaN] b=f[@-NaN]	T
+a >= b + 0	a=f[@NaN] b=f[@-NaN]	F
+b + 0 = a	a=f[@NaN] b=f[@-NaN]	F
+b + 0 <> a	a=f[@NaN] b=f[@-NaN]	T
+b + 0 < a	a=f[@NaN] b=f[@-NaN]	T
+b + 0 > a	a=f[@NaN] b=f[@-NaN]	F
+b + 0 <= a	a=f[@NaN] b=f[@-NaN]	T
+b + 0 >= a	a=f[@NaN] b=f[@-NaN]	F
+a + 0 = b	a=f[@-NaN] b=f[0]	F
+a + 0 <> b	a=f[@-NaN] b=f[0]	T
+a + 0 < b	a=f[@-NaN] b=f[0]	T
+a + 0 > b	a=f[@-NaN] b=f[0]	F
+a + 0 <= b	a=f[@-NaN] b=f[0]	T
+a + 0 >= b	a=f[@-NaN] b=f[0]	F
+b = a + 0	a=f[@-NaN] b=f[0]	F
+b <> a + 0	a=f[@-NaN] b=f[0]	T
+b < a + 0	a=f[@-NaN] b=f[0]	T
+b > a + 0	a=f[@-NaN] b=f[0]	F
+b <= a + 0	a=f[@-NaN] b=f[0]	T
+b >= a + 0	a=f[@-NaN] b=f[0]	F
+- a = b	a=f[@-NaN] b=f[0]	F
+- a <> b	a=f[@-NaN] b=f[0]	T
+- a < b	a=f[@-NaN] b=f[0]	T
+- a > b	a=f[@-NaN] b=f[0]	F
+- a <= b	a=f[@-NaN] b=f[0]	T
+- a >= b	a=f[@-NaN] b=f[0]	F
+b = - a	a=f[@-NaN] b=f[0]	F
+b <> - a	a=f[@-NaN] b=f[0]	T
+b < - a	a=f[@-NaN] b=f[0]	T
+b > - a	a=f[@-NaN] b=f[0]	F
+b <= - a	a=f[@-NaN] b=f[0]	T
+b >= - a	a=f[@-NaN] b=f[0]	F
+a + 0 = b + 0	a=f[@-NaN] b=f[0]	F
+a + 0 <> b + 0	a=f[@-NaN] b=f[0]	T
+a + 0 < b + 0	a=f[@-NaN] b=f[0]	T
+a + 0 > b + 0	a=f[@-NaN] b=f[0]	F
+a + 0 <= b + 0	a=f[@-NaN] b=f[0]	T
+a + 0 >= b + 0	a=f[@-NaN] b=f[0]	F
+a = b + 0	a=f[@-NaN] b=f[0]	F
+a <> b + 0	a=f[@-NaN] b=f[0]	T
+a < b + 0	a=f[@-NaN] b=f[0]	T
+a > b + 0	a=f[@-NaN] b=f[0]	F
+a <= b + 0	a=f[@-NaN] b=f[0]	T
+a >= b + 0	a=f[@-NaN] b=f[0]	F
+b + 0 = a	a=f[@-NaN] b=f[0]	F
+b + 0 <> a	a=f[@-NaN] b=f[0]	T
+b + 0 < a	a=f[@-NaN] b=f[0]	T
+b + 0 > a	a=f[@-NaN] b=f[0]	F
+b + 0 <= a	a=f[@-NaN] b=f[0]	T
+b + 0 >= a	a=f[@-NaN] b=f[0]	F
+a + 0 = b	a=f[@-NaN] b=f[1]	F
+a + 0 <> b	a=f[@-NaN] b=f[1]	T
+a + 0 < b	a=f[@-NaN] b=f[1]	T
+a + 0 > b	a=f[@-NaN] b=f[1]	F
+a + 0 <= b	a=f[@-NaN] b=f[1]	T
+a + 0 >= b	a=f[@-NaN] b=f[1]	F
+b = a + 0	a=f[@-NaN] b=f[1]	F
+b <> a + 0	a=f[@-NaN] b=f[1]	T
+b < a + 0	a=f[@-NaN] b=f[1]	T
+b > a + 0	a=f[@-NaN] b=f[1]	F
+b <= a + 0	a=f[@-NaN] b=f[1]	T
+b >= a + 0	a=f[@-NaN] b=f[1]	F
+- a = b	a=f[@-NaN] b=f[1]	F
+- a <> b	a=f[@-NaN] b=f[1]	T
+- a < b	a=f[@-NaN] b=f[1]	T
+- a > b	a=f[@-NaN] b=f[1]	F
+- a <= b	a=f[@-NaN] b=f[1]	T
+- a >= b	a=f[@-NaN] b=f[1]	F
+b = - a	a=f[@-NaN] b=f[1]	F
+b <> - a	a=f[@-NaN] b=f[1]	T
+b < - a	a=f[@-NaN] b=f[1]	T
+b > - a	a=f[@-NaN] b=f[1]	F
+b <= - a	a=f[@-NaN] b=f[1]	T
+b >= - a	a=f[@-NaN] b=f[1]	F
+a + 0 = b + 0	a=f[@-NaN] b=f[1]	F
+a + 0 <> b + 0	a=f[@-NaN] b=f[1]	T
+a + 0 < b + 0	a=f[@-NaN] b=f[1]	T
+a + 0 > b + 0	a=f[@-NaN] b=f[1]	F
+a + 0 <= b + 0	a=f[@-NaN] b=f[1]	T
+a + 0 >= b + 0	a=f[@-NaN] b=f[1]	F
+a = b + 0	a=f[@-NaN] b=f[1]	F
+a <> b + 0	a=f[@-NaN] b=f[1]	T
+a < b + 0	a=f[@-NaN] b=f[1]	T
+a > b + 0	a=f[@-NaN] b=f[1]	F
+a <= b + 0	a=f[@-NaN] b=f[1]	T
+a >= b + 0	a=f[@-NaN] b=f[1]	F
+b + 0 = a	a=f[@-NaN] b=f[1]	F
+b + 0 <> a	a=f[@-NaN] b=f[1]	T
+b + 0 < a	a=f[@-NaN] b=f[1]	T
+b + 0 > a	a=f[@-NaN] b=f[1]	F
+b + 0 <= a	a=f[@-NaN] b=f[1]	T
+b + 0 >= a	a=f[@-NaN] b=f[1]	F
+a + 0 = b	a=f[@-NaN] b=i[0]	F
+a + 0 <> b	a=f[@-NaN] b=i[0]	T
+a + 0 < b	a=f[@-NaN] b=i[0]	T
+a + 0 > b	a=f[@-NaN] b=i[0]	F
+a + 0 <= b	a=f[@-NaN] b=i[0]	T
+a + 0 >= b	a=f[@-NaN] b=i[0]	F
+b = a + 0	a=f[@-NaN] b=i[0]	F
+b <> a + 0	a=f[@-NaN] b=i[0]	T
+b < a + 0	a=f[@-NaN] b=i[0]	T
+b > a + 0	a=f[@-NaN] b=i[0]	F
+b <= a + 0	a=f[@-NaN] b=i[0]	T
+b >= a + 0	a=f[@-NaN] b=i[0]	F
+- a = b	a=f[@-NaN] b=i[0]	F
+- a <> b	a=f[@-NaN] b=i[0]	T
+- a < b	a=f[@-NaN] b=i[0]	T
+- a > b	a=f[@-NaN] b=i[0]	F
+- a <= b	a=f[@-NaN] b=i[0]	T
+- a >= b	a=f[@-NaN] b=i[0]	F
+b = - a	a=f[@-NaN] b=i[0]	F
+b <> - a	a=f[@-NaN] b=i[0]	T
+b < - a	a=f[@-NaN] b=i[0]	T
+b > - a	a=f[@-NaN] b=i[0]	F
+b <= - a	a=f[@-NaN] b=i[0]	T
+b >= - a	a=f[@-NaN] b=i[0]	F
+a + 0 = b + 0	a=f[@-NaN] b=i[0]	F
+a + 0 <> b + 0	a=f[@-NaN] b=i[0]	T
+a + 0 < b + 0	a=f[@-NaN] b=i[0]	T
+a + 0 > b + 0	a=f[@-NaN] b=i[0]	F
+a + 0 <= b + 0	a=f[@-NaN] b=i[0]	T
+a + 0 >= b + 0	a=f[@-NaN] b=i[0]	F
+a = b + 0	a=f[@-NaN] b=i[0]	F
+a <> b + 0	a=f[@-NaN] b=i[0]	T
+a < b + 0	a=f[@-NaN] b=i[0]	T
+a > b + 0	a=f[@-NaN] b=i[0]	F
+a <= b + 0	a=f[@-NaN] b=i[0]	T
+a >= b + 0	a=f[@-NaN] b=i[0]	F
+b + 0 = a	a=f[@-NaN] b=i[0]	F
+b + 0 <> a	a=f[@-NaN] b=i[0]	T
+b + 0 < a	a=f[@-NaN] b=i[0]	T
+b + 0 > a	a=f[@-NaN] b=i[0]	F
+b + 0 <= a	a=f[@-NaN] b=i[0]	T
+b + 0 >= a	a=f[@-NaN] b=i[0]	F
+a + 0 = b	a=f[@-NaN] b=f[@+Inf]	F
+a + 0 <> b	a=f[@-NaN] b=f[@+Inf]	T
+a + 0 < b	a=f[@-NaN] b=f[@+Inf]	T
+a + 0 > b	a=f[@-NaN] b=f[@+Inf]	F
+a + 0 <= b	a=f[@-NaN] b=f[@+Inf]	T
+a + 0 >= b	a=f[@-NaN] b=f[@+Inf]	F
+b = a + 0	a=f[@-NaN] b=f[@+Inf]	F
+b <> a + 0	a=f[@-NaN] b=f[@+Inf]	T
+b < a + 0	a=f[@-NaN] b=f[@+Inf]	T
+b > a + 0	a=f[@-NaN] b=f[@+Inf]	F
+b <= a + 0	a=f[@-NaN] b=f[@+Inf]	T
+b >= a + 0	a=f[@-NaN] b=f[@+Inf]	F
+- a = b	a=f[@-NaN] b=f[@+Inf]	F
+- a <> b	a=f[@-NaN] b=f[@+Inf]	T
+- a < b	a=f[@-NaN] b=f[@+Inf]	T
+- a > b	a=f[@-NaN] b=f[@+Inf]	F
+- a <= b	a=f[@-NaN] b=f[@+Inf]	T
+- a >= b	a=f[@-NaN] b=f[@+Inf]	F
+b = - a	a=f[@-NaN] b=f[@+Inf]	F
+b <> - a	a=f[@-NaN] b=f[@+Inf]	T
+b < - a	a=f[@-NaN] b=f[@+Inf]	T
+b > - a	a=f[@-NaN] b=f[@+Inf]	F
+b <= - a	a=f[@-NaN] b=f[@+Inf]	T
+b >= - a	a=f[@-NaN] b=f[@+Inf]	F
+a + 0 = b	a=f[@-NaN] b=f[@-Inf]	F
+a + 0 <> b	a=f[@-NaN] b=f[@-Inf]	T
+a + 0 < b	a=f[@-NaN] b=f[@-Inf]	T
+a + 0 > b	a=f[@-NaN] b=f[@-Inf]	F
+a + 0 <= b	a=f[@-NaN] b=f[@-Inf]	T
+a + 0 >= b	a=f[@-NaN] b=f[@-Inf]	F
+b = a + 0	a=f[@-NaN] b=f[@-Inf]	F
+b <> a + 0	a=f[@-NaN] b=f[@-Inf]	T
+b < a + 0	a=f[@-NaN] b=f[@-Inf]	T
+b > a + 0	a=f[@-NaN] b=f[@-Inf]	F
+b <= a + 0	a=f[@-NaN] b=f[@-Inf]	T
+b >= a + 0	a=f[@-NaN] b=f[@-Inf]	F
+- a = b	a=f[@-NaN] b=f[@-Inf]	F
+- a <> b	a=f[@-NaN] b=f[@-Inf]	T
+- a < b	a=f[@-NaN] b=f[@-Inf]	T
+- a > b	a=f[@-NaN] b=f[@-Inf]	F
+- a <= b	a=f[@-NaN] b=f[@-Inf]	T
+- a >= b	a=f[@-NaN] b=f[@-Inf]	F
+b = - a	a=f[@-NaN] b=f[@-Inf]	F
+b <> - a	a=f[@-NaN] b=f[@-Inf]	T
+b < - a	a=f[@-NaN] b=f[@-Inf]	T
+b > - a	a=f[@-NaN] b=f[@-Inf]	F
+b <= - a	a=f[@-NaN] b=f[@-Inf]	T
+b >= - a	a=f[@-NaN] b=f[@-Inf]	F
+a + 0 = b	a=f[@-NaN] b=f[@NaN]	F
+a + 0 <> b	a=f[@-NaN] b=f[@NaN]	T
+a + 0 < b	a=f[@-NaN] b=f[@NaN]	T
+a + 0 > b	a=f[@-NaN] b=f[@NaN]	F
+a + 0 <= b	a=f[@-NaN] b=f[@NaN]	T
+a + 0 >= b	a=f[@-NaN] b=f[@NaN]	F
+b = a + 0	a=f[@-NaN] b=f[@NaN]	F
+b <> a + 0	a=f[@-NaN] b=f[@NaN]	T
+b < a + 0	a=f[@-NaN] b=f[@NaN]	T
+b > a + 0	a=f[@-NaN] b=f[@NaN]	F
+b <= a + 0	a=f[@-NaN] b=f[@NaN]	T
+b >= a + 0	a=f[@-NaN] b=f[@NaN]	F
+- a = b	a=f[@-NaN] b=f[@NaN]	F
+- a <> b	a=f[@-NaN] b=f[@NaN]	T
+- a < b	a=f[@-NaN] b=f[@NaN]	T
+- a > b	a=f[@-NaN] b=f[@NaN]	F
+- a <= b	a=f[@-NaN] b=f[@NaN]	T
+- a >= b	a=f[@-NaN] b=f[@NaN]	F
+b = - a	a=f[@-NaN] b=f[@NaN]	F
+b <> - a	a=f[@-NaN] b=f[@NaN]	T
+b < - a	a=f[@-NaN] b=f[@NaN]	T
+b > - a	a=f[@-NaN] b=f[@NaN]	F
+b <= - a	a=f[@-NaN] b=f[@NaN]	T
+b >= - a	a=f[@-NaN] b=f[@NaN]	F
+a + 0 = b + 0	a=f[@-NaN] b=f[@NaN]	F
+a + 0 <> b + 0	a=f[@-NaN] b=f[@NaN]	T
+a + 0 < b + 0	a=f[@-NaN] b=f[@NaN]	T
+a + 0 > b + 0	a=f[@-NaN] b=f[@NaN]	F
+a + 0 <= b + 0	a=f[@-NaN] b=f[@NaN]	T
+a + 0 >= b + 0	a=f[@-NaN] b=f[@NaN]	F
+a = b + 0	a=f[@-NaN] b=f[@NaN]	F
+a <> b + 0	a=f[@-NaN] b=f[@NaN]	T
+a < b + 0	a=f[@-NaN] b=f[@NaN]	T
+a > b + 0	a=f[@-NaN] b=f[@NaN]	F
+a <= b + 0	a=f[@-NaN] b=f[@NaN]	T
+a >= b + 0	a=f[@-NaN] b=f[@NaN]	F
+b + 0 = a	a=f[@-NaN] b=f[@NaN]	F
+b + 0 <> a	a=f[@-NaN] b=f[@NaN]	T
+b + 0 < a	a=f[@-NaN] b=f[@NaN]	T
+b + 0 > a	a=f[@-NaN] b=f[@NaN]	F
+b + 0 <= a	a=f[@-NaN] b=f[@NaN]	T
+b + 0 >= a	a=f[@-NaN] b=f[@NaN]	F
+a + 0 = b	a=f[@-NaN] b=f[@-NaN]	F
+a + 0 <> b	a=f[@-NaN] b=f[@-NaN]	T
+a + 0 < b	a=f[@-NaN] b=f[@-NaN]	T
+a + 0 > b	a=f[@-NaN] b=f[@-NaN]	F
+a + 0 <= b	a=f[@-NaN] b=f[@-NaN]	T
+a + 0 >= b	a=f[@-NaN] b=f[@-NaN]	F
+b = a + 0	a=f[@-NaN] b=f[@-NaN]	F
+b <> a + 0	a=f[@-NaN] b=f[@-NaN]	T
+b < a + 0	a=f[@-NaN] b=f[@-NaN]	T
+b > a + 0	a=f[@-NaN] b=f[@-NaN]	F
+b <= a + 0	a=f[@-NaN] b=f[@-NaN]	T
+b >= a + 0	a=f[@-NaN] b=f[@-NaN]	F
+- a = b	a=f[@-NaN] b=f[@-NaN]	F
+- a <> b	a=f[@-NaN] b=f[@-NaN]	T
+- a < b	a=f[@-NaN] b=f[@-NaN]	T
+- a > b	a=f[@-NaN] b=f[@-NaN]	F
+- a <= b	a=f[@-NaN] b=f[@-NaN]	T
+- a >= b	a=f[@-NaN] b=f[@-NaN]	F
+b = - a	a=f[@-NaN] b=f[@-NaN]	F
+b <> - a	a=f[@-NaN] b=f[@-NaN]	T
+b < - a	a=f[@-NaN] b=f[@-NaN]	T
+b > - a	a=f[@-NaN] b=f[@-NaN]	F
+b <= - a	a=f[@-NaN] b=f[@-NaN]	T
+b >= - a	a=f[@-NaN] b=f[@-NaN]	F
+a + 0 = b + 0	a=f[@-NaN] b=f[@-NaN]	F
+a + 0 <> b + 0	a=f[@-NaN] b=f[@-NaN]	T
+a + 0 < b + 0	a=f[@-NaN] b=f[@-NaN]	T
+a + 0 > b + 0	a=f[@-NaN] b=f[@-NaN]	F
+a + 0 <= b + 0	a=f[@-NaN] b=f[@-NaN]	T
+a + 0 >= b + 0	a=f[@-NaN] b=f[@-NaN]	F
+a = b + 0	a=f[@-NaN] b=f[@-NaN]	F
+a <> b + 0	a=f[@-NaN] b=f[@-NaN]	T
+a < b + 0	a=f[@-NaN] b=f[@-NaN]	T
+a > b + 0	a=f[@-NaN] b=f[@-NaN]	F
+a <= b + 0	a=f[@-NaN] b=f[@-NaN]	T
+a >= b + 0	a=f[@-NaN] b=f[@-NaN]	F
+b + 0 = a	a=f[@-NaN] b=f[@-NaN]	F
+b + 0 <> a	a=f[@-NaN] b=f[@-NaN]	T
+b + 0 < a	a=f[@-NaN] b=f[@-NaN]	T
+b + 0 > a	a=f[@-NaN] b=f[@-NaN]	F
+b + 0 <= a	a=f[@-NaN] b=f[@-NaN]	T
+b + 0 >= a	a=f[@-NaN] b=f[@-NaN]	F
+a + 0 = b	a=decfloat34[@+Inf] b=decfloat34[0]	F
+a + 0 <> b	a=decfloat34[@+Inf] b=decfloat34[0]	T
+a + 0 < b	a=decfloat34[@+Inf] b=decfloat34[0]	F
+a + 0 > b	a=decfloat34[@+Inf] b=decfloat34[0]	T
+a + 0 <= b	a=decfloat34[@+Inf] b=decfloat34[0]	F
+a + 0 >= b	a=decfloat34[@+Inf] b=decfloat34[0]	T
+b = a + 0	a=decfloat34[@+Inf] b=decfloat34[0]	F
+b <> a + 0	a=decfloat34[@+Inf] b=decfloat34[0]	T
+b < a + 0	a=decfloat34[@+Inf] b=decfloat34[0]	T
+b > a + 0	a=decfloat34[@+Inf] b=decfloat34[0]	F
+b <= a + 0	a=decfloat34[@+Inf] b=decfloat34[0]	T
+b >= a + 0	a=decfloat34[@+Inf] b=decfloat34[0]	F
+- a = b	a=decfloat34[@+Inf] b=decfloat34[0]	F
+- a <> b	a=decfloat34[@+Inf] b=decfloat34[0]	T
+- a < b	a=decfloat34[@+Inf] b=decfloat34[0]	T
+- a > b	a=decfloat34[@+Inf] b=decfloat34[0]	F
+- a <= b	a=decfloat34[@+Inf] b=decfloat34[0]	T
+- a >= b	a=decfloat34[@+Inf] b=decfloat34[0]	F
+b = - a	a=decfloat34[@+Inf] b=decfloat34[0]	F
+b <> - a	a=decfloat34[@+Inf] b=decfloat34[0]	T
+b < - a	a=decfloat34[@+Inf] b=decfloat34[0]	F
+b > - a	a=decfloat34[@+Inf] b=decfloat34[0]	T
+b <= - a	a=decfloat34[@+Inf] b=decfloat34[0]	F
+b >= - a	a=decfloat34[@+Inf] b=decfloat34[0]	T
+a + 0 = b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	F
+a + 0 <> b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	T
+a + 0 < b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	F
+a + 0 > b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	T
+a + 0 <= b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	F
+a + 0 >= b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	T
+a = b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	F
+a <> b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	T
+a < b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	F
+a > b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	T
+a <= b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	F
+a >= b + 0	a=decfloat34[@+Inf] b=decfloat34[0]	T
+b + 0 = a	a=decfloat34[@+Inf] b=decfloat34[0]	F
+b + 0 <> a	a=decfloat34[@+Inf] b=decfloat34[0]	T
+b + 0 < a	a=decfloat34[@+Inf] b=decfloat34[0]	T
+b + 0 > a	a=decfloat34[@+Inf] b=decfloat34[0]	F
+b + 0 <= a	a=decfloat34[@+Inf] b=decfloat34[0]	T
+b + 0 >= a	a=decfloat34[@+Inf] b=decfloat34[0]	F
+a + 0 = b	a=decfloat34[@+Inf] b=decfloat34[1]	F
+a + 0 <> b	a=decfloat34[@+Inf] b=decfloat34[1]	T
+a + 0 < b	a=decfloat34[@+Inf] b=decfloat34[1]	F
+a + 0 > b	a=decfloat34[@+Inf] b=decfloat34[1]	T
+a + 0 <= b	a=decfloat34[@+Inf] b=decfloat34[1]	F
+a + 0 >= b	a=decfloat34[@+Inf] b=decfloat34[1]	T
+b = a + 0	a=decfloat34[@+Inf] b=decfloat34[1]	F
+b <> a + 0	a=decfloat34[@+Inf] b=decfloat34[1]	T
+b < a + 0	a=decfloat34[@+Inf] b=decfloat34[1]	T
+b > a + 0	a=decfloat34[@+Inf] b=decfloat34[1]	F
+b <= a + 0	a=decfloat34[@+Inf] b=decfloat34[1]	T
+b >= a + 0	a=decfloat34[@+Inf] b=decfloat34[1]	F
+- a = b	a=decfloat34[@+Inf] b=decfloat34[1]	F
+- a <> b	a=decfloat34[@+Inf] b=decfloat34[1]	T
+- a < b	a=decfloat34[@+Inf] b=decfloat34[1]	T
+- a > b	a=decfloat34[@+Inf] b=decfloat34[1]	F
+- a <= b	a=decfloat34[@+Inf] b=decfloat34[1]	T
+- a >= b	a=decfloat34[@+Inf] b=decfloat34[1]	F
+b = - a	a=decfloat34[@+Inf] b=decfloat34[1]	F
+b <> - a	a=decfloat34[@+Inf] b=decfloat34[1]	T
+b < - a	a=decfloat34[@+Inf] b=decfloat34[1]	F
+b > - a	a=decfloat34[@+Inf] b=decfloat34[1]	T
+b <= - a	a=decfloat34[@+Inf] b=decfloat34[1]	F
+b >= - a	a=decfloat34[@+Inf] b=decfloat34[1]	T
+a + 0 = b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	F
+a + 0 <> b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	T
+a + 0 < b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	F
+a + 0 > b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	T
+a + 0 <= b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	F
+a + 0 >= b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	T
+a = b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	F
+a <> b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	T
+a < b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	F
+a > b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	T
+a <= b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	F
+a >= b + 0	a=decfloat34[@+Inf] b=decfloat34[1]	T
+b + 0 = a	a=decfloat34[@+Inf] b=decfloat34[1]	F
+b + 0 <> a	a=decfloat34[@+Inf] b=decfloat34[1]	T
+b + 0 < a	a=decfloat34[@+Inf] b=decfloat34[1]	T
+b + 0 > a	a=decfloat34[@+Inf] b=decfloat34[1]	F
+b + 0 <= a	a=decfloat34[@+Inf] b=decfloat34[1]	T
+b + 0 >= a	a=decfloat34[@+Inf] b=decfloat34[1]	F
+a + 0 = b	a=decfloat34[@+Inf] b=i[0]	F
+a + 0 <> b	a=decfloat34[@+Inf] b=i[0]	T
+a + 0 < b	a=decfloat34[@+Inf] b=i[0]	F
+a + 0 > b	a=decfloat34[@+Inf] b=i[0]	T
+a + 0 <= b	a=decfloat34[@+Inf] b=i[0]	F
+a + 0 >= b	a=decfloat34[@+Inf] b=i[0]	T
+b = a + 0	a=decfloat34[@+Inf] b=i[0]	F
+b <> a + 0	a=decfloat34[@+Inf] b=i[0]	T
+b < a + 0	a=decfloat34[@+Inf] b=i[0]	T
+b > a + 0	a=decfloat34[@+Inf] b=i[0]	F
+b <= a + 0	a=decfloat34[@+Inf] b=i[0]	T
+b >= a + 0	a=decfloat34[@+Inf] b=i[0]	F
+- a = b	a=decfloat34[@+Inf] b=i[0]	F
+- a <> b	a=decfloat34[@+Inf] b=i[0]	T
+- a < b	a=decfloat34[@+Inf] b=i[0]	T
+- a > b	a=decfloat34[@+Inf] b=i[0]	F
+- a <= b	a=decfloat34[@+Inf] b=i[0]	T
+- a >= b	a=decfloat34[@+Inf] b=i[0]	F
+b = - a	a=decfloat34[@+Inf] b=i[0]	F
+b <> - a	a=decfloat34[@+Inf] b=i[0]	T
+b < - a	a=decfloat34[@+Inf] b=i[0]	F
+b > - a	a=decfloat34[@+Inf] b=i[0]	T
+b <= - a	a=decfloat34[@+Inf] b=i[0]	F
+b >= - a	a=decfloat34[@+Inf] b=i[0]	T
+a + 0 = b + 0	a=decfloat34[@+Inf] b=i[0]	F
+a + 0 <> b + 0	a=decfloat34[@+Inf] b=i[0]	T
+a + 0 < b + 0	a=decfloat34[@+Inf] b=i[0]	F
+a + 0 > b + 0	a=decfloat34[@+Inf] b=i[0]	T
+a + 0 <= b + 0	a=decfloat34[@+Inf] b=i[0]	F
+a + 0 >= b + 0	a=decfloat34[@+Inf] b=i[0]	T
+a = b + 0	a=decfloat34[@+Inf] b=i[0]	F
+a <> b + 0	a=decfloat34[@+Inf] b=i[0]	T
+a < b + 0	a=decfloat34[@+Inf] b=i[0]	F
+a > b + 0	a=decfloat34[@+Inf] b=i[0]	T
+a <= b + 0	a=decfloat34[@+Inf] b=i[0]	F
+a >= b + 0	a=decfloat34[@+Inf] b=i[0]	T
+b + 0 = a	a=decfloat34[@+Inf] b=i[0]	F
+b + 0 <> a	a=decfloat34[@+Inf] b=i[0]	T
+b + 0 < a	a=decfloat34[@+Inf] b=i[0]	T
+b + 0 > a	a=decfloat34[@+Inf] b=i[0]	F
+b + 0 <= a	a=decfloat34[@+Inf] b=i[0]	T
+b + 0 >= a	a=decfloat34[@+Inf] b=i[0]	F
+a + 0 = b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+a + 0 <> b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+a + 0 < b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+a + 0 > b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+a + 0 <= b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+a + 0 >= b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+b = a + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+b <> a + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+b < a + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+b > a + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+b <= a + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+b >= a + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+- a = b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+- a <> b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+- a < b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+- a > b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+- a <= b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+- a >= b	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+b = - a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+b <> - a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+b < - a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+b > - a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+b <= - a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+b >= - a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+a + 0 = b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+a + 0 <> b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+a + 0 < b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+a + 0 > b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+a + 0 <= b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+a + 0 >= b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+a = b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+a <> b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+a < b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+a > b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+a <= b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+a >= b + 0	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+b + 0 = a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+b + 0 <> a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+b + 0 < a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+b + 0 > a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+b + 0 <= a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+b + 0 >= a	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+a + 0 = b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+a + 0 <> b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+a + 0 < b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+a + 0 > b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+a + 0 <= b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+a + 0 >= b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+b = a + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+b <> a + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+b < a + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+b > a + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+b <= a + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+b >= a + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+- a = b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+- a <> b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+- a < b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+- a > b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+- a <= b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+- a >= b	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+b = - a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+b <> - a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+b < - a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+b > - a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+b <= - a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+b >= - a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+a + 0 = b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+a + 0 <> b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+a + 0 < b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+a + 0 > b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+a + 0 <= b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+a + 0 >= b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+a = b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+a <> b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+a < b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+a > b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+a <= b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+a >= b + 0	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+b + 0 = a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+b + 0 <> a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+b + 0 < a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+b + 0 > a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+b + 0 <= a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	T
+b + 0 >= a	a=decfloat34[@+Inf] b=decfloat34[@-Inf]	F
+a + 0 = b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+a + 0 <> b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+a + 0 < b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+a + 0 > b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+a + 0 <= b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+a + 0 >= b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+b = a + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+b <> a + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+b < a + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+b > a + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+b <= a + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+b >= a + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+- a = b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+- a <> b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+- a < b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+- a > b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+- a <= b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+- a >= b	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+b = - a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+b <> - a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+b < - a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+b > - a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+b <= - a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+b >= - a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+a + 0 = b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+a + 0 <> b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+a + 0 < b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+a + 0 > b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+a + 0 <= b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+a + 0 >= b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+a = b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+a <> b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+a < b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+a > b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+a <= b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+a >= b + 0	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+b + 0 = a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+b + 0 <> a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+b + 0 < a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+b + 0 > a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+b + 0 <= a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	F
+b + 0 >= a	a=decfloat34[@+Inf] b=decfloat34[@NaN]	T
+a + 0 = b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+a + 0 <> b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+a + 0 < b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+a + 0 > b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+a + 0 <= b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+a + 0 >= b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+b = a + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+b <> a + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+b < a + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+b > a + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+b <= a + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+b >= a + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+- a = b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+- a <> b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+- a < b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+- a > b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+- a <= b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+- a >= b	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+b = - a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+b <> - a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+b < - a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+b > - a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+b <= - a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+b >= - a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+a + 0 = b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+a + 0 <> b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+a + 0 < b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+a + 0 > b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+a + 0 <= b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+a + 0 >= b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+a = b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+a <> b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+a < b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+a > b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+a <= b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+a >= b + 0	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+b + 0 = a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+b + 0 <> a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+b + 0 < a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+b + 0 > a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+b + 0 <= a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	T
+b + 0 >= a	a=decfloat34[@+Inf] b=decfloat34[@-NaN]	F
+a + 0 = b	a=decfloat34[@-Inf] b=decfloat34[0]	F
+a + 0 <> b	a=decfloat34[@-Inf] b=decfloat34[0]	T
+a + 0 < b	a=decfloat34[@-Inf] b=decfloat34[0]	T
+a + 0 > b	a=decfloat34[@-Inf] b=decfloat34[0]	F
+a + 0 <= b	a=decfloat34[@-Inf] b=decfloat34[0]	T
+a + 0 >= b	a=decfloat34[@-Inf] b=decfloat34[0]	F
+b = a + 0	a=decfloat34[@-Inf] b=decfloat34[0]	F
+b <> a + 0	a=decfloat34[@-Inf] b=decfloat34[0]	T
+b < a + 0	a=decfloat34[@-Inf] b=decfloat34[0]	F
+b > a + 0	a=decfloat34[@-Inf] b=decfloat34[0]	T
+b <= a + 0	a=decfloat34[@-Inf] b=decfloat34[0]	F
+b >= a + 0	a=decfloat34[@-Inf] b=decfloat34[0]	T
+- a = b	a=decfloat34[@-Inf] b=decfloat34[0]	F
+- a <> b	a=decfloat34[@-Inf] b=decfloat34[0]	T
+- a < b	a=decfloat34[@-Inf] b=decfloat34[0]	F
+- a > b	a=decfloat34[@-Inf] b=decfloat34[0]	T
+- a <= b	a=decfloat34[@-Inf] b=decfloat34[0]	F
+- a >= b	a=decfloat34[@-Inf] b=decfloat34[0]	T
+b = - a	a=decfloat34[@-Inf] b=decfloat34[0]	F
+b <> - a	a=decfloat34[@-Inf] b=decfloat34[0]	T
+b < - a	a=decfloat34[@-Inf] b=decfloat34[0]	T
+b > - a	a=decfloat34[@-Inf] b=decfloat34[0]	F
+b <= - a	a=decfloat34[@-Inf] b=decfloat34[0]	T
+b >= - a	a=decfloat34[@-Inf] b=decfloat34[0]	F
+a + 0 = b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	F
+a + 0 <> b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	T
+a + 0 < b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	T
+a + 0 > b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	F
+a + 0 <= b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	T
+a + 0 >= b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	F
+a = b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	F
+a <> b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	T
+a < b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	T
+a > b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	F
+a <= b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	T
+a >= b + 0	a=decfloat34[@-Inf] b=decfloat34[0]	F
+b + 0 = a	a=decfloat34[@-Inf] b=decfloat34[0]	F
+b + 0 <> a	a=decfloat34[@-Inf] b=decfloat34[0]	T
+b + 0 < a	a=decfloat34[@-Inf] b=decfloat34[0]	F
+b + 0 > a	a=decfloat34[@-Inf] b=decfloat34[0]	T
+b + 0 <= a	a=decfloat34[@-Inf] b=decfloat34[0]	F
+b + 0 >= a	a=decfloat34[@-Inf] b=decfloat34[0]	T
+a + 0 = b	a=decfloat34[@-Inf] b=decfloat34[1]	F
+a + 0 <> b	a=decfloat34[@-Inf] b=decfloat34[1]	T
+a + 0 < b	a=decfloat34[@-Inf] b=decfloat34[1]	T
+a + 0 > b	a=decfloat34[@-Inf] b=decfloat34[1]	F
+a + 0 <= b	a=decfloat34[@-Inf] b=decfloat34[1]	T
+a + 0 >= b	a=decfloat34[@-Inf] b=decfloat34[1]	F
+b = a + 0	a=decfloat34[@-Inf] b=decfloat34[1]	F
+b <> a + 0	a=decfloat34[@-Inf] b=decfloat34[1]	T
+b < a + 0	a=decfloat34[@-Inf] b=decfloat34[1]	F
+b > a + 0	a=decfloat34[@-Inf] b=decfloat34[1]	T
+b <= a + 0	a=decfloat34[@-Inf] b=decfloat34[1]	F
+b >= a + 0	a=decfloat34[@-Inf] b=decfloat34[1]	T
+- a = b	a=decfloat34[@-Inf] b=decfloat34[1]	F
+- a <> b	a=decfloat34[@-Inf] b=decfloat34[1]	T
+- a < b	a=decfloat34[@-Inf] b=decfloat34[1]	F
+- a > b	a=decfloat34[@-Inf] b=decfloat34[1]	T
+- a <= b	a=decfloat34[@-Inf] b=decfloat34[1]	F
+- a >= b	a=decfloat34[@-Inf] b=decfloat34[1]	T
+b = - a	a=decfloat34[@-Inf] b=decfloat34[1]	F
+b <> - a	a=decfloat34[@-Inf] b=decfloat34[1]	T
+b < - a	a=decfloat34[@-Inf] b=decfloat34[1]	T
+b > - a	a=decfloat34[@-Inf] b=decfloat34[1]	F
+b <= - a	a=decfloat34[@-Inf] b=decfloat34[1]	T
+b >= - a	a=decfloat34[@-Inf] b=decfloat34[1]	F
+a + 0 = b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	F
+a + 0 <> b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	T
+a + 0 < b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	T
+a + 0 > b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	F
+a + 0 <= b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	T
+a + 0 >= b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	F
+a = b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	F
+a <> b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	T
+a < b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	T
+a > b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	F
+a <= b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	T
+a >= b + 0	a=decfloat34[@-Inf] b=decfloat34[1]	F
+b + 0 = a	a=decfloat34[@-Inf] b=decfloat34[1]	F
+b + 0 <> a	a=decfloat34[@-Inf] b=decfloat34[1]	T
+b + 0 < a	a=decfloat34[@-Inf] b=decfloat34[1]	F
+b + 0 > a	a=decfloat34[@-Inf] b=decfloat34[1]	T
+b + 0 <= a	a=decfloat34[@-Inf] b=decfloat34[1]	F
+b + 0 >= a	a=decfloat34[@-Inf] b=decfloat34[1]	T
+a + 0 = b	a=decfloat34[@-Inf] b=i[0]	F
+a + 0 <> b	a=decfloat34[@-Inf] b=i[0]	T
+a + 0 < b	a=decfloat34[@-Inf] b=i[0]	T
+a + 0 > b	a=decfloat34[@-Inf] b=i[0]	F
+a + 0 <= b	a=decfloat34[@-Inf] b=i[0]	T
+a + 0 >= b	a=decfloat34[@-Inf] b=i[0]	F
+b = a + 0	a=decfloat34[@-Inf] b=i[0]	F
+b <> a + 0	a=decfloat34[@-Inf] b=i[0]	T
+b < a + 0	a=decfloat34[@-Inf] b=i[0]	F
+b > a + 0	a=decfloat34[@-Inf] b=i[0]	T
+b <= a + 0	a=decfloat34[@-Inf] b=i[0]	F
+b >= a + 0	a=decfloat34[@-Inf] b=i[0]	T
+- a = b	a=decfloat34[@-Inf] b=i[0]	F
+- a <> b	a=decfloat34[@-Inf] b=i[0]	T
+- a < b	a=decfloat34[@-Inf] b=i[0]	F
+- a > b	a=decfloat34[@-Inf] b=i[0]	T
+- a <= b	a=decfloat34[@-Inf] b=i[0]	F
+- a >= b	a=decfloat34[@-Inf] b=i[0]	T
+b = - a	a=decfloat34[@-Inf] b=i[0]	F
+b <> - a	a=decfloat34[@-Inf] b=i[0]	T
+b < - a	a=decfloat34[@-Inf] b=i[0]	T
+b > - a	a=decfloat34[@-Inf] b=i[0]	F
+b <= - a	a=decfloat34[@-Inf] b=i[0]	T
+b >= - a	a=decfloat34[@-Inf] b=i[0]	F
+a + 0 = b + 0	a=decfloat34[@-Inf] b=i[0]	F
+a + 0 <> b + 0	a=decfloat34[@-Inf] b=i[0]	T
+a + 0 < b + 0	a=decfloat34[@-Inf] b=i[0]	T
+a + 0 > b + 0	a=decfloat34[@-Inf] b=i[0]	F
+a + 0 <= b + 0	a=decfloat34[@-Inf] b=i[0]	T
+a + 0 >= b + 0	a=decfloat34[@-Inf] b=i[0]	F
+a = b + 0	a=decfloat34[@-Inf] b=i[0]	F
+a <> b + 0	a=decfloat34[@-Inf] b=i[0]	T
+a < b + 0	a=decfloat34[@-Inf] b=i[0]	T
+a > b + 0	a=decfloat34[@-Inf] b=i[0]	F
+a <= b + 0	a=decfloat34[@-Inf] b=i[0]	T
+a >= b + 0	a=decfloat34[@-Inf] b=i[0]	F
+b + 0 = a	a=decfloat34[@-Inf] b=i[0]	F
+b + 0 <> a	a=decfloat34[@-Inf] b=i[0]	T
+b + 0 < a	a=decfloat34[@-Inf] b=i[0]	F
+b + 0 > a	a=decfloat34[@-Inf] b=i[0]	T
+b + 0 <= a	a=decfloat34[@-Inf] b=i[0]	F
+b + 0 >= a	a=decfloat34[@-Inf] b=i[0]	T
+a + 0 = b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+a + 0 <> b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+a + 0 < b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+a + 0 > b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+a + 0 <= b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+a + 0 >= b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+b = a + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+b <> a + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+b < a + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+b > a + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+b <= a + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+b >= a + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+- a = b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+- a <> b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+- a < b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+- a > b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+- a <= b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+- a >= b	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+b = - a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+b <> - a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+b < - a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+b > - a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+b <= - a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+b >= - a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+a + 0 = b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+a + 0 <> b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+a + 0 < b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+a + 0 > b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+a + 0 <= b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+a + 0 >= b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+a = b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+a <> b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+a < b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+a > b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+a <= b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+a >= b + 0	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+b + 0 = a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+b + 0 <> a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+b + 0 < a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+b + 0 > a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+b + 0 <= a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	F
+b + 0 >= a	a=decfloat34[@-Inf] b=decfloat34[@+Inf]	T
+a + 0 = b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+a + 0 <> b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+a + 0 < b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+a + 0 > b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+a + 0 <= b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+a + 0 >= b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+b = a + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+b <> a + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+b < a + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+b > a + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+b <= a + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+b >= a + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+- a = b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+- a <> b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+- a < b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+- a > b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+- a <= b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+- a >= b	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+b = - a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+b <> - a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+b < - a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+b > - a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+b <= - a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+b >= - a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+a + 0 = b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+a + 0 <> b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+a + 0 < b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+a + 0 > b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+a + 0 <= b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+a + 0 >= b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+a = b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+a <> b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+a < b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+a > b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+a <= b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+a >= b + 0	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+b + 0 = a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+b + 0 <> a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+b + 0 < a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+b + 0 > a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	F
+b + 0 <= a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+b + 0 >= a	a=decfloat34[@-Inf] b=decfloat34[@-Inf]	T
+a + 0 = b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+a + 0 <> b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+a + 0 < b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+a + 0 > b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+a + 0 <= b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+a + 0 >= b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+b = a + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+b <> a + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+b < a + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+b > a + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+b <= a + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+b >= a + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+- a = b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+- a <> b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+- a < b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+- a > b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+- a <= b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+- a >= b	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+b = - a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+b <> - a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+b < - a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+b > - a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+b <= - a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+b >= - a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+a + 0 = b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+a + 0 <> b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+a + 0 < b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+a + 0 > b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+a + 0 <= b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+a + 0 >= b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+a = b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+a <> b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+a < b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+a > b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+a <= b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+a >= b + 0	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+b + 0 = a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+b + 0 <> a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+b + 0 < a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+b + 0 > a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+b + 0 <= a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	F
+b + 0 >= a	a=decfloat34[@-Inf] b=decfloat34[@NaN]	T
+a + 0 = b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+a + 0 <> b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+a + 0 < b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+a + 0 > b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+a + 0 <= b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+a + 0 >= b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+b = a + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+b <> a + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+b < a + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+b > a + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+b <= a + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+b >= a + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+- a = b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+- a <> b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+- a < b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+- a > b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+- a <= b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+- a >= b	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+b = - a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+b <> - a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+b < - a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+b > - a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+b <= - a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+b >= - a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+a + 0 = b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+a + 0 <> b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+a + 0 < b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+a + 0 > b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+a + 0 <= b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+a + 0 >= b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+a = b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+a <> b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+a < b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+a > b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+a <= b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+a >= b + 0	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+b + 0 = a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+b + 0 <> a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+b + 0 < a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+b + 0 > a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+b + 0 <= a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	T
+b + 0 >= a	a=decfloat34[@-Inf] b=decfloat34[@-NaN]	F
+a + 0 = b	a=decfloat34[@NaN] b=decfloat34[0]	F
+a + 0 <> b	a=decfloat34[@NaN] b=decfloat34[0]	T
+a + 0 < b	a=decfloat34[@NaN] b=decfloat34[0]	F
+a + 0 > b	a=decfloat34[@NaN] b=decfloat34[0]	T
+a + 0 <= b	a=decfloat34[@NaN] b=decfloat34[0]	F
+a + 0 >= b	a=decfloat34[@NaN] b=decfloat34[0]	T
+b = a + 0	a=decfloat34[@NaN] b=decfloat34[0]	F
+b <> a + 0	a=decfloat34[@NaN] b=decfloat34[0]	T
+b < a + 0	a=decfloat34[@NaN] b=decfloat34[0]	F
+b > a + 0	a=decfloat34[@NaN] b=decfloat34[0]	T
+b <= a + 0	a=decfloat34[@NaN] b=decfloat34[0]	F
+b >= a + 0	a=decfloat34[@NaN] b=decfloat34[0]	T
+- a = b	a=decfloat34[@NaN] b=decfloat34[0]	F
+- a <> b	a=decfloat34[@NaN] b=decfloat34[0]	T
+- a < b	a=decfloat34[@NaN] b=decfloat34[0]	T
+- a > b	a=decfloat34[@NaN] b=decfloat34[0]	F
+- a <= b	a=decfloat34[@NaN] b=decfloat34[0]	T
+- a >= b	a=decfloat34[@NaN] b=decfloat34[0]	F
+b = - a	a=decfloat34[@NaN] b=decfloat34[0]	F
+b <> - a	a=decfloat34[@NaN] b=decfloat34[0]	T
+b < - a	a=decfloat34[@NaN] b=decfloat34[0]	T
+b > - a	a=decfloat34[@NaN] b=decfloat34[0]	F
+b <= - a	a=decfloat34[@NaN] b=decfloat34[0]	T
+b >= - a	a=decfloat34[@NaN] b=decfloat34[0]	F
+a + 0 = b + 0	a=decfloat34[@NaN] b=decfloat34[0]	F
+a + 0 <> b + 0	a=decfloat34[@NaN] b=decfloat34[0]	T
+a + 0 < b + 0	a=decfloat34[@NaN] b=decfloat34[0]	F
+a + 0 > b + 0	a=decfloat34[@NaN] b=decfloat34[0]	T
+a + 0 <= b + 0	a=decfloat34[@NaN] b=decfloat34[0]	F
+a + 0 >= b + 0	a=decfloat34[@NaN] b=decfloat34[0]	T
+a = b + 0	a=decfloat34[@NaN] b=decfloat34[0]	F
+a <> b + 0	a=decfloat34[@NaN] b=decfloat34[0]	T
+a < b + 0	a=decfloat34[@NaN] b=decfloat34[0]	F
+a > b + 0	a=decfloat34[@NaN] b=decfloat34[0]	T
+a <= b + 0	a=decfloat34[@NaN] b=decfloat34[0]	F
+a >= b + 0	a=decfloat34[@NaN] b=decfloat34[0]	T
+b + 0 = a	a=decfloat34[@NaN] b=decfloat34[0]	F
+b + 0 <> a	a=decfloat34[@NaN] b=decfloat34[0]	T
+b + 0 < a	a=decfloat34[@NaN] b=decfloat34[0]	F
+b + 0 > a	a=decfloat34[@NaN] b=decfloat34[0]	T
+b + 0 <= a	a=decfloat34[@NaN] b=decfloat34[0]	F
+b + 0 >= a	a=decfloat34[@NaN] b=decfloat34[0]	T
+a + 0 = b	a=decfloat34[@NaN] b=decfloat34[1]	F
+a + 0 <> b	a=decfloat34[@NaN] b=decfloat34[1]	T
+a + 0 < b	a=decfloat34[@NaN] b=decfloat34[1]	F
+a + 0 > b	a=decfloat34[@NaN] b=decfloat34[1]	T
+a + 0 <= b	a=decfloat34[@NaN] b=decfloat34[1]	F
+a + 0 >= b	a=decfloat34[@NaN] b=decfloat34[1]	T
+b = a + 0	a=decfloat34[@NaN] b=decfloat34[1]	F
+b <> a + 0	a=decfloat34[@NaN] b=decfloat34[1]	T
+b < a + 0	a=decfloat34[@NaN] b=decfloat34[1]	F
+b > a + 0	a=decfloat34[@NaN] b=decfloat34[1]	T
+b <= a + 0	a=decfloat34[@NaN] b=decfloat34[1]	F
+b >= a + 0	a=decfloat34[@NaN] b=decfloat34[1]	T
+- a = b	a=decfloat34[@NaN] b=decfloat34[1]	F
+- a <> b	a=decfloat34[@NaN] b=decfloat34[1]	T
+- a < b	a=decfloat34[@NaN] b=decfloat34[1]	T
+- a > b	a=decfloat34[@NaN] b=decfloat34[1]	F
+- a <= b	a=decfloat34[@NaN] b=decfloat34[1]	T
+- a >= b	a=decfloat34[@NaN] b=decfloat34[1]	F
+b = - a	a=decfloat34[@NaN] b=decfloat34[1]	F
+b <> - a	a=decfloat34[@NaN] b=decfloat34[1]	T
+b < - a	a=decfloat34[@NaN] b=decfloat34[1]	T
+b > - a	a=decfloat34[@NaN] b=decfloat34[1]	F
+b <= - a	a=decfloat34[@NaN] b=decfloat34[1]	T
+b >= - a	a=decfloat34[@NaN] b=decfloat34[1]	F
+a + 0 = b + 0	a=decfloat34[@NaN] b=decfloat34[1]	F
+a + 0 <> b + 0	a=decfloat34[@NaN] b=decfloat34[1]	T
+a + 0 < b + 0	a=decfloat34[@NaN] b=decfloat34[1]	F
+a + 0 > b + 0	a=decfloat34[@NaN] b=decfloat34[1]	T
+a + 0 <= b + 0	a=decfloat34[@NaN] b=decfloat34[1]	F
+a + 0 >= b + 0	a=decfloat34[@NaN] b=decfloat34[1]	T
+a = b + 0	a=decfloat34[@NaN] b=decfloat34[1]	F
+a <> b + 0	a=decfloat34[@NaN] b=decfloat34[1]	T
+a < b + 0	a=decfloat34[@NaN] b=decfloat34[1]	F
+a > b + 0	a=decfloat34[@NaN] b=decfloat34[1]	T
+a <= b + 0	a=decfloat34[@NaN] b=decfloat34[1]	F
+a >= b + 0	a=decfloat34[@NaN] b=decfloat34[1]	T
+b + 0 = a	a=decfloat34[@NaN] b=decfloat34[1]	F
+b + 0 <> a	a=decfloat34[@NaN] b=decfloat34[1]	T
+b + 0 < a	a=decfloat34[@NaN] b=decfloat34[1]	F
+b + 0 > a	a=decfloat34[@NaN] b=decfloat34[1]	T
+b + 0 <= a	a=decfloat34[@NaN] b=decfloat34[1]	F
+b + 0 >= a	a=decfloat34[@NaN] b=decfloat34[1]	T
+a + 0 = b	a=decfloat34[@NaN] b=i[0]	F
+a + 0 <> b	a=decfloat34[@NaN] b=i[0]	T
+a + 0 < b	a=decfloat34[@NaN] b=i[0]	F
+a + 0 > b	a=decfloat34[@NaN] b=i[0]	T
+a + 0 <= b	a=decfloat34[@NaN] b=i[0]	F
+a + 0 >= b	a=decfloat34[@NaN] b=i[0]	T
+b = a + 0	a=decfloat34[@NaN] b=i[0]	F
+b <> a + 0	a=decfloat34[@NaN] b=i[0]	T
+b < a + 0	a=decfloat34[@NaN] b=i[0]	F
+b > a + 0	a=decfloat34[@NaN] b=i[0]	T
+b <= a + 0	a=decfloat34[@NaN] b=i[0]	F
+b >= a + 0	a=decfloat34[@NaN] b=i[0]	T
+- a = b	a=decfloat34[@NaN] b=i[0]	F
+- a <> b	a=decfloat34[@NaN] b=i[0]	T
+- a < b	a=decfloat34[@NaN] b=i[0]	T
+- a > b	a=decfloat34[@NaN] b=i[0]	F
+- a <= b	a=decfloat34[@NaN] b=i[0]	T
+- a >= b	a=decfloat34[@NaN] b=i[0]	F
+b = - a	a=decfloat34[@NaN] b=i[0]	F
+b <> - a	a=decfloat34[@NaN] b=i[0]	T
+b < - a	a=decfloat34[@NaN] b=i[0]	T
+b > - a	a=decfloat34[@NaN] b=i[0]	F
+b <= - a	a=decfloat34[@NaN] b=i[0]	T
+b >= - a	a=decfloat34[@NaN] b=i[0]	F
+a + 0 = b + 0	a=decfloat34[@NaN] b=i[0]	F
+a + 0 <> b + 0	a=decfloat34[@NaN] b=i[0]	T
+a + 0 < b + 0	a=decfloat34[@NaN] b=i[0]	F
+a + 0 > b + 0	a=decfloat34[@NaN] b=i[0]	T
+a + 0 <= b + 0	a=decfloat34[@NaN] b=i[0]	F
+a + 0 >= b + 0	a=decfloat34[@NaN] b=i[0]	T
+a = b + 0	a=decfloat34[@NaN] b=i[0]	F
+a <> b + 0	a=decfloat34[@NaN] b=i[0]	T
+a < b + 0	a=decfloat34[@NaN] b=i[0]	F
+a > b + 0	a=decfloat34[@NaN] b=i[0]	T
+a <= b + 0	a=decfloat34[@NaN] b=i[0]	F
+a >= b + 0	a=decfloat34[@NaN] b=i[0]	T
+b + 0 = a	a=decfloat34[@NaN] b=i[0]	F
+b + 0 <> a	a=decfloat34[@NaN] b=i[0]	T
+b + 0 < a	a=decfloat34[@NaN] b=i[0]	F
+b + 0 > a	a=decfloat34[@NaN] b=i[0]	T
+b + 0 <= a	a=decfloat34[@NaN] b=i[0]	F
+b + 0 >= a	a=decfloat34[@NaN] b=i[0]	T
+a + 0 = b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+a + 0 <> b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+a + 0 < b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+a + 0 > b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+a + 0 <= b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+a + 0 >= b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+b = a + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+b <> a + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+b < a + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+b > a + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+b <= a + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+b >= a + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+- a = b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+- a <> b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+- a < b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+- a > b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+- a <= b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+- a >= b	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+b = - a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+b <> - a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+b < - a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+b > - a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+b <= - a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+b >= - a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+a + 0 = b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+a + 0 <> b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+a + 0 < b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+a + 0 > b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+a + 0 <= b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+a + 0 >= b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+a = b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+a <> b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+a < b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+a > b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+a <= b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+a >= b + 0	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+b + 0 = a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+b + 0 <> a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+b + 0 < a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+b + 0 > a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+b + 0 <= a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	F
+b + 0 >= a	a=decfloat34[@NaN] b=decfloat34[@+Inf]	T
+a + 0 = b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+a + 0 <> b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+a + 0 < b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+a + 0 > b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+a + 0 <= b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+a + 0 >= b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+b = a + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+b <> a + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+b < a + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+b > a + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+b <= a + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+b >= a + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+- a = b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+- a <> b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+- a < b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+- a > b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+- a <= b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+- a >= b	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+b = - a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+b <> - a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+b < - a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+b > - a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+b <= - a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+b >= - a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+a + 0 = b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+a + 0 <> b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+a + 0 < b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+a + 0 > b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+a + 0 <= b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+a + 0 >= b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+a = b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+a <> b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+a < b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+a > b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+a <= b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+a >= b + 0	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+b + 0 = a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+b + 0 <> a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+b + 0 < a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+b + 0 > a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+b + 0 <= a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	F
+b + 0 >= a	a=decfloat34[@NaN] b=decfloat34[@-Inf]	T
+a + 0 = b	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+a + 0 <> b	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+a + 0 < b	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+a + 0 > b	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+a + 0 <= b	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+a + 0 >= b	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+b = a + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+b <> a + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+b < a + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+b > a + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+b <= a + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+b >= a + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+- a = b	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+- a <> b	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+- a < b	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+- a > b	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+- a <= b	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+- a >= b	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+b = - a	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+b <> - a	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+b < - a	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+b > - a	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+b <= - a	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+b >= - a	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+a + 0 = b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+a + 0 <> b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+a + 0 < b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+a + 0 > b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+a + 0 <= b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+a + 0 >= b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+a = b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+a <> b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+a < b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+a > b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+a <= b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+a >= b + 0	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+b + 0 = a	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+b + 0 <> a	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+b + 0 < a	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+b + 0 > a	a=decfloat34[@NaN] b=decfloat34[@NaN]	F
+b + 0 <= a	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+b + 0 >= a	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+a + 0 = b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+a + 0 <> b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+a + 0 < b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+a + 0 > b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+a + 0 <= b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+a + 0 >= b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+b = a + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+b <> a + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+b < a + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+b > a + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+b <= a + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+b >= a + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+- a = b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+- a <> b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+- a < b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+- a > b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+- a <= b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+- a >= b	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+b = - a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+b <> - a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+b < - a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+b > - a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+b <= - a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+b >= - a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+a + 0 = b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+a + 0 <> b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+a + 0 < b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+a + 0 > b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+a + 0 <= b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+a + 0 >= b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+a = b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+a <> b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+a < b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+a > b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+a <= b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+a >= b + 0	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+b + 0 = a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+b + 0 <> a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+b + 0 < a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+b + 0 > a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+b + 0 <= a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	T
+b + 0 >= a	a=decfloat34[@NaN] b=decfloat34[@-NaN]	F
+a + 0 = b	a=decfloat34[@-NaN] b=decfloat34[0]	F
+a + 0 <> b	a=decfloat34[@-NaN] b=decfloat34[0]	T
+a + 0 < b	a=decfloat34[@-NaN] b=decfloat34[0]	T
+a + 0 > b	a=decfloat34[@-NaN] b=decfloat34[0]	F
+a + 0 <= b	a=decfloat34[@-NaN] b=decfloat34[0]	T
+a + 0 >= b	a=decfloat34[@-NaN] b=decfloat34[0]	F
+b = a + 0	a=decfloat34[@-NaN] b=decfloat34[0]	F
+b <> a + 0	a=decfloat34[@-NaN] b=decfloat34[0]	T
+b < a + 0	a=decfloat34[@-NaN] b=decfloat34[0]	T
+b > a + 0	a=decfloat34[@-NaN] b=decfloat34[0]	F
+b <= a + 0	a=decfloat34[@-NaN] b=decfloat34[0]	T
+b >= a + 0	a=decfloat34[@-NaN] b=decfloat34[0]	F
+- a = b	a=decfloat34[@-NaN] b=decfloat34[0]	F
+- a <> b	a=decfloat34[@-NaN] b=decfloat34[0]	T
+- a < b	a=decfloat34[@-NaN] b=decfloat34[0]	F
+- a > b	a=decfloat34[@-NaN] b=decfloat34[0]	T
+- a <= b	a=decfloat34[@-NaN] b=decfloat34[0]	F
+- a >= b	a=decfloat34[@-NaN] b=decfloat34[0]	T
+b = - a	a=decfloat34[@-NaN] b=decfloat34[0]	F
+b <> - a	a=decfloat34[@-NaN] b=decfloat34[0]	T
+b < - a	a=decfloat34[@-NaN] b=decfloat34[0]	F
+b > - a	a=decfloat34[@-NaN] b=decfloat34[0]	T
+b <= - a	a=decfloat34[@-NaN] b=decfloat34[0]	F
+b >= - a	a=decfloat34[@-NaN] b=decfloat34[0]	T
+a + 0 = b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	F
+a + 0 <> b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	T
+a + 0 < b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	T
+a + 0 > b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	F
+a + 0 <= b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	T
+a + 0 >= b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	F
+a = b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	F
+a <> b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	T
+a < b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	T
+a > b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	F
+a <= b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	T
+a >= b + 0	a=decfloat34[@-NaN] b=decfloat34[0]	F
+b + 0 = a	a=decfloat34[@-NaN] b=decfloat34[0]	F
+b + 0 <> a	a=decfloat34[@-NaN] b=decfloat34[0]	T
+b + 0 < a	a=decfloat34[@-NaN] b=decfloat34[0]	T
+b + 0 > a	a=decfloat34[@-NaN] b=decfloat34[0]	F
+b + 0 <= a	a=decfloat34[@-NaN] b=decfloat34[0]	T
+b + 0 >= a	a=decfloat34[@-NaN] b=decfloat34[0]	F
+a + 0 = b	a=decfloat34[@-NaN] b=decfloat34[1]	F
+a + 0 <> b	a=decfloat34[@-NaN] b=decfloat34[1]	T
+a + 0 < b	a=decfloat34[@-NaN] b=decfloat34[1]	T
+a + 0 > b	a=decfloat34[@-NaN] b=decfloat34[1]	F
+a + 0 <= b	a=decfloat34[@-NaN] b=decfloat34[1]	T
+a + 0 >= b	a=decfloat34[@-NaN] b=decfloat34[1]	F
+b = a + 0	a=decfloat34[@-NaN] b=decfloat34[1]	F
+b <> a + 0	a=decfloat34[@-NaN] b=decfloat34[1]	T
+b < a + 0	a=decfloat34[@-NaN] b=decfloat34[1]	T
+b > a + 0	a=decfloat34[@-NaN] b=decfloat34[1]	F
+b <= a + 0	a=decfloat34[@-NaN] b=decfloat34[1]	T
+b >= a + 0	a=decfloat34[@-NaN] b=decfloat34[1]	F
+- a = b	a=decfloat34[@-NaN] b=decfloat34[1]	F
+- a <> b	a=decfloat34[@-NaN] b=decfloat34[1]	T
+- a < b	a=decfloat34[@-NaN] b=decfloat34[1]	F
+- a > b	a=decfloat34[@-NaN] b=decfloat34[1]	T
+- a <= b	a=decfloat34[@-NaN] b=decfloat34[1]	F
+- a >= b	a=decfloat34[@-NaN] b=decfloat34[1]	T
+b = - a	a=decfloat34[@-NaN] b=decfloat34[1]	F
+b <> - a	a=decfloat34[@-NaN] b=decfloat34[1]	T
+b < - a	a=decfloat34[@-NaN] b=decfloat34[1]	F
+b > - a	a=decfloat34[@-NaN] b=decfloat34[1]	T
+b <= - a	a=decfloat34[@-NaN] b=decfloat34[1]	F
+b >= - a	a=decfloat34[@-NaN] b=decfloat34[1]	T
+a + 0 = b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	F
+a + 0 <> b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	T
+a + 0 < b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	T
+a + 0 > b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	F
+a + 0 <= b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	T
+a + 0 >= b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	F
+a = b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	F
+a <> b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	T
+a < b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	T
+a > b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	F
+a <= b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	T
+a >= b + 0	a=decfloat34[@-NaN] b=decfloat34[1]	F
+b + 0 = a	a=decfloat34[@-NaN] b=decfloat34[1]	F
+b + 0 <> a	a=decfloat34[@-NaN] b=decfloat34[1]	T
+b + 0 < a	a=decfloat34[@-NaN] b=decfloat34[1]	T
+b + 0 > a	a=decfloat34[@-NaN] b=decfloat34[1]	F
+b + 0 <= a	a=decfloat34[@-NaN] b=decfloat34[1]	T
+b + 0 >= a	a=decfloat34[@-NaN] b=decfloat34[1]	F
+a + 0 = b	a=decfloat34[@-NaN] b=i[0]	F
+a + 0 <> b	a=decfloat34[@-NaN] b=i[0]	T
+a + 0 < b	a=decfloat34[@-NaN] b=i[0]	T
+a + 0 > b	a=decfloat34[@-NaN] b=i[0]	F
+a + 0 <= b	a=decfloat34[@-NaN] b=i[0]	T
+a + 0 >= b	a=decfloat34[@-NaN] b=i[0]	F
+b = a + 0	a=decfloat34[@-NaN] b=i[0]	F
+b <> a + 0	a=decfloat34[@-NaN] b=i[0]	T
+b < a + 0	a=decfloat34[@-NaN] b=i[0]	T
+b > a + 0	a=decfloat34[@-NaN] b=i[0]	F
+b <= a + 0	a=decfloat34[@-NaN] b=i[0]	T
+b >= a + 0	a=decfloat34[@-NaN] b=i[0]	F
+- a = b	a=decfloat34[@-NaN] b=i[0]	F
+- a <> b	a=decfloat34[@-NaN] b=i[0]	T
+- a < b	a=decfloat34[@-NaN] b=i[0]	F
+- a > b	a=decfloat34[@-NaN] b=i[0]	T
+- a <= b	a=decfloat34[@-NaN] b=i[0]	F
+- a >= b	a=decfloat34[@-NaN] b=i[0]	T
+b = - a	a=decfloat34[@-NaN] b=i[0]	F
+b <> - a	a=decfloat34[@-NaN] b=i[0]	T
+b < - a	a=decfloat34[@-NaN] b=i[0]	F
+b > - a	a=decfloat34[@-NaN] b=i[0]	T
+b <= - a	a=decfloat34[@-NaN] b=i[0]	F
+b >= - a	a=decfloat34[@-NaN] b=i[0]	T
+a + 0 = b + 0	a=decfloat34[@-NaN] b=i[0]	F
+a + 0 <> b + 0	a=decfloat34[@-NaN] b=i[0]	T
+a + 0 < b + 0	a=decfloat34[@-NaN] b=i[0]	T
+a + 0 > b + 0	a=decfloat34[@-NaN] b=i[0]	F
+a + 0 <= b + 0	a=decfloat34[@-NaN] b=i[0]	T
+a + 0 >= b + 0	a=decfloat34[@-NaN] b=i[0]	F
+a = b + 0	a=decfloat34[@-NaN] b=i[0]	F
+a <> b + 0	a=decfloat34[@-NaN] b=i[0]	T
+a < b + 0	a=decfloat34[@-NaN] b=i[0]	T
+a > b + 0	a=decfloat34[@-NaN] b=i[0]	F
+a <= b + 0	a=decfloat34[@-NaN] b=i[0]	T
+a >= b + 0	a=decfloat34[@-NaN] b=i[0]	F
+b + 0 = a	a=decfloat34[@-NaN] b=i[0]	F
+b + 0 <> a	a=decfloat34[@-NaN] b=i[0]	T
+b + 0 < a	a=decfloat34[@-NaN] b=i[0]	T
+b + 0 > a	a=decfloat34[@-NaN] b=i[0]	F
+b + 0 <= a	a=decfloat34[@-NaN] b=i[0]	T
+b + 0 >= a	a=decfloat34[@-NaN] b=i[0]	F
+a + 0 = b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+a + 0 <> b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+a + 0 < b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+a + 0 > b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+a + 0 <= b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+a + 0 >= b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+b = a + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+b <> a + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+b < a + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+b > a + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+b <= a + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+b >= a + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+- a = b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+- a <> b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+- a < b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+- a > b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+- a <= b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+- a >= b	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+b = - a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+b <> - a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+b < - a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+b > - a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+b <= - a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+b >= - a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+a + 0 = b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+a + 0 <> b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+a + 0 < b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+a + 0 > b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+a + 0 <= b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+a + 0 >= b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+a = b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+a <> b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+a < b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+a > b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+a <= b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+a >= b + 0	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+b + 0 = a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+b + 0 <> a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+b + 0 < a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+b + 0 > a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+b + 0 <= a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	T
+b + 0 >= a	a=decfloat34[@-NaN] b=decfloat34[@+Inf]	F
+a + 0 = b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+a + 0 <> b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+a + 0 < b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+a + 0 > b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+a + 0 <= b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+a + 0 >= b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+b = a + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+b <> a + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+b < a + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+b > a + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+b <= a + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+b >= a + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+- a = b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+- a <> b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+- a < b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+- a > b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+- a <= b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+- a >= b	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+b = - a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+b <> - a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+b < - a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+b > - a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+b <= - a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+b >= - a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+a + 0 = b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+a + 0 <> b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+a + 0 < b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+a + 0 > b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+a + 0 <= b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+a + 0 >= b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+a = b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+a <> b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+a < b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+a > b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+a <= b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+a >= b + 0	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+b + 0 = a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+b + 0 <> a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+b + 0 < a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+b + 0 > a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+b + 0 <= a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	T
+b + 0 >= a	a=decfloat34[@-NaN] b=decfloat34[@-Inf]	F
+a + 0 = b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+a + 0 <> b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+a + 0 < b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+a + 0 > b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+a + 0 <= b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+a + 0 >= b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+b = a + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+b <> a + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+b < a + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+b > a + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+b <= a + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+b >= a + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+- a = b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+- a <> b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+- a < b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+- a > b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+- a <= b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+- a >= b	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+b = - a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+b <> - a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+b < - a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+b > - a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+b <= - a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+b >= - a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+a + 0 = b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+a + 0 <> b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+a + 0 < b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+a + 0 > b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+a + 0 <= b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+a + 0 >= b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+a = b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+a <> b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+a < b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+a > b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+a <= b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+a >= b + 0	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+b + 0 = a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+b + 0 <> a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+b + 0 < a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+b + 0 > a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+b + 0 <= a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	F
+b + 0 >= a	a=decfloat34[@-NaN] b=decfloat34[@NaN]	T
+a + 0 = b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+a + 0 <> b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+a + 0 < b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+a + 0 > b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+a + 0 <= b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+a + 0 >= b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+b = a + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+b <> a + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+b < a + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+b > a + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+b <= a + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+b >= a + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+- a = b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+- a <> b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+- a < b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+- a > b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+- a <= b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+- a >= b	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+b = - a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+b <> - a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+b < - a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+b > - a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+b <= - a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+b >= - a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+a + 0 = b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+a + 0 <> b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+a + 0 < b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+a + 0 > b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+a + 0 <= b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+a + 0 >= b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+a = b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+a <> b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+a < b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+a > b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+a <= b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+a >= b + 0	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+b + 0 = a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+b + 0 <> a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+b + 0 < a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+b + 0 > a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	F
+b + 0 <= a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+b + 0 >= a	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+a + 0 = b	a=decfloat16[@+Inf] b=decfloat34[0]	F
+a + 0 <> b	a=decfloat16[@+Inf] b=decfloat34[0]	T
+a + 0 < b	a=decfloat16[@+Inf] b=decfloat34[0]	F
+a + 0 > b	a=decfloat16[@+Inf] b=decfloat34[0]	T
+a + 0 <= b	a=decfloat16[@+Inf] b=decfloat34[0]	F
+a + 0 >= b	a=decfloat16[@+Inf] b=decfloat34[0]	T
+b = a + 0	a=decfloat16[@+Inf] b=decfloat34[0]	F
+b <> a + 0	a=decfloat16[@+Inf] b=decfloat34[0]	T
+b < a + 0	a=decfloat16[@+Inf] b=decfloat34[0]	T
+b > a + 0	a=decfloat16[@+Inf] b=decfloat34[0]	F
+b <= a + 0	a=decfloat16[@+Inf] b=decfloat34[0]	T
+b >= a + 0	a=decfloat16[@+Inf] b=decfloat34[0]	F
+- a = b	a=decfloat16[@+Inf] b=decfloat34[0]	F
+- a <> b	a=decfloat16[@+Inf] b=decfloat34[0]	T
+- a < b	a=decfloat16[@+Inf] b=decfloat34[0]	T
+- a > b	a=decfloat16[@+Inf] b=decfloat34[0]	F
+- a <= b	a=decfloat16[@+Inf] b=decfloat34[0]	T
+- a >= b	a=decfloat16[@+Inf] b=decfloat34[0]	F
+b = - a	a=decfloat16[@+Inf] b=decfloat34[0]	F
+b <> - a	a=decfloat16[@+Inf] b=decfloat34[0]	T
+b < - a	a=decfloat16[@+Inf] b=decfloat34[0]	F
+b > - a	a=decfloat16[@+Inf] b=decfloat34[0]	T
+b <= - a	a=decfloat16[@+Inf] b=decfloat34[0]	F
+b >= - a	a=decfloat16[@+Inf] b=decfloat34[0]	T
+a + 0 = b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	F
+a + 0 <> b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	T
+a + 0 < b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	F
+a + 0 > b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	T
+a + 0 <= b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	F
+a + 0 >= b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	T
+a = b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	F
+a <> b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	T
+a < b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	F
+a > b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	T
+a <= b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	F
+a >= b + 0	a=decfloat16[@+Inf] b=decfloat34[0]	T
+b + 0 = a	a=decfloat16[@+Inf] b=decfloat34[0]	F
+b + 0 <> a	a=decfloat16[@+Inf] b=decfloat34[0]	T
+b + 0 < a	a=decfloat16[@+Inf] b=decfloat34[0]	T
+b + 0 > a	a=decfloat16[@+Inf] b=decfloat34[0]	F
+b + 0 <= a	a=decfloat16[@+Inf] b=decfloat34[0]	T
+b + 0 >= a	a=decfloat16[@+Inf] b=decfloat34[0]	F
+a + 0 = b	a=decfloat16[@+Inf] b=decfloat34[1]	F
+a + 0 <> b	a=decfloat16[@+Inf] b=decfloat34[1]	T
+a + 0 < b	a=decfloat16[@+Inf] b=decfloat34[1]	F
+a + 0 > b	a=decfloat16[@+Inf] b=decfloat34[1]	T
+a + 0 <= b	a=decfloat16[@+Inf] b=decfloat34[1]	F
+a + 0 >= b	a=decfloat16[@+Inf] b=decfloat34[1]	T
+b = a + 0	a=decfloat16[@+Inf] b=decfloat34[1]	F
+b <> a + 0	a=decfloat16[@+Inf] b=decfloat34[1]	T
+b < a + 0	a=decfloat16[@+Inf] b=decfloat34[1]	T
+b > a + 0	a=decfloat16[@+Inf] b=decfloat34[1]	F
+b <= a + 0	a=decfloat16[@+Inf] b=decfloat34[1]	T
+b >= a + 0	a=decfloat16[@+Inf] b=decfloat34[1]	F
+- a = b	a=decfloat16[@+Inf] b=decfloat34[1]	F
+- a <> b	a=decfloat16[@+Inf] b=decfloat34[1]	T
+- a < b	a=decfloat16[@+Inf] b=decfloat34[1]	T
+- a > b	a=decfloat16[@+Inf] b=decfloat34[1]	F
+- a <= b	a=decfloat16[@+Inf] b=decfloat34[1]	T
+- a >= b	a=decfloat16[@+Inf] b=decfloat34[1]	F
+b = - a	a=decfloat16[@+Inf] b=decfloat34[1]	F
+b <> - a	a=decfloat16[@+Inf] b=decfloat34[1]	T
+b < - a	a=decfloat16[@+Inf] b=decfloat34[1]	F
+b > - a	a=decfloat16[@+Inf] b=decfloat34[1]	T
+b <= - a	a=decfloat16[@+Inf] b=decfloat34[1]	F
+b >= - a	a=decfloat16[@+Inf] b=decfloat34[1]	T
+a + 0 = b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	F
+a + 0 <> b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	T
+a + 0 < b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	F
+a + 0 > b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	T
+a + 0 <= b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	F
+a + 0 >= b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	T
+a = b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	F
+a <> b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	T
+a < b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	F
+a > b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	T
+a <= b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	F
+a >= b + 0	a=decfloat16[@+Inf] b=decfloat34[1]	T
+b + 0 = a	a=decfloat16[@+Inf] b=decfloat34[1]	F
+b + 0 <> a	a=decfloat16[@+Inf] b=decfloat34[1]	T
+b + 0 < a	a=decfloat16[@+Inf] b=decfloat34[1]	T
+b + 0 > a	a=decfloat16[@+Inf] b=decfloat34[1]	F
+b + 0 <= a	a=decfloat16[@+Inf] b=decfloat34[1]	T
+b + 0 >= a	a=decfloat16[@+Inf] b=decfloat34[1]	F
+a + 0 = b	a=decfloat16[@+Inf] b=i[0]	F
+a + 0 <> b	a=decfloat16[@+Inf] b=i[0]	T
+a + 0 < b	a=decfloat16[@+Inf] b=i[0]	F
+a + 0 > b	a=decfloat16[@+Inf] b=i[0]	T
+a + 0 <= b	a=decfloat16[@+Inf] b=i[0]	F
+a + 0 >= b	a=decfloat16[@+Inf] b=i[0]	T
+b = a + 0	a=decfloat16[@+Inf] b=i[0]	F
+b <> a + 0	a=decfloat16[@+Inf] b=i[0]	T
+b < a + 0	a=decfloat16[@+Inf] b=i[0]	T
+b > a + 0	a=decfloat16[@+Inf] b=i[0]	F
+b <= a + 0	a=decfloat16[@+Inf] b=i[0]	T
+b >= a + 0	a=decfloat16[@+Inf] b=i[0]	F
+- a = b	a=decfloat16[@+Inf] b=i[0]	F
+- a <> b	a=decfloat16[@+Inf] b=i[0]	T
+- a < b	a=decfloat16[@+Inf] b=i[0]	T
+- a > b	a=decfloat16[@+Inf] b=i[0]	F
+- a <= b	a=decfloat16[@+Inf] b=i[0]	T
+- a >= b	a=decfloat16[@+Inf] b=i[0]	F
+b = - a	a=decfloat16[@+Inf] b=i[0]	F
+b <> - a	a=decfloat16[@+Inf] b=i[0]	T
+b < - a	a=decfloat16[@+Inf] b=i[0]	F
+b > - a	a=decfloat16[@+Inf] b=i[0]	T
+b <= - a	a=decfloat16[@+Inf] b=i[0]	F
+b >= - a	a=decfloat16[@+Inf] b=i[0]	T
+a + 0 = b + 0	a=decfloat16[@+Inf] b=i[0]	F
+a + 0 <> b + 0	a=decfloat16[@+Inf] b=i[0]	T
+a + 0 < b + 0	a=decfloat16[@+Inf] b=i[0]	F
+a + 0 > b + 0	a=decfloat16[@+Inf] b=i[0]	T
+a + 0 <= b + 0	a=decfloat16[@+Inf] b=i[0]	F
+a + 0 >= b + 0	a=decfloat16[@+Inf] b=i[0]	T
+a = b + 0	a=decfloat16[@+Inf] b=i[0]	F
+a <> b + 0	a=decfloat16[@+Inf] b=i[0]	T
+a < b + 0	a=decfloat16[@+Inf] b=i[0]	F
+a > b + 0	a=decfloat16[@+Inf] b=i[0]	T
+a <= b + 0	a=decfloat16[@+Inf] b=i[0]	F
+a >= b + 0	a=decfloat16[@+Inf] b=i[0]	T
+b + 0 = a	a=decfloat16[@+Inf] b=i[0]	F
+b + 0 <> a	a=decfloat16[@+Inf] b=i[0]	T
+b + 0 < a	a=decfloat16[@+Inf] b=i[0]	T
+b + 0 > a	a=decfloat16[@+Inf] b=i[0]	F
+b + 0 <= a	a=decfloat16[@+Inf] b=i[0]	T
+b + 0 >= a	a=decfloat16[@+Inf] b=i[0]	F
+a + 0 = b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+a + 0 <> b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+a + 0 < b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+a + 0 > b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+a + 0 <= b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+a + 0 >= b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+b = a + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+b <> a + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+b < a + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+b > a + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+b <= a + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+b >= a + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+- a = b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+- a <> b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+- a < b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+- a > b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+- a <= b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+- a >= b	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+b = - a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+b <> - a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+b < - a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+b > - a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+b <= - a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+b >= - a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+a + 0 = b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+a + 0 <> b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+a + 0 < b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+a + 0 > b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+a + 0 <= b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+a + 0 >= b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+a = b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+a <> b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+a < b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+a > b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+a <= b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+a >= b + 0	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+b + 0 = a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+b + 0 <> a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+b + 0 < a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+b + 0 > a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+b + 0 <= a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+b + 0 >= a	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+a + 0 = b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+a + 0 <> b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+a + 0 < b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+a + 0 > b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+a + 0 <= b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+a + 0 >= b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+b = a + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+b <> a + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+b < a + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+b > a + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+b <= a + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+b >= a + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+- a = b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+- a <> b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+- a < b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+- a > b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+- a <= b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+- a >= b	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+b = - a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+b <> - a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+b < - a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+b > - a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+b <= - a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+b >= - a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+a + 0 = b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+a + 0 <> b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+a + 0 < b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+a + 0 > b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+a + 0 <= b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+a + 0 >= b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+a = b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+a <> b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+a < b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+a > b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+a <= b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+a >= b + 0	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+b + 0 = a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+b + 0 <> a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+b + 0 < a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+b + 0 > a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+b + 0 <= a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	T
+b + 0 >= a	a=decfloat16[@+Inf] b=decfloat16[@-Inf]	F
+a + 0 = b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+a + 0 <> b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+a + 0 < b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+a + 0 > b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+a + 0 <= b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+a + 0 >= b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+b = a + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+b <> a + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+b < a + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+b > a + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+b <= a + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+b >= a + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+- a = b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+- a <> b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+- a < b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+- a > b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+- a <= b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+- a >= b	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+b = - a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+b <> - a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+b < - a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+b > - a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+b <= - a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+b >= - a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+a + 0 = b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+a + 0 <> b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+a + 0 < b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+a + 0 > b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+a + 0 <= b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+a + 0 >= b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+a = b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+a <> b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+a < b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+a > b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+a <= b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+a >= b + 0	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+b + 0 = a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+b + 0 <> a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+b + 0 < a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+b + 0 > a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+b + 0 <= a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	F
+b + 0 >= a	a=decfloat16[@+Inf] b=decfloat16[@NaN]	T
+a + 0 = b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+a + 0 <> b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+a + 0 < b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+a + 0 > b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+a + 0 <= b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+a + 0 >= b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+b = a + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+b <> a + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+b < a + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+b > a + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+b <= a + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+b >= a + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+- a = b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+- a <> b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+- a < b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+- a > b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+- a <= b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+- a >= b	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+b = - a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+b <> - a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+b < - a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+b > - a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+b <= - a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+b >= - a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+a + 0 = b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+a + 0 <> b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+a + 0 < b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+a + 0 > b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+a + 0 <= b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+a + 0 >= b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+a = b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+a <> b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+a < b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+a > b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+a <= b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+a >= b + 0	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+b + 0 = a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+b + 0 <> a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+b + 0 < a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+b + 0 > a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+b + 0 <= a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	T
+b + 0 >= a	a=decfloat16[@+Inf] b=decfloat16[@-NaN]	F
+a + 0 = b	a=decfloat16[@-Inf] b=decfloat34[0]	F
+a + 0 <> b	a=decfloat16[@-Inf] b=decfloat34[0]	T
+a + 0 < b	a=decfloat16[@-Inf] b=decfloat34[0]	T
+a + 0 > b	a=decfloat16[@-Inf] b=decfloat34[0]	F
+a + 0 <= b	a=decfloat16[@-Inf] b=decfloat34[0]	T
+a + 0 >= b	a=decfloat16[@-Inf] b=decfloat34[0]	F
+b = a + 0	a=decfloat16[@-Inf] b=decfloat34[0]	F
+b <> a + 0	a=decfloat16[@-Inf] b=decfloat34[0]	T
+b < a + 0	a=decfloat16[@-Inf] b=decfloat34[0]	F
+b > a + 0	a=decfloat16[@-Inf] b=decfloat34[0]	T
+b <= a + 0	a=decfloat16[@-Inf] b=decfloat34[0]	F
+b >= a + 0	a=decfloat16[@-Inf] b=decfloat34[0]	T
+- a = b	a=decfloat16[@-Inf] b=decfloat34[0]	F
+- a <> b	a=decfloat16[@-Inf] b=decfloat34[0]	T
+- a < b	a=decfloat16[@-Inf] b=decfloat34[0]	F
+- a > b	a=decfloat16[@-Inf] b=decfloat34[0]	T
+- a <= b	a=decfloat16[@-Inf] b=decfloat34[0]	F
+- a >= b	a=decfloat16[@-Inf] b=decfloat34[0]	T
+b = - a	a=decfloat16[@-Inf] b=decfloat34[0]	F
+b <> - a	a=decfloat16[@-Inf] b=decfloat34[0]	T
+b < - a	a=decfloat16[@-Inf] b=decfloat34[0]	T
+b > - a	a=decfloat16[@-Inf] b=decfloat34[0]	F
+b <= - a	a=decfloat16[@-Inf] b=decfloat34[0]	T
+b >= - a	a=decfloat16[@-Inf] b=decfloat34[0]	F
+a + 0 = b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	F
+a + 0 <> b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	T
+a + 0 < b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	T
+a + 0 > b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	F
+a + 0 <= b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	T
+a + 0 >= b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	F
+a = b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	F
+a <> b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	T
+a < b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	T
+a > b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	F
+a <= b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	T
+a >= b + 0	a=decfloat16[@-Inf] b=decfloat34[0]	F
+b + 0 = a	a=decfloat16[@-Inf] b=decfloat34[0]	F
+b + 0 <> a	a=decfloat16[@-Inf] b=decfloat34[0]	T
+b + 0 < a	a=decfloat16[@-Inf] b=decfloat34[0]	F
+b + 0 > a	a=decfloat16[@-Inf] b=decfloat34[0]	T
+b + 0 <= a	a=decfloat16[@-Inf] b=decfloat34[0]	F
+b + 0 >= a	a=decfloat16[@-Inf] b=decfloat34[0]	T
+a + 0 = b	a=decfloat16[@-Inf] b=decfloat34[1]	F
+a + 0 <> b	a=decfloat16[@-Inf] b=decfloat34[1]	T
+a + 0 < b	a=decfloat16[@-Inf] b=decfloat34[1]	T
+a + 0 > b	a=decfloat16[@-Inf] b=decfloat34[1]	F
+a + 0 <= b	a=decfloat16[@-Inf] b=decfloat34[1]	T
+a + 0 >= b	a=decfloat16[@-Inf] b=decfloat34[1]	F
+b = a + 0	a=decfloat16[@-Inf] b=decfloat34[1]	F
+b <> a + 0	a=decfloat16[@-Inf] b=decfloat34[1]	T
+b < a + 0	a=decfloat16[@-Inf] b=decfloat34[1]	F
+b > a + 0	a=decfloat16[@-Inf] b=decfloat34[1]	T
+b <= a + 0	a=decfloat16[@-Inf] b=decfloat34[1]	F
+b >= a + 0	a=decfloat16[@-Inf] b=decfloat34[1]	T
+- a = b	a=decfloat16[@-Inf] b=decfloat34[1]	F
+- a <> b	a=decfloat16[@-Inf] b=decfloat34[1]	T
+- a < b	a=decfloat16[@-Inf] b=decfloat34[1]	F
+- a > b	a=decfloat16[@-Inf] b=decfloat34[1]	T
+- a <= b	a=decfloat16[@-Inf] b=decfloat34[1]	F
+- a >= b	a=decfloat16[@-Inf] b=decfloat34[1]	T
+b = - a	a=decfloat16[@-Inf] b=decfloat34[1]	F
+b <> - a	a=decfloat16[@-Inf] b=decfloat34[1]	T
+b < - a	a=decfloat16[@-Inf] b=decfloat34[1]	T
+b > - a	a=decfloat16[@-Inf] b=decfloat34[1]	F
+b <= - a	a=decfloat16[@-Inf] b=decfloat34[1]	T
+b >= - a	a=decfloat16[@-Inf] b=decfloat34[1]	F
+a + 0 = b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	F
+a + 0 <> b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	T
+a + 0 < b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	T
+a + 0 > b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	F
+a + 0 <= b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	T
+a + 0 >= b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	F
+a = b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	F
+a <> b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	T
+a < b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	T
+a > b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	F
+a <= b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	T
+a >= b + 0	a=decfloat16[@-Inf] b=decfloat34[1]	F
+b + 0 = a	a=decfloat16[@-Inf] b=decfloat34[1]	F
+b + 0 <> a	a=decfloat16[@-Inf] b=decfloat34[1]	T
+b + 0 < a	a=decfloat16[@-Inf] b=decfloat34[1]	F
+b + 0 > a	a=decfloat16[@-Inf] b=decfloat34[1]	T
+b + 0 <= a	a=decfloat16[@-Inf] b=decfloat34[1]	F
+b + 0 >= a	a=decfloat16[@-Inf] b=decfloat34[1]	T
+a + 0 = b	a=decfloat16[@-Inf] b=i[0]	F
+a + 0 <> b	a=decfloat16[@-Inf] b=i[0]	T
+a + 0 < b	a=decfloat16[@-Inf] b=i[0]	T
+a + 0 > b	a=decfloat16[@-Inf] b=i[0]	F
+a + 0 <= b	a=decfloat16[@-Inf] b=i[0]	T
+a + 0 >= b	a=decfloat16[@-Inf] b=i[0]	F
+b = a + 0	a=decfloat16[@-Inf] b=i[0]	F
+b <> a + 0	a=decfloat16[@-Inf] b=i[0]	T
+b < a + 0	a=decfloat16[@-Inf] b=i[0]	F
+b > a + 0	a=decfloat16[@-Inf] b=i[0]	T
+b <= a + 0	a=decfloat16[@-Inf] b=i[0]	F
+b >= a + 0	a=decfloat16[@-Inf] b=i[0]	T
+- a = b	a=decfloat16[@-Inf] b=i[0]	F
+- a <> b	a=decfloat16[@-Inf] b=i[0]	T
+- a < b	a=decfloat16[@-Inf] b=i[0]	F
+- a > b	a=decfloat16[@-Inf] b=i[0]	T
+- a <= b	a=decfloat16[@-Inf] b=i[0]	F
+- a >= b	a=decfloat16[@-Inf] b=i[0]	T
+b = - a	a=decfloat16[@-Inf] b=i[0]	F
+b <> - a	a=decfloat16[@-Inf] b=i[0]	T
+b < - a	a=decfloat16[@-Inf] b=i[0]	T
+b > - a	a=decfloat16[@-Inf] b=i[0]	F
+b <= - a	a=decfloat16[@-Inf] b=i[0]	T
+b >= - a	a=decfloat16[@-Inf] b=i[0]	F
+a + 0 = b + 0	a=decfloat16[@-Inf] b=i[0]	F
+a + 0 <> b + 0	a=decfloat16[@-Inf] b=i[0]	T
+a + 0 < b + 0	a=decfloat16[@-Inf] b=i[0]	T
+a + 0 > b + 0	a=decfloat16[@-Inf] b=i[0]	F
+a + 0 <= b + 0	a=decfloat16[@-Inf] b=i[0]	T
+a + 0 >= b + 0	a=decfloat16[@-Inf] b=i[0]	F
+a = b + 0	a=decfloat16[@-Inf] b=i[0]	F
+a <> b + 0	a=decfloat16[@-Inf] b=i[0]	T
+a < b + 0	a=decfloat16[@-Inf] b=i[0]	T
+a > b + 0	a=decfloat16[@-Inf] b=i[0]	F
+a <= b + 0	a=decfloat16[@-Inf] b=i[0]	T
+a >= b + 0	a=decfloat16[@-Inf] b=i[0]	F
+b + 0 = a	a=decfloat16[@-Inf] b=i[0]	F
+b + 0 <> a	a=decfloat16[@-Inf] b=i[0]	T
+b + 0 < a	a=decfloat16[@-Inf] b=i[0]	F
+b + 0 > a	a=decfloat16[@-Inf] b=i[0]	T
+b + 0 <= a	a=decfloat16[@-Inf] b=i[0]	F
+b + 0 >= a	a=decfloat16[@-Inf] b=i[0]	T
+a + 0 = b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+a + 0 <> b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+a + 0 < b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+a + 0 > b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+a + 0 <= b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+a + 0 >= b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+b = a + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+b <> a + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+b < a + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+b > a + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+b <= a + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+b >= a + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+- a = b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+- a <> b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+- a < b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+- a > b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+- a <= b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+- a >= b	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+b = - a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+b <> - a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+b < - a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+b > - a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+b <= - a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+b >= - a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+a + 0 = b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+a + 0 <> b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+a + 0 < b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+a + 0 > b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+a + 0 <= b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+a + 0 >= b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+a = b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+a <> b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+a < b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+a > b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+a <= b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+a >= b + 0	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+b + 0 = a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+b + 0 <> a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+b + 0 < a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+b + 0 > a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+b + 0 <= a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	F
+b + 0 >= a	a=decfloat16[@-Inf] b=decfloat16[@+Inf]	T
+a + 0 = b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+a + 0 <> b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+a + 0 < b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+a + 0 > b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+a + 0 <= b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+a + 0 >= b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+b = a + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+b <> a + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+b < a + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+b > a + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+b <= a + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+b >= a + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+- a = b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+- a <> b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+- a < b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+- a > b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+- a <= b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+- a >= b	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+b = - a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+b <> - a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+b < - a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+b > - a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+b <= - a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+b >= - a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+a + 0 = b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+a + 0 <> b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+a + 0 < b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+a + 0 > b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+a + 0 <= b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+a + 0 >= b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+a = b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+a <> b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+a < b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+a > b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+a <= b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+a >= b + 0	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+b + 0 = a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+b + 0 <> a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+b + 0 < a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+b + 0 > a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	F
+b + 0 <= a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+b + 0 >= a	a=decfloat16[@-Inf] b=decfloat16[@-Inf]	T
+a + 0 = b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+a + 0 <> b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+a + 0 < b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+a + 0 > b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+a + 0 <= b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+a + 0 >= b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+b = a + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+b <> a + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+b < a + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+b > a + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+b <= a + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+b >= a + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+- a = b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+- a <> b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+- a < b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+- a > b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+- a <= b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+- a >= b	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+b = - a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+b <> - a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+b < - a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+b > - a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+b <= - a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+b >= - a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+a + 0 = b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+a + 0 <> b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+a + 0 < b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+a + 0 > b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+a + 0 <= b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+a + 0 >= b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+a = b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+a <> b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+a < b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+a > b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+a <= b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+a >= b + 0	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+b + 0 = a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+b + 0 <> a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+b + 0 < a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+b + 0 > a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+b + 0 <= a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	F
+b + 0 >= a	a=decfloat16[@-Inf] b=decfloat16[@NaN]	T
+a + 0 = b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+a + 0 <> b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+a + 0 < b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+a + 0 > b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+a + 0 <= b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+a + 0 >= b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+b = a + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+b <> a + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+b < a + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+b > a + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+b <= a + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+b >= a + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+- a = b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+- a <> b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+- a < b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+- a > b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+- a <= b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+- a >= b	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+b = - a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+b <> - a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+b < - a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+b > - a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+b <= - a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+b >= - a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+a + 0 = b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+a + 0 <> b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+a + 0 < b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+a + 0 > b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+a + 0 <= b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+a + 0 >= b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+a = b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+a <> b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+a < b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+a > b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+a <= b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+a >= b + 0	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+b + 0 = a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+b + 0 <> a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+b + 0 < a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+b + 0 > a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+b + 0 <= a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	T
+b + 0 >= a	a=decfloat16[@-Inf] b=decfloat16[@-NaN]	F
+a + 0 = b	a=decfloat16[@NaN] b=decfloat34[0]	F
+a + 0 <> b	a=decfloat16[@NaN] b=decfloat34[0]	T
+a + 0 < b	a=decfloat16[@NaN] b=decfloat34[0]	F
+a + 0 > b	a=decfloat16[@NaN] b=decfloat34[0]	T
+a + 0 <= b	a=decfloat16[@NaN] b=decfloat34[0]	F
+a + 0 >= b	a=decfloat16[@NaN] b=decfloat34[0]	T
+b = a + 0	a=decfloat16[@NaN] b=decfloat34[0]	F
+b <> a + 0	a=decfloat16[@NaN] b=decfloat34[0]	T
+b < a + 0	a=decfloat16[@NaN] b=decfloat34[0]	F
+b > a + 0	a=decfloat16[@NaN] b=decfloat34[0]	T
+b <= a + 0	a=decfloat16[@NaN] b=decfloat34[0]	F
+b >= a + 0	a=decfloat16[@NaN] b=decfloat34[0]	T
+- a = b	a=decfloat16[@NaN] b=decfloat34[0]	F
+- a <> b	a=decfloat16[@NaN] b=decfloat34[0]	T
+- a < b	a=decfloat16[@NaN] b=decfloat34[0]	T
+- a > b	a=decfloat16[@NaN] b=decfloat34[0]	F
+- a <= b	a=decfloat16[@NaN] b=decfloat34[0]	T
+- a >= b	a=decfloat16[@NaN] b=decfloat34[0]	F
+b = - a	a=decfloat16[@NaN] b=decfloat34[0]	F
+b <> - a	a=decfloat16[@NaN] b=decfloat34[0]	T
+b < - a	a=decfloat16[@NaN] b=decfloat34[0]	T
+b > - a	a=decfloat16[@NaN] b=decfloat34[0]	F
+b <= - a	a=decfloat16[@NaN] b=decfloat34[0]	T
+b >= - a	a=decfloat16[@NaN] b=decfloat34[0]	F
+a + 0 = b + 0	a=decfloat16[@NaN] b=decfloat34[0]	F
+a + 0 <> b + 0	a=decfloat16[@NaN] b=decfloat34[0]	T
+a + 0 < b + 0	a=decfloat16[@NaN] b=decfloat34[0]	F
+a + 0 > b + 0	a=decfloat16[@NaN] b=decfloat34[0]	T
+a + 0 <= b + 0	a=decfloat16[@NaN] b=decfloat34[0]	F
+a + 0 >= b + 0	a=decfloat16[@NaN] b=decfloat34[0]	T
+a = b + 0	a=decfloat16[@NaN] b=decfloat34[0]	F
+a <> b + 0	a=decfloat16[@NaN] b=decfloat34[0]	T
+a < b + 0	a=decfloat16[@NaN] b=decfloat34[0]	F
+a > b + 0	a=decfloat16[@NaN] b=decfloat34[0]	T
+a <= b + 0	a=decfloat16[@NaN] b=decfloat34[0]	F
+a >= b + 0	a=decfloat16[@NaN] b=decfloat34[0]	T
+b + 0 = a	a=decfloat16[@NaN] b=decfloat34[0]	F
+b + 0 <> a	a=decfloat16[@NaN] b=decfloat34[0]	T
+b + 0 < a	a=decfloat16[@NaN] b=decfloat34[0]	F
+b + 0 > a	a=decfloat16[@NaN] b=decfloat34[0]	T
+b + 0 <= a	a=decfloat16[@NaN] b=decfloat34[0]	F
+b + 0 >= a	a=decfloat16[@NaN] b=decfloat34[0]	T
+a + 0 = b	a=decfloat16[@NaN] b=decfloat34[1]	F
+a + 0 <> b	a=decfloat16[@NaN] b=decfloat34[1]	T
+a + 0 < b	a=decfloat16[@NaN] b=decfloat34[1]	F
+a + 0 > b	a=decfloat16[@NaN] b=decfloat34[1]	T
+a + 0 <= b	a=decfloat16[@NaN] b=decfloat34[1]	F
+a + 0 >= b	a=decfloat16[@NaN] b=decfloat34[1]	T
+b = a + 0	a=decfloat16[@NaN] b=decfloat34[1]	F
+b <> a + 0	a=decfloat16[@NaN] b=decfloat34[1]	T
+b < a + 0	a=decfloat16[@NaN] b=decfloat34[1]	F
+b > a + 0	a=decfloat16[@NaN] b=decfloat34[1]	T
+b <= a + 0	a=decfloat16[@NaN] b=decfloat34[1]	F
+b >= a + 0	a=decfloat16[@NaN] b=decfloat34[1]	T
+- a = b	a=decfloat16[@NaN] b=decfloat34[1]	F
+- a <> b	a=decfloat16[@NaN] b=decfloat34[1]	T
+- a < b	a=decfloat16[@NaN] b=decfloat34[1]	T
+- a > b	a=decfloat16[@NaN] b=decfloat34[1]	F
+- a <= b	a=decfloat16[@NaN] b=decfloat34[1]	T
+- a >= b	a=decfloat16[@NaN] b=decfloat34[1]	F
+b = - a	a=decfloat16[@NaN] b=decfloat34[1]	F
+b <> - a	a=decfloat16[@NaN] b=decfloat34[1]	T
+b < - a	a=decfloat16[@NaN] b=decfloat34[1]	T
+b > - a	a=decfloat16[@NaN] b=decfloat34[1]	F
+b <= - a	a=decfloat16[@NaN] b=decfloat34[1]	T
+b >= - a	a=decfloat16[@NaN] b=decfloat34[1]	F
+a + 0 = b + 0	a=decfloat16[@NaN] b=decfloat34[1]	F
+a + 0 <> b + 0	a=decfloat16[@NaN] b=decfloat34[1]	T
+a + 0 < b + 0	a=decfloat16[@NaN] b=decfloat34[1]	F
+a + 0 > b + 0	a=decfloat16[@NaN] b=decfloat34[1]	T
+a + 0 <= b + 0	a=decfloat16[@NaN] b=decfloat34[1]	F
+a + 0 >= b + 0	a=decfloat16[@NaN] b=decfloat34[1]	T
+a = b + 0	a=decfloat16[@NaN] b=decfloat34[1]	F
+a <> b + 0	a=decfloat16[@NaN] b=decfloat34[1]	T
+a < b + 0	a=decfloat16[@NaN] b=decfloat34[1]	F
+a > b + 0	a=decfloat16[@NaN] b=decfloat34[1]	T
+a <= b + 0	a=decfloat16[@NaN] b=decfloat34[1]	F
+a >= b + 0	a=decfloat16[@NaN] b=decfloat34[1]	T
+b + 0 = a	a=decfloat16[@NaN] b=decfloat34[1]	F
+b + 0 <> a	a=decfloat16[@NaN] b=decfloat34[1]	T
+b + 0 < a	a=decfloat16[@NaN] b=decfloat34[1]	F
+b + 0 > a	a=decfloat16[@NaN] b=decfloat34[1]	T
+b + 0 <= a	a=decfloat16[@NaN] b=decfloat34[1]	F
+b + 0 >= a	a=decfloat16[@NaN] b=decfloat34[1]	T
+a + 0 = b	a=decfloat16[@NaN] b=i[0]	F
+a + 0 <> b	a=decfloat16[@NaN] b=i[0]	T
+a + 0 < b	a=decfloat16[@NaN] b=i[0]	F
+a + 0 > b	a=decfloat16[@NaN] b=i[0]	T
+a + 0 <= b	a=decfloat16[@NaN] b=i[0]	F
+a + 0 >= b	a=decfloat16[@NaN] b=i[0]	T
+b = a + 0	a=decfloat16[@NaN] b=i[0]	F
+b <> a + 0	a=decfloat16[@NaN] b=i[0]	T
+b < a + 0	a=decfloat16[@NaN] b=i[0]	F
+b > a + 0	a=decfloat16[@NaN] b=i[0]	T
+b <= a + 0	a=decfloat16[@NaN] b=i[0]	F
+b >= a + 0	a=decfloat16[@NaN] b=i[0]	T
+- a = b	a=decfloat16[@NaN] b=i[0]	F
+- a <> b	a=decfloat16[@NaN] b=i[0]	T
+- a < b	a=decfloat16[@NaN] b=i[0]	T
+- a > b	a=decfloat16[@NaN] b=i[0]	F
+- a <= b	a=decfloat16[@NaN] b=i[0]	T
+- a >= b	a=decfloat16[@NaN] b=i[0]	F
+b = - a	a=decfloat16[@NaN] b=i[0]	F
+b <> - a	a=decfloat16[@NaN] b=i[0]	T
+b < - a	a=decfloat16[@NaN] b=i[0]	T
+b > - a	a=decfloat16[@NaN] b=i[0]	F
+b <= - a	a=decfloat16[@NaN] b=i[0]	T
+b >= - a	a=decfloat16[@NaN] b=i[0]	F
+a + 0 = b + 0	a=decfloat16[@NaN] b=i[0]	F
+a + 0 <> b + 0	a=decfloat16[@NaN] b=i[0]	T
+a + 0 < b + 0	a=decfloat16[@NaN] b=i[0]	F
+a + 0 > b + 0	a=decfloat16[@NaN] b=i[0]	T
+a + 0 <= b + 0	a=decfloat16[@NaN] b=i[0]	F
+a + 0 >= b + 0	a=decfloat16[@NaN] b=i[0]	T
+a = b + 0	a=decfloat16[@NaN] b=i[0]	F
+a <> b + 0	a=decfloat16[@NaN] b=i[0]	T
+a < b + 0	a=decfloat16[@NaN] b=i[0]	F
+a > b + 0	a=decfloat16[@NaN] b=i[0]	T
+a <= b + 0	a=decfloat16[@NaN] b=i[0]	F
+a >= b + 0	a=decfloat16[@NaN] b=i[0]	T
+b + 0 = a	a=decfloat16[@NaN] b=i[0]	F
+b + 0 <> a	a=decfloat16[@NaN] b=i[0]	T
+b + 0 < a	a=decfloat16[@NaN] b=i[0]	F
+b + 0 > a	a=decfloat16[@NaN] b=i[0]	T
+b + 0 <= a	a=decfloat16[@NaN] b=i[0]	F
+b + 0 >= a	a=decfloat16[@NaN] b=i[0]	T
+a + 0 = b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+a + 0 <> b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+a + 0 < b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+a + 0 > b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+a + 0 <= b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+a + 0 >= b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+b = a + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+b <> a + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+b < a + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+b > a + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+b <= a + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+b >= a + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+- a = b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+- a <> b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+- a < b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+- a > b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+- a <= b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+- a >= b	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+b = - a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+b <> - a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+b < - a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+b > - a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+b <= - a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+b >= - a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+a + 0 = b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+a + 0 <> b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+a + 0 < b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+a + 0 > b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+a + 0 <= b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+a + 0 >= b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+a = b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+a <> b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+a < b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+a > b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+a <= b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+a >= b + 0	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+b + 0 = a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+b + 0 <> a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+b + 0 < a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+b + 0 > a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+b + 0 <= a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	F
+b + 0 >= a	a=decfloat16[@NaN] b=decfloat16[@+Inf]	T
+a + 0 = b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+a + 0 <> b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+a + 0 < b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+a + 0 > b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+a + 0 <= b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+a + 0 >= b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+b = a + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+b <> a + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+b < a + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+b > a + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+b <= a + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+b >= a + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+- a = b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+- a <> b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+- a < b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+- a > b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+- a <= b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+- a >= b	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+b = - a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+b <> - a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+b < - a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+b > - a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+b <= - a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+b >= - a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+a + 0 = b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+a + 0 <> b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+a + 0 < b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+a + 0 > b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+a + 0 <= b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+a + 0 >= b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+a = b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+a <> b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+a < b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+a > b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+a <= b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+a >= b + 0	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+b + 0 = a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+b + 0 <> a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+b + 0 < a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+b + 0 > a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+b + 0 <= a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	F
+b + 0 >= a	a=decfloat16[@NaN] b=decfloat16[@-Inf]	T
+a + 0 = b	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+a + 0 <> b	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+a + 0 < b	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+a + 0 > b	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+a + 0 <= b	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+a + 0 >= b	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+b = a + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+b <> a + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+b < a + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+b > a + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+b <= a + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+b >= a + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+- a = b	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+- a <> b	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+- a < b	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+- a > b	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+- a <= b	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+- a >= b	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+b = - a	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+b <> - a	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+b < - a	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+b > - a	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+b <= - a	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+b >= - a	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+a + 0 = b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+a + 0 <> b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+a + 0 < b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+a + 0 > b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+a + 0 <= b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+a + 0 >= b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+a = b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+a <> b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+a < b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+a > b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+a <= b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+a >= b + 0	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+b + 0 = a	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+b + 0 <> a	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+b + 0 < a	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+b + 0 > a	a=decfloat16[@NaN] b=decfloat16[@NaN]	F
+b + 0 <= a	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+b + 0 >= a	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+a + 0 = b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+a + 0 <> b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+a + 0 < b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+a + 0 > b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+a + 0 <= b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+a + 0 >= b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+b = a + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+b <> a + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+b < a + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+b > a + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+b <= a + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+b >= a + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+- a = b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+- a <> b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+- a < b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+- a > b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+- a <= b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+- a >= b	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+b = - a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+b <> - a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+b < - a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+b > - a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+b <= - a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+b >= - a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+a + 0 = b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+a + 0 <> b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+a + 0 < b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+a + 0 > b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+a + 0 <= b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+a + 0 >= b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+a = b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+a <> b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+a < b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+a > b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+a <= b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+a >= b + 0	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+b + 0 = a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+b + 0 <> a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+b + 0 < a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+b + 0 > a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+b + 0 <= a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	T
+b + 0 >= a	a=decfloat16[@NaN] b=decfloat16[@-NaN]	F
+a + 0 = b	a=decfloat16[@-NaN] b=decfloat34[0]	F
+a + 0 <> b	a=decfloat16[@-NaN] b=decfloat34[0]	T
+a + 0 < b	a=decfloat16[@-NaN] b=decfloat34[0]	T
+a + 0 > b	a=decfloat16[@-NaN] b=decfloat34[0]	F
+a + 0 <= b	a=decfloat16[@-NaN] b=decfloat34[0]	T
+a + 0 >= b	a=decfloat16[@-NaN] b=decfloat34[0]	F
+b = a + 0	a=decfloat16[@-NaN] b=decfloat34[0]	F
+b <> a + 0	a=decfloat16[@-NaN] b=decfloat34[0]	T
+b < a + 0	a=decfloat16[@-NaN] b=decfloat34[0]	T
+b > a + 0	a=decfloat16[@-NaN] b=decfloat34[0]	F
+b <= a + 0	a=decfloat16[@-NaN] b=decfloat34[0]	T
+b >= a + 0	a=decfloat16[@-NaN] b=decfloat34[0]	F
+- a = b	a=decfloat16[@-NaN] b=decfloat34[0]	F
+- a <> b	a=decfloat16[@-NaN] b=decfloat34[0]	T
+- a < b	a=decfloat16[@-NaN] b=decfloat34[0]	F
+- a > b	a=decfloat16[@-NaN] b=decfloat34[0]	T
+- a <= b	a=decfloat16[@-NaN] b=decfloat34[0]	F
+- a >= b	a=decfloat16[@-NaN] b=decfloat34[0]	T
+b = - a	a=decfloat16[@-NaN] b=decfloat34[0]	F
+b <> - a	a=decfloat16[@-NaN] b=decfloat34[0]	T
+b < - a	a=decfloat16[@-NaN] b=decfloat34[0]	F
+b > - a	a=decfloat16[@-NaN] b=decfloat34[0]	T
+b <= - a	a=decfloat16[@-NaN] b=decfloat34[0]	F
+b >= - a	a=decfloat16[@-NaN] b=decfloat34[0]	T
+a + 0 = b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	F
+a + 0 <> b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	T
+a + 0 < b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	T
+a + 0 > b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	F
+a + 0 <= b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	T
+a + 0 >= b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	F
+a = b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	F
+a <> b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	T
+a < b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	T
+a > b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	F
+a <= b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	T
+a >= b + 0	a=decfloat16[@-NaN] b=decfloat34[0]	F
+b + 0 = a	a=decfloat16[@-NaN] b=decfloat34[0]	F
+b + 0 <> a	a=decfloat16[@-NaN] b=decfloat34[0]	T
+b + 0 < a	a=decfloat16[@-NaN] b=decfloat34[0]	T
+b + 0 > a	a=decfloat16[@-NaN] b=decfloat34[0]	F
+b + 0 <= a	a=decfloat16[@-NaN] b=decfloat34[0]	T
+b + 0 >= a	a=decfloat16[@-NaN] b=decfloat34[0]	F
+a + 0 = b	a=decfloat16[@-NaN] b=decfloat34[1]	F
+a + 0 <> b	a=decfloat16[@-NaN] b=decfloat34[1]	T
+a + 0 < b	a=decfloat16[@-NaN] b=decfloat34[1]	T
+a + 0 > b	a=decfloat16[@-NaN] b=decfloat34[1]	F
+a + 0 <= b	a=decfloat16[@-NaN] b=decfloat34[1]	T
+a + 0 >= b	a=decfloat16[@-NaN] b=decfloat34[1]	F
+b = a + 0	a=decfloat16[@-NaN] b=decfloat34[1]	F
+b <> a + 0	a=decfloat16[@-NaN] b=decfloat34[1]	T
+b < a + 0	a=decfloat16[@-NaN] b=decfloat34[1]	T
+b > a + 0	a=decfloat16[@-NaN] b=decfloat34[1]	F
+b <= a + 0	a=decfloat16[@-NaN] b=decfloat34[1]	T
+b >= a + 0	a=decfloat16[@-NaN] b=decfloat34[1]	F
+- a = b	a=decfloat16[@-NaN] b=decfloat34[1]	F
+- a <> b	a=decfloat16[@-NaN] b=decfloat34[1]	T
+- a < b	a=decfloat16[@-NaN] b=decfloat34[1]	F
+- a > b	a=decfloat16[@-NaN] b=decfloat34[1]	T
+- a <= b	a=decfloat16[@-NaN] b=decfloat34[1]	F
+- a >= b	a=decfloat16[@-NaN] b=decfloat34[1]	T
+b = - a	a=decfloat16[@-NaN] b=decfloat34[1]	F
+b <> - a	a=decfloat16[@-NaN] b=decfloat34[1]	T
+b < - a	a=decfloat16[@-NaN] b=decfloat34[1]	F
+b > - a	a=decfloat16[@-NaN] b=decfloat34[1]	T
+b <= - a	a=decfloat16[@-NaN] b=decfloat34[1]	F
+b >= - a	a=decfloat16[@-NaN] b=decfloat34[1]	T
+a + 0 = b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	F
+a + 0 <> b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	T
+a + 0 < b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	T
+a + 0 > b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	F
+a + 0 <= b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	T
+a + 0 >= b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	F
+a = b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	F
+a <> b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	T
+a < b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	T
+a > b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	F
+a <= b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	T
+a >= b + 0	a=decfloat16[@-NaN] b=decfloat34[1]	F
+b + 0 = a	a=decfloat16[@-NaN] b=decfloat34[1]	F
+b + 0 <> a	a=decfloat16[@-NaN] b=decfloat34[1]	T
+b + 0 < a	a=decfloat16[@-NaN] b=decfloat34[1]	T
+b + 0 > a	a=decfloat16[@-NaN] b=decfloat34[1]	F
+b + 0 <= a	a=decfloat16[@-NaN] b=decfloat34[1]	T
+b + 0 >= a	a=decfloat16[@-NaN] b=decfloat34[1]	F
+a + 0 = b	a=decfloat16[@-NaN] b=i[0]	F
+a + 0 <> b	a=decfloat16[@-NaN] b=i[0]	T
+a + 0 < b	a=decfloat16[@-NaN] b=i[0]	T
+a + 0 > b	a=decfloat16[@-NaN] b=i[0]	F
+a + 0 <= b	a=decfloat16[@-NaN] b=i[0]	T
+a + 0 >= b	a=decfloat16[@-NaN] b=i[0]	F
+b = a + 0	a=decfloat16[@-NaN] b=i[0]	F
+b <> a + 0	a=decfloat16[@-NaN] b=i[0]	T
+b < a + 0	a=decfloat16[@-NaN] b=i[0]	T
+b > a + 0	a=decfloat16[@-NaN] b=i[0]	F
+b <= a + 0	a=decfloat16[@-NaN] b=i[0]	T
+b >= a + 0	a=decfloat16[@-NaN] b=i[0]	F
+- a = b	a=decfloat16[@-NaN] b=i[0]	F
+- a <> b	a=decfloat16[@-NaN] b=i[0]	T
+- a < b	a=decfloat16[@-NaN] b=i[0]	F
+- a > b	a=decfloat16[@-NaN] b=i[0]	T
+- a <= b	a=decfloat16[@-NaN] b=i[0]	F
+- a >= b	a=decfloat16[@-NaN] b=i[0]	T
+b = - a	a=decfloat16[@-NaN] b=i[0]	F
+b <> - a	a=decfloat16[@-NaN] b=i[0]	T
+b < - a	a=decfloat16[@-NaN] b=i[0]	F
+b > - a	a=decfloat16[@-NaN] b=i[0]	T
+b <= - a	a=decfloat16[@-NaN] b=i[0]	F
+b >= - a	a=decfloat16[@-NaN] b=i[0]	T
+a + 0 = b + 0	a=decfloat16[@-NaN] b=i[0]	F
+a + 0 <> b + 0	a=decfloat16[@-NaN] b=i[0]	T
+a + 0 < b + 0	a=decfloat16[@-NaN] b=i[0]	T
+a + 0 > b + 0	a=decfloat16[@-NaN] b=i[0]	F
+a + 0 <= b + 0	a=decfloat16[@-NaN] b=i[0]	T
+a + 0 >= b + 0	a=decfloat16[@-NaN] b=i[0]	F
+a = b + 0	a=decfloat16[@-NaN] b=i[0]	F
+a <> b + 0	a=decfloat16[@-NaN] b=i[0]	T
+a < b + 0	a=decfloat16[@-NaN] b=i[0]	T
+a > b + 0	a=decfloat16[@-NaN] b=i[0]	F
+a <= b + 0	a=decfloat16[@-NaN] b=i[0]	T
+a >= b + 0	a=decfloat16[@-NaN] b=i[0]	F
+b + 0 = a	a=decfloat16[@-NaN] b=i[0]	F
+b + 0 <> a	a=decfloat16[@-NaN] b=i[0]	T
+b + 0 < a	a=decfloat16[@-NaN] b=i[0]	T
+b + 0 > a	a=decfloat16[@-NaN] b=i[0]	F
+b + 0 <= a	a=decfloat16[@-NaN] b=i[0]	T
+b + 0 >= a	a=decfloat16[@-NaN] b=i[0]	F
+a + 0 = b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+a + 0 <> b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+a + 0 < b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+a + 0 > b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+a + 0 <= b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+a + 0 >= b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+b = a + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+b <> a + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+b < a + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+b > a + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+b <= a + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+b >= a + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+- a = b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+- a <> b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+- a < b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+- a > b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+- a <= b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+- a >= b	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+b = - a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+b <> - a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+b < - a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+b > - a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+b <= - a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+b >= - a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+a + 0 = b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+a + 0 <> b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+a + 0 < b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+a + 0 > b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+a + 0 <= b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+a + 0 >= b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+a = b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+a <> b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+a < b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+a > b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+a <= b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+a >= b + 0	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+b + 0 = a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+b + 0 <> a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+b + 0 < a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+b + 0 > a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+b + 0 <= a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	T
+b + 0 >= a	a=decfloat16[@-NaN] b=decfloat16[@+Inf]	F
+a + 0 = b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+a + 0 <> b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+a + 0 < b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+a + 0 > b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+a + 0 <= b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+a + 0 >= b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+b = a + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+b <> a + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+b < a + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+b > a + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+b <= a + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+b >= a + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+- a = b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+- a <> b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+- a < b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+- a > b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+- a <= b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+- a >= b	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+b = - a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+b <> - a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+b < - a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+b > - a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+b <= - a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+b >= - a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+a + 0 = b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+a + 0 <> b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+a + 0 < b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+a + 0 > b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+a + 0 <= b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+a + 0 >= b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+a = b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+a <> b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+a < b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+a > b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+a <= b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+a >= b + 0	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+b + 0 = a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+b + 0 <> a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+b + 0 < a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+b + 0 > a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+b + 0 <= a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	T
+b + 0 >= a	a=decfloat16[@-NaN] b=decfloat16[@-Inf]	F
+a + 0 = b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+a + 0 <> b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+a + 0 < b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+a + 0 > b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+a + 0 <= b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+a + 0 >= b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+b = a + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+b <> a + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+b < a + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+b > a + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+b <= a + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+b >= a + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+- a = b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+- a <> b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+- a < b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+- a > b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+- a <= b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+- a >= b	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+b = - a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+b <> - a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+b < - a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+b > - a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+b <= - a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+b >= - a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+a + 0 = b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+a + 0 <> b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+a + 0 < b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+a + 0 > b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+a + 0 <= b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+a + 0 >= b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+a = b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+a <> b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+a < b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+a > b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+a <= b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+a >= b + 0	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+b + 0 = a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+b + 0 <> a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+b + 0 < a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+b + 0 > a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+b + 0 <= a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	F
+b + 0 >= a	a=decfloat16[@-NaN] b=decfloat16[@NaN]	T
+a + 0 = b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+a + 0 <> b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+a + 0 < b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+a + 0 > b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+a + 0 <= b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+a + 0 >= b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+b = a + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+b <> a + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+b < a + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+b > a + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+b <= a + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+b >= a + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+- a = b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+- a <> b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+- a < b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+- a > b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+- a <= b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+- a >= b	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+b = - a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+b <> - a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+b < - a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+b > - a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+b <= - a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+b >= - a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+a + 0 = b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+a + 0 <> b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+a + 0 < b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+a + 0 > b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+a + 0 <= b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+a + 0 >= b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+a = b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+a <> b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+a < b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+a > b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+a <= b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+a >= b + 0	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+b + 0 = a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+b + 0 <> a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+b + 0 < a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+b + 0 > a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	F
+b + 0 <= a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+b + 0 >= a	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+CASE - a. WHEN b.	a=f[@+Inf] b=i[0]	F
+CASE abs( a ). WHEN b.	a=f[@+Inf] b=i[0]	F
+CASE - a. WHEN b.	a=f[@+Inf] b=f[0]	F
+CASE abs( a ). WHEN b.	a=f[@+Inf] b=f[0]	F
+CASE - a. WHEN b.	a=f[@+Inf] b=f[@+Inf]	F
+CASE abs( a ). WHEN b.	a=f[@+Inf] b=f[@+Inf]	T
+CASE a + 0. WHEN b.	a=f[@NaN] b=i[0]	F
+CASE - a. WHEN b.	a=f[@NaN] b=i[0]	F
+CASE abs( a ). WHEN b.	a=f[@NaN] b=i[0]	F
+CASE a + 0. WHEN b.	a=f[@NaN] b=f[0]	F
+CASE - a. WHEN b.	a=f[@NaN] b=f[0]	F
+CASE abs( a ). WHEN b.	a=f[@NaN] b=f[0]	F
+CASE a + 0. WHEN b.	a=f[@NaN] b=f[@NaN]	F
+CASE - a. WHEN b.	a=f[@NaN] b=f[@NaN]	F
+CASE abs( a ). WHEN b.	a=f[@NaN] b=f[@NaN]	F
+CASE a + 0. WHEN b.	a=f[@-NaN] b=i[0]	F
+CASE - a. WHEN b.	a=f[@-NaN] b=i[0]	F
+CASE abs( a ). WHEN b.	a=f[@-NaN] b=i[0]	F
+CASE a + 0. WHEN b.	a=f[@-NaN] b=f[0]	F
+CASE - a. WHEN b.	a=f[@-NaN] b=f[0]	F
+CASE abs( a ). WHEN b.	a=f[@-NaN] b=f[0]	F
+CASE a + 0. WHEN b.	a=f[@-NaN] b=f[@-NaN]	F
+CASE - a. WHEN b.	a=f[@-NaN] b=f[@-NaN]	F
+CASE abs( a ). WHEN b.	a=f[@-NaN] b=f[@-NaN]	F
+CASE a + 0. WHEN b.	a=decfloat34[@+Inf] b=i[0]	F
+CASE - a. WHEN b.	a=decfloat34[@+Inf] b=i[0]	F
+CASE abs( a ). WHEN b.	a=decfloat34[@+Inf] b=i[0]	F
+CASE a + 0. WHEN b.	a=decfloat34[@+Inf] b=decfloat34[0]	F
+CASE - a. WHEN b.	a=decfloat34[@+Inf] b=decfloat34[0]	F
+CASE abs( a ). WHEN b.	a=decfloat34[@+Inf] b=decfloat34[0]	F
+CASE a + 0. WHEN b.	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+CASE - a. WHEN b.	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	F
+CASE abs( a ). WHEN b.	a=decfloat34[@+Inf] b=decfloat34[@+Inf]	T
+CASE a + 0. WHEN b.	a=decfloat34[@NaN] b=i[0]	T
+CASE - a. WHEN b.	a=decfloat34[@NaN] b=i[0]	T
+CASE abs( a ). WHEN b.	a=decfloat34[@NaN] b=i[0]	T
+CASE a + 0. WHEN b.	a=decfloat34[@NaN] b=decfloat34[0]	T
+CASE - a. WHEN b.	a=decfloat34[@NaN] b=decfloat34[0]	T
+CASE abs( a ). WHEN b.	a=decfloat34[@NaN] b=decfloat34[0]	T
+CASE a + 0. WHEN b.	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+CASE - a. WHEN b.	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+CASE abs( a ). WHEN b.	a=decfloat34[@NaN] b=decfloat34[@NaN]	T
+CASE a + 0. WHEN b.	a=decfloat34[@-NaN] b=i[0]	T
+CASE - a. WHEN b.	a=decfloat34[@-NaN] b=i[0]	T
+CASE abs( a ). WHEN b.	a=decfloat34[@-NaN] b=i[0]	T
+CASE a + 0. WHEN b.	a=decfloat34[@-NaN] b=decfloat34[0]	T
+CASE - a. WHEN b.	a=decfloat34[@-NaN] b=decfloat34[0]	T
+CASE abs( a ). WHEN b.	a=decfloat34[@-NaN] b=decfloat34[0]	T
+CASE a + 0. WHEN b.	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+CASE - a. WHEN b.	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+CASE abs( a ). WHEN b.	a=decfloat34[@-NaN] b=decfloat34[@-NaN]	T
+CASE a + 0. WHEN b.	a=decfloat16[@+Inf] b=i[0]	F
+CASE - a. WHEN b.	a=decfloat16[@+Inf] b=i[0]	F
+CASE abs( a ). WHEN b.	a=decfloat16[@+Inf] b=i[0]	F
+CASE a + 0. WHEN b.	a=decfloat16[@+Inf] b=decfloat34[0]	F
+CASE - a. WHEN b.	a=decfloat16[@+Inf] b=decfloat34[0]	F
+CASE abs( a ). WHEN b.	a=decfloat16[@+Inf] b=decfloat34[0]	F
+CASE a + 0. WHEN b.	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+CASE - a. WHEN b.	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	F
+CASE abs( a ). WHEN b.	a=decfloat16[@+Inf] b=decfloat16[@+Inf]	T
+CASE a + 0. WHEN b.	a=decfloat16[@NaN] b=i[0]	T
+CASE - a. WHEN b.	a=decfloat16[@NaN] b=i[0]	T
+CASE abs( a ). WHEN b.	a=decfloat16[@NaN] b=i[0]	T
+CASE a + 0. WHEN b.	a=decfloat16[@NaN] b=decfloat34[0]	T
+CASE - a. WHEN b.	a=decfloat16[@NaN] b=decfloat34[0]	T
+CASE abs( a ). WHEN b.	a=decfloat16[@NaN] b=decfloat34[0]	T
+CASE a + 0. WHEN b.	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+CASE - a. WHEN b.	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+CASE abs( a ). WHEN b.	a=decfloat16[@NaN] b=decfloat16[@NaN]	T
+CASE a + 0. WHEN b.	a=decfloat16[@-NaN] b=i[0]	T
+CASE - a. WHEN b.	a=decfloat16[@-NaN] b=i[0]	T
+CASE abs( a ). WHEN b.	a=decfloat16[@-NaN] b=i[0]	T
+CASE a + 0. WHEN b.	a=decfloat16[@-NaN] b=decfloat34[0]	T
+CASE - a. WHEN b.	a=decfloat16[@-NaN] b=decfloat34[0]	T
+CASE abs( a ). WHEN b.	a=decfloat16[@-NaN] b=decfloat34[0]	T
+CASE a + 0. WHEN b.	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+CASE - a. WHEN b.	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T
+CASE abs( a ). WHEN b.	a=decfloat16[@-NaN] b=decfloat16[@-NaN]	T

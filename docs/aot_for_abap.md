@@ -28,9 +28,9 @@ one fails loudly, naming what is missing, and is never a silently different resu
 2. *Special values left after a caught exception (2026-11-26):* an exception that leaves `+Inf`, `-Inf` or NaN in
    an `f` field, or an infinity in a `decfloat16` field, ends the program with the run-time error
    `SPECIAL_VALUE_NOT_SUPPORTED` when a `TRY` catches it (or a `CLEANUP` block would run), since the runtime does
-   not specify what statements do with such values yet (see "Known gaps" in
-   [spec/conversion.md](spec/conversion.md)). Whether the values occur depends on run-time data, so this cannot be
-   a build error; uncaught, the exception ends the program as in ABAP.
+   not implement what statements do with such values yet (specified in
+   [spec/special_values.md](spec/special_values.md), 2026-11-27). Whether the values occur depends on run-time
+   data, so this cannot be a build error; uncaught, the exception ends the program as in ABAP.
 
 **Assumption on resources.** Memory, the size of strings and tables, and the depth of calls are limited
 differently in a native binary. A program that only works because ABAP fails at such a limit, or fails only

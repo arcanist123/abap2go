@@ -1,0 +1,318 @@
+# A special value as the embedded expression of a string template, see docs/spec/special_values.md. Not run by the
+# tests yet. Columns: type, value, format options (- for none), expected: the result of |{ a <options> }| in [],
+# or EXC:<class>. *{n} stands for n asterisks. Special values are written as in special_conversion.tsv.
+f	[@+Inf]	-	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	WIDTH = 12	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	WIDTH = 2	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	WIDTH = 12 ALIGN = RIGHT PAD = '#'	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	WIDTH = 12 ALIGN = CENTER PAD = '#'	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	ALIGN = RIGHT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	SIGN = LEFT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	SIGN = LEFTPLUS	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	SIGN = LEFTSPACE	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	SIGN = RIGHT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	SIGN = RIGHTPLUS	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	SIGN = RIGHTSPACE	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	NUMBER = RAW	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	NUMBER = USER	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	NUMBER = ENVIRONMENT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	DECIMALS = 0	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	DECIMALS = 2	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	ZERO = NO	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	ZERO = YES	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	XSD = YES	[INF]
+f	[@+Inf]	STYLE = SIMPLE	[*{8200}]
+f	[@+Inf]	STYLE = SIGN_AS_POSTFIX	[*{8200}]
+f	[@+Inf]	STYLE = SCALE_PRESERVING	[*{8200}]
+f	[@+Inf]	STYLE = SCIENTIFIC	[*{8200}]
+f	[@+Inf]	STYLE = SCIENTIFIC_WITH_LEADING_ZERO	[*{8200}]
+f	[@+Inf]	STYLE = SCALE_PRESERVING_SCIENTIFIC	[*{8200}]
+f	[@+Inf]	STYLE = ENGINEERING	[*{8200}]
+f	[@+Inf]	EXPONENT = 0	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	EXPONENT = 3	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	CURRENCY = 'EUR'	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	COUNTRY = 'US '	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	DECIMALS = 2 NUMBER = USER	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	DECIMALS = 2 SIGN = LEFTPLUS WIDTH = 10	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@+Inf]	STYLE = SCIENTIFIC DECIMALS = 2	[*{8200}]
+f	[@-Inf]	-	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	WIDTH = 12	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	WIDTH = 2	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	WIDTH = 12 ALIGN = RIGHT PAD = '#'	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	WIDTH = 12 ALIGN = CENTER PAD = '#'	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	ALIGN = RIGHT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	SIGN = LEFT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	SIGN = LEFTPLUS	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	SIGN = LEFTSPACE	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	SIGN = RIGHT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	SIGN = RIGHTPLUS	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	SIGN = RIGHTSPACE	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	NUMBER = RAW	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	NUMBER = USER	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	NUMBER = ENVIRONMENT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	DECIMALS = 0	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	DECIMALS = 2	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	ZERO = NO	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	ZERO = YES	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	XSD = YES	[-INF]
+f	[@-Inf]	STYLE = SIMPLE	[*{8200}]
+f	[@-Inf]	STYLE = SIGN_AS_POSTFIX	[*{8200}]
+f	[@-Inf]	STYLE = SCALE_PRESERVING	[*{8200}]
+f	[@-Inf]	STYLE = SCIENTIFIC	[*{8200}]
+f	[@-Inf]	STYLE = SCIENTIFIC_WITH_LEADING_ZERO	[*{8200}]
+f	[@-Inf]	STYLE = SCALE_PRESERVING_SCIENTIFIC	[*{8200}]
+f	[@-Inf]	STYLE = ENGINEERING	[*{8200}]
+f	[@-Inf]	EXPONENT = 0	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	EXPONENT = 3	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	CURRENCY = 'EUR'	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	COUNTRY = 'US '	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	DECIMALS = 2 NUMBER = USER	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	DECIMALS = 2 SIGN = LEFTPLUS WIDTH = 10	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-Inf]	STYLE = SCIENTIFIC DECIMALS = 2	[*{8200}]
+f	[@NaN]	-	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	WIDTH = 12	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	WIDTH = 2	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	WIDTH = 12 ALIGN = RIGHT PAD = '#'	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	WIDTH = 12 ALIGN = CENTER PAD = '#'	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	ALIGN = RIGHT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	SIGN = LEFT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	SIGN = LEFTPLUS	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	SIGN = LEFTSPACE	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	SIGN = RIGHT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	SIGN = RIGHTPLUS	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	SIGN = RIGHTSPACE	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	NUMBER = RAW	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	NUMBER = USER	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	NUMBER = ENVIRONMENT	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	DECIMALS = 0	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	DECIMALS = 2	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	ZERO = NO	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	ZERO = YES	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	XSD = YES	[NaN]
+f	[@NaN]	STYLE = SIMPLE	[*{8200}]
+f	[@NaN]	STYLE = SIGN_AS_POSTFIX	[*{8200}]
+f	[@NaN]	STYLE = SCALE_PRESERVING	[*{8200}]
+f	[@NaN]	STYLE = SCIENTIFIC	[*{8200}]
+f	[@NaN]	STYLE = SCIENTIFIC_WITH_LEADING_ZERO	[*{8200}]
+f	[@NaN]	STYLE = SCALE_PRESERVING_SCIENTIFIC	[*{8200}]
+f	[@NaN]	STYLE = ENGINEERING	[*{8200}]
+f	[@NaN]	EXPONENT = 0	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	EXPONENT = 3	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	CURRENCY = 'EUR'	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	COUNTRY = 'US '	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	DECIMALS = 2 NUMBER = USER	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	DECIMALS = 2 SIGN = LEFTPLUS WIDTH = 10	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@NaN]	STYLE = SCIENTIFIC DECIMALS = 2	[*{8200}]
+decfloat16	[@+Inf]	-	[*{8200}]
+decfloat16	[@+Inf]	WIDTH = 12	[*{8200}]
+decfloat16	[@+Inf]	WIDTH = 2	[*{8200}]
+decfloat16	[@+Inf]	WIDTH = 12 ALIGN = RIGHT PAD = '#'	[*{8200}]
+decfloat16	[@+Inf]	WIDTH = 12 ALIGN = CENTER PAD = '#'	[*{8200}]
+decfloat16	[@+Inf]	ALIGN = RIGHT	[*{8200}]
+decfloat16	[@+Inf]	SIGN = LEFT	[*{8200}]
+decfloat16	[@+Inf]	SIGN = LEFTPLUS	[+*{8200}]
+decfloat16	[@+Inf]	SIGN = LEFTSPACE	[ *{8200}]
+decfloat16	[@+Inf]	SIGN = RIGHT	[*{8200}]
+decfloat16	[@+Inf]	SIGN = RIGHTPLUS	[*{8200}+]
+decfloat16	[@+Inf]	SIGN = RIGHTSPACE	[*{8200} ]
+decfloat16	[@+Inf]	NUMBER = RAW	[*{8200}]
+decfloat16	[@+Inf]	NUMBER = USER	[*{8200}]
+decfloat16	[@+Inf]	NUMBER = ENVIRONMENT	[*{8200}]
+decfloat16	[@+Inf]	DECIMALS = 0	[*{8200}]
+decfloat16	[@+Inf]	DECIMALS = 2	[*{8200}]
+decfloat16	[@+Inf]	ZERO = NO	[*{8200}]
+decfloat16	[@+Inf]	ZERO = YES	[*{8200}]
+decfloat16	[@+Inf]	XSD = YES	[Infinity]
+decfloat16	[@+Inf]	STYLE = SIMPLE	[*{8200}]
+decfloat16	[@+Inf]	STYLE = SIGN_AS_POSTFIX	[*{8200}]
+decfloat16	[@+Inf]	STYLE = SCALE_PRESERVING	[*{8200}]
+decfloat16	[@+Inf]	STYLE = SCIENTIFIC	[*{8200}]
+decfloat16	[@+Inf]	STYLE = SCIENTIFIC_WITH_LEADING_ZERO	[*{8200}]
+decfloat16	[@+Inf]	STYLE = SCALE_PRESERVING_SCIENTIFIC	[*{8200}]
+decfloat16	[@+Inf]	STYLE = ENGINEERING	[*{8200}]
+decfloat16	[@+Inf]	EXPONENT = 0	[*{8200}]
+decfloat16	[@+Inf]	EXPONENT = 3	[*{8200}]
+decfloat16	[@+Inf]	CURRENCY = 'EUR'	[*{8200}]
+decfloat16	[@+Inf]	COUNTRY = 'US '	[*{8200}]
+decfloat16	[@+Inf]	DECIMALS = 2 NUMBER = USER	[*{8200}]
+decfloat16	[@+Inf]	DECIMALS = 2 SIGN = LEFTPLUS WIDTH = 10	[+*{8200}]
+decfloat16	[@+Inf]	STYLE = SCIENTIFIC DECIMALS = 2	[*{8200}]
+decfloat16	[@-Inf]	-	[*{8200}]
+decfloat16	[@-Inf]	WIDTH = 12	[*{8200}]
+decfloat16	[@-Inf]	WIDTH = 2	[*{8200}]
+decfloat16	[@-Inf]	WIDTH = 12 ALIGN = RIGHT PAD = '#'	[*{8200}]
+decfloat16	[@-Inf]	WIDTH = 12 ALIGN = CENTER PAD = '#'	[*{8200}]
+decfloat16	[@-Inf]	ALIGN = RIGHT	[*{8200}]
+decfloat16	[@-Inf]	SIGN = LEFT	[*{8200}]
+decfloat16	[@-Inf]	SIGN = LEFTPLUS	[+*{8200}]
+decfloat16	[@-Inf]	SIGN = LEFTSPACE	[ *{8200}]
+decfloat16	[@-Inf]	SIGN = RIGHT	[*{8200}]
+decfloat16	[@-Inf]	SIGN = RIGHTPLUS	[*{8200}+]
+decfloat16	[@-Inf]	SIGN = RIGHTSPACE	[*{8200} ]
+decfloat16	[@-Inf]	NUMBER = RAW	[*{8200}]
+decfloat16	[@-Inf]	NUMBER = USER	[*{8200}]
+decfloat16	[@-Inf]	NUMBER = ENVIRONMENT	[*{8200}]
+decfloat16	[@-Inf]	DECIMALS = 0	[*{8200}]
+decfloat16	[@-Inf]	DECIMALS = 2	[*{8200}]
+decfloat16	[@-Inf]	ZERO = NO	[*{8200}]
+decfloat16	[@-Inf]	ZERO = YES	[*{8200}]
+decfloat16	[@-Inf]	XSD = YES	[-Infinity]
+decfloat16	[@-Inf]	STYLE = SIMPLE	[*{8200}]
+decfloat16	[@-Inf]	STYLE = SIGN_AS_POSTFIX	[*{8200}]
+decfloat16	[@-Inf]	STYLE = SCALE_PRESERVING	[*{8200}]
+decfloat16	[@-Inf]	STYLE = SCIENTIFIC	[*{8200}]
+decfloat16	[@-Inf]	STYLE = SCIENTIFIC_WITH_LEADING_ZERO	[*{8200}]
+decfloat16	[@-Inf]	STYLE = SCALE_PRESERVING_SCIENTIFIC	[*{8200}]
+decfloat16	[@-Inf]	STYLE = ENGINEERING	[*{8200}]
+decfloat16	[@-Inf]	EXPONENT = 0	[*{8200}]
+decfloat16	[@-Inf]	EXPONENT = 3	[*{8200}]
+decfloat16	[@-Inf]	CURRENCY = 'EUR'	[*{8200}]
+decfloat16	[@-Inf]	COUNTRY = 'US '	[*{8200}]
+decfloat16	[@-Inf]	DECIMALS = 2 NUMBER = USER	[*{8200}]
+decfloat16	[@-Inf]	DECIMALS = 2 SIGN = LEFTPLUS WIDTH = 10	[+*{8200}]
+decfloat16	[@-Inf]	STYLE = SCIENTIFIC DECIMALS = 2	[*{8200}]
+decfloat16	[@NaN]	-	[*{8200}]
+decfloat16	[@NaN]	WIDTH = 12	[*{8200}]
+decfloat16	[@NaN]	WIDTH = 2	[*{8200}]
+decfloat16	[@NaN]	WIDTH = 12 ALIGN = RIGHT PAD = '#'	[*{8200}]
+decfloat16	[@NaN]	WIDTH = 12 ALIGN = CENTER PAD = '#'	[*{8200}]
+decfloat16	[@NaN]	ALIGN = RIGHT	[*{8200}]
+decfloat16	[@NaN]	SIGN = LEFT	[*{8200}]
+decfloat16	[@NaN]	SIGN = LEFTPLUS	[+*{8200}]
+decfloat16	[@NaN]	SIGN = LEFTSPACE	[ *{8200}]
+decfloat16	[@NaN]	SIGN = RIGHT	[*{8200}]
+decfloat16	[@NaN]	SIGN = RIGHTPLUS	[*{8200}+]
+decfloat16	[@NaN]	SIGN = RIGHTSPACE	[*{8200} ]
+decfloat16	[@NaN]	NUMBER = RAW	[*{8200}]
+decfloat16	[@NaN]	NUMBER = USER	[*{8200}]
+decfloat16	[@NaN]	NUMBER = ENVIRONMENT	[*{8200}]
+decfloat16	[@NaN]	DECIMALS = 0	[*{8200}]
+decfloat16	[@NaN]	DECIMALS = 2	[*{8200}]
+decfloat16	[@NaN]	ZERO = NO	[*{8200}]
+decfloat16	[@NaN]	ZERO = YES	[*{8200}]
+decfloat16	[@NaN]	XSD = YES	[NaN]
+decfloat16	[@NaN]	STYLE = SIMPLE	[*{8200}]
+decfloat16	[@NaN]	STYLE = SIGN_AS_POSTFIX	[*{8200}]
+decfloat16	[@NaN]	STYLE = SCALE_PRESERVING	[*{8200}]
+decfloat16	[@NaN]	STYLE = SCIENTIFIC	[*{8200}]
+decfloat16	[@NaN]	STYLE = SCIENTIFIC_WITH_LEADING_ZERO	[*{8200}]
+decfloat16	[@NaN]	STYLE = SCALE_PRESERVING_SCIENTIFIC	[*{8200}]
+decfloat16	[@NaN]	STYLE = ENGINEERING	[*{8200}]
+decfloat16	[@NaN]	EXPONENT = 0	[*{8200}]
+decfloat16	[@NaN]	EXPONENT = 3	[*{8200}]
+decfloat16	[@NaN]	CURRENCY = 'EUR'	[*{8200}]
+decfloat16	[@NaN]	COUNTRY = 'US '	[*{8200}]
+decfloat16	[@NaN]	DECIMALS = 2 NUMBER = USER	[*{8200}]
+decfloat16	[@NaN]	DECIMALS = 2 SIGN = LEFTPLUS WIDTH = 10	[+*{8200}]
+decfloat16	[@NaN]	STYLE = SCIENTIFIC DECIMALS = 2	[*{8200}]
+decfloat34	[@+Inf]	-	[*{8200}]
+decfloat34	[@+Inf]	WIDTH = 12	[*{8200}]
+decfloat34	[@+Inf]	WIDTH = 2	[*{8200}]
+decfloat34	[@+Inf]	WIDTH = 12 ALIGN = RIGHT PAD = '#'	[*{8200}]
+decfloat34	[@+Inf]	WIDTH = 12 ALIGN = CENTER PAD = '#'	[*{8200}]
+decfloat34	[@+Inf]	ALIGN = RIGHT	[*{8200}]
+decfloat34	[@+Inf]	SIGN = LEFT	[*{8200}]
+decfloat34	[@+Inf]	SIGN = LEFTPLUS	[+*{8200}]
+decfloat34	[@+Inf]	SIGN = LEFTSPACE	[ *{8200}]
+decfloat34	[@+Inf]	SIGN = RIGHT	[*{8200}]
+decfloat34	[@+Inf]	SIGN = RIGHTPLUS	[*{8200}+]
+decfloat34	[@+Inf]	SIGN = RIGHTSPACE	[*{8200} ]
+decfloat34	[@+Inf]	NUMBER = RAW	[*{8200}]
+decfloat34	[@+Inf]	NUMBER = USER	[*{8200}]
+decfloat34	[@+Inf]	NUMBER = ENVIRONMENT	[*{8200}]
+decfloat34	[@+Inf]	DECIMALS = 0	[*{8200}]
+decfloat34	[@+Inf]	DECIMALS = 2	[*{8200}]
+decfloat34	[@+Inf]	ZERO = NO	[*{8200}]
+decfloat34	[@+Inf]	ZERO = YES	[*{8200}]
+decfloat34	[@+Inf]	XSD = YES	[Infinity]
+decfloat34	[@+Inf]	STYLE = SIMPLE	[*{8200}]
+decfloat34	[@+Inf]	STYLE = SIGN_AS_POSTFIX	[*{8200}]
+decfloat34	[@+Inf]	STYLE = SCALE_PRESERVING	[*{8200}]
+decfloat34	[@+Inf]	STYLE = SCIENTIFIC	[*{8200}]
+decfloat34	[@+Inf]	STYLE = SCIENTIFIC_WITH_LEADING_ZERO	[*{8200}]
+decfloat34	[@+Inf]	STYLE = SCALE_PRESERVING_SCIENTIFIC	[*{8200}]
+decfloat34	[@+Inf]	STYLE = ENGINEERING	[*{8200}]
+decfloat34	[@+Inf]	EXPONENT = 0	[*{8200}]
+decfloat34	[@+Inf]	EXPONENT = 3	[*{8200}]
+decfloat34	[@+Inf]	CURRENCY = 'EUR'	[*{8200}]
+decfloat34	[@+Inf]	COUNTRY = 'US '	[*{8200}]
+decfloat34	[@+Inf]	DECIMALS = 2 NUMBER = USER	[*{8200}]
+decfloat34	[@+Inf]	DECIMALS = 2 SIGN = LEFTPLUS WIDTH = 10	[+*{8200}]
+decfloat34	[@+Inf]	STYLE = SCIENTIFIC DECIMALS = 2	[*{8200}]
+decfloat34	[@-Inf]	-	[*{8200}]
+decfloat34	[@-Inf]	WIDTH = 12	[*{8200}]
+decfloat34	[@-Inf]	WIDTH = 2	[*{8200}]
+decfloat34	[@-Inf]	WIDTH = 12 ALIGN = RIGHT PAD = '#'	[*{8200}]
+decfloat34	[@-Inf]	WIDTH = 12 ALIGN = CENTER PAD = '#'	[*{8200}]
+decfloat34	[@-Inf]	ALIGN = RIGHT	[*{8200}]
+decfloat34	[@-Inf]	SIGN = LEFT	[*{8200}]
+decfloat34	[@-Inf]	SIGN = LEFTPLUS	[+*{8200}]
+decfloat34	[@-Inf]	SIGN = LEFTSPACE	[ *{8200}]
+decfloat34	[@-Inf]	SIGN = RIGHT	[*{8200}]
+decfloat34	[@-Inf]	SIGN = RIGHTPLUS	[*{8200}+]
+decfloat34	[@-Inf]	SIGN = RIGHTSPACE	[*{8200} ]
+decfloat34	[@-Inf]	NUMBER = RAW	[*{8200}]
+decfloat34	[@-Inf]	NUMBER = USER	[*{8200}]
+decfloat34	[@-Inf]	NUMBER = ENVIRONMENT	[*{8200}]
+decfloat34	[@-Inf]	DECIMALS = 0	[*{8200}]
+decfloat34	[@-Inf]	DECIMALS = 2	[*{8200}]
+decfloat34	[@-Inf]	ZERO = NO	[*{8200}]
+decfloat34	[@-Inf]	ZERO = YES	[*{8200}]
+decfloat34	[@-Inf]	XSD = YES	[-Infinity]
+decfloat34	[@-Inf]	STYLE = SIMPLE	[*{8200}]
+decfloat34	[@-Inf]	STYLE = SIGN_AS_POSTFIX	[*{8200}]
+decfloat34	[@-Inf]	STYLE = SCALE_PRESERVING	[*{8200}]
+decfloat34	[@-Inf]	STYLE = SCIENTIFIC	[*{8200}]
+decfloat34	[@-Inf]	STYLE = SCIENTIFIC_WITH_LEADING_ZERO	[*{8200}]
+decfloat34	[@-Inf]	STYLE = SCALE_PRESERVING_SCIENTIFIC	[*{8200}]
+decfloat34	[@-Inf]	STYLE = ENGINEERING	[*{8200}]
+decfloat34	[@-Inf]	EXPONENT = 0	[*{8200}]
+decfloat34	[@-Inf]	EXPONENT = 3	[*{8200}]
+decfloat34	[@-Inf]	CURRENCY = 'EUR'	[*{8200}]
+decfloat34	[@-Inf]	COUNTRY = 'US '	[*{8200}]
+decfloat34	[@-Inf]	DECIMALS = 2 NUMBER = USER	[*{8200}]
+decfloat34	[@-Inf]	DECIMALS = 2 SIGN = LEFTPLUS WIDTH = 10	[+*{8200}]
+decfloat34	[@-Inf]	STYLE = SCIENTIFIC DECIMALS = 2	[*{8200}]
+decfloat34	[@NaN]	-	[*{8200}]
+decfloat34	[@NaN]	WIDTH = 12	[*{8200}]
+decfloat34	[@NaN]	WIDTH = 2	[*{8200}]
+decfloat34	[@NaN]	WIDTH = 12 ALIGN = RIGHT PAD = '#'	[*{8200}]
+decfloat34	[@NaN]	WIDTH = 12 ALIGN = CENTER PAD = '#'	[*{8200}]
+decfloat34	[@NaN]	ALIGN = RIGHT	[*{8200}]
+decfloat34	[@NaN]	SIGN = LEFT	[*{8200}]
+decfloat34	[@NaN]	SIGN = LEFTPLUS	[+*{8200}]
+decfloat34	[@NaN]	SIGN = LEFTSPACE	[ *{8200}]
+decfloat34	[@NaN]	SIGN = RIGHT	[*{8200}]
+decfloat34	[@NaN]	SIGN = RIGHTPLUS	[*{8200}+]
+decfloat34	[@NaN]	SIGN = RIGHTSPACE	[*{8200} ]
+decfloat34	[@NaN]	NUMBER = RAW	[*{8200}]
+decfloat34	[@NaN]	NUMBER = USER	[*{8200}]
+decfloat34	[@NaN]	NUMBER = ENVIRONMENT	[*{8200}]
+decfloat34	[@NaN]	DECIMALS = 0	[*{8200}]
+decfloat34	[@NaN]	DECIMALS = 2	[*{8200}]
+decfloat34	[@NaN]	ZERO = NO	[*{8200}]
+decfloat34	[@NaN]	ZERO = YES	[*{8200}]
+decfloat34	[@NaN]	XSD = YES	[NaN]
+decfloat34	[@NaN]	STYLE = SIMPLE	[*{8200}]
+decfloat34	[@NaN]	STYLE = SIGN_AS_POSTFIX	[*{8200}]
+decfloat34	[@NaN]	STYLE = SCALE_PRESERVING	[*{8200}]
+decfloat34	[@NaN]	STYLE = SCIENTIFIC	[*{8200}]
+decfloat34	[@NaN]	STYLE = SCIENTIFIC_WITH_LEADING_ZERO	[*{8200}]
+decfloat34	[@NaN]	STYLE = SCALE_PRESERVING_SCIENTIFIC	[*{8200}]
+decfloat34	[@NaN]	STYLE = ENGINEERING	[*{8200}]
+decfloat34	[@NaN]	EXPONENT = 0	[*{8200}]
+decfloat34	[@NaN]	EXPONENT = 3	[*{8200}]
+decfloat34	[@NaN]	CURRENCY = 'EUR'	[*{8200}]
+decfloat34	[@NaN]	COUNTRY = 'US '	[*{8200}]
+decfloat34	[@NaN]	DECIMALS = 2 NUMBER = USER	[*{8200}]
+decfloat34	[@NaN]	DECIMALS = 2 SIGN = LEFTPLUS WIDTH = 10	[+*{8200}]
+decfloat34	[@NaN]	STYLE = SCIENTIFIC DECIMALS = 2	[*{8200}]
+f	[@-NaN]	-	EXC:CX_SY_CONVERSION_OVERFLOW
+f	[@-NaN]	XSD = YES	[NaN]
+f	[@-NaN]	STYLE = SIMPLE	[*{8200}]
+decfloat34	[@-NaN]	-	[*{8200}]
+decfloat34	[@-NaN]	XSD = YES	[-NaN]
+decfloat34	[@-NaN]	STYLE = SIMPLE	[*{8200}]
+decfloat16	[@-NaN]	-	[*{8200}]
+decfloat16	[@-NaN]	XSD = YES	[-NaN]
+decfloat16	[@-NaN]	STYLE = SIMPLE	[*{8200}]
