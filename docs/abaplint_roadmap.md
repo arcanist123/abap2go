@@ -163,12 +163,14 @@ errors of its own (see "Syntax checks to move out of the compiler"), against "No
 [aot_for_abap.md](aot_for_abap.md). Taking them out comes before any other work here and before the compiler's next
 step, in this order:
 
-1. write the two missing PRs, from upstream `main`: [#4746](https://github.com/abaplint/abaplint/issues/4746) (static
-   bounds of `n`, `d`, `t`) and [#4743](https://github.com/abaplint/abaplint/issues/4743) (more than 31 digits)
+1. write the missing PR, from upstream `main`: [#4743](https://github.com/abaplint/abaplint/issues/4743) (more than 31
+   digits). [#4746](https://github.com/abaplint/abaplint/issues/4746) (static bounds of `n`, `d`, `t`) is written, as
+   waiting PR [arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21) (2026-11-27)
 2. once a release contains [PR #4828](https://github.com/abaplint/abaplint/pull/4828): pin it and regenerate the patch
    (see "In the patch"), so that it holds #4828, [PR #4829](https://github.com/abaplint/abaplint/pull/4829),
-   [PR #4830](https://github.com/abaplint/abaplint/pull/4830), waiting PR
-   [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) and the two new PRs
+   [PR #4830](https://github.com/abaplint/abaplint/pull/4830), waiting PRs
+   [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) and
+   [arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21), and the PR for #4743
 3. remove the six checks, each with its cases in the patch: `CONTINUE` outside a loop, a `utclong` in a calculation, a
    subfield of a `utclong`, a static length of 0, static bounds of `n`, `d`, `t`, more than 31 digits
 
@@ -321,6 +323,16 @@ that the patch has it and the compiler's `CONTINUE` check can go. No upstream PR
 take the author's new pushes, and close it once a release has #4653. If #4653 is merged before #4739, rebase #4739
 onto it.
 
+Chain on the substring check of `_substring.ts`, on [PR #4830](https://github.com/abaplint/abaplint/pull/4830):
+
+| Order | PR | Branch | Base | Fixes |
+|---|---|---|---|---|
+| 1 | [abaplint#4830](https://github.com/abaplint/abaplint/pull/4830) (upstream) | `substring-whole-numeric-15` | upstream `main` | arcanist123/abaplint#15 |
+| 2 | [arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21) | `substring-bounds-ndt-4746` | `substring-whole-numeric-15` | [#4746](https://github.com/abaplint/abaplint/issues/4746) |
+
+#21 also merges cleanly with [PR #4829](https://github.com/abaplint/abaplint/pull/4829), which changes the same file:
+keep it so when rebasing. The upstream PR from it says `closes #4746`.
+
 ### Syntax checks to move out of the compiler
 
 The compiler still has syntax checks of its own, from before the decision that it does not reimplement the syntax
@@ -354,9 +366,7 @@ Removed 2026-11-27, since abaplint reports them:
 - a missing, unknown or repeated argument of `abs( )`, `sqrt( )`, `ipow( )` or `strlen( )`
 
 abaplint accepts these, in every form or in some, or the release and the patch do not report them yet, so the fix goes
-into abaplint. #4746 changes the same file (`_substring.ts`) as the open
-[PR #4829](https://github.com/abaplint/abaplint/pull/4829) and [PR #4830](https://github.com/abaplint/abaplint/pull/4830),
-and still branches from upstream `main` (2026-11-27): no waiting PR for it. These six are the first priority (see "Now").
+into abaplint. These six are the first priority (see "Now").
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
   with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-27). Not ours,
   so it is copied as waiting PR [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) (see "Waiting
@@ -386,7 +396,12 @@ and still branches from upstream `main` (2026-11-27): no waiting PR for it. Thes
   the whole field and stay valid (`u+0`, `u(*)`, `u+0(*)`). The compiler's check, which also refuses these valid
   forms, goes once the patch contains #4828. Not covered: a dictionary type `UTCL` (see "Backlog")
 - [ ] [#4746](https://github.com/abaplint/abaplint/issues/4746) static bounds outside a flat field of type `n`, `d`
-  or `t`, `d+8`, `n(6)` (`src/lower_common.ts`)
+  or `t`, `d+8`, `n(6)` (`src/lower_common.ts`). Fixed in waiting PR
+  [arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21), not in the patch yet, which goes up once
+  [PR #4830](https://github.com/abaplint/abaplint/pull/4830) is merged. As for `c` and `x`, field symbols are not
+  checked, and with a variable offset or length the other one is not checked against the field. A generic `n` parameter
+  is not checked. A constant as offset or length beyond the field is arcanist123/abaplint#18 (see "Later"). The
+  compiler's check goes once the patch contains #21
 
 Dropped 2026-11-27, since it is no syntax error: a `utclong` value after `WHEN` when the operand of `CASE` is an
 arithmetic expression, `CASE i + 1. WHEN u.`, is expected to be valid, unlike `CASE i. WHEN u.`, so abaplint is right
@@ -434,7 +449,9 @@ Invalid ABAP that abaplint accepts:
 | [arcanist123/abaplint#20](https://github.com/arcanist123/abaplint/issues/20) | `ASSIGN` of a data object with an offset but without a length (`ASSIGN c+2 TO <fs>.`) is accepted. With a length or `*`, and with a source which starts with a field symbol (`<c>+2`), it is expected to be valid | field symbols and `ASSIGN` |
 
 arcanist123/abaplint#18 to #20 change code which [PR #4829](https://github.com/abaplint/abaplint/pull/4829) changes
-(`_substring.ts`, `assign.ts`): while it is open, their fixes are waiting PRs on `substring-length-zero-4730`.
+(`_substring.ts`, `assign.ts`): while it is open, their fixes are waiting PRs on `substring-length-zero-4730`. A fix
+for #18 also changes the bounds check which arcanist123/abaplint#21 changes (see "Waiting PRs on the fork"): while #21
+or #4830 is open, check which of the two branches it has to build on.
 
 ## Parked
 
@@ -485,13 +502,16 @@ Opened since the patch was generated, not in it yet:
 [PR #4829](https://github.com/abaplint/abaplint/pull/4829), a substring length of 0 on a flat field is an error
 ([#4730](https://github.com/abaplint/abaplint/issues/4730)),
 [PR #4830](https://github.com/abaplint/abaplint/pull/4830), an offset or length taking a whole numeric field is valid
-(arcanist123/abaplint#15), and waiting PR [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14),
+(arcanist123/abaplint#15), waiting PR [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14),
 `CONTINUE` outside a loop is an error ([#3660](https://github.com/abaplint/abaplint/issues/3660), a copy of
-[PR #4653](https://github.com/abaplint/abaplint/pull/4653)).
+[PR #4653](https://github.com/abaplint/abaplint/pull/4653)), and waiting PR
+[arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21), static substring bounds of `n`, `d` and `t`
+([#4746](https://github.com/abaplint/abaplint/issues/4746)).
 
-The script cannot regenerate the patch until a release contains #4828 (2026-11-27, 2.120.122 is the latest): #4829 and
-#4830 branch from a `main` with the squashed commit of #4828, and their merges conflict with its original commits, which
-the script merges first (see "Moving to a newer release"). Then pin that release and run the script.
+The script cannot regenerate the patch until a release contains #4828 (2026-11-27, 2.120.122 is the latest): #4829,
+#4830 and arcanist123/abaplint#21 on it branch from a `main` with the squashed commit of #4828, and their merges
+conflict with its original commits, which the script merges first (see "Moving to a newer release"). Then pin that
+release and run the script.
 
 | PR | What | State |
 |---|---|---|
