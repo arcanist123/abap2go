@@ -21,7 +21,8 @@ file records their priority and what they mean for abap2go, not a copy of their 
   private dependencies
 - of the list processor's statements only `WRITE` is in scope, as in the compiler ([roadmap.md](roadmap.md),
   "Purpose"): issues about `ULINE`, `SKIP`, `NEW-LINE`, `FORMAT`, `TOP-OF-PAGE` and the others are not picked up or
-  raised
+  raised. Of `WRITE`, only strings are (2026-11-27): issues about its positions and lengths, its formatting
+  additions, `WRITE … TO` and the output lengths of dictionary types are not picked up or raised either
 - **abap2go does not reimplement the syntax check** ([aot_for_abap.md](aot_for_abap.md), "No syntax check of its
   own"): the compiler's code assumes valid ABAP, and invalid syntax that abap2go identifies is fixed here, never
   checked in the compiler instead
@@ -287,7 +288,6 @@ Valid ABAP that abaplint mistypes, fails to parse or rejects:
 
 | Issue | What | Pick up with |
 |---|---|---|
-| [#4703](https://github.com/abaplint/abaplint/issues/4703) | `sy` components have no type name, so `TYPE sy-datum` cannot be told from `TYPE d`. The data elements are expected to be `SYST_<component>` with their own output lengths (`SYST_DATUM` 10) | `WRITE` of dictionary types with their own output length |
 | [#4756](https://github.com/abaplint/abaplint/issues/4756) | a literal passed to a parameter of the generic type `p` is reported as not compatible: valid code rejected | method calls with parameters |
 | [#4754](https://github.com/abaplint/abaplint/issues/4754) | `NEW lcl( )->attr = 1.` gives "Not an object reference, target" for any attribute | objects and `NEW` |
 | [#4779](https://github.com/abaplint/abaplint/issues/4779) | `NEW` with `LET`, `FOR`, `BASE`, `LINES OF` or default components in front of table rows does not parse | objects and `NEW` |
@@ -306,7 +306,6 @@ Invalid ABAP that abaplint accepts:
 | [#4780](https://github.com/abaplint/abaplint/issues/4780) | a built-in function as the work area of `COLLECT`, `READ TABLE` and `DELETE TABLE` | internal tables |
 | [#4777](https://github.com/abaplint/abaplint/issues/4777) | parentheses around a single operand as the whole source of an inline declaration | inline declarations |
 | [#4778](https://github.com/abaplint/abaplint/issues/4778) | parentheses around a string expression or a string template | `&&` and string templates |
-| [#4783](https://github.com/abaplint/abaplint/issues/4783) | `WRITE` with a blank between `/` and a number or `(length)` (`WRITE / 5.`, `WRITE / (10) moo.`). Expected to be an error: `/`, position and length are one word. A text literal or data object after `/ ` is the field to write, valid. Two tests in `test/abap/statements/write.ts` expect `WRITE / (10) moo.` to parse and have to change. `ULINE / (5).` is accepted too, but `ULINE` is out of scope | `WRITE` positions and lengths |
 
 ## Parked
 
@@ -332,6 +331,12 @@ Nothing in the compiler's scope needs these yet.
   add to `strictModeChecks` in `5_syntax/expressions/select.ts`
 - [ ] [#4690](https://github.com/abaplint/abaplint/issues/4690) rules that report syntax errors: waits for the
   maintainer's answer (see "Rules that replace the syntax check")
+- [ ] out of scope since `WRITE` takes strings only (2026-11-27); raised before, left open upstream, not worked on:
+  - [#4703](https://github.com/abaplint/abaplint/issues/4703) `sy` components have no type name, so
+    `TYPE sy-datum` cannot be told from `TYPE d`. The data elements are expected to be `SYST_<component>` with
+    their own output lengths (`SYST_DATUM` 10). Reopen if RTTI of `sy` components needs it
+  - [#4783](https://github.com/abaplint/abaplint/issues/4783) `WRITE` with a blank between `/` and a number or
+    `(length)` (`WRITE / 5.`, `WRITE / (10) moo.`), expected to be an error: `/`, position and length are one word
 
 Closed as raised in error (2026-11-26), kept here so they are not raised again: a number literal of type `i` passed
 to a `p` parameter with decimals is valid ([#4751](https://github.com/abaplint/abaplint/issues/4751)); an unsupported
