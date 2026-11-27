@@ -36,6 +36,44 @@ SQL syntax without `@` the choice between column and host variable is made later
 What remains is a small set of token sequences with more than one valid parse, where branch order picks one. The
 result is a well-formed tree, so nothing downstream can tell that it is the wrong one.
 
+## Known cases
+
+Two groups of abaplint issues show trees that are well-formed but can mean something else.
+
+### Macro redefinition
+
+`ExpandMacros` keeps one macro table per object, keyed by name. `Macros.addMacro` does nothing when the name is
+already there, so the first definition wins everywhere in the object. Per the ABAP keyword documentation, a macro
+is valid from its `DEFINE` onward, so a later `DEFINE` of the same name replaces it.
+
+| Issue | State | Case |
+|---|---|---|
+| [#1809](https://github.com/abaplint/abaplint/issues/1809) | open | `_macro` defined in two methods; the second call expands the first definition. Maintainer: abaplint does not handle the scoping of macros |
+| [#2854](https://github.com/abaplint/abaplint/issues/2854) | closed, duplicate of #1809 | `add_html` defined in two methods; the maintainer does not plan to fix it |
+| [#4190](https://github.com/abaplint/abaplint/issues/4190) | open | `check_return` defined in `.clas.macros.abap` and again in a method gives a false parser_error |
+
+In the reported examples the first body refers to variables that the second method does not have, so abaplint
+reports an error. When both methods declare the same names, the wrong body is expanded without any error. This is
+the clearest case of a tree that is valid in shape and wrong in meaning.
+
+Macros add nothing for the compiler: they are text substitution, expanded before the tree is built. Their value is
+that existing code uses them and should still compile.
+
+### Internal table or database table
+
+`DELETE`, `MODIFY`, `INSERT` and `UPDATE` each have a form for internal tables and one for database tables. Some
+token sequences fit both, and only the type of the name decides which is meant. The parser has no symbol
+information, so the first statement that matches wins. abaplint does not resolve these in the syntax pass. Its
+answer is the rule `ambiguous_statement` (`rules/ambiguous_statement.ts`), which asks for the explicit form.
+
+| Issue | State | Case |
+|---|---|---|
+| [#475](https://github.com/abaplint/abaplint/issues/475) | closed | `DELETE foo FROM bar.` is either statement depending on context; led to `ambiguous_statement` |
+| [#4755](https://github.com/abaplint/abaplint/issues/4755) | open | `INSERT itab.` for a table with a header line always parses as `InsertDatabase` |
+| [#3417](https://github.com/abaplint/abaplint/issues/3417) | closed | `DELETE itab FROM 2.` means different things for a `c` and an `i` operand; the explicit form is `DELETE TABLE itab FROM 2` |
+| [#1855](https://github.com/abaplint/abaplint/issues/1855) | open | `MODIFY lt_foo FROM lv_foo.` reported as ambiguous |
+| [#2105](https://github.com/abaplint/abaplint/issues/2105) | closed | `MODIFY SCREEN FROM wa`, a false positive of the rule |
+
 ## Types and unresolved names
 
 The syntax pass (`5_syntax`) builds a `SpaghettiScope` with identifiers and references (`_reference.ts`).
@@ -50,6 +88,17 @@ JavaScript runtime, where values are boxed and operations are resolved at run ti
 variants collapse into uniform nodes and every expression carries a resolved static type. CST nodes and
 `SpaghettiScope` do not reach code generation. Lowering refuses the build on any `Unknown` statement, `VoidType`,
 `UnknownType` or unresolved reference.
+
+For the known cases above:
+
+- **Internal or database table** is already handled. `src/validation.ts` turns on `ambiguous_statement` and keeps
+  its issue unless the statement is `DELETE name …` or `MODIFY name …` and the name decides it: a variable of
+  table type is the internal table, anything else the database table. `INSERT` and `UPDATE`, including #4755, are
+  refused.
+- **Macro redefinition** is not handled yet. The planned check refuses an object that defines the same macro name
+  more than once, counting the class macros include and the definitions in methods together. This closes the
+  silent case without waiting for #1809, which would be fixed upstream only if code that abap2go must compile
+  redefines macros.
 
 **Patching abaplint.** The refusal at the boundary only catches what abaplint marks as unresolved. It cannot catch
 a program that abaplint wrongly accepts, or a tree that is well-formed but means something else. Two kinds of
