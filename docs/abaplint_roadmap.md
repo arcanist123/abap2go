@@ -338,8 +338,8 @@ into abaplint. #4746 changes the same code (`_substring.ts`) as the open
 - [ ] [#4730](https://github.com/abaplint/abaplint/issues/4730) a subfield of length 0 of a flat field, `c+1(0)`
   (`src/lower_common.ts`). Fixed in [PR #4829](https://github.com/abaplint/abaplint/pull/4829), open, not in the
   patch yet: a literal length of 0 on a `c`, `n`, `d`, `t` or `x` field, a structure, and the generic types `c`, `n`,
-  `x`, `clike`, `csequence`, `xsequence` and `simple`. A `string`, an `xstring`, `any` and `data` stay valid, and so are two
-  positions: the source of `ASSIGN` (`ASSIGN c+1(0) TO <fs>.`) and the target of `WRITE … TO`. A refusal of these two
+  `x`, `clike`, `csequence`, `xsequence` and `simple`. A `string`, an `xstring`, `any` and `data` stay valid, and so
+  are two positions: the source of `ASSIGN` (`ASSIGN c+1(0) TO <fs>.`) and the target of `WRITE … TO`. A refusal of these two
   in the compiler is a form it does not compile, not a syntax check. Not covered: a constant of value 0 as the length
   (see "Backlog"). The compiler's check of the invalid forms goes once the patch contains #4829
 - [ ] [#4743](https://github.com/abaplint/abaplint/issues/4743) a number literal of more than 31 digits
@@ -503,8 +503,8 @@ abaplint (main `af7440a`, default config, `v757`).
   numeric field, with the offset `0`, the length `*` or the field's length in bytes (`i+0`, `i(*)`, `i+0(4)`, `f(8)`,
   `p+0(5)`), is reported as a substring the type does not permit, while ABAP is expected to accept it; only `p(5)` is
   accepted. Found 2026-11-27 while fixing #4745. The fix is in `_substring.ts`: while
-  [PR #4829](https://github.com/abaplint/abaplint/pull/4829) is open, a waiting PR on `substring-length-zero-4730`, after
-  the one for #4746 if that is open too
+  [PR #4829](https://github.com/abaplint/abaplint/pull/4829) is open, a waiting PR on `substring-length-zero-4730`,
+  after the one for #4746 if that is open too
 
 ### Invalid ABAP accepted
 
