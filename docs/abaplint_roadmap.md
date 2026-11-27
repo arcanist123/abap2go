@@ -26,22 +26,84 @@ copy of their state.
   `TOP-OF-PAGE` and the others are not picked up or raised. Of `WRITE`, only strings are (2026-11-27): issues about its
   positions and lengths, its formatting additions, `WRITE … TO` and the output lengths of dictionary types are not
   picked up or raised either
-- **abap2go does not reimplement the syntax check** ([aot_for_abap.md](aot_for_abap.md), "No syntax check of its
-  own"): the compiler's code assumes valid ABAP, and invalid syntax that abap2go identifies is fixed here, never
-  checked in the compiler instead
-- what the compiler runs into, within the scope it compiles, is fixed right away, before the other work
-- after that, valid ABAP that abaplint mistypes, fails to parse or rejects comes before invalid ABAP that it
-  accepts: the compiler's types come from abaplint, so a mistyped expression becomes wrong native code, and its
-  input is code that already activates
+- **the syntax check has two layers** (2026-11-27, see "Two layers" below): abaplint is layer 1, abap2go's own
+  checks are layer 2. Work here is layer 1 only: valid ABAP that abaplint fails to parse, rejects or mistypes.
+  Invalid ABAP that abaplint accepts is checked in layer 2, in abap2go, and is not raised or fixed here any more
+- what the compiler runs into, within the scope it compiles, is fixed right away, before the other work: the
+  compiler's types come from abaplint, so a mistyped expression becomes wrong native code
+
+## Two layers
+
+Decided 2026-11-27.
+
+**Layer 1: abaplint, as released.** Its parser, check_syntax and types are taken as they are, from the pinned
+release and the patch. What it reports is accepted as reported. Raised and fixed here, and sent upstream:
+- valid ABAP that does not parse
+- valid ABAP that check_syntax rejects
+- valid ABAP that is typed wrongly: a wrong built-in type, a lost length or size, `VoidType` where a type is known
+
+A type fix is kept as small as it can be and
+comes with what keeps valid code valid; it does not add checks of its own. The patch holds such fixes only until a
+release has them. Layer 1 must be right first: on the first error in a block, check_syntax stops typing the rest of
+that block, so where abaplint rejects valid code, layer 2 does not see the code after it.
+
+**Layer 2: abap2go's own checks**, in `src/check/` (see [compiler_roadmap.md](compiler_roadmap.md)). They run after
+abaplint's checks, on its syntax tree, scopes and types, through its public API only, and report in its `Issue`
+format. They cover:
+- invalid ABAP that abaplint accepts
+- the Unicode flag of each program (`UCCHECK`), which abaplint does not read: non-Unicode programs are out of scope,
+  so a program without the flag is refused, and the rules of Unicode programs that abaplint does not apply are
+  checked in the rest
+- the value ranges, overflow and sizes of the internal types `b` and `s` (`INT1`, `INT2`), once layer 1 gives the
+  size (see [#4631](https://github.com/abaplint/abaplint/pull/4631))
+- the absolute position of code expanded from a macro: abaplint lexes an expanded macro as new text, so its tokens
+  only carry the position of the call
+
+### Valid code that abaplint rejects
+
+This cannot be handled in layer 2. abap2go does not ignore or filter out an abaplint finding: check_syntax stops
+typing the block at its first error, so the code after it has no types, and the compiler would build from a
+partial picture. Such a case is therefore always fixed in layer 1, and comes before every other layer 1 fix:
+1. the case goes into abap2go's tests at once, with the abaplint issue linked, expecting the build to refuse it
+   with abaplint's finding as long as abaplint gives one
+2. the fix goes into the patch the day it is written, and the same fix goes upstream as a PR branched from `main`.
+   The test then expects the code to build
+3. a fix that needs the code of another open PR is the one case where a waiting PR on the fork is still opened, so
+   that the patch has it at once (see "Two kinds of PRs")
+4. if the maintainer prefers another approach, the fix follows his review. If he declines it, or a fix is too large
+   to offer upstream, abap2go carries it in the patch for good, as a waiting PR on the fork with base `main` (see
+   "When upstream changes or rejects a PR"), and pays the cost of rebasing it when the pin moves
+5. code that only a non-Unicode program allows is not fixed in layer 1: abap2go refuses non-Unicode programs as a
+   whole (see layer 2), so abaplint rejecting such code needs no fix
+
+The same holds for valid code that abaplint types wrongly: the compiler takes its types, so the fix is in layer 1,
+in the patch at once, and never a correction inside the compiler.
+
+### Layer 2 checks
+
+A layer 2 check is written, tested and changed at abap2go's pace, without an abaplint issue or PR. When an abaplint
+release reports the same case in every form, our check goes, and its test then expects abaplint's finding. A layer 2
+check can still be offered upstream later, as a single PR, where it may also help abaplint's users.
+
+### Moving over
+
+What is open in this file from before the decision is moved over as follows:
+- open upstream PRs stay as they are; the maintainer merges or declines them at his pace
+- upstream PRs and waiting PRs that only add checks for invalid code are ported to layer 2, and leave the patch as
+  each port lands. Waiting PRs on the fork are then closed, so the chains end
+- upstream PRs that mix a type fix and new checks (#4832) are split: the type fix stays, the checks move to layer 2
+- issues about invalid ABAP that abaplint accepts, upstream and on the fork, stay open and are linked from the layer
+  2 check that covers them
 
 ## How a fix gets in
 
 ### Principle
 
-abap2go's own development comes first; upstream PRs are a bonus. A fix goes into abap2go the day it is written,
-whether upstream has taken it or not, since there is little upstream activity on the syntax check to wait for.
-Upstream gets the same fixes as a queue of small PRs, one issue (or a few close ones) each, at the maintainer's pace.
-Upstream's own improvements reach abap2go with a newer release, when the pin moves.
+This section is about layer 1 fixes (see "Two layers"). A fix goes into abap2go the day it is written, through the
+patch, whether upstream has taken it or not. Upstream gets the same fixes as small PRs, one issue (or a few close
+ones) each, at the maintainer's pace. Upstream's own improvements reach abap2go with a newer release, when the pin
+moves. A layer 1 fix rarely needs another open PR; where one does, it is a waiting PR on the fork as below, so that
+the patch has it at once. Checks for invalid code are no longer waiting PRs: they go to layer 2.
 
 ### The patch
 
@@ -158,24 +220,17 @@ argument otherwise).
 Reviewed 2026-11-26 against abaplint `main` `fc504b57`: every open issue in this file still behaves on `main` as it
 describes. PRs and fork issues reviewed again on 2026-11-27.
 
-**First: the compiler's last syntax checks** (priority set 2026-11-27). The compiler still refuses six cases as syntax
-errors of its own (see "Syntax checks to move out of the compiler"), against "No syntax check of its own" in
-[aot_for_abap.md](aot_for_abap.md). Taking them out comes before any other work here and before the compiler's next
-step, in this order:
+**First: the compiler's last syntax checks move to layer 2** (priority set 2026-11-27, revised the same day by "Two
+layers"). The compiler still refuses six cases as syntax errors of its own, in its lowering (see "Syntax checks to
+move out of the compiler"): `CONTINUE` outside a loop, a `utclong` in a calculation, a subfield of a `utclong`, a
+static length of 0, static bounds of `n`, `d`, `t`, and more than 31 digits. They move to `src/check/` as they are,
+with their tests, before any other work here; none of them waits for an abaplint PR or release any more. The PRs
+written for them stay open upstream, and the waiting PRs for them
+([arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21)) are closed once the check is in layer 2.
+No PR is written for [#4743](https://github.com/abaplint/abaplint/issues/4743) (more than 31 digits).
 
-1. write the missing PR, from upstream `main`: [#4743](https://github.com/abaplint/abaplint/issues/4743) (more than 31
-   digits). [#4746](https://github.com/abaplint/abaplint/issues/4746) (static bounds of `n`, `d`, `t`) is written, as
-   waiting PR [arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21) (2026-11-27)
-2. once a release contains [PR #4828](https://github.com/abaplint/abaplint/pull/4828): pin it and regenerate the patch
-   (see "In the patch"), so that it holds #4828, [PR #4829](https://github.com/abaplint/abaplint/pull/4829),
-   [PR #4830](https://github.com/abaplint/abaplint/pull/4830), waiting PRs
-   [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) and
-   [arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21), and the PR for #4743
-3. remove the six checks, each with its cases in the patch: `CONTINUE` outside a loop, a `utclong` in a calculation, a
-   subfield of a `utclong`, a static length of 0, static bounds of `n`, `d`, `t`, more than 31 digits
-
-After that the compiler has no syntax check of its own; what it refuses beyond abaplint's findings is what it does not
-compile yet. With #4830 in the patch, `i+0`, `i(*)` and `i(4)` become valid and reach the compiler, which has to refuse
+After that the lowering has no syntax check; what it refuses beyond the findings of both layers is what it does not
+compile yet. With [PR #4830](https://github.com/abaplint/abaplint/pull/4830) in the patch, `i+0`, `i(*)` and `i(4)` become valid and reach the compiler, which has to refuse
 a subfield of a numeric type as not supported yet (not as a syntax error) or compile it as the whole field; `p(5)`,
 which the release already accepts, needs the same look.
 
@@ -209,7 +264,9 @@ number literals itself, with the same lengths.
 
 ### Invalid syntax to fix, without a check in the compiler
 
-Found 2026-11-26, with 2.120.120 and the patch.
+Found 2026-11-26, with 2.120.120 and the patch. Since 2026-11-27 these belong to layer 2 (see "Two layers"): each
+one is ported to a check in `src/check/`, and its fix leaves the patch once the port lands. The entries stay until
+then, as the record of what each fix covers.
 
 - [ ] [#4747](https://github.com/abaplint/abaplint/issues/4747) an arithmetic expression after `WHEN` (`WHEN a + 1`,
   `WHEN ipow( base = a exp = 2 )`, `WHEN abs( a + 0 )`) is accepted, while ABAP is expected to allow only a data
@@ -285,7 +342,10 @@ Found 2026-11-26, with 2.120.120 and the patch.
 
 Fixes that need the code of an open upstream PR (see "How a fix gets in"): open PRs on
 [arcanist123/abaplint](https://github.com/arcanist123/abaplint/pulls), never merged there, all in the patch. Listed by
-`gh pr list -R arcanist123/abaplint`; in order, each chain from the bottom up.
+`gh pr list -R arcanist123/abaplint`; in order, each chain from the bottom up. Since 2026-11-27 (see "Two layers")
+the ones below, which add checks for invalid code, are ported to layer 2 instead of going up; each is closed once its
+port lands. #14, the copy of another author's PR, stays until a release has that PR. New waiting PRs are only for
+layer 1 fixes.
 
 Chain on `when.ts` and `compare.ts`, which starts going up once
 [PR #4741](https://github.com/abaplint/abaplint/pull/4741) is merged:
@@ -335,9 +395,10 @@ keep it so when rebasing. The upstream PR from it says `closes #4746`.
 
 ### Syntax checks to move out of the compiler
 
-The compiler still has syntax checks of its own, from before the decision that it does not reimplement the syntax
-check. Each one goes once abaplint reports the case in every form. Compared on 2026-11-26 with 2.120.120 and the
-patch.
+The compiler still has syntax checks of its own in its lowering. Since 2026-11-27 they move to layer 2 (see "Two
+layers"), not out of abap2go: each one goes to `src/check/`, and is removed only once an abaplint release reports
+the case in every form. The list below records what abaplint reports and what it does not. Compared on 2026-11-26
+with 2.120.120 and the patch.
 
 Removed that day, since abaplint reports them:
 - `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block, a subfield of a string as a target, and
@@ -645,9 +706,12 @@ check_syntax alone reports nothing and the rule reports it. ABAP is expected to 
 
 Not syntax errors, dropped: mix_returning (a Clean ABAP style rule), unhandled_classic_exception (a runtime
 error). Not part of the source syntax check, dropped: global_class, cloud_types, local_testclass_consistency.
-- [ ] start with one small, clear case as a PR, so the shape (move the check, what happens to the rule) is
-  settled in review before the rest follow, once [#4690](https://github.com/abaplint/abaplint/issues/4690) is
-  answered. Suggested first: identical_form_names or superclass_final (small, self-contained)
+Since 2026-11-27 (see "Two layers") abap2go simply turns these rules on next to check_syntax in
+`src/validation.ts`, as it does for the first three; whether they move into check_syntax is the maintainer's choice.
+- [ ] turn on method_implemented_twice, superclass_final, identical_form_names and check_include in
+  `src/validation.ts`
+- [ ] optional, only if [#4690](https://github.com/abaplint/abaplint/issues/4690) is answered with a yes: start with
+  one small, clear case as a PR. Suggested first: identical_form_names or superclass_final (small, self-contained)
 - note: our own PRs [#4633](https://github.com/abaplint/abaplint/pull/4633) (open, parked) and
   [#4636](https://github.com/abaplint/abaplint/pull/4636) (merged) report through unknown_types; once the approach is
   agreed, they move too
@@ -660,10 +724,16 @@ lengths in `_check_database_work_area.ts`). In modern ABAP every program is Unic
 expected to be syntax errors; abaplint accepts several of them, for every `syntax.version`. Following ABAP, this
 belongs in the parser / check_syntax, not in a rule option.
 
-**Waiting for the maintainer** (asked 2026-11-26 in
-[a comment on #4753](https://github.com/abaplint/abaplint/issues/4753#issuecomment-7196231659)): either non-Unicode-only
+Asked 2026-11-26 in
+[a comment on #4753](https://github.com/abaplint/abaplint/issues/4753#issuecomment-7196231659): either non-Unicode-only
 forms are errors everywhere, or the Unicode flag of the program (UCCHECK) or a config setting decides, with Unicode as
-the default. No fix and no further issue here before the answer.
+the default.
+
+**Since 2026-11-27 this is layer 2** (see "Two layers"). abaplint accepts some of these forms on purpose:
+`OPEN DATASET f.` with no addition parses since [PR #3571](https://github.com/abaplint/abaplint/pull/3571).
+Non-Unicode programs are out of scope for abap2go. It reads the UCCHECK flag of each program itself: it refuses a
+program without the flag, and its layer 2 checks reject the non-Unicode-only forms in the others. #4753 no longer
+blocks anything. The inventory below becomes the list of those checks.
 
 - [ ] [#4753](https://github.com/abaplint/abaplint/issues/4753) `OPEN DATASET f.` without `FOR ...` or
   `IN ... MODE`; with no addition at all it parses since

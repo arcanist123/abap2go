@@ -64,22 +64,23 @@ What the rule demands:
 - **Optimisations must be invisible.** Trimming, specialisation and devirtualisation may not change what the
   program does, except where the documentation leaves the result unspecified (above).
 
-## No syntax check of its own
+## The syntax check in two layers
 
-**abap2go does not reimplement the syntax check (2026-11-26).** Whether the input is valid ABAP, by the rules of
-ABAP in general, is decided by abaplint: its parser, check_syntax, and the rules `src/validation.ts` turns on for
-syntax errors check_syntax does not report. **The compiler's code assumes that input which passes is valid ABAP.**
-Valid does not mean accepted: abap2go compiles only part of valid ABAP, and refuses the rest for its own reasons.
+**Whether the input is valid ABAP is decided in two layers (2026-11-27, replacing "No syntax check of its own" of
+2026-11-26).** **The compiler's code assumes that input which passes both is valid ABAP.** Valid does not mean
+accepted: abap2go compiles only part of valid ABAP, and refuses the rest for its own reasons.
 
-When work on abap2go identifies invalid syntax that abaplint accepts, the fix goes into abaplint:
-1. raise it as an abaplint issue;
-2. fix it in abaplint, carried here in `patches/`;
-3. send the same fix upstream as a PR.
+- **Layer 1, abaplint:** its parser, check_syntax, and the rules `src/validation.ts` turns on for syntax errors
+  check_syntax does not report. It also gives the compiler its syntax tree and types. Where it fails to parse,
+  rejects or mistypes valid ABAP, the fix goes into abaplint, carried here in `patches/` and sent upstream as a PR.
+- **Layer 2, abap2go's own checks** in `src/check/`, run after layer 1 on its tree and types: invalid ABAP that
+  abaplint accepts, the Unicode flag of each program, the internal types `b` and `s`, and the absolute positions of
+  code expanded from macros.
 
-No check for it goes into the compiler, not even for the time being: the patch takes a fix from an open PR, so
-nothing has to wait for a release. A check in the compiler would be a second syntax check that can drift from
-abaplint's, and only abap2go would gain from it. Checks the compiler still has from before this decision are listed
-in [abaplint_roadmap.md](abaplint_roadmap.md), "Syntax checks to move out of the compiler".
+Non-Unicode programs are out of scope. A layer 2 check goes once an abaplint release reports its case in every form, so the two do not
+drift apart. Valid code that abaplint rejects cannot be worked around in layer 2, since check_syntax stops typing
+at its first error; it is always fixed in layer 1. The rules are in [abaplint_roadmap.md](abaplint_roadmap.md),
+"Two layers".
 
 Not a syntax check, so part of abap2go:
 - refusing valid ABAP because of the restrictions of AOT compilation (code named dynamically, `CASTING`,
@@ -272,8 +273,8 @@ from the program.
   native code. Fixing "valid ABAP that abaplint mistypes or fails to parse" (abaplint#4633, #4689, #4687, #1809,
   #4644/#4645) helps AOT directly. "Invalid ABAP that abaplint accepts" barely affects AOT output, because the
   input is code that already activates, so in the general backlog it comes second.
-- **The whole syntax check.** A case of invalid syntax that abap2go identifies is fixed in abaplint (see "No syntax
-  check of its own").
+- **Layer 1 of the syntax check.** Valid code parsed, accepted and typed; invalid code that abaplint accepts is
+  checked in abap2go's layer 2 (see "The syntax check in two layers").
 - **Metadata export:** descriptors, signatures and dictionary information, in a form the runtime can load.
 - **A reverse index over the world:** interface → implementers, class → subclasses. abaplint's registry holds the
   data; the index does not exist yet.
