@@ -269,18 +269,13 @@ has it.
 - [ ] [#4743](https://github.com/abaplint/abaplint/issues/4743) a number literal of more than 31 digits
   (`src/lower_common.ts`): leading zeros are expected to count and the sign not, while the compiler strips leading
   zeros before counting. Also in a `VALUE` addition, which `Constant.runSyntax` does not see
-- [ ] [#4744](https://github.com/abaplint/abaplint/issues/4744) `CASE` without any `WHEN` (`src/lower_block.ts`):
-  a syntax error is expected in classes, only a warning in a program outside classes, where the compiler's check
-  refuses valid code
+- [ ] [#4744](https://github.com/abaplint/abaplint/issues/4744) `CASE` without any `WHEN`, or with statements
+  before the first one (`src/lower_block.ts`): a syntax error is expected in classes, only a warning in a program
+  outside classes, so the check applies to classes only
 - [ ] [#4745](https://github.com/abaplint/abaplint/issues/4745) a subfield of a `utclong` in a reading position,
   `s = u+1(1)` (`src/lower_common.ts`)
 - [ ] [#4746](https://github.com/abaplint/abaplint/issues/4746) static bounds outside a flat field of type `n`, `d`
   or `t`, `d+8`, `n(5)` (`src/lower_common.ts`)
-
-Statements between `CASE` and the first `WHEN` are part of
-[#4744](https://github.com/abaplint/abaplint/issues/4744) for classes. In a program outside classes ABAP is expected
-to give only a warning, so the code is valid there. The compiler refuses it as not supported yet, a gap of the
-compiler ([compiler_roadmap.md](compiler_roadmap.md), "Next").
 
 ## Later: with the compiler step that needs it
 
