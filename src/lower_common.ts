@@ -249,18 +249,17 @@ export function lowerTarget(target: abaplint.Nodes.ExpressionNode, variables: Va
   return rest.length === 0 ? base : lowerSubstring(base, rest, variables, where);
 }
 
-const SUBFIELD_KINDS = new Set(["c", "n", "d", "t", "string", "x", "xstring"]);
-
 /**
  * The subfield of base given by its FieldOffset and FieldLength nodes. These ABAP syntax errors, which abaplint does
- * not report in every case yet, are build errors: a type without subfields, static bounds outside a flat field.
+ * not report yet, are build errors: a subfield of a utclong, a static length of 0 in a flat field, static bounds
+ * outside a field of type n, d or t.
  */
 function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode)[],
     variables: Variables, where: Where): IRSubstring {
   const offsetNode = nodes.find(n => n instanceof abaplint.Nodes.ExpressionNode && n.get() instanceof Expressions.FieldOffset);
   const lengthNode = nodes.find(n => n instanceof abaplint.Nodes.ExpressionNode && n.get() instanceof Expressions.FieldLength);
   const text = `${base.name}${nodes.map(n => n.concatTokens()).join("")}`;
-  if (!SUBFIELD_KINDS.has(base.type.kind)) {
+  if (base.type.kind === "utclong") {
     throw new BuildError(`${text}: type ${base.type.kind} does not permit subfields`, where);
   }
   const flat = base.type.kind !== "string" && base.type.kind !== "xstring";
@@ -289,12 +288,15 @@ function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode 
     throw new BuildError(`${text}: the length of a subfield must be greater than 0`, where);
   }
   const size = flat ? flatLength(base.type) : undefined;
+  // static bounds outside a c or x field are reported by abaplint
+  const unchecked = ["n", "d", "t"].includes(base.type.kind) ? size : undefined;
   // with a variable length, an offset outside the field is not a syntax error: the access raises at run time
-  if (size !== undefined && staticOffset !== undefined && staticOffset >= size && length?.kind !== "variable") {
-    throw new BuildError(`${text}: the offset ${staticOffset} is not within the length ${size}`, where);
+  if (unchecked !== undefined && staticOffset !== undefined && staticOffset >= unchecked && length?.kind !== "variable") {
+    throw new BuildError(`${text}: the offset ${staticOffset} is not within the length ${unchecked}`, where);
   }
-  if (size !== undefined && staticOffset !== undefined && staticLength !== undefined && staticOffset + staticLength > size) {
-    throw new BuildError(`${text}: the offset ${staticOffset} and length ${staticLength} exceed the length ${size}`, where);
+  if (unchecked !== undefined && staticOffset !== undefined && staticLength !== undefined
+      && staticOffset + staticLength > unchecked) {
+    throw new BuildError(`${text}: the offset ${staticOffset} and length ${staticLength} exceed the length ${unchecked}`, where);
   }
 
   // only the rest of a field from a static offset has a length of its own that is known here

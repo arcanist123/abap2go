@@ -174,8 +174,7 @@ Valid code rejected: nothing open that abap2go has run into. The last case, a st
 `x` field while the other one is a variable (`c+5(off)`, `c+off(6)` with `c TYPE c LENGTH 5`,
 [#4742](https://github.com/abaplint/abaplint/issues/4742)), is fixed by
 [PR #4759](https://github.com/abaplint/abaplint/pull/4759), in 2.120.121: ABAP is expected to accept it and to decide
-at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static. The compiler's own check still refuses
-`c+5(off)`, a follow-up in [compiler_roadmap.md](compiler_roadmap.md), "Next".
+at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static.
 
 [#4726](https://github.com/abaplint/abaplint/issues/4726) is fixed by
 [PR #4727](https://github.com/abaplint/abaplint/pull/4727), in 2.120.121.
@@ -311,30 +310,35 @@ Removed that day, since abaplint reports them:
 Removed that day, since it was no syntax error: a `TRY` without `CATCH` or `CLEANUP` is expected to give only a
 warning. [#4724](https://github.com/abaplint/abaplint/issues/4724), which asked abaplint to report it, is closed.
 
-Removed 2026-11-27, since abaplint reports it:
+Removed 2026-11-27, since abaplint reports them:
 - in a class, `CASE` without any `WHEN`, or with statements before the first one
   ([#4744](https://github.com/abaplint/abaplint/issues/4744),
   [PR #4784](https://github.com/abaplint/abaplint/pull/4784), in the patch). A macro call, an `INCLUDE` or an
   enhancement before the first `WHEN` is not reported, as it might supply the `WHEN`; the compiler supports none of
   these in a class
+- a subfield of a type without subfields (`i+1(1)`), except of a `utclong` (below)
+- static bounds outside a `c` or `x` field (`c+5`, `c+4(2)`); `n`, `d` and `t` are below
+- a missing, unknown or repeated argument of `abs( )`, `sqrt( )`, `ipow( )` or `strlen( )`
 
-abaplint accepts these, so the fix goes into abaplint. #4730, #4745 and #4746 change the same code
-(`_substring.ts`) as the merged [PR #4759](https://github.com/abaplint/abaplint/pull/4759): branch from a `main` that
-has it.
+abaplint accepts these, in every form or in some, so the fix goes into abaplint. #4730, #4745 and #4746 change the same
+code (`_substring.ts`) as the merged [PR #4759](https://github.com/abaplint/abaplint/pull/4759): branch from a `main`
+that has it.
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
-  with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-26). Review
+  with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-27). Review
   it rather than write our own; not ours, so not in the patch, and the compiler's check stays until a release has it
 - [ ] [#4729](https://github.com/abaplint/abaplint/issues/4729) `utclong` in an arithmetic expression, `u + 1`
-  (`src/lower_arith.ts`)
+  (`src/lower_arith.ts`). Some forms are reported (`abs( u )`, `i += u`), `i = u + 1` is not
 - [ ] [#4730](https://github.com/abaplint/abaplint/issues/4730) a subfield of length 0 of a flat field, `c+1(0)`
   (`src/lower_common.ts`)
 - [ ] [#4743](https://github.com/abaplint/abaplint/issues/4743) a number literal of more than 31 digits
   (`src/lower_common.ts`): leading zeros are expected to count and the sign not, while the compiler strips leading
   zeros before counting. Also in a `VALUE` addition, which `Constant.runSyntax` does not see
-- [ ] [#4745](https://github.com/abaplint/abaplint/issues/4745) a subfield of a `utclong` in a reading position,
-  `s = u+1(1)` (`src/lower_common.ts`)
+- [ ] [#4745](https://github.com/abaplint/abaplint/issues/4745) a subfield of a `utclong`, `s = u+1(1)`, `u(1) = s`
+  (`src/lower_common.ts`)
 - [ ] [#4746](https://github.com/abaplint/abaplint/issues/4746) static bounds outside a flat field of type `n`, `d`
-  or `t`, `d+8`, `n(5)` (`src/lower_common.ts`)
+  or `t`, `d+8`, `n(6)` (`src/lower_common.ts`)
+- [ ] a `utclong` value after `WHEN` when the operand of `CASE` is an arithmetic expression, `CASE i + 1. WHEN u.`
+  (`src/lower_cond.ts`, not raised). `CASE i. WHEN u.` is reported
 
 ## Later: with the compiler step that needs it
 
