@@ -1,19 +1,19 @@
 # WRITE formatting of elementary data objects
 
-The `WRITE` part of the output formatting table of the rule-table specification ([roadmap.md](../roadmap.md),
-critical path): the text `WRITE` puts onto a list for a value of each elementary kind, without formatting
-additions. String templates (`|{ x }|`) and `DESCRIBE … OUTPUT-LENGTH` are the other parts of the table and are
-not covered yet. The structure follows the ABAP keyword documentation, *WRITE - Output Length* and *WRITE -
-Predefined Formats*; the details below go further than the documentation where it is silent (which separators
-are dropped first, how decfloat rounds when it does not fit).
+The `WRITE` part of the output formatting table of the rule-table specification
+([compiler_roadmap.md](../compiler_roadmap.md), critical path): the text `WRITE` puts onto a list for a value of each
+elementary kind, without formatting additions. String templates (`|{ x }|`) and `DESCRIBE … OUTPUT-LENGTH` are the other
+parts of the table and are not covered yet. The structure follows the ABAP keyword documentation, *WRITE - Output
+Length* and *WRITE - Predefined Formats*; the details below go further than the documentation where it is silent (which
+separators are dropped first, how decfloat rounds when it does not fit).
 
 `WRITE` formatting is not the conversion to text of [conversion.md](conversion.md): `out->write( )` and
 `string = x` use the conversion, `WRITE` uses these rules.
 
-**Out of scope since 2026-11-27:** `WRITE` takes strings only ([roadmap.md](../roadmap.md), "Purpose"), so the
-compiler will not use these rules for `WRITE`. The rules and their test cases stay as the reference for the string
-templates' format options that follow the user settings (`NUMBER`, `DATE`, `TIME` with `USER`), as far as those
-reuse them; what the templates do not reuse goes.
+**Out of scope since 2026-11-27:** `WRITE` takes strings only ([compiler_roadmap.md](../compiler_roadmap.md),
+"Purpose"), so the compiler will not use these rules for `WRITE`. The rules and their test cases stay as the reference
+for the string templates' format options that follow the user settings (`NUMBER`, `DATE`, `TIME` with `USER`), as far as
+those reuse them; what the templates do not reuse goes.
 
 **Status (2026-11-24): all 16 kinds are specified and implemented** in the Go runtime,
 [`runtime/go/abap/write.go`](../../runtime/go/abap/write.go) (`abap.Format`). The test cases are

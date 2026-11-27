@@ -2,8 +2,9 @@
 
 Design notes for compiling ABAP ahead of time into a standalone native executable. Worked out in a discussion on
 2026-11-24. Several points rest on measurements of open-steamgate's ABAP-to-Go backend (gogen), in
-[open-steamgate-notes.md](open-steamgate-notes.md). The work items are in [roadmap.md](roadmap.md), those in abaplint
-in [abaplint_roadmap.md](abaplint_roadmap.md).
+[open-steamgate-notes.md](open-steamgate-notes.md). The work items are in [compiler_roadmap.md](compiler_roadmap.md),
+those in abaplint in [abaplint_roadmap.md](abaplint_roadmap.md), those in open-abap-core in
+[open-abap-roadmap.md](open-abap-roadmap.md).
 Decisions and the open points are at the end.
 
 ## Guiding principle
@@ -296,8 +297,8 @@ from the program.
 - **Conversion exits: only explicit calls (revised 2026-11-27).** A conversion exit is code named by a domain.
   As far as we know, the statements in which the kernel calls one implicitly are `WRITE` of a field whose type has
   one and `WRITE … TO`; screens and ALV do too, and they are out of scope. Since `WRITE` takes strings only and
-  `WRITE … TO` is out of scope ([roadmap.md](roadmap.md), "Purpose"), no statement in scope calls an exit
-  implicitly. An exit runs where the source says so: a static call of `CONVERSION_EXIT_<x>_OUTPUT` or `_INPUT`,
+  `WRITE … TO` is out of scope ([compiler_roadmap.md](compiler_roadmap.md), "Purpose"), no statement in scope calls an
+  exit implicitly. An exit runs where the source says so: a static call of `CONVERSION_EXIT_<x>_OUTPUT` or `_INPUT`,
   compiled with its closure like any other call, or the `ALPHA` option of a string template. A call by a name
   computed from the domain is dispatch by naming convention, refused as such ("Dynamic code").
   *Why:* abap2go's list is stdout, not a report on a screen; the classic list formatting buys nothing there, and
@@ -573,7 +574,7 @@ from the program.
   text storage: behaviour that depends on data or on the run-time environment, so it cannot be refused at build
   time and would be a silently different result. Each finding below is a bug under the guiding principle until it
   is fixed, refused through a static input, or listed as an exception. Work items are in
-  [roadmap.md](roadmap.md).
+  [compiler_roadmap.md](compiler_roadmap.md).
   1. *`**` and floating point functions:* `f` results come from Go's `math.Pow` (`calc.go`), which is not
      correctly rounded, and neither is every C library, so the last bit can differ from ABAP's for some inputs.
      That shows in `WRITE` of `f` and, rarely, in a result rounded into `p`. The same holds for `exp`, `log` and

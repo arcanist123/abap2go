@@ -10,8 +10,8 @@ processing, the console, the build layout, later the database, LUW and locks) th
 
 Status: first steps. Small programs compile, as a report or as an `if_oo_adt_classrun` console class: elementary
 `DATA`, moves, arithmetic, `strlen( )` and offset/length access, `IF`, `CASE`, `DO` and `WHILE`, `TRY`, `ASSERT`,
-`WRITE` and `out->write( )`, each in the forms listed in [docs/roadmap.md](docs/roadmap.md). Every other construct is
-refused at build time.
+`WRITE` and `out->write( )`, each in the forms listed in [docs/compiler_roadmap.md](docs/compiler_roadmap.md). Every
+other construct is refused at build time.
 
 ## Motivation
 
@@ -46,11 +46,12 @@ The design follows from this:
 - `patches/`, `scripts/` - the abaplint fixes that are not released yet, and the script that collects them
 - `docs/` - design, specification and status:
   - [aot_for_abap.md](docs/aot_for_abap.md): the design, its guiding principle and its decisions
-  - [roadmap.md](docs/roadmap.md): the critical path (the specification of ABAP's conversion, comparison and
-    calculation rules), the compiler's status and the work items in open-abap-core
+  - [compiler_roadmap.md](docs/compiler_roadmap.md): the critical path (the specification of ABAP's conversion,
+    comparison and calculation rules) and the compiler's status
   - [spec/](docs/spec/): the rules for [conversion](docs/spec/conversion.md),
     [calculation](docs/spec/calculation.md), [comparison](docs/spec/comparison.md) and [`WRITE`](docs/spec/write.md)
   - [abaplint_roadmap.md](docs/abaplint_roadmap.md): the work in abaplint, a line of its own
+  - [open-abap-roadmap.md](docs/open-abap-roadmap.md): the work items in open-abap-core
   - [open-steamgate-notes.md](docs/open-steamgate-notes.md): measurements of open-steamgate's Go backend, the closest
     prior art
 
