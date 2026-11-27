@@ -321,9 +321,9 @@ Removed 2026-11-27, since abaplint reports them:
 - a missing, unknown or repeated argument of `abs( )`, `sqrt( )`, `ipow( )` or `strlen( )`
 
 abaplint accepts these, in every form or in some, or the release and the patch do not report them yet, so the fix goes
-into abaplint. #4746 changes the same code (`_substring.ts`) as the open
-[PR #4829](https://github.com/abaplint/abaplint/pull/4829): while that is open, the fix is a waiting PR on
-`substring-length-zero-4730`.
+into abaplint. #4746 changes the same file (`_substring.ts`) as the open
+[PR #4829](https://github.com/abaplint/abaplint/pull/4829) and [PR #4830](https://github.com/abaplint/abaplint/pull/4830),
+and still branches from upstream `main` (2026-11-27): no waiting PR for it.
 - [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
   with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-27). Review
   it rather than write our own; not ours, so not in the patch, and the compiler's check stays until a release has it
@@ -440,9 +440,15 @@ Merged since the patch was generated and not in a release yet, in the patch from
 error ([#4745](https://github.com/abaplint/abaplint/issues/4745), part of
 [#4729](https://github.com/abaplint/abaplint/issues/4729)).
 
-Opened since the patch was generated, in the patch from the next run of the script on:
+Opened since the patch was generated, not in it yet:
 [PR #4829](https://github.com/abaplint/abaplint/pull/4829), a substring length of 0 on a flat field is an error
-([#4730](https://github.com/abaplint/abaplint/issues/4730)).
+([#4730](https://github.com/abaplint/abaplint/issues/4730)), and
+[PR #4830](https://github.com/abaplint/abaplint/pull/4830), an offset or length taking a whole numeric field is valid
+(arcanist123/abaplint#15).
+
+The script cannot regenerate the patch until a release contains #4828 (2026-11-27, 2.120.122 is the latest): #4829 and
+#4830 branch from a `main` with the squashed commit of #4828, and their merges conflict with its original commits, which
+the script merges first (see "Moving to a newer release"). Then pin that release and run the script.
 
 | PR | What | State |
 |---|---|---|
@@ -502,9 +508,12 @@ abaplint (main `af7440a`, default config, `v757`).
 - [ ] [arcanist123/abaplint#15](https://github.com/arcanist123/abaplint/issues/15) an access which takes a whole
   numeric field, with the offset `0`, the length `*` or the field's length in bytes (`i+0`, `i(*)`, `i+0(4)`, `f(8)`,
   `p+0(5)`), is reported as a substring the type does not permit, while ABAP is expected to accept it; only `p(5)` is
-  accepted. Found 2026-11-27 while fixing #4745. The fix is in `_substring.ts`: while
-  [PR #4829](https://github.com/abaplint/abaplint/pull/4829) is open, a waiting PR on `substring-length-zero-4730`,
-  after the one for #4746 if that is open too
+  accepted. Found 2026-11-27 while fixing #4745. Fixed in [PR #4830](https://github.com/abaplint/abaplint/pull/4830),
+  open, not in the patch yet (see "In the patch"). On the generic type `decfloat` only the offset `0` and the length `*`
+  are accepted. Not covered: a constant as the offset or length; close the issue once the PR is merged
+  - [ ] follow-up once [PR #4631](https://github.com/abaplint/abaplint/pull/4631) is merged: take the byte length of an
+    integer from `IntegerType.getBytes()`. Until then a dictionary field of type `INT1` or `INT2` accepts the length 4
+    and reports its own length, 1 or 2
 
 ### Invalid ABAP accepted
 
