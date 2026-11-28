@@ -248,6 +248,28 @@ calculation itself, and every exception under `EXACT`, keeps the result field (s
 [calculation.md](calculation.md)). The cells by calculation type and result field are in
 `test/result_field.test.ts`.
 
+## The literal of VALUE
+
+The literal of a `VALUE` addition is expected to be a **syntax error** when its conversion to the type of the data
+object would raise an exception, or is not supported. The same literal in a move (`i = 'abc'.`, `b = 300.`) is valid
+code, which raises when it runs.
+
+| Data object | Syntax error |
+|---|---|
+| i, int8, b, s, p | a text that is not a number, and a number (also from text, after rounding) that does not fit: `'abc'`, `'1E3'`, `'255.5'` for b, `-1` for b |
+| f, decfloat16, decfloat34 | a text that is not a number of that target, or beyond its range (`'INF'` included for f) |
+| utclong | a text that is no time stamp, and every number literal |
+| d, t, x | a number literal beyond the range of i |
+| c, n, string, xstring | none |
+
+A literal that converts without being represented exactly is valid (`DATA i TYPE i VALUE '2.5'.`), as is every
+number literal for xstring, whatever its conversion does at run time. The cells, one declaration each, are in
+[`testdata/value_literal.tsv`](../../runtime/go/abap/testdata/value_literal.tsv): the layer 2 check
+(`src/check/value.ts`) and, for the numeric types, d, t, x and utclong, the runtime's conversion are run over them.
+
+A constant named after `VALUE` is expected to be checked the same way, with the constant's own literal in its place.
+That is not checked yet.
+
 ## Known gaps
 
 - **b and s** are implemented, but the compiler cannot declare them yet: abaplint does not type them, so a

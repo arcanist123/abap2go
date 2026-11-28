@@ -1,0 +1,3640 @@
+# Which literals of a VALUE addition are syntax errors, see docs/spec/conversion.md, "The literal of VALUE".
+# Columns: type of the data object, the operand of VALUE as written, "error" (a syntax error) or "ok".
+# b and s are declared through data elements of the types INT1 and INT2.
+i	0	ok
+i	7	ok
+i	-0	ok
+i	-1	ok
+i	9	ok
+i	10	ok
+i	-9	ok
+i	-10	ok
+i	99	ok
+i	100	ok
+i	127	ok
+i	128	ok
+i	255	ok
+i	256	ok
+i	-128	ok
+i	-129	ok
+i	999	ok
+i	1000	ok
+i	-999	ok
+i	-1000	ok
+i	32767	ok
+i	32768	ok
+i	-32768	ok
+i	-32769	ok
+i	65535	ok
+i	65536	ok
+i	2147483647	ok
+i	2147483648	error
+i	-2147483648	ok
+i	-2147483649	error
+i	999999999999999	error
+i	1000000000000000	error
+i	9223372036854775807	error
+i	9223372036854775808	error
+i	-9223372036854775808	error
+i	-9223372036854775809	error
+i	9999999999999999	error
+i	10000000000000000	error
+i	12345678901234567	error
+i	9999999999999999999999999999999	error
+i	''	ok
+i	' '	ok
+i	'abc'	error
+i	'7'	ok
+i	' 12 '	ok
+i	'12'	ok
+i	'+7'	ok
+i	'-7'	ok
+i	'7-'	ok
+i	'7+'	ok
+i	'- 3'	ok
+i	'7 -'	ok
+i	' - 3'	ok
+i	' 7- '	ok
+i	'+-1'	error
+i	'-1-'	error
+i	'--1'	error
+i	'.'	error
+i	'.5'	ok
+i	'5.'	ok
+i	'-.5'	ok
+i	'1,5'	error
+i	'1.2.3'	error
+i	'1 2'	error
+i	'0x10'	error
+i	'1E'	error
+i	'1E3'	error
+i	'1e3'	error
+i	'-1.5E+2'	error
+i	'1E-2'	error
+i	'1E 3'	error
+i	'- 1E2'	error
+i	'1E2-'	error
+i	'1.5 E2'	error
+i	'1E2 x'	error
+i	'1 x'	error
+i	' + 7'	ok
+i	' 7-x'	error
+i	'  1 2'	error
+i	'INF'	error
+i	'-Infinity'	error
+i	'NaN'	error
+i	'1E400'	error
+i	'-1E400'	error
+i	'1E-400'	error
+i	'1E308'	error
+i	'2E308'	error
+i	'1E384'	error
+i	'1E385'	error
+i	'9.999999999999999E384'	error
+i	'9.9999999999999999E384'	error
+i	'1E6144'	error
+i	'1E6145'	error
+i	'1E-398'	error
+i	'1E-399'	error
+i	'1E-6176'	error
+i	'1E-6177'	error
+i	'2.5'	ok
+i	'-2.5'	ok
+i	'1.234'	ok
+i	'-1.234'	ok
+i	'0.000000000000001'	ok
+i	'-1'	ok
+i	'-0'	ok
+i	'-0.4'	ok
+i	'-0.5'	ok
+i	'127'	ok
+i	'255'	ok
+i	'255.4'	ok
+i	'255.5'	ok
+i	'256'	ok
+i	'300'	ok
+i	'32767.4'	ok
+i	'32767.5'	ok
+i	'32768'	ok
+i	'-32768.4'	ok
+i	'-32768.5'	ok
+i	'-32769'	ok
+i	'2147483647.4'	ok
+i	'2147483647.5'	error
+i	'-2147483648.4'	ok
+i	'-2147483648.5'	error
+i	'3000000000'	error
+i	'9223372036854775807.4'	error
+i	'9223372036854775807.5'	error
+i	'-9223372036854775808.5'	error
+i	'9223372036854775808'	error
+i	'9'	ok
+i	'9.4'	ok
+i	'9.5'	ok
+i	'999'	ok
+i	'999.4'	ok
+i	'999.5'	ok
+i	'-999.5'	ok
+i	'1000'	ok
+i	'9999999999999.99'	error
+i	'9999999999999.994'	error
+i	'9999999999999.995'	error
+i	'10000000000000'	error
+i	'9.999999999999999'	ok
+i	'10'	ok
+i	'10.0'	ok
+i	'9999999999999999999999999999999'	error
+i	'10000000000000000000000000000000'	error
+i	'0000000000000000000000000000000000000001'	ok
+i	'1.00000000000000000000000000000000000000000001'	ok
+i	'123456789012345678901234567890123456789'	error
+i	'abcdef'	error
+i	'0A'	error
+i	'0a'	error
+i	'FFFF'	error
+i	'A12'	error
+i	'20240229'	ok
+i	'20240230'	ok
+i	'240000'	ok
+i	'x10'	error
+i	'2024-01-01T00:00:00'	error
+i	'2024-01-01 12:34:56.1234567'	error
+i	'2024-13-01T00:00:00'	error
+i	``	ok
+i	` `	ok
+i	`7`	ok
+i	`7 `	ok
+i	`abc`	error
+i	`300`	ok
+i	`2.5`	ok
+i	`1E3`	error
+i	`3000000000`	error
+i	'- '	error
+i	'-'	error
+i	'+'	error
+i	' -'	error
+i	'- .5'	ok
+i	'.5 -'	ok
+i	'+ 5 '	ok
+i	'5 5'	error
+i	'5..'	error
+i	'..5'	error
+int8	0	ok
+int8	7	ok
+int8	-0	ok
+int8	-1	ok
+int8	9	ok
+int8	10	ok
+int8	-9	ok
+int8	-10	ok
+int8	99	ok
+int8	100	ok
+int8	127	ok
+int8	128	ok
+int8	255	ok
+int8	256	ok
+int8	-128	ok
+int8	-129	ok
+int8	999	ok
+int8	1000	ok
+int8	-999	ok
+int8	-1000	ok
+int8	32767	ok
+int8	32768	ok
+int8	-32768	ok
+int8	-32769	ok
+int8	65535	ok
+int8	65536	ok
+int8	2147483647	ok
+int8	2147483648	ok
+int8	-2147483648	ok
+int8	-2147483649	ok
+int8	999999999999999	ok
+int8	1000000000000000	ok
+int8	9223372036854775807	ok
+int8	9223372036854775808	error
+int8	-9223372036854775808	ok
+int8	-9223372036854775809	error
+int8	9999999999999999	ok
+int8	10000000000000000	ok
+int8	12345678901234567	ok
+int8	9999999999999999999999999999999	error
+int8	''	ok
+int8	' '	ok
+int8	'abc'	error
+int8	'7'	ok
+int8	' 12 '	ok
+int8	'12'	ok
+int8	'+7'	ok
+int8	'-7'	ok
+int8	'7-'	ok
+int8	'7+'	ok
+int8	'- 3'	ok
+int8	'7 -'	ok
+int8	' - 3'	ok
+int8	' 7- '	ok
+int8	'+-1'	error
+int8	'-1-'	error
+int8	'--1'	error
+int8	'.'	error
+int8	'.5'	ok
+int8	'5.'	ok
+int8	'-.5'	ok
+int8	'1,5'	error
+int8	'1.2.3'	error
+int8	'1 2'	error
+int8	'0x10'	error
+int8	'1E'	error
+int8	'1E3'	error
+int8	'1e3'	error
+int8	'-1.5E+2'	error
+int8	'1E-2'	error
+int8	'1E 3'	error
+int8	'- 1E2'	error
+int8	'1E2-'	error
+int8	'1.5 E2'	error
+int8	'1E2 x'	error
+int8	'1 x'	error
+int8	' + 7'	ok
+int8	' 7-x'	error
+int8	'  1 2'	error
+int8	'INF'	error
+int8	'-Infinity'	error
+int8	'NaN'	error
+int8	'1E400'	error
+int8	'-1E400'	error
+int8	'1E-400'	error
+int8	'1E308'	error
+int8	'2E308'	error
+int8	'1E384'	error
+int8	'1E385'	error
+int8	'9.999999999999999E384'	error
+int8	'9.9999999999999999E384'	error
+int8	'1E6144'	error
+int8	'1E6145'	error
+int8	'1E-398'	error
+int8	'1E-399'	error
+int8	'1E-6176'	error
+int8	'1E-6177'	error
+int8	'2.5'	ok
+int8	'-2.5'	ok
+int8	'1.234'	ok
+int8	'-1.234'	ok
+int8	'0.000000000000001'	ok
+int8	'-1'	ok
+int8	'-0'	ok
+int8	'-0.4'	ok
+int8	'-0.5'	ok
+int8	'127'	ok
+int8	'255'	ok
+int8	'255.4'	ok
+int8	'255.5'	ok
+int8	'256'	ok
+int8	'300'	ok
+int8	'32767.4'	ok
+int8	'32767.5'	ok
+int8	'32768'	ok
+int8	'-32768.4'	ok
+int8	'-32768.5'	ok
+int8	'-32769'	ok
+int8	'2147483647.4'	ok
+int8	'2147483647.5'	ok
+int8	'-2147483648.4'	ok
+int8	'-2147483648.5'	ok
+int8	'3000000000'	ok
+int8	'9223372036854775807.4'	ok
+int8	'9223372036854775807.5'	error
+int8	'-9223372036854775808.5'	error
+int8	'9223372036854775808'	error
+int8	'9'	ok
+int8	'9.4'	ok
+int8	'9.5'	ok
+int8	'999'	ok
+int8	'999.4'	ok
+int8	'999.5'	ok
+int8	'-999.5'	ok
+int8	'1000'	ok
+int8	'9999999999999.99'	ok
+int8	'9999999999999.994'	ok
+int8	'9999999999999.995'	ok
+int8	'10000000000000'	ok
+int8	'9.999999999999999'	ok
+int8	'10'	ok
+int8	'10.0'	ok
+int8	'9999999999999999999999999999999'	error
+int8	'10000000000000000000000000000000'	error
+int8	'0000000000000000000000000000000000000001'	ok
+int8	'1.00000000000000000000000000000000000000000001'	ok
+int8	'123456789012345678901234567890123456789'	error
+int8	'abcdef'	error
+int8	'0A'	error
+int8	'0a'	error
+int8	'FFFF'	error
+int8	'A12'	error
+int8	'20240229'	ok
+int8	'20240230'	ok
+int8	'240000'	ok
+int8	'x10'	error
+int8	'2024-01-01T00:00:00'	error
+int8	'2024-01-01 12:34:56.1234567'	error
+int8	'2024-13-01T00:00:00'	error
+int8	``	ok
+int8	` `	ok
+int8	`7`	ok
+int8	`7 `	ok
+int8	`abc`	error
+int8	`300`	ok
+int8	`2.5`	ok
+int8	`1E3`	error
+int8	`3000000000`	ok
+b	0	ok
+b	7	ok
+b	-0	ok
+b	-1	error
+b	9	ok
+b	10	ok
+b	-9	error
+b	-10	error
+b	99	ok
+b	100	ok
+b	127	ok
+b	128	ok
+b	255	ok
+b	256	error
+b	-128	error
+b	-129	error
+b	999	error
+b	1000	error
+b	-999	error
+b	-1000	error
+b	32767	error
+b	32768	error
+b	-32768	error
+b	-32769	error
+b	65535	error
+b	65536	error
+b	2147483647	error
+b	2147483648	error
+b	-2147483648	error
+b	-2147483649	error
+b	999999999999999	error
+b	1000000000000000	error
+b	9223372036854775807	error
+b	9223372036854775808	error
+b	-9223372036854775808	error
+b	-9223372036854775809	error
+b	9999999999999999	error
+b	10000000000000000	error
+b	12345678901234567	error
+b	9999999999999999999999999999999	error
+b	''	ok
+b	' '	ok
+b	'abc'	error
+b	'7'	ok
+b	' 12 '	ok
+b	'12'	ok
+b	'+7'	ok
+b	'-7'	error
+b	'7-'	error
+b	'7+'	ok
+b	'- 3'	error
+b	'7 -'	error
+b	' - 3'	error
+b	' 7- '	error
+b	'+-1'	error
+b	'-1-'	error
+b	'--1'	error
+b	'.'	error
+b	'.5'	ok
+b	'5.'	ok
+b	'-.5'	error
+b	'1,5'	error
+b	'1.2.3'	error
+b	'1 2'	error
+b	'0x10'	error
+b	'1E'	error
+b	'1E3'	error
+b	'1e3'	error
+b	'-1.5E+2'	error
+b	'1E-2'	error
+b	'1E 3'	error
+b	'- 1E2'	error
+b	'1E2-'	error
+b	'1.5 E2'	error
+b	'1E2 x'	error
+b	'1 x'	error
+b	' + 7'	ok
+b	' 7-x'	error
+b	'  1 2'	error
+b	'INF'	error
+b	'-Infinity'	error
+b	'NaN'	error
+b	'1E400'	error
+b	'-1E400'	error
+b	'1E-400'	error
+b	'1E308'	error
+b	'2E308'	error
+b	'1E384'	error
+b	'1E385'	error
+b	'9.999999999999999E384'	error
+b	'9.9999999999999999E384'	error
+b	'1E6144'	error
+b	'1E6145'	error
+b	'1E-398'	error
+b	'1E-399'	error
+b	'1E-6176'	error
+b	'1E-6177'	error
+b	'2.5'	ok
+b	'-2.5'	error
+b	'1.234'	ok
+b	'-1.234'	error
+b	'0.000000000000001'	ok
+b	'-1'	error
+b	'-0'	ok
+b	'-0.4'	ok
+b	'-0.5'	error
+b	'127'	ok
+b	'255'	ok
+b	'255.4'	ok
+b	'255.5'	error
+b	'256'	error
+b	'300'	error
+b	'32767.4'	error
+b	'32767.5'	error
+b	'32768'	error
+b	'-32768.4'	error
+b	'-32768.5'	error
+b	'-32769'	error
+b	'2147483647.4'	error
+b	'2147483647.5'	error
+b	'-2147483648.4'	error
+b	'-2147483648.5'	error
+b	'3000000000'	error
+b	'9223372036854775807.4'	error
+b	'9223372036854775807.5'	error
+b	'-9223372036854775808.5'	error
+b	'9223372036854775808'	error
+b	'9'	ok
+b	'9.4'	ok
+b	'9.5'	ok
+b	'999'	error
+b	'999.4'	error
+b	'999.5'	error
+b	'-999.5'	error
+b	'1000'	error
+b	'9999999999999.99'	error
+b	'9999999999999.994'	error
+b	'9999999999999.995'	error
+b	'10000000000000'	error
+b	'9.999999999999999'	ok
+b	'10'	ok
+b	'10.0'	ok
+b	'9999999999999999999999999999999'	error
+b	'10000000000000000000000000000000'	error
+b	'0000000000000000000000000000000000000001'	ok
+b	'1.00000000000000000000000000000000000000000001'	ok
+b	'123456789012345678901234567890123456789'	error
+b	'abcdef'	error
+b	'0A'	error
+b	'0a'	error
+b	'FFFF'	error
+b	'A12'	error
+b	'20240229'	error
+b	'20240230'	error
+b	'240000'	error
+b	'x10'	error
+b	'2024-01-01T00:00:00'	error
+b	'2024-01-01 12:34:56.1234567'	error
+b	'2024-13-01T00:00:00'	error
+b	``	ok
+b	` `	ok
+b	`7`	ok
+b	`7 `	ok
+b	`abc`	error
+b	`300`	error
+b	`2.5`	ok
+b	`1E3`	error
+b	`3000000000`	error
+b	9999	error
+b	99999	error
+b	999999	error
+b	9999999	error
+s	0	ok
+s	7	ok
+s	-0	ok
+s	-1	ok
+s	9	ok
+s	10	ok
+s	-9	ok
+s	-10	ok
+s	99	ok
+s	100	ok
+s	127	ok
+s	128	ok
+s	255	ok
+s	256	ok
+s	-128	ok
+s	-129	ok
+s	999	ok
+s	1000	ok
+s	-999	ok
+s	-1000	ok
+s	32767	ok
+s	32768	error
+s	-32768	ok
+s	-32769	error
+s	65535	error
+s	65536	error
+s	2147483647	error
+s	2147483648	error
+s	-2147483648	error
+s	-2147483649	error
+s	999999999999999	error
+s	1000000000000000	error
+s	9223372036854775807	error
+s	9223372036854775808	error
+s	-9223372036854775808	error
+s	-9223372036854775809	error
+s	9999999999999999	error
+s	10000000000000000	error
+s	12345678901234567	error
+s	9999999999999999999999999999999	error
+s	''	ok
+s	' '	ok
+s	'abc'	error
+s	'7'	ok
+s	' 12 '	ok
+s	'12'	ok
+s	'+7'	ok
+s	'-7'	ok
+s	'7-'	ok
+s	'7+'	ok
+s	'- 3'	ok
+s	'7 -'	ok
+s	' - 3'	ok
+s	' 7- '	ok
+s	'+-1'	error
+s	'-1-'	error
+s	'--1'	error
+s	'.'	error
+s	'.5'	ok
+s	'5.'	ok
+s	'-.5'	ok
+s	'1,5'	error
+s	'1.2.3'	error
+s	'1 2'	error
+s	'0x10'	error
+s	'1E'	error
+s	'1E3'	error
+s	'1e3'	error
+s	'-1.5E+2'	error
+s	'1E-2'	error
+s	'1E 3'	error
+s	'- 1E2'	error
+s	'1E2-'	error
+s	'1.5 E2'	error
+s	'1E2 x'	error
+s	'1 x'	error
+s	' + 7'	ok
+s	' 7-x'	error
+s	'  1 2'	error
+s	'INF'	error
+s	'-Infinity'	error
+s	'NaN'	error
+s	'1E400'	error
+s	'-1E400'	error
+s	'1E-400'	error
+s	'1E308'	error
+s	'2E308'	error
+s	'1E384'	error
+s	'1E385'	error
+s	'9.999999999999999E384'	error
+s	'9.9999999999999999E384'	error
+s	'1E6144'	error
+s	'1E6145'	error
+s	'1E-398'	error
+s	'1E-399'	error
+s	'1E-6176'	error
+s	'1E-6177'	error
+s	'2.5'	ok
+s	'-2.5'	ok
+s	'1.234'	ok
+s	'-1.234'	ok
+s	'0.000000000000001'	ok
+s	'-1'	ok
+s	'-0'	ok
+s	'-0.4'	ok
+s	'-0.5'	ok
+s	'127'	ok
+s	'255'	ok
+s	'255.4'	ok
+s	'255.5'	ok
+s	'256'	ok
+s	'300'	ok
+s	'32767.4'	ok
+s	'32767.5'	error
+s	'32768'	error
+s	'-32768.4'	ok
+s	'-32768.5'	error
+s	'-32769'	error
+s	'2147483647.4'	error
+s	'2147483647.5'	error
+s	'-2147483648.4'	error
+s	'-2147483648.5'	error
+s	'3000000000'	error
+s	'9223372036854775807.4'	error
+s	'9223372036854775807.5'	error
+s	'-9223372036854775808.5'	error
+s	'9223372036854775808'	error
+s	'9'	ok
+s	'9.4'	ok
+s	'9.5'	ok
+s	'999'	ok
+s	'999.4'	ok
+s	'999.5'	ok
+s	'-999.5'	ok
+s	'1000'	ok
+s	'9999999999999.99'	error
+s	'9999999999999.994'	error
+s	'9999999999999.995'	error
+s	'10000000000000'	error
+s	'9.999999999999999'	ok
+s	'10'	ok
+s	'10.0'	ok
+s	'9999999999999999999999999999999'	error
+s	'10000000000000000000000000000000'	error
+s	'0000000000000000000000000000000000000001'	ok
+s	'1.00000000000000000000000000000000000000000001'	ok
+s	'123456789012345678901234567890123456789'	error
+s	'abcdef'	error
+s	'0A'	error
+s	'0a'	error
+s	'FFFF'	error
+s	'A12'	error
+s	'20240229'	error
+s	'20240230'	error
+s	'240000'	error
+s	'x10'	error
+s	'2024-01-01T00:00:00'	error
+s	'2024-01-01 12:34:56.1234567'	error
+s	'2024-13-01T00:00:00'	error
+s	``	ok
+s	` `	ok
+s	`7`	ok
+s	`7 `	ok
+s	`abc`	error
+s	`300`	ok
+s	`2.5`	ok
+s	`1E3`	error
+s	`3000000000`	error
+s	9999	ok
+s	99999	error
+s	999999	error
+s	9999999	error
+p1.0	0	ok
+p1.0	7	ok
+p1.0	-0	ok
+p1.0	-1	ok
+p1.0	9	ok
+p1.0	10	error
+p1.0	-9	ok
+p1.0	-10	error
+p1.0	99	error
+p1.0	100	error
+p1.0	127	error
+p1.0	128	error
+p1.0	255	error
+p1.0	256	error
+p1.0	-128	error
+p1.0	-129	error
+p1.0	999	error
+p1.0	1000	error
+p1.0	-999	error
+p1.0	-1000	error
+p1.0	32767	error
+p1.0	32768	error
+p1.0	-32768	error
+p1.0	-32769	error
+p1.0	65535	error
+p1.0	65536	error
+p1.0	2147483647	error
+p1.0	2147483648	error
+p1.0	-2147483648	error
+p1.0	-2147483649	error
+p1.0	999999999999999	error
+p1.0	1000000000000000	error
+p1.0	9223372036854775807	error
+p1.0	9223372036854775808	error
+p1.0	-9223372036854775808	error
+p1.0	-9223372036854775809	error
+p1.0	9999999999999999	error
+p1.0	10000000000000000	error
+p1.0	12345678901234567	error
+p1.0	9999999999999999999999999999999	error
+p1.0	''	ok
+p1.0	' '	ok
+p1.0	'abc'	error
+p1.0	'7'	ok
+p1.0	' 12 '	error
+p1.0	'12'	error
+p1.0	'+7'	ok
+p1.0	'-7'	ok
+p1.0	'7-'	ok
+p1.0	'7+'	ok
+p1.0	'- 3'	ok
+p1.0	'7 -'	ok
+p1.0	' - 3'	ok
+p1.0	' 7- '	ok
+p1.0	'+-1'	error
+p1.0	'-1-'	error
+p1.0	'--1'	error
+p1.0	'.'	error
+p1.0	'.5'	ok
+p1.0	'5.'	ok
+p1.0	'-.5'	ok
+p1.0	'1,5'	error
+p1.0	'1.2.3'	error
+p1.0	'1 2'	error
+p1.0	'0x10'	error
+p1.0	'1E'	error
+p1.0	'1E3'	error
+p1.0	'1e3'	error
+p1.0	'-1.5E+2'	error
+p1.0	'1E-2'	error
+p1.0	'1E 3'	error
+p1.0	'- 1E2'	error
+p1.0	'1E2-'	error
+p1.0	'1.5 E2'	error
+p1.0	'1E2 x'	error
+p1.0	'1 x'	error
+p1.0	' + 7'	ok
+p1.0	' 7-x'	error
+p1.0	'  1 2'	error
+p1.0	'INF'	error
+p1.0	'-Infinity'	error
+p1.0	'NaN'	error
+p1.0	'1E400'	error
+p1.0	'-1E400'	error
+p1.0	'1E-400'	error
+p1.0	'1E308'	error
+p1.0	'2E308'	error
+p1.0	'1E384'	error
+p1.0	'1E385'	error
+p1.0	'9.999999999999999E384'	error
+p1.0	'9.9999999999999999E384'	error
+p1.0	'1E6144'	error
+p1.0	'1E6145'	error
+p1.0	'1E-398'	error
+p1.0	'1E-399'	error
+p1.0	'1E-6176'	error
+p1.0	'1E-6177'	error
+p1.0	'2.5'	ok
+p1.0	'-2.5'	ok
+p1.0	'1.234'	ok
+p1.0	'-1.234'	ok
+p1.0	'0.000000000000001'	ok
+p1.0	'-1'	ok
+p1.0	'-0'	ok
+p1.0	'-0.4'	ok
+p1.0	'-0.5'	ok
+p1.0	'127'	error
+p1.0	'255'	error
+p1.0	'255.4'	error
+p1.0	'255.5'	error
+p1.0	'256'	error
+p1.0	'300'	error
+p1.0	'32767.4'	error
+p1.0	'32767.5'	error
+p1.0	'32768'	error
+p1.0	'-32768.4'	error
+p1.0	'-32768.5'	error
+p1.0	'-32769'	error
+p1.0	'2147483647.4'	error
+p1.0	'2147483647.5'	error
+p1.0	'-2147483648.4'	error
+p1.0	'-2147483648.5'	error
+p1.0	'3000000000'	error
+p1.0	'9223372036854775807.4'	error
+p1.0	'9223372036854775807.5'	error
+p1.0	'-9223372036854775808.5'	error
+p1.0	'9223372036854775808'	error
+p1.0	'9'	ok
+p1.0	'9.4'	ok
+p1.0	'9.5'	error
+p1.0	'999'	error
+p1.0	'999.4'	error
+p1.0	'999.5'	error
+p1.0	'-999.5'	error
+p1.0	'1000'	error
+p1.0	'9999999999999.99'	error
+p1.0	'9999999999999.994'	error
+p1.0	'9999999999999.995'	error
+p1.0	'10000000000000'	error
+p1.0	'9.999999999999999'	error
+p1.0	'10'	error
+p1.0	'10.0'	error
+p1.0	'9999999999999999999999999999999'	error
+p1.0	'10000000000000000000000000000000'	error
+p1.0	'0000000000000000000000000000000000000001'	ok
+p1.0	'1.00000000000000000000000000000000000000000001'	ok
+p1.0	'123456789012345678901234567890123456789'	error
+p1.0	'abcdef'	error
+p1.0	'0A'	error
+p1.0	'0a'	error
+p1.0	'FFFF'	error
+p1.0	'A12'	error
+p1.0	'20240229'	error
+p1.0	'20240230'	error
+p1.0	'240000'	error
+p1.0	'x10'	error
+p1.0	'2024-01-01T00:00:00'	error
+p1.0	'2024-01-01 12:34:56.1234567'	error
+p1.0	'2024-13-01T00:00:00'	error
+p1.0	``	ok
+p1.0	` `	ok
+p1.0	`7`	ok
+p1.0	`7 `	ok
+p1.0	`abc`	error
+p1.0	`300`	error
+p1.0	`2.5`	ok
+p1.0	`1E3`	error
+p1.0	`3000000000`	error
+p2.0	0	ok
+p2.0	7	ok
+p2.0	-0	ok
+p2.0	-1	ok
+p2.0	9	ok
+p2.0	10	ok
+p2.0	-9	ok
+p2.0	-10	ok
+p2.0	99	ok
+p2.0	100	ok
+p2.0	127	ok
+p2.0	128	ok
+p2.0	255	ok
+p2.0	256	ok
+p2.0	-128	ok
+p2.0	-129	ok
+p2.0	999	ok
+p2.0	1000	error
+p2.0	-999	ok
+p2.0	-1000	error
+p2.0	32767	error
+p2.0	32768	error
+p2.0	-32768	error
+p2.0	-32769	error
+p2.0	65535	error
+p2.0	65536	error
+p2.0	2147483647	error
+p2.0	2147483648	error
+p2.0	-2147483648	error
+p2.0	-2147483649	error
+p2.0	999999999999999	error
+p2.0	1000000000000000	error
+p2.0	9223372036854775807	error
+p2.0	9223372036854775808	error
+p2.0	-9223372036854775808	error
+p2.0	-9223372036854775809	error
+p2.0	9999999999999999	error
+p2.0	10000000000000000	error
+p2.0	12345678901234567	error
+p2.0	9999999999999999999999999999999	error
+p2.0	''	ok
+p2.0	' '	ok
+p2.0	'abc'	error
+p2.0	'7'	ok
+p2.0	' 12 '	ok
+p2.0	'12'	ok
+p2.0	'+7'	ok
+p2.0	'-7'	ok
+p2.0	'7-'	ok
+p2.0	'7+'	ok
+p2.0	'- 3'	ok
+p2.0	'7 -'	ok
+p2.0	' - 3'	ok
+p2.0	' 7- '	ok
+p2.0	'+-1'	error
+p2.0	'-1-'	error
+p2.0	'--1'	error
+p2.0	'.'	error
+p2.0	'.5'	ok
+p2.0	'5.'	ok
+p2.0	'-.5'	ok
+p2.0	'1,5'	error
+p2.0	'1.2.3'	error
+p2.0	'1 2'	error
+p2.0	'0x10'	error
+p2.0	'1E'	error
+p2.0	'1E3'	error
+p2.0	'1e3'	error
+p2.0	'-1.5E+2'	error
+p2.0	'1E-2'	error
+p2.0	'1E 3'	error
+p2.0	'- 1E2'	error
+p2.0	'1E2-'	error
+p2.0	'1.5 E2'	error
+p2.0	'1E2 x'	error
+p2.0	'1 x'	error
+p2.0	' + 7'	ok
+p2.0	' 7-x'	error
+p2.0	'  1 2'	error
+p2.0	'INF'	error
+p2.0	'-Infinity'	error
+p2.0	'NaN'	error
+p2.0	'1E400'	error
+p2.0	'-1E400'	error
+p2.0	'1E-400'	error
+p2.0	'1E308'	error
+p2.0	'2E308'	error
+p2.0	'1E384'	error
+p2.0	'1E385'	error
+p2.0	'9.999999999999999E384'	error
+p2.0	'9.9999999999999999E384'	error
+p2.0	'1E6144'	error
+p2.0	'1E6145'	error
+p2.0	'1E-398'	error
+p2.0	'1E-399'	error
+p2.0	'1E-6176'	error
+p2.0	'1E-6177'	error
+p2.0	'2.5'	ok
+p2.0	'-2.5'	ok
+p2.0	'1.234'	ok
+p2.0	'-1.234'	ok
+p2.0	'0.000000000000001'	ok
+p2.0	'-1'	ok
+p2.0	'-0'	ok
+p2.0	'-0.4'	ok
+p2.0	'-0.5'	ok
+p2.0	'127'	ok
+p2.0	'255'	ok
+p2.0	'255.4'	ok
+p2.0	'255.5'	ok
+p2.0	'256'	ok
+p2.0	'300'	ok
+p2.0	'32767.4'	error
+p2.0	'32767.5'	error
+p2.0	'32768'	error
+p2.0	'-32768.4'	error
+p2.0	'-32768.5'	error
+p2.0	'-32769'	error
+p2.0	'2147483647.4'	error
+p2.0	'2147483647.5'	error
+p2.0	'-2147483648.4'	error
+p2.0	'-2147483648.5'	error
+p2.0	'3000000000'	error
+p2.0	'9223372036854775807.4'	error
+p2.0	'9223372036854775807.5'	error
+p2.0	'-9223372036854775808.5'	error
+p2.0	'9223372036854775808'	error
+p2.0	'9'	ok
+p2.0	'9.4'	ok
+p2.0	'9.5'	ok
+p2.0	'999'	ok
+p2.0	'999.4'	ok
+p2.0	'999.5'	error
+p2.0	'-999.5'	error
+p2.0	'1000'	error
+p2.0	'9999999999999.99'	error
+p2.0	'9999999999999.994'	error
+p2.0	'9999999999999.995'	error
+p2.0	'10000000000000'	error
+p2.0	'9.999999999999999'	ok
+p2.0	'10'	ok
+p2.0	'10.0'	ok
+p2.0	'9999999999999999999999999999999'	error
+p2.0	'10000000000000000000000000000000'	error
+p2.0	'0000000000000000000000000000000000000001'	ok
+p2.0	'1.00000000000000000000000000000000000000000001'	ok
+p2.0	'123456789012345678901234567890123456789'	error
+p2.0	'abcdef'	error
+p2.0	'0A'	error
+p2.0	'0a'	error
+p2.0	'FFFF'	error
+p2.0	'A12'	error
+p2.0	'20240229'	error
+p2.0	'20240230'	error
+p2.0	'240000'	error
+p2.0	'x10'	error
+p2.0	'2024-01-01T00:00:00'	error
+p2.0	'2024-01-01 12:34:56.1234567'	error
+p2.0	'2024-13-01T00:00:00'	error
+p2.0	``	ok
+p2.0	` `	ok
+p2.0	`7`	ok
+p2.0	`7 `	ok
+p2.0	`abc`	error
+p2.0	`300`	ok
+p2.0	`2.5`	ok
+p2.0	`1E3`	error
+p2.0	`3000000000`	error
+p8.2	0	ok
+p8.2	7	ok
+p8.2	-0	ok
+p8.2	-1	ok
+p8.2	9	ok
+p8.2	10	ok
+p8.2	-9	ok
+p8.2	-10	ok
+p8.2	99	ok
+p8.2	100	ok
+p8.2	127	ok
+p8.2	128	ok
+p8.2	255	ok
+p8.2	256	ok
+p8.2	-128	ok
+p8.2	-129	ok
+p8.2	999	ok
+p8.2	1000	ok
+p8.2	-999	ok
+p8.2	-1000	ok
+p8.2	32767	ok
+p8.2	32768	ok
+p8.2	-32768	ok
+p8.2	-32769	ok
+p8.2	65535	ok
+p8.2	65536	ok
+p8.2	2147483647	ok
+p8.2	2147483648	ok
+p8.2	-2147483648	ok
+p8.2	-2147483649	ok
+p8.2	999999999999999	error
+p8.2	1000000000000000	error
+p8.2	9223372036854775807	error
+p8.2	9223372036854775808	error
+p8.2	-9223372036854775808	error
+p8.2	-9223372036854775809	error
+p8.2	9999999999999999	error
+p8.2	10000000000000000	error
+p8.2	12345678901234567	error
+p8.2	9999999999999999999999999999999	error
+p8.2	''	ok
+p8.2	' '	ok
+p8.2	'abc'	error
+p8.2	'7'	ok
+p8.2	' 12 '	ok
+p8.2	'12'	ok
+p8.2	'+7'	ok
+p8.2	'-7'	ok
+p8.2	'7-'	ok
+p8.2	'7+'	ok
+p8.2	'- 3'	ok
+p8.2	'7 -'	ok
+p8.2	' - 3'	ok
+p8.2	' 7- '	ok
+p8.2	'+-1'	error
+p8.2	'-1-'	error
+p8.2	'--1'	error
+p8.2	'.'	error
+p8.2	'.5'	ok
+p8.2	'5.'	ok
+p8.2	'-.5'	ok
+p8.2	'1,5'	error
+p8.2	'1.2.3'	error
+p8.2	'1 2'	error
+p8.2	'0x10'	error
+p8.2	'1E'	error
+p8.2	'1E3'	error
+p8.2	'1e3'	error
+p8.2	'-1.5E+2'	error
+p8.2	'1E-2'	error
+p8.2	'1E 3'	error
+p8.2	'- 1E2'	error
+p8.2	'1E2-'	error
+p8.2	'1.5 E2'	error
+p8.2	'1E2 x'	error
+p8.2	'1 x'	error
+p8.2	' + 7'	ok
+p8.2	' 7-x'	error
+p8.2	'  1 2'	error
+p8.2	'INF'	error
+p8.2	'-Infinity'	error
+p8.2	'NaN'	error
+p8.2	'1E400'	error
+p8.2	'-1E400'	error
+p8.2	'1E-400'	error
+p8.2	'1E308'	error
+p8.2	'2E308'	error
+p8.2	'1E384'	error
+p8.2	'1E385'	error
+p8.2	'9.999999999999999E384'	error
+p8.2	'9.9999999999999999E384'	error
+p8.2	'1E6144'	error
+p8.2	'1E6145'	error
+p8.2	'1E-398'	error
+p8.2	'1E-399'	error
+p8.2	'1E-6176'	error
+p8.2	'1E-6177'	error
+p8.2	'2.5'	ok
+p8.2	'-2.5'	ok
+p8.2	'1.234'	ok
+p8.2	'-1.234'	ok
+p8.2	'0.000000000000001'	ok
+p8.2	'-1'	ok
+p8.2	'-0'	ok
+p8.2	'-0.4'	ok
+p8.2	'-0.5'	ok
+p8.2	'127'	ok
+p8.2	'255'	ok
+p8.2	'255.4'	ok
+p8.2	'255.5'	ok
+p8.2	'256'	ok
+p8.2	'300'	ok
+p8.2	'32767.4'	ok
+p8.2	'32767.5'	ok
+p8.2	'32768'	ok
+p8.2	'-32768.4'	ok
+p8.2	'-32768.5'	ok
+p8.2	'-32769'	ok
+p8.2	'2147483647.4'	ok
+p8.2	'2147483647.5'	ok
+p8.2	'-2147483648.4'	ok
+p8.2	'-2147483648.5'	ok
+p8.2	'3000000000'	ok
+p8.2	'9223372036854775807.4'	error
+p8.2	'9223372036854775807.5'	error
+p8.2	'-9223372036854775808.5'	error
+p8.2	'9223372036854775808'	error
+p8.2	'9'	ok
+p8.2	'9.4'	ok
+p8.2	'9.5'	ok
+p8.2	'999'	ok
+p8.2	'999.4'	ok
+p8.2	'999.5'	ok
+p8.2	'-999.5'	ok
+p8.2	'1000'	ok
+p8.2	'9999999999999.99'	ok
+p8.2	'9999999999999.994'	ok
+p8.2	'9999999999999.995'	error
+p8.2	'10000000000000'	error
+p8.2	'9.999999999999999'	ok
+p8.2	'10'	ok
+p8.2	'10.0'	ok
+p8.2	'9999999999999999999999999999999'	error
+p8.2	'10000000000000000000000000000000'	error
+p8.2	'0000000000000000000000000000000000000001'	ok
+p8.2	'1.00000000000000000000000000000000000000000001'	ok
+p8.2	'123456789012345678901234567890123456789'	error
+p8.2	'abcdef'	error
+p8.2	'0A'	error
+p8.2	'0a'	error
+p8.2	'FFFF'	error
+p8.2	'A12'	error
+p8.2	'20240229'	ok
+p8.2	'20240230'	ok
+p8.2	'240000'	ok
+p8.2	'x10'	error
+p8.2	'2024-01-01T00:00:00'	error
+p8.2	'2024-01-01 12:34:56.1234567'	error
+p8.2	'2024-13-01T00:00:00'	error
+p8.2	``	ok
+p8.2	` `	ok
+p8.2	`7`	ok
+p8.2	`7 `	ok
+p8.2	`abc`	error
+p8.2	`300`	ok
+p8.2	`2.5`	ok
+p8.2	`1E3`	error
+p8.2	`3000000000`	ok
+p8.14	0	ok
+p8.14	7	ok
+p8.14	-0	ok
+p8.14	-1	ok
+p8.14	9	ok
+p8.14	10	error
+p8.14	-9	ok
+p8.14	-10	error
+p8.14	99	error
+p8.14	100	error
+p8.14	127	error
+p8.14	128	error
+p8.14	255	error
+p8.14	256	error
+p8.14	-128	error
+p8.14	-129	error
+p8.14	999	error
+p8.14	1000	error
+p8.14	-999	error
+p8.14	-1000	error
+p8.14	32767	error
+p8.14	32768	error
+p8.14	-32768	error
+p8.14	-32769	error
+p8.14	65535	error
+p8.14	65536	error
+p8.14	2147483647	error
+p8.14	2147483648	error
+p8.14	-2147483648	error
+p8.14	-2147483649	error
+p8.14	999999999999999	error
+p8.14	1000000000000000	error
+p8.14	9223372036854775807	error
+p8.14	9223372036854775808	error
+p8.14	-9223372036854775808	error
+p8.14	-9223372036854775809	error
+p8.14	9999999999999999	error
+p8.14	10000000000000000	error
+p8.14	12345678901234567	error
+p8.14	9999999999999999999999999999999	error
+p8.14	''	ok
+p8.14	' '	ok
+p8.14	'abc'	error
+p8.14	'7'	ok
+p8.14	' 12 '	error
+p8.14	'12'	error
+p8.14	'+7'	ok
+p8.14	'-7'	ok
+p8.14	'7-'	ok
+p8.14	'7+'	ok
+p8.14	'- 3'	ok
+p8.14	'7 -'	ok
+p8.14	' - 3'	ok
+p8.14	' 7- '	ok
+p8.14	'+-1'	error
+p8.14	'-1-'	error
+p8.14	'--1'	error
+p8.14	'.'	error
+p8.14	'.5'	ok
+p8.14	'5.'	ok
+p8.14	'-.5'	ok
+p8.14	'1,5'	error
+p8.14	'1.2.3'	error
+p8.14	'1 2'	error
+p8.14	'0x10'	error
+p8.14	'1E'	error
+p8.14	'1E3'	error
+p8.14	'1e3'	error
+p8.14	'-1.5E+2'	error
+p8.14	'1E-2'	error
+p8.14	'1E 3'	error
+p8.14	'- 1E2'	error
+p8.14	'1E2-'	error
+p8.14	'1.5 E2'	error
+p8.14	'1E2 x'	error
+p8.14	'1 x'	error
+p8.14	' + 7'	ok
+p8.14	' 7-x'	error
+p8.14	'  1 2'	error
+p8.14	'INF'	error
+p8.14	'-Infinity'	error
+p8.14	'NaN'	error
+p8.14	'1E400'	error
+p8.14	'-1E400'	error
+p8.14	'1E-400'	error
+p8.14	'1E308'	error
+p8.14	'2E308'	error
+p8.14	'1E384'	error
+p8.14	'1E385'	error
+p8.14	'9.999999999999999E384'	error
+p8.14	'9.9999999999999999E384'	error
+p8.14	'1E6144'	error
+p8.14	'1E6145'	error
+p8.14	'1E-398'	error
+p8.14	'1E-399'	error
+p8.14	'1E-6176'	error
+p8.14	'1E-6177'	error
+p8.14	'2.5'	ok
+p8.14	'-2.5'	ok
+p8.14	'1.234'	ok
+p8.14	'-1.234'	ok
+p8.14	'0.000000000000001'	ok
+p8.14	'-1'	ok
+p8.14	'-0'	ok
+p8.14	'-0.4'	ok
+p8.14	'-0.5'	ok
+p8.14	'127'	error
+p8.14	'255'	error
+p8.14	'255.4'	error
+p8.14	'255.5'	error
+p8.14	'256'	error
+p8.14	'300'	error
+p8.14	'32767.4'	error
+p8.14	'32767.5'	error
+p8.14	'32768'	error
+p8.14	'-32768.4'	error
+p8.14	'-32768.5'	error
+p8.14	'-32769'	error
+p8.14	'2147483647.4'	error
+p8.14	'2147483647.5'	error
+p8.14	'-2147483648.4'	error
+p8.14	'-2147483648.5'	error
+p8.14	'3000000000'	error
+p8.14	'9223372036854775807.4'	error
+p8.14	'9223372036854775807.5'	error
+p8.14	'-9223372036854775808.5'	error
+p8.14	'9223372036854775808'	error
+p8.14	'9'	ok
+p8.14	'9.4'	ok
+p8.14	'9.5'	ok
+p8.14	'999'	error
+p8.14	'999.4'	error
+p8.14	'999.5'	error
+p8.14	'-999.5'	error
+p8.14	'1000'	error
+p8.14	'9999999999999.99'	error
+p8.14	'9999999999999.994'	error
+p8.14	'9999999999999.995'	error
+p8.14	'10000000000000'	error
+p8.14	'9.999999999999999'	error
+p8.14	'10'	error
+p8.14	'10.0'	error
+p8.14	'9999999999999999999999999999999'	error
+p8.14	'10000000000000000000000000000000'	error
+p8.14	'0000000000000000000000000000000000000001'	ok
+p8.14	'1.00000000000000000000000000000000000000000001'	ok
+p8.14	'123456789012345678901234567890123456789'	error
+p8.14	'abcdef'	error
+p8.14	'0A'	error
+p8.14	'0a'	error
+p8.14	'FFFF'	error
+p8.14	'A12'	error
+p8.14	'20240229'	error
+p8.14	'20240230'	error
+p8.14	'240000'	error
+p8.14	'x10'	error
+p8.14	'2024-01-01T00:00:00'	error
+p8.14	'2024-01-01 12:34:56.1234567'	error
+p8.14	'2024-13-01T00:00:00'	error
+p8.14	``	ok
+p8.14	` `	ok
+p8.14	`7`	ok
+p8.14	`7 `	ok
+p8.14	`abc`	error
+p8.14	`300`	error
+p8.14	`2.5`	ok
+p8.14	`1E3`	error
+p8.14	`3000000000`	error
+p16.0	0	ok
+p16.0	7	ok
+p16.0	-0	ok
+p16.0	-1	ok
+p16.0	9	ok
+p16.0	10	ok
+p16.0	-9	ok
+p16.0	-10	ok
+p16.0	99	ok
+p16.0	100	ok
+p16.0	127	ok
+p16.0	128	ok
+p16.0	255	ok
+p16.0	256	ok
+p16.0	-128	ok
+p16.0	-129	ok
+p16.0	999	ok
+p16.0	1000	ok
+p16.0	-999	ok
+p16.0	-1000	ok
+p16.0	32767	ok
+p16.0	32768	ok
+p16.0	-32768	ok
+p16.0	-32769	ok
+p16.0	65535	ok
+p16.0	65536	ok
+p16.0	2147483647	ok
+p16.0	2147483648	ok
+p16.0	-2147483648	ok
+p16.0	-2147483649	ok
+p16.0	999999999999999	ok
+p16.0	1000000000000000	ok
+p16.0	9223372036854775807	ok
+p16.0	9223372036854775808	ok
+p16.0	-9223372036854775808	ok
+p16.0	-9223372036854775809	ok
+p16.0	9999999999999999	ok
+p16.0	10000000000000000	ok
+p16.0	12345678901234567	ok
+p16.0	9999999999999999999999999999999	ok
+p16.0	''	ok
+p16.0	' '	ok
+p16.0	'abc'	error
+p16.0	'7'	ok
+p16.0	' 12 '	ok
+p16.0	'12'	ok
+p16.0	'+7'	ok
+p16.0	'-7'	ok
+p16.0	'7-'	ok
+p16.0	'7+'	ok
+p16.0	'- 3'	ok
+p16.0	'7 -'	ok
+p16.0	' - 3'	ok
+p16.0	' 7- '	ok
+p16.0	'+-1'	error
+p16.0	'-1-'	error
+p16.0	'--1'	error
+p16.0	'.'	error
+p16.0	'.5'	ok
+p16.0	'5.'	ok
+p16.0	'-.5'	ok
+p16.0	'1,5'	error
+p16.0	'1.2.3'	error
+p16.0	'1 2'	error
+p16.0	'0x10'	error
+p16.0	'1E'	error
+p16.0	'1E3'	error
+p16.0	'1e3'	error
+p16.0	'-1.5E+2'	error
+p16.0	'1E-2'	error
+p16.0	'1E 3'	error
+p16.0	'- 1E2'	error
+p16.0	'1E2-'	error
+p16.0	'1.5 E2'	error
+p16.0	'1E2 x'	error
+p16.0	'1 x'	error
+p16.0	' + 7'	ok
+p16.0	' 7-x'	error
+p16.0	'  1 2'	error
+p16.0	'INF'	error
+p16.0	'-Infinity'	error
+p16.0	'NaN'	error
+p16.0	'1E400'	error
+p16.0	'-1E400'	error
+p16.0	'1E-400'	error
+p16.0	'1E308'	error
+p16.0	'2E308'	error
+p16.0	'1E384'	error
+p16.0	'1E385'	error
+p16.0	'9.999999999999999E384'	error
+p16.0	'9.9999999999999999E384'	error
+p16.0	'1E6144'	error
+p16.0	'1E6145'	error
+p16.0	'1E-398'	error
+p16.0	'1E-399'	error
+p16.0	'1E-6176'	error
+p16.0	'1E-6177'	error
+p16.0	'2.5'	ok
+p16.0	'-2.5'	ok
+p16.0	'1.234'	ok
+p16.0	'-1.234'	ok
+p16.0	'0.000000000000001'	ok
+p16.0	'-1'	ok
+p16.0	'-0'	ok
+p16.0	'-0.4'	ok
+p16.0	'-0.5'	ok
+p16.0	'127'	ok
+p16.0	'255'	ok
+p16.0	'255.4'	ok
+p16.0	'255.5'	ok
+p16.0	'256'	ok
+p16.0	'300'	ok
+p16.0	'32767.4'	ok
+p16.0	'32767.5'	ok
+p16.0	'32768'	ok
+p16.0	'-32768.4'	ok
+p16.0	'-32768.5'	ok
+p16.0	'-32769'	ok
+p16.0	'2147483647.4'	ok
+p16.0	'2147483647.5'	ok
+p16.0	'-2147483648.4'	ok
+p16.0	'-2147483648.5'	ok
+p16.0	'3000000000'	ok
+p16.0	'9223372036854775807.4'	ok
+p16.0	'9223372036854775807.5'	ok
+p16.0	'-9223372036854775808.5'	ok
+p16.0	'9223372036854775808'	ok
+p16.0	'9'	ok
+p16.0	'9.4'	ok
+p16.0	'9.5'	ok
+p16.0	'999'	ok
+p16.0	'999.4'	ok
+p16.0	'999.5'	ok
+p16.0	'-999.5'	ok
+p16.0	'1000'	ok
+p16.0	'9999999999999.99'	ok
+p16.0	'9999999999999.994'	ok
+p16.0	'9999999999999.995'	ok
+p16.0	'10000000000000'	ok
+p16.0	'9.999999999999999'	ok
+p16.0	'10'	ok
+p16.0	'10.0'	ok
+p16.0	'9999999999999999999999999999999'	ok
+p16.0	'10000000000000000000000000000000'	error
+p16.0	'0000000000000000000000000000000000000001'	ok
+p16.0	'1.00000000000000000000000000000000000000000001'	ok
+p16.0	'123456789012345678901234567890123456789'	error
+p16.0	'abcdef'	error
+p16.0	'0A'	error
+p16.0	'0a'	error
+p16.0	'FFFF'	error
+p16.0	'A12'	error
+p16.0	'20240229'	ok
+p16.0	'20240230'	ok
+p16.0	'240000'	ok
+p16.0	'x10'	error
+p16.0	'2024-01-01T00:00:00'	error
+p16.0	'2024-01-01 12:34:56.1234567'	error
+p16.0	'2024-13-01T00:00:00'	error
+p16.0	``	ok
+p16.0	` `	ok
+p16.0	`7`	ok
+p16.0	`7 `	ok
+p16.0	`abc`	error
+p16.0	`300`	ok
+p16.0	`2.5`	ok
+p16.0	`1E3`	error
+p16.0	`3000000000`	ok
+f	0	ok
+f	7	ok
+f	-0	ok
+f	-1	ok
+f	9	ok
+f	10	ok
+f	-9	ok
+f	-10	ok
+f	99	ok
+f	100	ok
+f	127	ok
+f	128	ok
+f	255	ok
+f	256	ok
+f	-128	ok
+f	-129	ok
+f	999	ok
+f	1000	ok
+f	-999	ok
+f	-1000	ok
+f	32767	ok
+f	32768	ok
+f	-32768	ok
+f	-32769	ok
+f	65535	ok
+f	65536	ok
+f	2147483647	ok
+f	2147483648	ok
+f	-2147483648	ok
+f	-2147483649	ok
+f	999999999999999	ok
+f	1000000000000000	ok
+f	9223372036854775807	ok
+f	9223372036854775808	ok
+f	-9223372036854775808	ok
+f	-9223372036854775809	ok
+f	9999999999999999	ok
+f	10000000000000000	ok
+f	12345678901234567	ok
+f	9999999999999999999999999999999	ok
+f	''	ok
+f	' '	ok
+f	'abc'	error
+f	'7'	ok
+f	' 12 '	ok
+f	'12'	ok
+f	'+7'	ok
+f	'-7'	ok
+f	'7-'	ok
+f	'7+'	ok
+f	'- 3'	error
+f	'7 -'	ok
+f	' - 3'	ok
+f	' 7- '	error
+f	'+-1'	error
+f	'-1-'	error
+f	'--1'	error
+f	'.'	error
+f	'.5'	ok
+f	'5.'	ok
+f	'-.5'	ok
+f	'1,5'	error
+f	'1.2.3'	error
+f	'1 2'	ok
+f	'0x10'	error
+f	'1E'	error
+f	'1E3'	ok
+f	'1e3'	ok
+f	'-1.5E+2'	ok
+f	'1E-2'	ok
+f	'1E 3'	error
+f	'- 1E2'	error
+f	'1E2-'	ok
+f	'1.5 E2'	ok
+f	'1E2 x'	ok
+f	'1 x'	ok
+f	' + 7'	ok
+f	' 7-x'	error
+f	'  1 2'	ok
+f	'INF'	error
+f	'-Infinity'	error
+f	'NaN'	error
+f	'1E400'	error
+f	'-1E400'	error
+f	'1E-400'	ok
+f	'1E308'	ok
+f	'2E308'	error
+f	'1E384'	error
+f	'1E385'	error
+f	'9.999999999999999E384'	error
+f	'9.9999999999999999E384'	error
+f	'1E6144'	error
+f	'1E6145'	error
+f	'1E-398'	ok
+f	'1E-399'	ok
+f	'1E-6176'	ok
+f	'1E-6177'	ok
+f	'2.5'	ok
+f	'-2.5'	ok
+f	'1.234'	ok
+f	'-1.234'	ok
+f	'0.000000000000001'	ok
+f	'-1'	ok
+f	'-0'	ok
+f	'-0.4'	ok
+f	'-0.5'	ok
+f	'127'	ok
+f	'255'	ok
+f	'255.4'	ok
+f	'255.5'	ok
+f	'256'	ok
+f	'300'	ok
+f	'32767.4'	ok
+f	'32767.5'	ok
+f	'32768'	ok
+f	'-32768.4'	ok
+f	'-32768.5'	ok
+f	'-32769'	ok
+f	'2147483647.4'	ok
+f	'2147483647.5'	ok
+f	'-2147483648.4'	ok
+f	'-2147483648.5'	ok
+f	'3000000000'	ok
+f	'9223372036854775807.4'	ok
+f	'9223372036854775807.5'	ok
+f	'-9223372036854775808.5'	ok
+f	'9223372036854775808'	ok
+f	'9'	ok
+f	'9.4'	ok
+f	'9.5'	ok
+f	'999'	ok
+f	'999.4'	ok
+f	'999.5'	ok
+f	'-999.5'	ok
+f	'1000'	ok
+f	'9999999999999.99'	ok
+f	'9999999999999.994'	ok
+f	'9999999999999.995'	ok
+f	'10000000000000'	ok
+f	'9.999999999999999'	ok
+f	'10'	ok
+f	'10.0'	ok
+f	'9999999999999999999999999999999'	ok
+f	'10000000000000000000000000000000'	ok
+f	'0000000000000000000000000000000000000001'	ok
+f	'1.00000000000000000000000000000000000000000001'	ok
+f	'123456789012345678901234567890123456789'	ok
+f	'abcdef'	error
+f	'0A'	error
+f	'0a'	error
+f	'FFFF'	error
+f	'A12'	error
+f	'20240229'	ok
+f	'20240230'	ok
+f	'240000'	ok
+f	'x10'	error
+f	'2024-01-01T00:00:00'	error
+f	'2024-01-01 12:34:56.1234567'	error
+f	'2024-13-01T00:00:00'	error
+f	``	ok
+f	` `	ok
+f	`7`	ok
+f	`7 `	ok
+f	`abc`	error
+f	`300`	ok
+f	`2.5`	ok
+f	`1E3`	ok
+f	`3000000000`	ok
+f	'1.7976931348623157E308'	ok
+f	'1.7976931348623158E308'	ok
+f	'1.7976931348623159E308'	error
+f	' 1E400'	error
+f	' INF'	error
+f	'INFx'	error
+f	'+nan'	error
+f	'infinity'	error
+f	' x'	ok
+f	'x '	error
+f	' -x'	ok
+f	' .'	ok
+f	'.E1'	error
+f	'1.E1'	ok
+f	'+.5'	ok
+f	'- '	error
+f	'-'	error
+f	'+'	error
+f	' -'	ok
+f	'1+x'	error
+f	'1 +x'	ok
+f	'1+ x'	ok
+f	'0E99999'	ok
+f	' 12-'	error
+f	' 12 -'	ok
+decfloat16	0	ok
+decfloat16	7	ok
+decfloat16	-0	ok
+decfloat16	-1	ok
+decfloat16	9	ok
+decfloat16	10	ok
+decfloat16	-9	ok
+decfloat16	-10	ok
+decfloat16	99	ok
+decfloat16	100	ok
+decfloat16	127	ok
+decfloat16	128	ok
+decfloat16	255	ok
+decfloat16	256	ok
+decfloat16	-128	ok
+decfloat16	-129	ok
+decfloat16	999	ok
+decfloat16	1000	ok
+decfloat16	-999	ok
+decfloat16	-1000	ok
+decfloat16	32767	ok
+decfloat16	32768	ok
+decfloat16	-32768	ok
+decfloat16	-32769	ok
+decfloat16	65535	ok
+decfloat16	65536	ok
+decfloat16	2147483647	ok
+decfloat16	2147483648	ok
+decfloat16	-2147483648	ok
+decfloat16	-2147483649	ok
+decfloat16	999999999999999	ok
+decfloat16	1000000000000000	ok
+decfloat16	9223372036854775807	ok
+decfloat16	9223372036854775808	ok
+decfloat16	-9223372036854775808	ok
+decfloat16	-9223372036854775809	ok
+decfloat16	9999999999999999	ok
+decfloat16	10000000000000000	ok
+decfloat16	12345678901234567	ok
+decfloat16	9999999999999999999999999999999	ok
+decfloat16	''	ok
+decfloat16	' '	ok
+decfloat16	'abc'	error
+decfloat16	'7'	ok
+decfloat16	' 12 '	ok
+decfloat16	'12'	ok
+decfloat16	'+7'	ok
+decfloat16	'-7'	ok
+decfloat16	'7-'	ok
+decfloat16	'7+'	ok
+decfloat16	'- 3'	ok
+decfloat16	'7 -'	ok
+decfloat16	' - 3'	ok
+decfloat16	' 7- '	ok
+decfloat16	'+-1'	error
+decfloat16	'-1-'	error
+decfloat16	'--1'	error
+decfloat16	'.'	error
+decfloat16	'.5'	ok
+decfloat16	'5.'	ok
+decfloat16	'-.5'	ok
+decfloat16	'1,5'	error
+decfloat16	'1.2.3'	error
+decfloat16	'1 2'	error
+decfloat16	'0x10'	error
+decfloat16	'1E'	error
+decfloat16	'1E3'	ok
+decfloat16	'1e3'	ok
+decfloat16	'-1.5E+2'	ok
+decfloat16	'1E-2'	ok
+decfloat16	'1E 3'	error
+decfloat16	'- 1E2'	error
+decfloat16	'1E2-'	error
+decfloat16	'1.5 E2'	error
+decfloat16	'1E2 x'	error
+decfloat16	'1 x'	error
+decfloat16	' + 7'	ok
+decfloat16	' 7-x'	error
+decfloat16	'  1 2'	error
+decfloat16	'INF'	error
+decfloat16	'-Infinity'	error
+decfloat16	'NaN'	error
+decfloat16	'1E400'	error
+decfloat16	'-1E400'	error
+decfloat16	'1E-400'	ok
+decfloat16	'1E308'	ok
+decfloat16	'2E308'	ok
+decfloat16	'1E384'	ok
+decfloat16	'1E385'	error
+decfloat16	'9.999999999999999E384'	ok
+decfloat16	'9.9999999999999999E384'	error
+decfloat16	'1E6144'	error
+decfloat16	'1E6145'	error
+decfloat16	'1E-398'	ok
+decfloat16	'1E-399'	ok
+decfloat16	'1E-6176'	ok
+decfloat16	'1E-6177'	ok
+decfloat16	'2.5'	ok
+decfloat16	'-2.5'	ok
+decfloat16	'1.234'	ok
+decfloat16	'-1.234'	ok
+decfloat16	'0.000000000000001'	ok
+decfloat16	'-1'	ok
+decfloat16	'-0'	ok
+decfloat16	'-0.4'	ok
+decfloat16	'-0.5'	ok
+decfloat16	'127'	ok
+decfloat16	'255'	ok
+decfloat16	'255.4'	ok
+decfloat16	'255.5'	ok
+decfloat16	'256'	ok
+decfloat16	'300'	ok
+decfloat16	'32767.4'	ok
+decfloat16	'32767.5'	ok
+decfloat16	'32768'	ok
+decfloat16	'-32768.4'	ok
+decfloat16	'-32768.5'	ok
+decfloat16	'-32769'	ok
+decfloat16	'2147483647.4'	ok
+decfloat16	'2147483647.5'	ok
+decfloat16	'-2147483648.4'	ok
+decfloat16	'-2147483648.5'	ok
+decfloat16	'3000000000'	ok
+decfloat16	'9223372036854775807.4'	ok
+decfloat16	'9223372036854775807.5'	ok
+decfloat16	'-9223372036854775808.5'	ok
+decfloat16	'9223372036854775808'	ok
+decfloat16	'9'	ok
+decfloat16	'9.4'	ok
+decfloat16	'9.5'	ok
+decfloat16	'999'	ok
+decfloat16	'999.4'	ok
+decfloat16	'999.5'	ok
+decfloat16	'-999.5'	ok
+decfloat16	'1000'	ok
+decfloat16	'9999999999999.99'	ok
+decfloat16	'9999999999999.994'	ok
+decfloat16	'9999999999999.995'	ok
+decfloat16	'10000000000000'	ok
+decfloat16	'9.999999999999999'	ok
+decfloat16	'10'	ok
+decfloat16	'10.0'	ok
+decfloat16	'9999999999999999999999999999999'	ok
+decfloat16	'10000000000000000000000000000000'	ok
+decfloat16	'0000000000000000000000000000000000000001'	ok
+decfloat16	'1.00000000000000000000000000000000000000000001'	ok
+decfloat16	'123456789012345678901234567890123456789'	ok
+decfloat16	'abcdef'	error
+decfloat16	'0A'	error
+decfloat16	'0a'	error
+decfloat16	'FFFF'	error
+decfloat16	'A12'	error
+decfloat16	'20240229'	ok
+decfloat16	'20240230'	ok
+decfloat16	'240000'	ok
+decfloat16	'x10'	error
+decfloat16	'2024-01-01T00:00:00'	error
+decfloat16	'2024-01-01 12:34:56.1234567'	error
+decfloat16	'2024-13-01T00:00:00'	error
+decfloat16	``	ok
+decfloat16	` `	ok
+decfloat16	`7`	ok
+decfloat16	`7 `	ok
+decfloat16	`abc`	error
+decfloat16	`300`	ok
+decfloat16	`2.5`	ok
+decfloat16	`1E3`	ok
+decfloat16	`3000000000`	ok
+decfloat16	'0E7000'	ok
+decfloat16	'0.0E-99999999999'	ok
+decfloat16	'1E99999999999'	error
+decfloat16	'1E+385'	error
+decfloat16	'1E+0000000000384'	ok
+decfloat16	'0.1E385'	ok
+decfloat16	'0.01E385'	ok
+decfloat16	'10E383'	ok
+decfloat16	'10E384'	error
+decfloat16	'9999999999999999.4E369'	ok
+decfloat16	'9999999999999999.5E369'	error
+decfloat16	'-9999999999999999.5E369'	error
+decfloat16	'1.E5'	ok
+decfloat16	'.5E5'	ok
+decfloat16	'E5'	error
+decfloat16	'+ 1E5'	error
+decfloat16	' 1E5 '	ok
+decfloat16	'1E+'	error
+decfloat16	'1E5.'	error
+decfloat34	0	ok
+decfloat34	7	ok
+decfloat34	-0	ok
+decfloat34	-1	ok
+decfloat34	9	ok
+decfloat34	10	ok
+decfloat34	-9	ok
+decfloat34	-10	ok
+decfloat34	99	ok
+decfloat34	100	ok
+decfloat34	127	ok
+decfloat34	128	ok
+decfloat34	255	ok
+decfloat34	256	ok
+decfloat34	-128	ok
+decfloat34	-129	ok
+decfloat34	999	ok
+decfloat34	1000	ok
+decfloat34	-999	ok
+decfloat34	-1000	ok
+decfloat34	32767	ok
+decfloat34	32768	ok
+decfloat34	-32768	ok
+decfloat34	-32769	ok
+decfloat34	65535	ok
+decfloat34	65536	ok
+decfloat34	2147483647	ok
+decfloat34	2147483648	ok
+decfloat34	-2147483648	ok
+decfloat34	-2147483649	ok
+decfloat34	999999999999999	ok
+decfloat34	1000000000000000	ok
+decfloat34	9223372036854775807	ok
+decfloat34	9223372036854775808	ok
+decfloat34	-9223372036854775808	ok
+decfloat34	-9223372036854775809	ok
+decfloat34	9999999999999999	ok
+decfloat34	10000000000000000	ok
+decfloat34	12345678901234567	ok
+decfloat34	9999999999999999999999999999999	ok
+decfloat34	''	ok
+decfloat34	' '	ok
+decfloat34	'abc'	error
+decfloat34	'7'	ok
+decfloat34	' 12 '	ok
+decfloat34	'12'	ok
+decfloat34	'+7'	ok
+decfloat34	'-7'	ok
+decfloat34	'7-'	ok
+decfloat34	'7+'	ok
+decfloat34	'- 3'	ok
+decfloat34	'7 -'	ok
+decfloat34	' - 3'	ok
+decfloat34	' 7- '	ok
+decfloat34	'+-1'	error
+decfloat34	'-1-'	error
+decfloat34	'--1'	error
+decfloat34	'.'	error
+decfloat34	'.5'	ok
+decfloat34	'5.'	ok
+decfloat34	'-.5'	ok
+decfloat34	'1,5'	error
+decfloat34	'1.2.3'	error
+decfloat34	'1 2'	error
+decfloat34	'0x10'	error
+decfloat34	'1E'	error
+decfloat34	'1E3'	ok
+decfloat34	'1e3'	ok
+decfloat34	'-1.5E+2'	ok
+decfloat34	'1E-2'	ok
+decfloat34	'1E 3'	error
+decfloat34	'- 1E2'	error
+decfloat34	'1E2-'	error
+decfloat34	'1.5 E2'	error
+decfloat34	'1E2 x'	error
+decfloat34	'1 x'	error
+decfloat34	' + 7'	ok
+decfloat34	' 7-x'	error
+decfloat34	'  1 2'	error
+decfloat34	'INF'	error
+decfloat34	'-Infinity'	error
+decfloat34	'NaN'	error
+decfloat34	'1E400'	ok
+decfloat34	'-1E400'	ok
+decfloat34	'1E-400'	ok
+decfloat34	'1E308'	ok
+decfloat34	'2E308'	ok
+decfloat34	'1E384'	ok
+decfloat34	'1E385'	ok
+decfloat34	'9.999999999999999E384'	ok
+decfloat34	'9.9999999999999999E384'	ok
+decfloat34	'1E6144'	ok
+decfloat34	'1E6145'	error
+decfloat34	'1E-398'	ok
+decfloat34	'1E-399'	ok
+decfloat34	'1E-6176'	ok
+decfloat34	'1E-6177'	ok
+decfloat34	'2.5'	ok
+decfloat34	'-2.5'	ok
+decfloat34	'1.234'	ok
+decfloat34	'-1.234'	ok
+decfloat34	'0.000000000000001'	ok
+decfloat34	'-1'	ok
+decfloat34	'-0'	ok
+decfloat34	'-0.4'	ok
+decfloat34	'-0.5'	ok
+decfloat34	'127'	ok
+decfloat34	'255'	ok
+decfloat34	'255.4'	ok
+decfloat34	'255.5'	ok
+decfloat34	'256'	ok
+decfloat34	'300'	ok
+decfloat34	'32767.4'	ok
+decfloat34	'32767.5'	ok
+decfloat34	'32768'	ok
+decfloat34	'-32768.4'	ok
+decfloat34	'-32768.5'	ok
+decfloat34	'-32769'	ok
+decfloat34	'2147483647.4'	ok
+decfloat34	'2147483647.5'	ok
+decfloat34	'-2147483648.4'	ok
+decfloat34	'-2147483648.5'	ok
+decfloat34	'3000000000'	ok
+decfloat34	'9223372036854775807.4'	ok
+decfloat34	'9223372036854775807.5'	ok
+decfloat34	'-9223372036854775808.5'	ok
+decfloat34	'9223372036854775808'	ok
+decfloat34	'9'	ok
+decfloat34	'9.4'	ok
+decfloat34	'9.5'	ok
+decfloat34	'999'	ok
+decfloat34	'999.4'	ok
+decfloat34	'999.5'	ok
+decfloat34	'-999.5'	ok
+decfloat34	'1000'	ok
+decfloat34	'9999999999999.99'	ok
+decfloat34	'9999999999999.994'	ok
+decfloat34	'9999999999999.995'	ok
+decfloat34	'10000000000000'	ok
+decfloat34	'9.999999999999999'	ok
+decfloat34	'10'	ok
+decfloat34	'10.0'	ok
+decfloat34	'9999999999999999999999999999999'	ok
+decfloat34	'10000000000000000000000000000000'	ok
+decfloat34	'0000000000000000000000000000000000000001'	ok
+decfloat34	'1.00000000000000000000000000000000000000000001'	ok
+decfloat34	'123456789012345678901234567890123456789'	ok
+decfloat34	'abcdef'	error
+decfloat34	'0A'	error
+decfloat34	'0a'	error
+decfloat34	'FFFF'	error
+decfloat34	'A12'	error
+decfloat34	'20240229'	ok
+decfloat34	'20240230'	ok
+decfloat34	'240000'	ok
+decfloat34	'x10'	error
+decfloat34	'2024-01-01T00:00:00'	error
+decfloat34	'2024-01-01 12:34:56.1234567'	error
+decfloat34	'2024-13-01T00:00:00'	error
+decfloat34	``	ok
+decfloat34	` `	ok
+decfloat34	`7`	ok
+decfloat34	`7 `	ok
+decfloat34	`abc`	error
+decfloat34	`300`	ok
+decfloat34	`2.5`	ok
+decfloat34	`1E3`	ok
+decfloat34	`3000000000`	ok
+decfloat34	'0E7000'	ok
+decfloat34	'0.0E-99999999999'	ok
+decfloat34	'1E99999999999'	error
+decfloat34	'1E+385'	ok
+decfloat34	'1E+0000000000384'	ok
+decfloat34	'0.1E385'	ok
+decfloat34	'0.01E385'	ok
+decfloat34	'10E383'	ok
+decfloat34	'10E384'	ok
+decfloat34	'9999999999999999.4E369'	ok
+decfloat34	'9999999999999999.5E369'	ok
+decfloat34	'-9999999999999999.5E369'	ok
+decfloat34	'1.E5'	ok
+decfloat34	'.5E5'	ok
+decfloat34	'E5'	error
+decfloat34	'+ 1E5'	error
+decfloat34	' 1E5 '	ok
+decfloat34	'1E+'	error
+decfloat34	'1E5.'	error
+c1	0	ok
+c1	7	ok
+c1	-0	ok
+c1	-1	ok
+c1	9	ok
+c1	10	ok
+c1	-9	ok
+c1	-10	ok
+c1	99	ok
+c1	100	ok
+c1	127	ok
+c1	128	ok
+c1	255	ok
+c1	256	ok
+c1	-128	ok
+c1	-129	ok
+c1	999	ok
+c1	1000	ok
+c1	-999	ok
+c1	-1000	ok
+c1	32767	ok
+c1	32768	ok
+c1	-32768	ok
+c1	-32769	ok
+c1	65535	ok
+c1	65536	ok
+c1	2147483647	ok
+c1	2147483648	ok
+c1	-2147483648	ok
+c1	-2147483649	ok
+c1	999999999999999	ok
+c1	1000000000000000	ok
+c1	9223372036854775807	ok
+c1	9223372036854775808	ok
+c1	-9223372036854775808	ok
+c1	-9223372036854775809	ok
+c1	9999999999999999	ok
+c1	10000000000000000	ok
+c1	12345678901234567	ok
+c1	9999999999999999999999999999999	ok
+c1	''	ok
+c1	' '	ok
+c1	'abc'	ok
+c1	'7'	ok
+c1	' 12 '	ok
+c1	'12'	ok
+c1	'+7'	ok
+c1	'-7'	ok
+c1	'7-'	ok
+c1	'7+'	ok
+c1	'- 3'	ok
+c1	'7 -'	ok
+c1	' - 3'	ok
+c1	' 7- '	ok
+c1	'+-1'	ok
+c1	'-1-'	ok
+c1	'--1'	ok
+c1	'.'	ok
+c1	'.5'	ok
+c1	'5.'	ok
+c1	'-.5'	ok
+c1	'1,5'	ok
+c1	'1.2.3'	ok
+c1	'1 2'	ok
+c1	'0x10'	ok
+c1	'1E'	ok
+c1	'1E3'	ok
+c1	'1e3'	ok
+c1	'-1.5E+2'	ok
+c1	'1E-2'	ok
+c1	'1E 3'	ok
+c1	'- 1E2'	ok
+c1	'1E2-'	ok
+c1	'1.5 E2'	ok
+c1	'1E2 x'	ok
+c1	'1 x'	ok
+c1	' + 7'	ok
+c1	' 7-x'	ok
+c1	'  1 2'	ok
+c1	'INF'	ok
+c1	'-Infinity'	ok
+c1	'NaN'	ok
+c1	'1E400'	ok
+c1	'-1E400'	ok
+c1	'1E-400'	ok
+c1	'1E308'	ok
+c1	'2E308'	ok
+c1	'1E384'	ok
+c1	'1E385'	ok
+c1	'9.999999999999999E384'	ok
+c1	'9.9999999999999999E384'	ok
+c1	'1E6144'	ok
+c1	'1E6145'	ok
+c1	'1E-398'	ok
+c1	'1E-399'	ok
+c1	'1E-6176'	ok
+c1	'1E-6177'	ok
+c1	'2.5'	ok
+c1	'-2.5'	ok
+c1	'1.234'	ok
+c1	'-1.234'	ok
+c1	'0.000000000000001'	ok
+c1	'-1'	ok
+c1	'-0'	ok
+c1	'-0.4'	ok
+c1	'-0.5'	ok
+c1	'127'	ok
+c1	'255'	ok
+c1	'255.4'	ok
+c1	'255.5'	ok
+c1	'256'	ok
+c1	'300'	ok
+c1	'32767.4'	ok
+c1	'32767.5'	ok
+c1	'32768'	ok
+c1	'-32768.4'	ok
+c1	'-32768.5'	ok
+c1	'-32769'	ok
+c1	'2147483647.4'	ok
+c1	'2147483647.5'	ok
+c1	'-2147483648.4'	ok
+c1	'-2147483648.5'	ok
+c1	'3000000000'	ok
+c1	'9223372036854775807.4'	ok
+c1	'9223372036854775807.5'	ok
+c1	'-9223372036854775808.5'	ok
+c1	'9223372036854775808'	ok
+c1	'9'	ok
+c1	'9.4'	ok
+c1	'9.5'	ok
+c1	'999'	ok
+c1	'999.4'	ok
+c1	'999.5'	ok
+c1	'-999.5'	ok
+c1	'1000'	ok
+c1	'9999999999999.99'	ok
+c1	'9999999999999.994'	ok
+c1	'9999999999999.995'	ok
+c1	'10000000000000'	ok
+c1	'9.999999999999999'	ok
+c1	'10'	ok
+c1	'10.0'	ok
+c1	'9999999999999999999999999999999'	ok
+c1	'10000000000000000000000000000000'	ok
+c1	'0000000000000000000000000000000000000001'	ok
+c1	'1.00000000000000000000000000000000000000000001'	ok
+c1	'123456789012345678901234567890123456789'	ok
+c1	'abcdef'	ok
+c1	'0A'	ok
+c1	'0a'	ok
+c1	'FFFF'	ok
+c1	'A12'	ok
+c1	'20240229'	ok
+c1	'20240230'	ok
+c1	'240000'	ok
+c1	'x10'	ok
+c1	'2024-01-01T00:00:00'	ok
+c1	'2024-01-01 12:34:56.1234567'	ok
+c1	'2024-13-01T00:00:00'	ok
+c1	``	ok
+c1	` `	ok
+c1	`7`	ok
+c1	`7 `	ok
+c1	`abc`	ok
+c1	`300`	ok
+c1	`2.5`	ok
+c1	`1E3`	ok
+c1	`3000000000`	ok
+c30	0	ok
+c30	7	ok
+c30	-0	ok
+c30	-1	ok
+c30	9	ok
+c30	10	ok
+c30	-9	ok
+c30	-10	ok
+c30	99	ok
+c30	100	ok
+c30	127	ok
+c30	128	ok
+c30	255	ok
+c30	256	ok
+c30	-128	ok
+c30	-129	ok
+c30	999	ok
+c30	1000	ok
+c30	-999	ok
+c30	-1000	ok
+c30	32767	ok
+c30	32768	ok
+c30	-32768	ok
+c30	-32769	ok
+c30	65535	ok
+c30	65536	ok
+c30	2147483647	ok
+c30	2147483648	ok
+c30	-2147483648	ok
+c30	-2147483649	ok
+c30	999999999999999	ok
+c30	1000000000000000	ok
+c30	9223372036854775807	ok
+c30	9223372036854775808	ok
+c30	-9223372036854775808	ok
+c30	-9223372036854775809	ok
+c30	9999999999999999	ok
+c30	10000000000000000	ok
+c30	12345678901234567	ok
+c30	9999999999999999999999999999999	ok
+c30	''	ok
+c30	' '	ok
+c30	'abc'	ok
+c30	'7'	ok
+c30	' 12 '	ok
+c30	'12'	ok
+c30	'+7'	ok
+c30	'-7'	ok
+c30	'7-'	ok
+c30	'7+'	ok
+c30	'- 3'	ok
+c30	'7 -'	ok
+c30	' - 3'	ok
+c30	' 7- '	ok
+c30	'+-1'	ok
+c30	'-1-'	ok
+c30	'--1'	ok
+c30	'.'	ok
+c30	'.5'	ok
+c30	'5.'	ok
+c30	'-.5'	ok
+c30	'1,5'	ok
+c30	'1.2.3'	ok
+c30	'1 2'	ok
+c30	'0x10'	ok
+c30	'1E'	ok
+c30	'1E3'	ok
+c30	'1e3'	ok
+c30	'-1.5E+2'	ok
+c30	'1E-2'	ok
+c30	'1E 3'	ok
+c30	'- 1E2'	ok
+c30	'1E2-'	ok
+c30	'1.5 E2'	ok
+c30	'1E2 x'	ok
+c30	'1 x'	ok
+c30	' + 7'	ok
+c30	' 7-x'	ok
+c30	'  1 2'	ok
+c30	'INF'	ok
+c30	'-Infinity'	ok
+c30	'NaN'	ok
+c30	'1E400'	ok
+c30	'-1E400'	ok
+c30	'1E-400'	ok
+c30	'1E308'	ok
+c30	'2E308'	ok
+c30	'1E384'	ok
+c30	'1E385'	ok
+c30	'9.999999999999999E384'	ok
+c30	'9.9999999999999999E384'	ok
+c30	'1E6144'	ok
+c30	'1E6145'	ok
+c30	'1E-398'	ok
+c30	'1E-399'	ok
+c30	'1E-6176'	ok
+c30	'1E-6177'	ok
+c30	'2.5'	ok
+c30	'-2.5'	ok
+c30	'1.234'	ok
+c30	'-1.234'	ok
+c30	'0.000000000000001'	ok
+c30	'-1'	ok
+c30	'-0'	ok
+c30	'-0.4'	ok
+c30	'-0.5'	ok
+c30	'127'	ok
+c30	'255'	ok
+c30	'255.4'	ok
+c30	'255.5'	ok
+c30	'256'	ok
+c30	'300'	ok
+c30	'32767.4'	ok
+c30	'32767.5'	ok
+c30	'32768'	ok
+c30	'-32768.4'	ok
+c30	'-32768.5'	ok
+c30	'-32769'	ok
+c30	'2147483647.4'	ok
+c30	'2147483647.5'	ok
+c30	'-2147483648.4'	ok
+c30	'-2147483648.5'	ok
+c30	'3000000000'	ok
+c30	'9223372036854775807.4'	ok
+c30	'9223372036854775807.5'	ok
+c30	'-9223372036854775808.5'	ok
+c30	'9223372036854775808'	ok
+c30	'9'	ok
+c30	'9.4'	ok
+c30	'9.5'	ok
+c30	'999'	ok
+c30	'999.4'	ok
+c30	'999.5'	ok
+c30	'-999.5'	ok
+c30	'1000'	ok
+c30	'9999999999999.99'	ok
+c30	'9999999999999.994'	ok
+c30	'9999999999999.995'	ok
+c30	'10000000000000'	ok
+c30	'9.999999999999999'	ok
+c30	'10'	ok
+c30	'10.0'	ok
+c30	'9999999999999999999999999999999'	ok
+c30	'10000000000000000000000000000000'	ok
+c30	'0000000000000000000000000000000000000001'	ok
+c30	'1.00000000000000000000000000000000000000000001'	ok
+c30	'123456789012345678901234567890123456789'	ok
+c30	'abcdef'	ok
+c30	'0A'	ok
+c30	'0a'	ok
+c30	'FFFF'	ok
+c30	'A12'	ok
+c30	'20240229'	ok
+c30	'20240230'	ok
+c30	'240000'	ok
+c30	'x10'	ok
+c30	'2024-01-01T00:00:00'	ok
+c30	'2024-01-01 12:34:56.1234567'	ok
+c30	'2024-13-01T00:00:00'	ok
+c30	``	ok
+c30	` `	ok
+c30	`7`	ok
+c30	`7 `	ok
+c30	`abc`	ok
+c30	`300`	ok
+c30	`2.5`	ok
+c30	`1E3`	ok
+c30	`3000000000`	ok
+n5	0	ok
+n5	7	ok
+n5	-0	ok
+n5	-1	ok
+n5	9	ok
+n5	10	ok
+n5	-9	ok
+n5	-10	ok
+n5	99	ok
+n5	100	ok
+n5	127	ok
+n5	128	ok
+n5	255	ok
+n5	256	ok
+n5	-128	ok
+n5	-129	ok
+n5	999	ok
+n5	1000	ok
+n5	-999	ok
+n5	-1000	ok
+n5	32767	ok
+n5	32768	ok
+n5	-32768	ok
+n5	-32769	ok
+n5	65535	ok
+n5	65536	ok
+n5	2147483647	ok
+n5	2147483648	ok
+n5	-2147483648	ok
+n5	-2147483649	ok
+n5	999999999999999	ok
+n5	1000000000000000	ok
+n5	9223372036854775807	ok
+n5	9223372036854775808	ok
+n5	-9223372036854775808	ok
+n5	-9223372036854775809	ok
+n5	9999999999999999	ok
+n5	10000000000000000	ok
+n5	12345678901234567	ok
+n5	9999999999999999999999999999999	ok
+n5	''	ok
+n5	' '	ok
+n5	'abc'	ok
+n5	'7'	ok
+n5	' 12 '	ok
+n5	'12'	ok
+n5	'+7'	ok
+n5	'-7'	ok
+n5	'7-'	ok
+n5	'7+'	ok
+n5	'- 3'	ok
+n5	'7 -'	ok
+n5	' - 3'	ok
+n5	' 7- '	ok
+n5	'+-1'	ok
+n5	'-1-'	ok
+n5	'--1'	ok
+n5	'.'	ok
+n5	'.5'	ok
+n5	'5.'	ok
+n5	'-.5'	ok
+n5	'1,5'	ok
+n5	'1.2.3'	ok
+n5	'1 2'	ok
+n5	'0x10'	ok
+n5	'1E'	ok
+n5	'1E3'	ok
+n5	'1e3'	ok
+n5	'-1.5E+2'	ok
+n5	'1E-2'	ok
+n5	'1E 3'	ok
+n5	'- 1E2'	ok
+n5	'1E2-'	ok
+n5	'1.5 E2'	ok
+n5	'1E2 x'	ok
+n5	'1 x'	ok
+n5	' + 7'	ok
+n5	' 7-x'	ok
+n5	'  1 2'	ok
+n5	'INF'	ok
+n5	'-Infinity'	ok
+n5	'NaN'	ok
+n5	'1E400'	ok
+n5	'-1E400'	ok
+n5	'1E-400'	ok
+n5	'1E308'	ok
+n5	'2E308'	ok
+n5	'1E384'	ok
+n5	'1E385'	ok
+n5	'9.999999999999999E384'	ok
+n5	'9.9999999999999999E384'	ok
+n5	'1E6144'	ok
+n5	'1E6145'	ok
+n5	'1E-398'	ok
+n5	'1E-399'	ok
+n5	'1E-6176'	ok
+n5	'1E-6177'	ok
+n5	'2.5'	ok
+n5	'-2.5'	ok
+n5	'1.234'	ok
+n5	'-1.234'	ok
+n5	'0.000000000000001'	ok
+n5	'-1'	ok
+n5	'-0'	ok
+n5	'-0.4'	ok
+n5	'-0.5'	ok
+n5	'127'	ok
+n5	'255'	ok
+n5	'255.4'	ok
+n5	'255.5'	ok
+n5	'256'	ok
+n5	'300'	ok
+n5	'32767.4'	ok
+n5	'32767.5'	ok
+n5	'32768'	ok
+n5	'-32768.4'	ok
+n5	'-32768.5'	ok
+n5	'-32769'	ok
+n5	'2147483647.4'	ok
+n5	'2147483647.5'	ok
+n5	'-2147483648.4'	ok
+n5	'-2147483648.5'	ok
+n5	'3000000000'	ok
+n5	'9223372036854775807.4'	ok
+n5	'9223372036854775807.5'	ok
+n5	'-9223372036854775808.5'	ok
+n5	'9223372036854775808'	ok
+n5	'9'	ok
+n5	'9.4'	ok
+n5	'9.5'	ok
+n5	'999'	ok
+n5	'999.4'	ok
+n5	'999.5'	ok
+n5	'-999.5'	ok
+n5	'1000'	ok
+n5	'9999999999999.99'	ok
+n5	'9999999999999.994'	ok
+n5	'9999999999999.995'	ok
+n5	'10000000000000'	ok
+n5	'9.999999999999999'	ok
+n5	'10'	ok
+n5	'10.0'	ok
+n5	'9999999999999999999999999999999'	ok
+n5	'10000000000000000000000000000000'	ok
+n5	'0000000000000000000000000000000000000001'	ok
+n5	'1.00000000000000000000000000000000000000000001'	ok
+n5	'123456789012345678901234567890123456789'	ok
+n5	'abcdef'	ok
+n5	'0A'	ok
+n5	'0a'	ok
+n5	'FFFF'	ok
+n5	'A12'	ok
+n5	'20240229'	ok
+n5	'20240230'	ok
+n5	'240000'	ok
+n5	'x10'	ok
+n5	'2024-01-01T00:00:00'	ok
+n5	'2024-01-01 12:34:56.1234567'	ok
+n5	'2024-13-01T00:00:00'	ok
+n5	``	ok
+n5	` `	ok
+n5	`7`	ok
+n5	`7 `	ok
+n5	`abc`	ok
+n5	`300`	ok
+n5	`2.5`	ok
+n5	`1E3`	ok
+n5	`3000000000`	ok
+d	0	ok
+d	7	ok
+d	-0	ok
+d	-1	ok
+d	9	ok
+d	10	ok
+d	-9	ok
+d	-10	ok
+d	99	ok
+d	100	ok
+d	127	ok
+d	128	ok
+d	255	ok
+d	256	ok
+d	-128	ok
+d	-129	ok
+d	999	ok
+d	1000	ok
+d	-999	ok
+d	-1000	ok
+d	32767	ok
+d	32768	ok
+d	-32768	ok
+d	-32769	ok
+d	65535	ok
+d	65536	ok
+d	2147483647	ok
+d	2147483648	error
+d	-2147483648	ok
+d	-2147483649	error
+d	999999999999999	error
+d	1000000000000000	error
+d	9223372036854775807	error
+d	9223372036854775808	error
+d	-9223372036854775808	error
+d	-9223372036854775809	error
+d	9999999999999999	error
+d	10000000000000000	error
+d	12345678901234567	error
+d	9999999999999999999999999999999	error
+d	''	ok
+d	' '	ok
+d	'abc'	ok
+d	'7'	ok
+d	' 12 '	ok
+d	'12'	ok
+d	'+7'	ok
+d	'-7'	ok
+d	'7-'	ok
+d	'7+'	ok
+d	'- 3'	ok
+d	'7 -'	ok
+d	' - 3'	ok
+d	' 7- '	ok
+d	'+-1'	ok
+d	'-1-'	ok
+d	'--1'	ok
+d	'.'	ok
+d	'.5'	ok
+d	'5.'	ok
+d	'-.5'	ok
+d	'1,5'	ok
+d	'1.2.3'	ok
+d	'1 2'	ok
+d	'0x10'	ok
+d	'1E'	ok
+d	'1E3'	ok
+d	'1e3'	ok
+d	'-1.5E+2'	ok
+d	'1E-2'	ok
+d	'1E 3'	ok
+d	'- 1E2'	ok
+d	'1E2-'	ok
+d	'1.5 E2'	ok
+d	'1E2 x'	ok
+d	'1 x'	ok
+d	' + 7'	ok
+d	' 7-x'	ok
+d	'  1 2'	ok
+d	'INF'	ok
+d	'-Infinity'	ok
+d	'NaN'	ok
+d	'1E400'	ok
+d	'-1E400'	ok
+d	'1E-400'	ok
+d	'1E308'	ok
+d	'2E308'	ok
+d	'1E384'	ok
+d	'1E385'	ok
+d	'9.999999999999999E384'	ok
+d	'9.9999999999999999E384'	ok
+d	'1E6144'	ok
+d	'1E6145'	ok
+d	'1E-398'	ok
+d	'1E-399'	ok
+d	'1E-6176'	ok
+d	'1E-6177'	ok
+d	'2.5'	ok
+d	'-2.5'	ok
+d	'1.234'	ok
+d	'-1.234'	ok
+d	'0.000000000000001'	ok
+d	'-1'	ok
+d	'-0'	ok
+d	'-0.4'	ok
+d	'-0.5'	ok
+d	'127'	ok
+d	'255'	ok
+d	'255.4'	ok
+d	'255.5'	ok
+d	'256'	ok
+d	'300'	ok
+d	'32767.4'	ok
+d	'32767.5'	ok
+d	'32768'	ok
+d	'-32768.4'	ok
+d	'-32768.5'	ok
+d	'-32769'	ok
+d	'2147483647.4'	ok
+d	'2147483647.5'	ok
+d	'-2147483648.4'	ok
+d	'-2147483648.5'	ok
+d	'3000000000'	ok
+d	'9223372036854775807.4'	ok
+d	'9223372036854775807.5'	ok
+d	'-9223372036854775808.5'	ok
+d	'9223372036854775808'	ok
+d	'9'	ok
+d	'9.4'	ok
+d	'9.5'	ok
+d	'999'	ok
+d	'999.4'	ok
+d	'999.5'	ok
+d	'-999.5'	ok
+d	'1000'	ok
+d	'9999999999999.99'	ok
+d	'9999999999999.994'	ok
+d	'9999999999999.995'	ok
+d	'10000000000000'	ok
+d	'9.999999999999999'	ok
+d	'10'	ok
+d	'10.0'	ok
+d	'9999999999999999999999999999999'	ok
+d	'10000000000000000000000000000000'	ok
+d	'0000000000000000000000000000000000000001'	ok
+d	'1.00000000000000000000000000000000000000000001'	ok
+d	'123456789012345678901234567890123456789'	ok
+d	'abcdef'	ok
+d	'0A'	ok
+d	'0a'	ok
+d	'FFFF'	ok
+d	'A12'	ok
+d	'20240229'	ok
+d	'20240230'	ok
+d	'240000'	ok
+d	'x10'	ok
+d	'2024-01-01T00:00:00'	ok
+d	'2024-01-01 12:34:56.1234567'	ok
+d	'2024-13-01T00:00:00'	ok
+d	``	ok
+d	` `	ok
+d	`7`	ok
+d	`7 `	ok
+d	`abc`	ok
+d	`300`	ok
+d	`2.5`	ok
+d	`1E3`	ok
+d	`3000000000`	ok
+t	0	ok
+t	7	ok
+t	-0	ok
+t	-1	ok
+t	9	ok
+t	10	ok
+t	-9	ok
+t	-10	ok
+t	99	ok
+t	100	ok
+t	127	ok
+t	128	ok
+t	255	ok
+t	256	ok
+t	-128	ok
+t	-129	ok
+t	999	ok
+t	1000	ok
+t	-999	ok
+t	-1000	ok
+t	32767	ok
+t	32768	ok
+t	-32768	ok
+t	-32769	ok
+t	65535	ok
+t	65536	ok
+t	2147483647	ok
+t	2147483648	error
+t	-2147483648	ok
+t	-2147483649	error
+t	999999999999999	error
+t	1000000000000000	error
+t	9223372036854775807	error
+t	9223372036854775808	error
+t	-9223372036854775808	error
+t	-9223372036854775809	error
+t	9999999999999999	error
+t	10000000000000000	error
+t	12345678901234567	error
+t	9999999999999999999999999999999	error
+t	''	ok
+t	' '	ok
+t	'abc'	ok
+t	'7'	ok
+t	' 12 '	ok
+t	'12'	ok
+t	'+7'	ok
+t	'-7'	ok
+t	'7-'	ok
+t	'7+'	ok
+t	'- 3'	ok
+t	'7 -'	ok
+t	' - 3'	ok
+t	' 7- '	ok
+t	'+-1'	ok
+t	'-1-'	ok
+t	'--1'	ok
+t	'.'	ok
+t	'.5'	ok
+t	'5.'	ok
+t	'-.5'	ok
+t	'1,5'	ok
+t	'1.2.3'	ok
+t	'1 2'	ok
+t	'0x10'	ok
+t	'1E'	ok
+t	'1E3'	ok
+t	'1e3'	ok
+t	'-1.5E+2'	ok
+t	'1E-2'	ok
+t	'1E 3'	ok
+t	'- 1E2'	ok
+t	'1E2-'	ok
+t	'1.5 E2'	ok
+t	'1E2 x'	ok
+t	'1 x'	ok
+t	' + 7'	ok
+t	' 7-x'	ok
+t	'  1 2'	ok
+t	'INF'	ok
+t	'-Infinity'	ok
+t	'NaN'	ok
+t	'1E400'	ok
+t	'-1E400'	ok
+t	'1E-400'	ok
+t	'1E308'	ok
+t	'2E308'	ok
+t	'1E384'	ok
+t	'1E385'	ok
+t	'9.999999999999999E384'	ok
+t	'9.9999999999999999E384'	ok
+t	'1E6144'	ok
+t	'1E6145'	ok
+t	'1E-398'	ok
+t	'1E-399'	ok
+t	'1E-6176'	ok
+t	'1E-6177'	ok
+t	'2.5'	ok
+t	'-2.5'	ok
+t	'1.234'	ok
+t	'-1.234'	ok
+t	'0.000000000000001'	ok
+t	'-1'	ok
+t	'-0'	ok
+t	'-0.4'	ok
+t	'-0.5'	ok
+t	'127'	ok
+t	'255'	ok
+t	'255.4'	ok
+t	'255.5'	ok
+t	'256'	ok
+t	'300'	ok
+t	'32767.4'	ok
+t	'32767.5'	ok
+t	'32768'	ok
+t	'-32768.4'	ok
+t	'-32768.5'	ok
+t	'-32769'	ok
+t	'2147483647.4'	ok
+t	'2147483647.5'	ok
+t	'-2147483648.4'	ok
+t	'-2147483648.5'	ok
+t	'3000000000'	ok
+t	'9223372036854775807.4'	ok
+t	'9223372036854775807.5'	ok
+t	'-9223372036854775808.5'	ok
+t	'9223372036854775808'	ok
+t	'9'	ok
+t	'9.4'	ok
+t	'9.5'	ok
+t	'999'	ok
+t	'999.4'	ok
+t	'999.5'	ok
+t	'-999.5'	ok
+t	'1000'	ok
+t	'9999999999999.99'	ok
+t	'9999999999999.994'	ok
+t	'9999999999999.995'	ok
+t	'10000000000000'	ok
+t	'9.999999999999999'	ok
+t	'10'	ok
+t	'10.0'	ok
+t	'9999999999999999999999999999999'	ok
+t	'10000000000000000000000000000000'	ok
+t	'0000000000000000000000000000000000000001'	ok
+t	'1.00000000000000000000000000000000000000000001'	ok
+t	'123456789012345678901234567890123456789'	ok
+t	'abcdef'	ok
+t	'0A'	ok
+t	'0a'	ok
+t	'FFFF'	ok
+t	'A12'	ok
+t	'20240229'	ok
+t	'20240230'	ok
+t	'240000'	ok
+t	'x10'	ok
+t	'2024-01-01T00:00:00'	ok
+t	'2024-01-01 12:34:56.1234567'	ok
+t	'2024-13-01T00:00:00'	ok
+t	``	ok
+t	` `	ok
+t	`7`	ok
+t	`7 `	ok
+t	`abc`	ok
+t	`300`	ok
+t	`2.5`	ok
+t	`1E3`	ok
+t	`3000000000`	ok
+x1	0	ok
+x1	7	ok
+x1	-0	ok
+x1	-1	ok
+x1	9	ok
+x1	10	ok
+x1	-9	ok
+x1	-10	ok
+x1	99	ok
+x1	100	ok
+x1	127	ok
+x1	128	ok
+x1	255	ok
+x1	256	ok
+x1	-128	ok
+x1	-129	ok
+x1	999	ok
+x1	1000	ok
+x1	-999	ok
+x1	-1000	ok
+x1	32767	ok
+x1	32768	ok
+x1	-32768	ok
+x1	-32769	ok
+x1	65535	ok
+x1	65536	ok
+x1	2147483647	ok
+x1	2147483648	error
+x1	-2147483648	ok
+x1	-2147483649	error
+x1	999999999999999	error
+x1	1000000000000000	error
+x1	9223372036854775807	error
+x1	9223372036854775808	error
+x1	-9223372036854775808	error
+x1	-9223372036854775809	error
+x1	9999999999999999	error
+x1	10000000000000000	error
+x1	12345678901234567	error
+x1	9999999999999999999999999999999	error
+x1	''	ok
+x1	' '	ok
+x1	'abc'	ok
+x1	'7'	ok
+x1	' 12 '	ok
+x1	'12'	ok
+x1	'+7'	ok
+x1	'-7'	ok
+x1	'7-'	ok
+x1	'7+'	ok
+x1	'- 3'	ok
+x1	'7 -'	ok
+x1	' - 3'	ok
+x1	' 7- '	ok
+x1	'+-1'	ok
+x1	'-1-'	ok
+x1	'--1'	ok
+x1	'.'	ok
+x1	'.5'	ok
+x1	'5.'	ok
+x1	'-.5'	ok
+x1	'1,5'	ok
+x1	'1.2.3'	ok
+x1	'1 2'	ok
+x1	'0x10'	ok
+x1	'1E'	ok
+x1	'1E3'	ok
+x1	'1e3'	ok
+x1	'-1.5E+2'	ok
+x1	'1E-2'	ok
+x1	'1E 3'	ok
+x1	'- 1E2'	ok
+x1	'1E2-'	ok
+x1	'1.5 E2'	ok
+x1	'1E2 x'	ok
+x1	'1 x'	ok
+x1	' + 7'	ok
+x1	' 7-x'	ok
+x1	'  1 2'	ok
+x1	'INF'	ok
+x1	'-Infinity'	ok
+x1	'NaN'	ok
+x1	'1E400'	ok
+x1	'-1E400'	ok
+x1	'1E-400'	ok
+x1	'1E308'	ok
+x1	'2E308'	ok
+x1	'1E384'	ok
+x1	'1E385'	ok
+x1	'9.999999999999999E384'	ok
+x1	'9.9999999999999999E384'	ok
+x1	'1E6144'	ok
+x1	'1E6145'	ok
+x1	'1E-398'	ok
+x1	'1E-399'	ok
+x1	'1E-6176'	ok
+x1	'1E-6177'	ok
+x1	'2.5'	ok
+x1	'-2.5'	ok
+x1	'1.234'	ok
+x1	'-1.234'	ok
+x1	'0.000000000000001'	ok
+x1	'-1'	ok
+x1	'-0'	ok
+x1	'-0.4'	ok
+x1	'-0.5'	ok
+x1	'127'	ok
+x1	'255'	ok
+x1	'255.4'	ok
+x1	'255.5'	ok
+x1	'256'	ok
+x1	'300'	ok
+x1	'32767.4'	ok
+x1	'32767.5'	ok
+x1	'32768'	ok
+x1	'-32768.4'	ok
+x1	'-32768.5'	ok
+x1	'-32769'	ok
+x1	'2147483647.4'	ok
+x1	'2147483647.5'	ok
+x1	'-2147483648.4'	ok
+x1	'-2147483648.5'	ok
+x1	'3000000000'	ok
+x1	'9223372036854775807.4'	ok
+x1	'9223372036854775807.5'	ok
+x1	'-9223372036854775808.5'	ok
+x1	'9223372036854775808'	ok
+x1	'9'	ok
+x1	'9.4'	ok
+x1	'9.5'	ok
+x1	'999'	ok
+x1	'999.4'	ok
+x1	'999.5'	ok
+x1	'-999.5'	ok
+x1	'1000'	ok
+x1	'9999999999999.99'	ok
+x1	'9999999999999.994'	ok
+x1	'9999999999999.995'	ok
+x1	'10000000000000'	ok
+x1	'9.999999999999999'	ok
+x1	'10'	ok
+x1	'10.0'	ok
+x1	'9999999999999999999999999999999'	ok
+x1	'10000000000000000000000000000000'	ok
+x1	'0000000000000000000000000000000000000001'	ok
+x1	'1.00000000000000000000000000000000000000000001'	ok
+x1	'123456789012345678901234567890123456789'	ok
+x1	'abcdef'	ok
+x1	'0A'	ok
+x1	'0a'	ok
+x1	'FFFF'	ok
+x1	'A12'	ok
+x1	'20240229'	ok
+x1	'20240230'	ok
+x1	'240000'	ok
+x1	'x10'	ok
+x1	'2024-01-01T00:00:00'	ok
+x1	'2024-01-01 12:34:56.1234567'	ok
+x1	'2024-13-01T00:00:00'	ok
+x1	``	ok
+x1	` `	ok
+x1	`7`	ok
+x1	`7 `	ok
+x1	`abc`	ok
+x1	`300`	ok
+x1	`2.5`	ok
+x1	`1E3`	ok
+x1	`3000000000`	ok
+string	0	ok
+string	7	ok
+string	-0	ok
+string	-1	ok
+string	9	ok
+string	10	ok
+string	-9	ok
+string	-10	ok
+string	99	ok
+string	100	ok
+string	127	ok
+string	128	ok
+string	255	ok
+string	256	ok
+string	-128	ok
+string	-129	ok
+string	999	ok
+string	1000	ok
+string	-999	ok
+string	-1000	ok
+string	32767	ok
+string	32768	ok
+string	-32768	ok
+string	-32769	ok
+string	65535	ok
+string	65536	ok
+string	2147483647	ok
+string	2147483648	ok
+string	-2147483648	ok
+string	-2147483649	ok
+string	999999999999999	ok
+string	1000000000000000	ok
+string	9223372036854775807	ok
+string	9223372036854775808	ok
+string	-9223372036854775808	ok
+string	-9223372036854775809	ok
+string	9999999999999999	ok
+string	10000000000000000	ok
+string	12345678901234567	ok
+string	9999999999999999999999999999999	ok
+string	''	ok
+string	' '	ok
+string	'abc'	ok
+string	'7'	ok
+string	' 12 '	ok
+string	'12'	ok
+string	'+7'	ok
+string	'-7'	ok
+string	'7-'	ok
+string	'7+'	ok
+string	'- 3'	ok
+string	'7 -'	ok
+string	' - 3'	ok
+string	' 7- '	ok
+string	'+-1'	ok
+string	'-1-'	ok
+string	'--1'	ok
+string	'.'	ok
+string	'.5'	ok
+string	'5.'	ok
+string	'-.5'	ok
+string	'1,5'	ok
+string	'1.2.3'	ok
+string	'1 2'	ok
+string	'0x10'	ok
+string	'1E'	ok
+string	'1E3'	ok
+string	'1e3'	ok
+string	'-1.5E+2'	ok
+string	'1E-2'	ok
+string	'1E 3'	ok
+string	'- 1E2'	ok
+string	'1E2-'	ok
+string	'1.5 E2'	ok
+string	'1E2 x'	ok
+string	'1 x'	ok
+string	' + 7'	ok
+string	' 7-x'	ok
+string	'  1 2'	ok
+string	'INF'	ok
+string	'-Infinity'	ok
+string	'NaN'	ok
+string	'1E400'	ok
+string	'-1E400'	ok
+string	'1E-400'	ok
+string	'1E308'	ok
+string	'2E308'	ok
+string	'1E384'	ok
+string	'1E385'	ok
+string	'9.999999999999999E384'	ok
+string	'9.9999999999999999E384'	ok
+string	'1E6144'	ok
+string	'1E6145'	ok
+string	'1E-398'	ok
+string	'1E-399'	ok
+string	'1E-6176'	ok
+string	'1E-6177'	ok
+string	'2.5'	ok
+string	'-2.5'	ok
+string	'1.234'	ok
+string	'-1.234'	ok
+string	'0.000000000000001'	ok
+string	'-1'	ok
+string	'-0'	ok
+string	'-0.4'	ok
+string	'-0.5'	ok
+string	'127'	ok
+string	'255'	ok
+string	'255.4'	ok
+string	'255.5'	ok
+string	'256'	ok
+string	'300'	ok
+string	'32767.4'	ok
+string	'32767.5'	ok
+string	'32768'	ok
+string	'-32768.4'	ok
+string	'-32768.5'	ok
+string	'-32769'	ok
+string	'2147483647.4'	ok
+string	'2147483647.5'	ok
+string	'-2147483648.4'	ok
+string	'-2147483648.5'	ok
+string	'3000000000'	ok
+string	'9223372036854775807.4'	ok
+string	'9223372036854775807.5'	ok
+string	'-9223372036854775808.5'	ok
+string	'9223372036854775808'	ok
+string	'9'	ok
+string	'9.4'	ok
+string	'9.5'	ok
+string	'999'	ok
+string	'999.4'	ok
+string	'999.5'	ok
+string	'-999.5'	ok
+string	'1000'	ok
+string	'9999999999999.99'	ok
+string	'9999999999999.994'	ok
+string	'9999999999999.995'	ok
+string	'10000000000000'	ok
+string	'9.999999999999999'	ok
+string	'10'	ok
+string	'10.0'	ok
+string	'9999999999999999999999999999999'	ok
+string	'10000000000000000000000000000000'	ok
+string	'0000000000000000000000000000000000000001'	ok
+string	'1.00000000000000000000000000000000000000000001'	ok
+string	'123456789012345678901234567890123456789'	ok
+string	'abcdef'	ok
+string	'0A'	ok
+string	'0a'	ok
+string	'FFFF'	ok
+string	'A12'	ok
+string	'20240229'	ok
+string	'20240230'	ok
+string	'240000'	ok
+string	'x10'	ok
+string	'2024-01-01T00:00:00'	ok
+string	'2024-01-01 12:34:56.1234567'	ok
+string	'2024-13-01T00:00:00'	ok
+string	``	ok
+string	` `	ok
+string	`7`	ok
+string	`7 `	ok
+string	`abc`	ok
+string	`300`	ok
+string	`2.5`	ok
+string	`1E3`	ok
+string	`3000000000`	ok
+xstring	0	ok
+xstring	7	ok
+xstring	-0	ok
+xstring	-1	ok
+xstring	9	ok
+xstring	10	ok
+xstring	-9	ok
+xstring	-10	ok
+xstring	99	ok
+xstring	100	ok
+xstring	127	ok
+xstring	128	ok
+xstring	255	ok
+xstring	256	ok
+xstring	-128	ok
+xstring	-129	ok
+xstring	999	ok
+xstring	1000	ok
+xstring	-999	ok
+xstring	-1000	ok
+xstring	32767	ok
+xstring	32768	ok
+xstring	-32768	ok
+xstring	-32769	ok
+xstring	65535	ok
+xstring	65536	ok
+xstring	2147483647	ok
+xstring	2147483648	ok
+xstring	-2147483648	ok
+xstring	-2147483649	ok
+xstring	999999999999999	ok
+xstring	1000000000000000	ok
+xstring	9223372036854775807	ok
+xstring	9223372036854775808	ok
+xstring	-9223372036854775808	ok
+xstring	-9223372036854775809	ok
+xstring	9999999999999999	ok
+xstring	10000000000000000	ok
+xstring	12345678901234567	ok
+xstring	9999999999999999999999999999999	ok
+xstring	''	ok
+xstring	' '	ok
+xstring	'abc'	ok
+xstring	'7'	ok
+xstring	' 12 '	ok
+xstring	'12'	ok
+xstring	'+7'	ok
+xstring	'-7'	ok
+xstring	'7-'	ok
+xstring	'7+'	ok
+xstring	'- 3'	ok
+xstring	'7 -'	ok
+xstring	' - 3'	ok
+xstring	' 7- '	ok
+xstring	'+-1'	ok
+xstring	'-1-'	ok
+xstring	'--1'	ok
+xstring	'.'	ok
+xstring	'.5'	ok
+xstring	'5.'	ok
+xstring	'-.5'	ok
+xstring	'1,5'	ok
+xstring	'1.2.3'	ok
+xstring	'1 2'	ok
+xstring	'0x10'	ok
+xstring	'1E'	ok
+xstring	'1E3'	ok
+xstring	'1e3'	ok
+xstring	'-1.5E+2'	ok
+xstring	'1E-2'	ok
+xstring	'1E 3'	ok
+xstring	'- 1E2'	ok
+xstring	'1E2-'	ok
+xstring	'1.5 E2'	ok
+xstring	'1E2 x'	ok
+xstring	'1 x'	ok
+xstring	' + 7'	ok
+xstring	' 7-x'	ok
+xstring	'  1 2'	ok
+xstring	'INF'	ok
+xstring	'-Infinity'	ok
+xstring	'NaN'	ok
+xstring	'1E400'	ok
+xstring	'-1E400'	ok
+xstring	'1E-400'	ok
+xstring	'1E308'	ok
+xstring	'2E308'	ok
+xstring	'1E384'	ok
+xstring	'1E385'	ok
+xstring	'9.999999999999999E384'	ok
+xstring	'9.9999999999999999E384'	ok
+xstring	'1E6144'	ok
+xstring	'1E6145'	ok
+xstring	'1E-398'	ok
+xstring	'1E-399'	ok
+xstring	'1E-6176'	ok
+xstring	'1E-6177'	ok
+xstring	'2.5'	ok
+xstring	'-2.5'	ok
+xstring	'1.234'	ok
+xstring	'-1.234'	ok
+xstring	'0.000000000000001'	ok
+xstring	'-1'	ok
+xstring	'-0'	ok
+xstring	'-0.4'	ok
+xstring	'-0.5'	ok
+xstring	'127'	ok
+xstring	'255'	ok
+xstring	'255.4'	ok
+xstring	'255.5'	ok
+xstring	'256'	ok
+xstring	'300'	ok
+xstring	'32767.4'	ok
+xstring	'32767.5'	ok
+xstring	'32768'	ok
+xstring	'-32768.4'	ok
+xstring	'-32768.5'	ok
+xstring	'-32769'	ok
+xstring	'2147483647.4'	ok
+xstring	'2147483647.5'	ok
+xstring	'-2147483648.4'	ok
+xstring	'-2147483648.5'	ok
+xstring	'3000000000'	ok
+xstring	'9223372036854775807.4'	ok
+xstring	'9223372036854775807.5'	ok
+xstring	'-9223372036854775808.5'	ok
+xstring	'9223372036854775808'	ok
+xstring	'9'	ok
+xstring	'9.4'	ok
+xstring	'9.5'	ok
+xstring	'999'	ok
+xstring	'999.4'	ok
+xstring	'999.5'	ok
+xstring	'-999.5'	ok
+xstring	'1000'	ok
+xstring	'9999999999999.99'	ok
+xstring	'9999999999999.994'	ok
+xstring	'9999999999999.995'	ok
+xstring	'10000000000000'	ok
+xstring	'9.999999999999999'	ok
+xstring	'10'	ok
+xstring	'10.0'	ok
+xstring	'9999999999999999999999999999999'	ok
+xstring	'10000000000000000000000000000000'	ok
+xstring	'0000000000000000000000000000000000000001'	ok
+xstring	'1.00000000000000000000000000000000000000000001'	ok
+xstring	'123456789012345678901234567890123456789'	ok
+xstring	'abcdef'	ok
+xstring	'0A'	ok
+xstring	'0a'	ok
+xstring	'FFFF'	ok
+xstring	'A12'	ok
+xstring	'20240229'	ok
+xstring	'20240230'	ok
+xstring	'240000'	ok
+xstring	'x10'	ok
+xstring	'2024-01-01T00:00:00'	ok
+xstring	'2024-01-01 12:34:56.1234567'	ok
+xstring	'2024-13-01T00:00:00'	ok
+xstring	``	ok
+xstring	` `	ok
+xstring	`7`	ok
+xstring	`7 `	ok
+xstring	`abc`	ok
+xstring	`300`	ok
+xstring	`2.5`	ok
+xstring	`1E3`	ok
+xstring	`3000000000`	ok
+utclong	0	error
+utclong	7	error
+utclong	-0	error
+utclong	-1	error
+utclong	9	error
+utclong	10	error
+utclong	-9	error
+utclong	-10	error
+utclong	99	error
+utclong	100	error
+utclong	127	error
+utclong	128	error
+utclong	255	error
+utclong	256	error
+utclong	-128	error
+utclong	-129	error
+utclong	999	error
+utclong	1000	error
+utclong	-999	error
+utclong	-1000	error
+utclong	32767	error
+utclong	32768	error
+utclong	-32768	error
+utclong	-32769	error
+utclong	65535	error
+utclong	65536	error
+utclong	2147483647	error
+utclong	2147483648	error
+utclong	-2147483648	error
+utclong	-2147483649	error
+utclong	999999999999999	error
+utclong	1000000000000000	error
+utclong	9223372036854775807	error
+utclong	9223372036854775808	error
+utclong	-9223372036854775808	error
+utclong	-9223372036854775809	error
+utclong	9999999999999999	error
+utclong	10000000000000000	error
+utclong	12345678901234567	error
+utclong	9999999999999999999999999999999	error
+utclong	''	ok
+utclong	' '	ok
+utclong	'abc'	error
+utclong	'7'	error
+utclong	' 12 '	error
+utclong	'12'	error
+utclong	'+7'	error
+utclong	'-7'	error
+utclong	'7-'	error
+utclong	'7+'	error
+utclong	'- 3'	error
+utclong	'7 -'	error
+utclong	' - 3'	error
+utclong	' 7- '	error
+utclong	'+-1'	error
+utclong	'-1-'	error
+utclong	'--1'	error
+utclong	'.'	error
+utclong	'.5'	error
+utclong	'5.'	error
+utclong	'-.5'	error
+utclong	'1,5'	error
+utclong	'1.2.3'	error
+utclong	'1 2'	error
+utclong	'0x10'	error
+utclong	'1E'	error
+utclong	'1E3'	error
+utclong	'1e3'	error
+utclong	'-1.5E+2'	error
+utclong	'1E-2'	error
+utclong	'1E 3'	error
+utclong	'- 1E2'	error
+utclong	'1E2-'	error
+utclong	'1.5 E2'	error
+utclong	'1E2 x'	error
+utclong	'1 x'	error
+utclong	' + 7'	error
+utclong	' 7-x'	error
+utclong	'  1 2'	error
+utclong	'INF'	error
+utclong	'-Infinity'	error
+utclong	'NaN'	error
+utclong	'1E400'	error
+utclong	'-1E400'	error
+utclong	'1E-400'	error
+utclong	'1E308'	error
+utclong	'2E308'	error
+utclong	'1E384'	error
+utclong	'1E385'	error
+utclong	'9.999999999999999E384'	error
+utclong	'9.9999999999999999E384'	error
+utclong	'1E6144'	error
+utclong	'1E6145'	error
+utclong	'1E-398'	error
+utclong	'1E-399'	error
+utclong	'1E-6176'	error
+utclong	'1E-6177'	error
+utclong	'2.5'	error
+utclong	'-2.5'	error
+utclong	'1.234'	error
+utclong	'-1.234'	error
+utclong	'0.000000000000001'	error
+utclong	'-1'	error
+utclong	'-0'	error
+utclong	'-0.4'	error
+utclong	'-0.5'	error
+utclong	'127'	error
+utclong	'255'	error
+utclong	'255.4'	error
+utclong	'255.5'	error
+utclong	'256'	error
+utclong	'300'	error
+utclong	'32767.4'	error
+utclong	'32767.5'	error
+utclong	'32768'	error
+utclong	'-32768.4'	error
+utclong	'-32768.5'	error
+utclong	'-32769'	error
+utclong	'2147483647.4'	error
+utclong	'2147483647.5'	error
+utclong	'-2147483648.4'	error
+utclong	'-2147483648.5'	error
+utclong	'3000000000'	error
+utclong	'9223372036854775807.4'	error
+utclong	'9223372036854775807.5'	error
+utclong	'-9223372036854775808.5'	error
+utclong	'9223372036854775808'	error
+utclong	'9'	error
+utclong	'9.4'	error
+utclong	'9.5'	error
+utclong	'999'	error
+utclong	'999.4'	error
+utclong	'999.5'	error
+utclong	'-999.5'	error
+utclong	'1000'	error
+utclong	'9999999999999.99'	error
+utclong	'9999999999999.994'	error
+utclong	'9999999999999.995'	error
+utclong	'10000000000000'	error
+utclong	'9.999999999999999'	error
+utclong	'10'	error
+utclong	'10.0'	error
+utclong	'9999999999999999999999999999999'	error
+utclong	'10000000000000000000000000000000'	error
+utclong	'0000000000000000000000000000000000000001'	error
+utclong	'1.00000000000000000000000000000000000000000001'	error
+utclong	'123456789012345678901234567890123456789'	error
+utclong	'abcdef'	error
+utclong	'0A'	error
+utclong	'0a'	error
+utclong	'FFFF'	error
+utclong	'A12'	error
+utclong	'20240229'	error
+utclong	'20240230'	error
+utclong	'240000'	error
+utclong	'x10'	error
+utclong	'2024-01-01T00:00:00'	ok
+utclong	'2024-01-01 12:34:56.1234567'	ok
+utclong	'2024-13-01T00:00:00'	error
+utclong	``	ok
+utclong	` `	ok
+utclong	`7`	error
+utclong	`7 `	error
+utclong	`abc`	error
+utclong	`300`	error
+utclong	`2.5`	error
+utclong	`1E3`	error
+utclong	`3000000000`	error
+utclong	'9999-12-31T23:59:59'	ok
+utclong	'9999-12-31T24:00:00'	error
+utclong	'2024-01-01T24:00:00'	ok
+utclong	'2024-01-01T24:00:01'	error
+utclong	'2024-01-01T25:00:00'	error
+utclong	'2024-01-01T23:60:00'	error
+utclong	'2024-01-01T23:59:60'	error
+utclong	'1582-10-04T00:00:00'	ok
+utclong	'1582-10-05T00:00:00'	error
+utclong	'1582-10-14T00:00:00'	error
+utclong	'1582-10-15T00:00:00'	ok
+utclong	'1500-02-29T00:00:00'	ok
+utclong	'1700-02-29T00:00:00'	error
+utclong	'2023-02-29T00:00:00'	error
+utclong	'0000-01-01T00:00:00'	error
+utclong	'0001-01-01T00:00:00'	ok
+utclong	'2024-01-01t00:00:00'	error
+utclong	'2024-01-01T00:00:00,5'	ok
+utclong	'2024-01-01T00:00:00.'	ok
+utclong	'2024-01-01T00:00:00.12345678'	error
+utclong	'2024-01-01T00:00:00Z'	error
+utclong	' 2024-01-01T00:00:00'	error
+utclong	'2024-01-01T00:00'	error
+utclong	'2024-1-01T00:00:00'	error
+utclong	`2024-01-01T00:00:00   `	ok
+utclong	'2024-00-10T00:00:00'	error
+utclong	'2024-04-31T00:00:00'	error
+utclong	'12024-01-01T00:00:00'	error

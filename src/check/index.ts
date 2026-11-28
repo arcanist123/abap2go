@@ -10,10 +10,11 @@ import { argumentParentheses, comparisonOperands } from "./comparison";
 import { continueOutsideLoop } from "./loops";
 import { numberLiteralLength } from "./literals";
 import { substringBounds } from "./substring";
+import { valueLiteral } from "./value";
 import { Check } from "./input";
 
 const CHECKS: readonly Check[] = [continueOutsideLoop, numberLiteralLength, substringBounds, comparisonOperands,
-  argumentParentheses, caseOperands];
+  argumentParentheses, caseOperands, valueLiteral];
 
 /**
  * The findings of layer 2 in every ABAP object of the registry that passed layer 1. An object with a finding of

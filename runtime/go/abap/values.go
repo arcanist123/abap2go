@@ -84,12 +84,19 @@ func (f decfloatFormat) toDecfloat(d decimal) (Decfloat, bool) {
 			r = r.roundAway(r.exp + 1)
 		}
 	}
+	// an exponent can be far outside the format (a text holds any), so no power of ten is built from it unchecked
 	if r.exp < f.minExp {
-		r = r.roundAway(f.minExp)
+		if f.minExp-r.exp > len(r.digits()) {
+			r = decimal{neg: r.neg, coef: new(big.Int), exp: f.minExp} // less than a tenth of the quantum
+		} else {
+			r = r.roundAway(f.minExp)
+		}
 	}
 	if r.exp > f.maxExp {
 		if r.coef.Sign() == 0 {
 			r.exp = f.maxExp
+		} else if r.exp-f.maxExp >= f.digits {
+			return Decfloat{}, false
 		} else {
 			r = decimal{neg: r.neg, coef: new(big.Int).Mul(r.coef, pow10(r.exp-f.maxExp)), exp: f.maxExp}
 			if len(r.digits()) > f.digits {

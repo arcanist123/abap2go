@@ -143,8 +143,8 @@ is built on the final value model (revised 2026-11-28). The specifications of st
 compiler and can be written ahead of their step.
 
 1. [ ] **Layer 2 and the scope pass** (in progress, priority set 2026-11-27; details under "Next"): the `VALUE` literal
-   that does not convert (abaplint#4712), the Unicode flag and fixed-point arithmetic in the scope pass, the
-   non-Unicode-only forms, and the ports of the PRs that only add checks, of those the milestone needs only: for the
+   that does not convert (abaplint#4712, done 2026-11-28), the Unicode flag and fixed-point arithmetic in the scope
+   pass, the non-Unicode-only forms, and the ports of the PRs that only add checks, of those the milestone needs only: for the
    statements compiled today abaplint#4739, #4741, #4761 and fork #1 to #3 (the fork's #4 to #6 come in step 7,
    abaplint#4635 waits for classes). Done 2026-11-28: the pin is on 2.120.125, which has #4739 and the `COMPUTE`
    fix (PR abaplint#4844), and #4741, #4761 and fork #1 to #3 are ported (`src/check/comparison.ts`,
@@ -419,10 +419,13 @@ Next (the order is that of the milestone's steps above; this list keeps the deta
     - [x] a subfield of a numeric type (2026-11-28, `src/lower_common.ts`, `test/substring.test.ts`): `i+0`, `i(4)`,
       `p(5)` and the like are valid ABAP (abaplint#4830, in 2.120.123) and gave Go that does not build. The lowering
       now refuses them as not compiled yet, as it does `u(*)`
-    - a `VALUE` literal that does not convert to its field's type (`DATA x TYPE i VALUE 3000000000.`, a `b` of
-      `VALUE 300`) is expected to be a syntax error; abaplint accepts every such literal (abaplint#4712, open) and
-      the compiler builds it, so it fails at run time. A layer 2 check, which also covers the range of `b` and `s`
-      below. A move of such a literal (`b = 300.`) is expected to give only a warning and stays a run-time error
+    - [x] a `VALUE` literal that does not convert to its field's type (2026-11-28, `src/check/value.ts` and
+      `convertible.ts`, `test/check/value.test.ts`; abaplint#4712, open): `DATA x TYPE i VALUE 3000000000.` or a `b`
+      of `VALUE 300` was built and failed at run time. The rule and its types, which also cover the ranges of `b`
+      and `s`, are in [spec/conversion.md](spec/conversion.md), "The literal of VALUE", with 3,637 cells
+      (`value_literal.tsv`). A move of such a literal (`b = 300.`) stays valid and a run-time error. The cells found
+      that the runtime did not finish a conversion of a text with an exponent far beyond a decimal floating point
+      number (`'1E99999999999'`): fixed. Left: a constant named after `VALUE`, with `CONSTANTS` in step 5
     - the Unicode flag (below): the compiler does not read `UCCHECK`, so a program without it is compiled as Unicode
   - port the checks of the waiting PRs on the abaplint fork and of the abaplint PRs that only add checks (listed in
     [abaplint_roadmap.md](abaplint_roadmap.md), "Invalid syntax to fix, without a check in the compiler"), one at a
@@ -434,7 +437,8 @@ Next (the order is that of the milestone's steps above; this list keeps the deta
   - the non-Unicode-only forms in a Unicode program ([abaplint_roadmap.md](abaplint_roadmap.md), "Non-Unicode-only
     syntax"); refusing a program without the flag is the scope pass, below
   - `b` and `s`: the size, value range and overflow of `INT1` and `INT2`, once abaplint gives the size on the type
-    (abaplint#4631, in the patch); the overflow at run time belongs to the lowering, the static range checks here
+    (abaplint#4631, in the patch); the overflow at run time belongs to the lowering, the static range checks here (of
+    `VALUE`, done)
   - macros: map each expanded token back to its absolute position, in the `DEFINE` body or in an argument at the
     call, by rebuilding the text abaplint lexes for the expansion; a test fails if abaplint changes how it expands
   - a layer 2 check goes once an abaplint release reports its case in every form; its tests then expect abaplint's
@@ -470,7 +474,7 @@ Next (the order is that of the milestone's steps above; this list keeps the deta
     warning: valid code, whose conversion fails at run time as for a variable. Such a move already compiles and
     raises when it runs, and stays so when its cell is chosen at build time; the six "as written" transpiler fixtures
     are its test cases. Only the literal of a `VALUE` addition that would raise is a syntax error, reported by
-    layer 2 (abaplint#4712, see the first item)
+    layer 2 (see the first item)
   - their status lines still say "syntax error": change them to the result of the run. Two of the six build today
     (`arithmetics`, `integer_operations` "from text"), four wait for `abap_true`, `CLEAR` and `TYPES`
 - [ ] the rest of `calculation_contexts.tsv` as its statements are compiled: inline declarations, templates, `CONV`,
