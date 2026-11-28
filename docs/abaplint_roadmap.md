@@ -226,12 +226,13 @@ argument otherwise).
 Reviewed 2026-11-26 against abaplint `main` `fc504b57`: every open issue in this file still behaves on `main` as it
 describes. PRs and fork issues reviewed again on 2026-11-27.
 
-**First: `COMPUTE` upstream** (priority set 2026-11-28). abaplint's syntax check skips the statement, so valid code
-in it gets no types or references (see "Open, layer 1" under "Syntax checks to move out of the compiler"). A layer
-1 defect goes upstream early, since review takes time, and the patch carries it meanwhile: a `Compute` handler
-that checks the statement as the assignment it stands for, with tests for the valid forms and the invalid ones it
-then reports. Then rerun `scripts/abaplint-patch.sh`. The compiler's own items wait behind it (see
-[compiler_roadmap.md](compiler_roadmap.md), "Next").
+**Done 2026-11-28: `COMPUTE` upstream** (priority set the same day). abaplint's syntax check skipped the statement,
+so valid code in it got no types or references (see "Open, layer 1" under "Syntax checks to move out of the
+compiler"). [PR #4844](https://github.com/abaplint/abaplint/pull/4844) adds a `Compute` handler that checks the
+statement as the assignment it stands for. abap2go does not wait for it: the compiler does not compile `COMPUTE` yet,
+so the patch is not rebuilt for it alone, and the PR goes in with the next run of `scripts/abaplint-patch.sh` or a
+release, whichever comes first. The compiler's own items are next (see [compiler_roadmap.md](compiler_roadmap.md),
+"Next").
 
 **Done 2026-11-28: the compiler's last syntax checks are in layer 2 or gone** (priority set 2026-11-27, revised the
 same day by "Two layers"; see "Syntax checks to move out of the compiler"). Three moved to `src/check/`:
@@ -464,8 +465,9 @@ such as `COMPUTE r = i + 1.` gets no references and no types, where `r = i + 1.`
 `i`. As a consequence, `COMPUTE r = zzz + 1.` with an unknown `zzz`, `COMPUTE r = u + 1.` with a `utclong` and
 `COMPUTE s = c5(0).` are accepted, while ABAP is expected to reject each of them. Valid code left untyped is a layer 1
 defect, so the fix goes upstream: a handler that checks `COMPUTE` (with or without `EXACT`) as the assignment it
-stands for. No layer 2 check is written for it, since layer 2 cannot type a statement on its own. The compiler does
-not compile `COMPUTE` yet and refuses it as not supported; it needs the fix before it does.
+stands for, in [PR #4844](https://github.com/abaplint/abaplint/pull/4844) (open). No layer 2 check is written for
+it, since layer 2 cannot type a statement on its own. The compiler does not compile `COMPUTE` yet and refuses it as
+not supported; it needs the fix before it does.
 
 Dropped 2026-11-27, since it is no syntax error: a `utclong` value after `WHEN` when the operand of `CASE` is an
 arithmetic expression, `CASE i + 1. WHEN u.`, is expected to be valid, unlike `CASE i. WHEN u.`, so abaplint is right
