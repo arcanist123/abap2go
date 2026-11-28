@@ -44,8 +44,8 @@ function writePackage(kind: "prog" | "clas", source: string, files: Record<strin
 }
 
 /**
- * Runs both layers of the syntax check over a package of one source file, without lowering or Go, and returns the
- * findings as `row:col: message [key]`, empty if it passes.
+ * Runs every check before the lowering (both layers of the syntax check and the scope) over a package of one source
+ * file, without lowering or Go, and returns the findings as `row:col: message [key]`, empty if it passes.
  */
 export function syntaxCheck(kind: "prog" | "clas", source: string, files: Record<string, string> = {}): string[] {
   const { dir } = writePackage(kind, source, files);
@@ -56,7 +56,7 @@ export function syntaxCheck(kind: "prog" | "clas", source: string, files: Record
     if (!(e instanceof BuildError)) {
       throw e;
     }
-    return e.message.split("\n").slice(1).map(line => line.replace(/^.*?:(?=\d+:\d+: )/, ""));
+    return e.message.split("\n").filter(line => /:\d+:\d+: /.test(line)).map(line => line.replace(/^.*?:(?=\d+:\d+: )/, ""));
   }
 }
 

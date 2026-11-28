@@ -3,6 +3,7 @@ import * as path from "node:path";
 import * as abaplint from "@abaplint/core";
 import { BuildError } from "./errors";
 import { check } from "./check";
+import { isScopeFinding, scope } from "./scope";
 import { config, validate } from "./validation";
 
 /** The built-in library package, part of every world. */
@@ -10,8 +11,9 @@ export const LIB_PACKAGE = path.join(__dirname, "..", "..", "lib");
 
 /**
  * Reads abapGit packages (folders with .abapgit.xml) into one abaplint registry, the world of the build, and runs
- * both layers of the syntax check over it: abaplint with the rules of src/validation.ts, then the checks of
- * src/check/. Every finding of both is reported before any lowering. The built-in library package is always added.
+ * every check that comes before the lowering: both layers of the syntax check (abaplint with the rules of
+ * src/validation.ts, then src/check/) and the scope of abap2go (src/scope/). Every finding of all three is reported
+ * before any lowering, the syntax errors first. The built-in library package is always added.
  */
 export function loadPackages(inputs: string[]): abaplint.IRegistry {
   const files: abaplint.MemoryFile[] = [];
@@ -26,15 +28,28 @@ export function loadPackages(inputs: string[]): abaplint.IRegistry {
     }
   }
 
-  // Layer 1 the same way abaplint/transpiler checks its input (src/validation.ts), layer 2 on what passes it.
+  // Layer 1 the same way abaplint/transpiler checks its input (src/validation.ts), less the rules that report
+  // scope rather than syntax; layer 2 on what passes it; then the scope.
   const registry = new abaplint.Registry(new abaplint.Config(JSON.stringify(config))).addFiles(files).parse();
-  const layer1 = validate(registry);
-  const issues = [...layer1, ...check(registry, layer1)];
-  if (issues.length > 0) {
-    const lines = issues.map(i => `${i.getFilename()}:${i.getStart().getRow()}:${i.getStart().getCol()}: ${i.getMessage()} [${i.getKey()}]`);
-    throw new BuildError(`the packages do not pass the syntax check:\n${lines.join("\n")}`);
+  const abaplintIssues = validate(registry);
+  const layer1 = abaplintIssues.filter(i => !isScopeFinding(i));
+  const syntax = [...layer1, ...check(registry, layer1)];
+  const unsupported = scope(registry, abaplintIssues.filter(isScopeFinding));
+  const parts: string[] = [];
+  if (syntax.length > 0) {
+    parts.push(`the packages do not pass the syntax check:\n${format(syntax)}`);
+  }
+  if (unsupported.length > 0) {
+    parts.push(`the packages use ABAP that abap2go does not support:\n${format(unsupported)}`);
+  }
+  if (parts.length > 0) {
+    throw new BuildError(parts.join("\n"));
   }
   return registry;
+}
+
+function format(issues: readonly abaplint.Issue[]): string {
+  return issues.map(i => `${i.getFilename()}:${i.getStart().getRow()}:${i.getStart().getCol()}: ${i.getMessage()} [${i.getKey()}]`).join("\n");
 }
 
 function* walk(dir: string): Generator<string> {

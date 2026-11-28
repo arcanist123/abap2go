@@ -56,9 +56,9 @@ that block, so where abaplint rejects valid code, layer 2 does not see the code 
 abaplint's checks, on its syntax tree, scopes and types, through its public API only, and report in its `Issue`
 format. They cover:
 - invalid ABAP that abaplint accepts
-- the Unicode flag of each program (`UCCHECK`), which abaplint does not read: non-Unicode programs are out of scope,
-  so a program without the flag is refused, and the rules of Unicode programs that abaplint does not apply are
-  checked in the rest
+- the rules of Unicode programs that abaplint does not apply: abaplint does not read the Unicode flag (`UCCHECK`).
+  A program without the flag is refused by the scope pass, not by layer 2 (see
+  [aot_for_abap.md](aot_for_abap.md), "Four kinds of refusal")
 - the value ranges, overflow and sizes of the internal types `b` and `s` (`INT1`, `INT2`), once layer 1 gives the
   size (see [#4631](https://github.com/abaplint/abaplint/pull/4631))
 - the absolute position of code expanded from a macro: abaplint lexes an expanded macro as new text, so its tokens
@@ -727,9 +727,11 @@ the default.
 
 **Since 2026-11-27 this is layer 2** (see "Two layers"). abaplint accepts some of these forms on purpose:
 `OPEN DATASET f.` with no addition parses since [PR #3571](https://github.com/abaplint/abaplint/pull/3571).
-Non-Unicode programs are out of scope for abap2go. It reads the UCCHECK flag of each program itself: it refuses a
+Non-Unicode programs are out of scope for abap2go. It reads the UCCHECK flag of each program itself: its scope pass refuses a
 program without the flag, and its layer 2 checks reject the non-Unicode-only forms in the others. #4753 no longer
-blocks anything. The inventory below becomes the list of those checks.
+blocks anything. The inventory below becomes the list of those checks. The forms found so far are a missing addition, visible
+in the tree, or a rule on types, so the checks do not depend on how abaplint resolves ambiguous parses
+([abaplint_ambiguous_parsing.md](abaplint_ambiguous_parsing.md), "Unicode flag").
 
 - [ ] [#4753](https://github.com/abaplint/abaplint/issues/4753) `OPEN DATASET f.` without `FOR ...` or
   `IN ... MODE`; with no addition at all it parses since

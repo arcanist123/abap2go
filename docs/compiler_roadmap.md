@@ -266,18 +266,32 @@ Next:
     [abaplint_roadmap.md](abaplint_roadmap.md), "Invalid syntax to fix, without a check in the compiler"), one at a
     time, each leaving the abaplint patch as its port lands: abaplint#4739, #4741, #4635 and #4761, then fork #1 to
     #6. The upstream PRs stay open for the maintainer, without further rebasing
-  - the Unicode flag: read `UCCHECK` from each program's XML, refuse a program without it as not supported, and
-    check the non-Unicode-only forms in the rest ([abaplint_roadmap.md](abaplint_roadmap.md), "Non-Unicode-only
-    syntax")
+  - the non-Unicode-only forms in a Unicode program ([abaplint_roadmap.md](abaplint_roadmap.md), "Non-Unicode-only
+    syntax"); refusing a program without the flag is the scope pass, below
   - `b` and `s`: the size, value range and overflow of `INT1` and `INT2`, once abaplint gives the size on the type
     (abaplint#4631, in the patch); the overflow at run time belongs to the lowering, the static range checks here
   - macros: map each expanded token back to its absolute position, in the `DEFINE` body or in an argument at the
     call, by rebuilding the text abaplint lexes for the expansion; a test fails if abaplint changes how it expands
   - a layer 2 check goes once an abaplint release reports its case in every form; its tests then expect abaplint's
     finding
-  - not syntax checks, so they stay in the lowering: the refusals of valid code not compiled yet, a `utclong` after
+  - not syntax checks: the scope pass (next item), and in the lowering the refusals of valid code not compiled yet, a `utclong` after
     `WHEN` against a calculated `CASE` operand (`caseValue` in `src/lower_cond.ts`) and a subfield of a numeric type
     (`lowerSubstring`), which could be compiled as the whole field
+- [ ] **the scope pass, `src/scope/`**: valid ABAP that abap2go does not compile by design, reported before the
+  lowering under its own heading (decided 2026-11-28, [aot_for_abap.md](aot_for_abap.md), "Four kinds of refusal")
+  - [x] the pass (2026-11-28): `scope()` in `src/scope/index.ts`, called in `src/load.ts` after layer 2. The
+    findings of the abaplint rules in `SCOPE_RULES` move there from layer 1, so they no longer keep layer 2 from
+    checking the object. The test harness `syntaxCheck` returns the findings of both headings
+  - [x] statements with more than one meaning (2026-11-28, [abaplint_ambiguous_parsing.md](abaplint_ambiguous_parsing.md),
+    "Rule for now"): every `ambiguous_statement` finding, also where the name would decide (`test/scope/ambiguous.test.ts`)
+  - the Unicode flag: read `UCCHECK` from each program's XML (`UNICODE` for a class), refuse a program without it
+  - fixed-point arithmetic: read `FIXPT` with it, refuse a program without it
+  - an object that defines the same macro name more than once
+  - the restrictions of AOT compilation the lowering refuses today (code named dynamically, `CASTING`, ...), as they
+    come up
+- [ ] the lowering's refusals: collect every "not compiled yet" finding and report them all, instead of stopping at
+  the first; internal errors (a case the checks rule out, such as "malformed arithmetic expression") get their own
+  error class ([aot_for_abap.md](aot_for_abap.md), "Four kinds of refusal")
 - [ ] control flow, the rest: `IS INITIAL`, `IN` and the string, byte and bit operators with `sy-fdpos`
   ([spec/comparison.md](spec/comparison.md), "Predicate expressions and comparison operators"; `IN` once ranges
   tables are compiled), their cells run by the tests; the other predicates once the comparison table has them;
