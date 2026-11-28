@@ -177,7 +177,9 @@ compiler and can be written ahead of their step.
    as written. Before them, in abaplint, the types the compiler would take over wrongly: an operand after a
    constructor expression (`CONV i( 1 ) + p` typed `i`, arcanist123/abaplint#17), a constant as offset or length
    (arcanist123/abaplint#18) and an inline declaration from a calculation with a text operand (`DATA(x) = i * '2'.`
-   typed `i`, arcanist123/abaplint#22; how to fix it is not decided yet)
+   typed `i`, arcanist123/abaplint#22). #18 (PR abaplint#4850; the rest is arcanist123/abaplint#24 to #27) and #22
+   (PR abaplint#4851) are fixed and in the patch (2026-11-28). Left are #17, and an inline declaration from a signed
+   or parenthesised calculation (`DATA(x) = ( p + 1 ).` keeps the operand's decimals, arcanist123/abaplint#36)
 6. [ ] **String templates, then `WRITE` of strings only**: the rest of the output formatting table specified (the
    template rules per kind and the format options), templates and `&&` compiled, then `WRITE` of other operands
    refused and its tests rewritten to `WRITE |{ x }|` (details under "Next")
@@ -235,10 +237,9 @@ Done:
   `patches/@abaplint+core+<version>.patch` on `npm install`. The patch holds the abap2go PRs to abaplint that the
   release does not contain yet, open or merged but unreleased (listed in `patches/abaplint-prs.txt`);
   `scripts/abaplint-patch.sh` regenerates it, and each PR drops out once a release has it; a PR listed in
-  `patches/abaplint-skipped.txt` is left out. Pinned to 2.120.125 since 2026-11-28; the patch holds #4631, #4633
-  and #4635. The PRs that only add checks leave the patch as layer 2 takes them over, and #4684 (EXEC SQL and AMDP,
-  which the compiler does not compile) is dropped, so the patch is to end up with the one layer 1 fix below that no
-  release has yet, abaplint#4631 (INT1 and INT2). The fixes the compiler's
+  `patches/abaplint-skipped.txt` is left out. Pinned to 2.120.125 since 2026-11-28; the patch holds #4631, #4633,
+  #4635 and #4849 to #4851. The PRs that only add checks leave the patch as layer 2 takes them over, and #4684 (EXEC
+  SQL and AMDP, which the compiler does not compile) is dropped. The fixes the compiler's
   features rest on (all work in abaplint: [abaplint_roadmap.md](abaplint_roadmap.md)):
   - `WRITE` of a utclong (abaplint#4700, PR abaplint#4701), which now compiles; released in 2.120.119, so no
     longer in the patch

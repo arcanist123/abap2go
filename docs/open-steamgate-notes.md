@@ -143,7 +143,8 @@ The other elementary entries are about the transpiler's JS runtime, settled upst
 (templates, `&&`, `FIND`, `REPLACE`, the string functions, list output). They are cells for the specifications of
 string templates and of the built-in functions. One is for abaplint:
 `ANOMALY-2026-09-17-character-operand-calculation-type` (an inline declaration from `i * '2'` is
-`p LENGTH 8 DECIMALS 0`) is still typed `i` by abaplint 2.120.125 (see [abaplint_roadmap.md](abaplint_roadmap.md)).
+`p LENGTH 8 DECIMALS 0`) is typed `i` by abaplint 2.120.125 and `p` with the patch (PR abaplint#4851, see
+[abaplint_roadmap.md](abaplint_roadmap.md)).
 `sin( )` and `cos( )` follow the C library (`ANOMALY-2026-09-23-sin-cos-libm`); Go's `math.Sin` gives the value the
 entry names for its one argument, which settles nothing for the other inputs.
 

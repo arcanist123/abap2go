@@ -77,6 +77,158 @@ index e98190c..a59eb3a 100644
  }
  
  declare class Interface extends ABAPObject {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_character_start.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_character_start.js
+index 3d9e4f4..071f0e2 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_character_start.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_character_start.js
+@@ -41,6 +41,7 @@ const Expressions = __importStar(require("../2_statements/expressions"));
+ const nodes_1 = require("../nodes");
+ const basic_1 = require("../types/basic");
+ const _syntax_input_1 = require("./_syntax_input");
++const _constant_operand_1 = require("./_constant_operand");
+ /** The length of the character-like initial part of a flat structure which also has other components:
+  * the fields of type c, n, d and t in front of the first other one. A single field of type c, and an
+  * offset or length, can access this part. Returns undefined for a purely character-like structure,
+@@ -76,9 +77,9 @@ function characterStartSubstring(context, offset, length, node, chain, input) {
+         const lengthNode = chain.find(c => c.get() instanceof Expressions.FieldLength);
+         if (offset === undefined) {
+             // the offset is a variable, a static length still has to fit
+-            const staticLength = lengthNode instanceof nodes_1.ExpressionNode ? lengthNode.concatTokens().match(/^\((\d+)\)$/) : null;
+-            if (staticLength && Number(staticLength[1]) > start) {
+-                return error("Length " + staticLength[1]);
++            const fixed = lengthNode instanceof nodes_1.ExpressionNode ? staticLength(lengthNode, input) : undefined;
++            if (fixed !== undefined && fixed > start) {
++                return error("Length " + fixed);
+             }
+             return new basic_1.CharacterType(start);
+         }
+@@ -95,6 +96,16 @@ function characterStartSubstring(context, offset, length, node, chain, input) {
+     }
+     return length <= start ? new basic_1.CharacterType(length) : error("Length " + length);
+ }
++// the value of a length given by a number or a constant
++function staticLength(node, input) {
++    var _a;
++    const field = node.findDirectExpression(Expressions.SimpleFieldChain2);
++    if (field) {
++        return (0, _constant_operand_1.constantNumber)(field, input);
++    }
++    const number = (_a = node.concatTokens().match(/^\((\d+)\)$/)) === null || _a === void 0 ? void 0 : _a[1];
++    return number === undefined ? undefined : Number(number);
++}
+ function initialPart(structure) {
+     let length = 0;
+     for (const component of structure.getComponents()) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_constant_operand.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_constant_operand.js
+new file mode 100644
+index 0000000..e4e41ef
+--- /dev/null
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_constant_operand.js
+@@ -0,0 +1,103 @@
++"use strict";
++var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    var desc = Object.getOwnPropertyDescriptor(m, k);
++    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
++      desc = { enumerable: true, get: function() { return m[k]; } };
++    }
++    Object.defineProperty(o, k2, desc);
++}) : (function(o, m, k, k2) {
++    if (k2 === undefined) k2 = k;
++    o[k2] = m[k];
++}));
++var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
++    Object.defineProperty(o, "default", { enumerable: true, value: v });
++}) : function(o, v) {
++    o["default"] = v;
++});
++var __importStar = (this && this.__importStar) || (function () {
++    var ownKeys = function(o) {
++        ownKeys = Object.getOwnPropertyNames || function (o) {
++            var ar = [];
++            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
++            return ar;
++        };
++        return ownKeys(o);
++    };
++    return function (mod) {
++        if (mod && mod.__esModule) return mod;
++        var result = {};
++        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
++        __setModuleDefault(result, mod);
++        return result;
++    };
++})();
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.findConstant = findConstant;
++exports.constantNumber = constantNumber;
++const Expressions = __importStar(require("../2_statements/expressions"));
++const tokens_1 = require("../1_lexer/tokens");
++const basic_1 = require("../types/basic");
++const class_attribute_1 = require("../types/class_attribute");
++const _object_oriented_1 = require("./_object_oriented");
++/** The constant a "SimpleFieldChain2" starts with, undefined for a variable.
++ * An attribute behind "->" is not resolved here */
++function findConstant(field, input) {
++    var _a;
++    const children = field.getChildren();
++    if (children.some(c => c.get() instanceof tokens_1.InstanceArrow)) {
++        return undefined;
++    }
++    if (children[0].get() instanceof Expressions.ClassName) {
++        const def = input.scope.findObjectDefinition(children[0].concatTokens());
++        return new _object_oriented_1.ObjectOriented(input.scope).searchConstantName(def, (_a = children[2]) === null || _a === void 0 ? void 0 : _a.concatTokens());
++    }
++    const found = input.scope.findVariable(children[0].concatTokens());
++    if (found === undefined || found instanceof class_attribute_1.ClassAttribute) {
++        return undefined;
++    }
++    const meta = found.getMeta();
++    return meta.includes("read_only" /* IdentifierMeta.ReadOnly */) && meta.includes("static" /* IdentifierMeta.Static */) ? found : undefined;
++}
++/** The number a constant, or a component of a structured one, stands for. Undefined for a variable,
++ * and if the value is not known or not a whole number without sign */
++function constantNumber(field, input) {
++    var _a, _b;
++    const constant = findConstant(field, input);
++    if (constant === undefined) {
++        return undefined;
++    }
++    let type = constant.getType();
++    let value = constant.getValue();
++    const children = field.getChildren();
++    // a class name is followed by "=>" and the attribute name
++    const first = children[0].get() instanceof Expressions.ClassName ? 3 : 1;
++    for (const child of children.slice(first)) {
++        if (child.get() instanceof Expressions.ComponentName) {
++            const name = child.concatTokens().toUpperCase();
++            if (!(type instanceof basic_1.StructureType) || typeof value !== "object") {
++                return undefined;
++            }
++            type = type.getComponentByName(name);
++            value = (_a = Object.entries(value).find(([key]) => key.toUpperCase() === name)) === null || _a === void 0 ? void 0 : _a[1];
++        }
++    }
++    if (typeof value !== "string") {
++        return undefined;
++    }
++    const digits = (_b = value.match(/^(['`]?)(\d+)\1$/)) === null || _b === void 0 ? void 0 : _b[2];
++    if (digits === undefined) {
++        return undefined;
++    }
++    else if (type instanceof basic_1.CharacterType || type instanceof basic_1.NumericType) {
++        // a longer value does not fit the constant
++        return digits.length <= type.getLength() ? Number(digits) : undefined;
++    }
++    else if (type instanceof basic_1.IntegerType || type instanceof basic_1.Integer8Type || type instanceof basic_1.StringType
++        || (type instanceof basic_1.PackedType && type.getDecimals() === 0)) {
++        return Number(digits);
++    }
++    // eg. the digits of a byte-like constant are hexadecimal
++    return undefined;
++}
++//# sourceMappingURL=_constant_operand.js.map
+\ No newline at end of file
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_current_scope.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_current_scope.js
 index 1c14059..5aaf579 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_current_scope.js
@@ -161,6 +313,33 @@ index 05aa5ab..0c96594 100644
      // the fixture methods of a test class are called by ABAP Unit only, returns the message otherwise
      checkSpecialTestMethodCall(method, foundDef) {
          if (method === undefined
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
+index d0af3f4..4539c95 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/_type_utils.js
+@@ -342,6 +342,10 @@ class TypeUtils {
+             || node.findFirstExpression(Expressions.ArithOperator) !== undefined;
+         return calculated;
+     }
++    isSigned(node) {
++        const first = (node === null || node === void 0 ? void 0 : node.get()) instanceof Expressions.Source ? node.getFirstChild() : undefined;
++        return first instanceof nodes_1.TokenNode && ["+", "-"].includes(first.concatTokens());
++    }
+     /** the source is only a call of a functional method, not a built-in function,
+      * optionally followed by a component of the returned structure, like get( )-comp */
+     isFunctionalMethodResult(node) {
+@@ -702,8 +706,9 @@ class TypeUtils {
+             }
+         }
+         else if (source instanceof basic_1.PackedType && target instanceof basic_1.PackedType) {
+-            return source.getLength() === target.getLength()
+-                && source.getDecimals() === target.getDecimals();
++            // with a sign, "- foo", the value is calculated, and converted into any packed type
++            return this.isSigned(node)
++                || (source.getLength() === target.getLength() && source.getDecimals() === target.getDecimals());
+         }
+         else if (source instanceof basic_1.FloatType) {
+             if (target instanceof basic_1.IntegerType) {
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
 index fc80fb5..2fdb1fc 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/basic_types.js
@@ -197,6 +376,95 @@ index 24beacc..f8979be 100644
      }
      else if (type instanceof Basic.Integer8Type || type instanceof Basic.FloatType
          || type instanceof Basic.DecFloat16Type || type instanceof Basic.UTCLongType) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_substring.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_substring.js
+index 0a21345..fcd06ed 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_substring.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/_substring.js
+@@ -37,12 +37,10 @@ exports.substringType = substringType;
+ exports.allowEmptySubstring = allowEmptySubstring;
+ exports.isFieldSymbolItself = isFieldSymbolItself;
+ const nodes_1 = require("../../nodes");
+-const tokens_1 = require("../../1_lexer/tokens");
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const basic_1 = require("../../types/basic");
+-const class_attribute_1 = require("../../types/class_attribute");
+ const _character_start_1 = require("../_character_start");
+-const _object_oriented_1 = require("../_object_oriented");
++const _constant_operand_1 = require("../_constant_operand");
+ const _syntax_input_1 = require("../_syntax_input");
+ // The type of a substring with a static offset or length, used for reading and writing positions.
+ // On a character or byte field of fixed length the substring must lie inside the field, else it is
+@@ -138,29 +136,9 @@ function hasVariablePart(chain, input) {
+             return false;
+         }
+         const field = node.findDirectExpression(Expressions.SimpleFieldChain2);
+-        return field !== undefined && isConstant(field, input) === false;
++        return field !== undefined && (0, _constant_operand_1.findConstant)(field, input) === undefined;
+     });
+ }
+-// a constant or a component of one, an attribute behind "->" is not resolved here
+-function isConstant(field, input) {
+-    var _a;
+-    const children = field.getChildren();
+-    if (children.some(c => c.get() instanceof tokens_1.InstanceArrow)) {
+-        return false;
+-    }
+-    const name = children[0].getFirstToken().getStr();
+-    if (children[0].get() instanceof Expressions.ClassName) {
+-        const def = input.scope.findObjectDefinition(name);
+-        const attribute = (_a = children[2]) === null || _a === void 0 ? void 0 : _a.getFirstToken().getStr();
+-        return new _object_oriented_1.ObjectOriented(input.scope).searchConstantName(def, attribute) !== undefined;
+-    }
+-    const found = input.scope.findVariable(name);
+-    if (found === undefined || found instanceof class_attribute_1.ClassAttribute) {
+-        return false;
+-    }
+-    const meta = found.getMeta();
+-    return meta.includes("read_only" /* IdentifierMeta.ReadOnly */) && meta.includes("static" /* IdentifierMeta.Static */);
+-}
+ // the internal type code the ABAP syntax check names: I, 8, P, F, a (decfloat16), e (decfloat34)
+ function numericTypeName(context) {
+     if (context instanceof basic_1.IntegerType) {
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_length.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_length.js
+index 12b2dc6..1c80fe2 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_length.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_length.js
+@@ -36,13 +36,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.FieldLength = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const _reference_1 = require("../_reference");
++const _constant_operand_1 = require("../_constant_operand");
+ const field_chain_1 = require("./field_chain");
+ class FieldLength {
+     static runSyntax(node, input) {
+         const field = node.findDirectExpression(Expressions.SimpleFieldChain2);
+         if (field) {
+             field_chain_1.FieldChain.runSyntax(field, input, _reference_1.ReferenceType.DataReadReference);
+-            return undefined;
++            return (0, _constant_operand_1.constantNumber)(field, input);
+         }
+         else {
+             const children = node.getChildren();
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_offset.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_offset.js
+index 1ec6c67..4ccb0fd 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_offset.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/field_offset.js
+@@ -36,13 +36,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.FieldOffset = void 0;
+ const Expressions = __importStar(require("../../2_statements/expressions"));
+ const _reference_1 = require("../_reference");
++const _constant_operand_1 = require("../_constant_operand");
+ const field_chain_1 = require("./field_chain");
+ class FieldOffset {
+     static runSyntax(node, input) {
+         const field = node.findDirectExpression(Expressions.SimpleFieldChain2);
+         if (field) {
+             field_chain_1.FieldChain.runSyntax(field, input, _reference_1.ReferenceType.DataReadReference);
+-            return undefined;
++            return (0, _constant_operand_1.constantNumber)(field, input);
+         }
+         else {
+             return parseInt(node.getLastToken().getStr(), 10);
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
 index ba69e57..64b87f8 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/inline_data.js
@@ -210,6 +478,115 @@ index ba69e57..64b87f8 100644
          }
          else if (type instanceof basic_1.StringType) {
              return basic_1.StringType.get(rest);
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
+index d6cbaca..b5d322b 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/source.js
+@@ -274,9 +274,11 @@ class Source {
+                     {
+                         const foundType = this.determineType(node, input, targetType);
+                         (0, _parenthesized_operand_1.checkParenthesizedOperand)(node.findDirectExpression(Expressions.Source), input);
+-                        Source.runSyntax(node.findDirectExpression(Expressions.Source), input, foundType);
+-                        this.addIfInferred(node, input, foundType);
+-                        return foundType;
++                        const argumentType = Source.runSyntax(node.findDirectExpression(Expressions.Source), input, foundType);
++                        // without a target type, "EXACT #( foo )" takes the type of its argument
++                        const exactType = foundType ? foundType : argumentType;
++                        this.addIfInferred(node, input, exactType);
++                        return exactType;
+                     }
+                 case "VALUE":
+                     {
+@@ -350,7 +352,8 @@ class Source {
+                     context = arithmetic === true ? this.infer(context, found, true) : found;
+                 }
+                 else if (get instanceof Expressions.StringTemplate) {
+-                    context = string_template_1.StringTemplate.runSyntax(first, input);
++                    const found = string_template_1.StringTemplate.runSyntax(first, input);
++                    context = arithmetic === true ? this.infer(context, found, true) : found;
+                 }
+                 else if (get instanceof Expressions.Source) {
+                     const found = Source.runSyntax(first, input);
+@@ -421,8 +424,13 @@ class Source {
+         if (node.findDirectTokenByText("&&")) {
+             return basic_1.StringType.get();
+         }
+-        if (signed === true && arithmetic === false && this.reportNonNumericOperand(context, operand, input)) {
+-            return basic_1.VoidType.get(_syntax_input_1.CheckSyntaxKey);
++        if (signed === true && arithmetic === false) {
++            if (this.reportNonNumericOperand(context, operand, input)) {
++                return basic_1.VoidType.get(_syntax_input_1.CheckSyntaxKey);
++            }
++            else if (context !== undefined && this.isCharacterLike(context)) {
++                return new basic_1.PackedType(8, 0);
++            }
+         }
+         return context;
+     }
+@@ -494,11 +502,11 @@ class Source {
+         }
+     }
+     /** The calculation type of an arithmetic expression is the most general of the
+-     * operand types. An operand of type c, n, d, t or string is converted into it and
+-     * never becomes the result: "lv_f * '0.25'" is a float, not a character field of
+-     * length four. Date and time operands count as numbers of days and seconds, type i:
+-     * "lv_end - lv_start" is a number of days, not a date. Returns undefined when neither
+-     * operand is numeric, leaving the decision to the caller. */
++     * operand types. An operand of type c, n or string counts as p and never becomes the
++     * result: "lv_i * '2'" is p, "lv_f * '0.25'" is a float. Date and time operands count
++     * as numbers of days and seconds, type i: "lv_end - lv_start" is a number of days,
++     * not a date. Returns undefined when neither operand is numeric or character-like,
++     * leaving the decision to the caller. */
+     static calculationType(left, right) {
+         if (left === undefined || right === undefined) {
+             return undefined;
+@@ -510,8 +518,6 @@ class Source {
+         else if (right instanceof basic_1.VoidType || right instanceof unknown_type_1.UnknownType) {
+             return right;
+         }
+-        const dateOrTime = left instanceof basic_1.DateType || left instanceof basic_1.TimeType
+-            || right instanceof basic_1.DateType || right instanceof basic_1.TimeType;
+         if (left instanceof basic_1.DateType || left instanceof basic_1.TimeType) {
+             left = basic_1.IntegerType.get();
+         }
+@@ -520,16 +526,19 @@ class Source {
+         }
+         const leftRank = this.numericRank(left);
+         const rightRank = this.numericRank(right);
++        if ((this.isCharacterLike(left) && this.isElementaryOperand(right))
++            || (this.isCharacterLike(right) && this.isElementaryOperand(left))) {
++            if (leftRank !== undefined && leftRank >= 3 && leftRank >= (rightRank || 0)) {
++                return left;
++            }
++            else if (rightRank !== undefined && rightRank >= 3) {
++                return right;
++            }
++            return new basic_1.PackedType(8, 0);
++        }
+         if (leftRank === undefined && rightRank === undefined) {
+             return undefined;
+         }
+-        // a character-like operand next to a date or time counts as p: "lv_date + '5'" is p
+-        if (leftRank === undefined && this.isCharacterLike(left) && dateOrTime) {
+-            return rightRank >= 3 ? right : new basic_1.PackedType(8, 0);
+-        }
+-        else if (rightRank === undefined && this.isCharacterLike(right) && dateOrTime) {
+-            return leftRank >= 3 ? left : new basic_1.PackedType(8, 0);
+-        }
+         if (rightRank === undefined) {
+             return left;
+         }
+@@ -541,6 +550,10 @@ class Source {
+     static isCharacterLike(type) {
+         return type instanceof basic_1.CharacterType || type instanceof basic_1.NumericType || type instanceof basic_1.StringType;
+     }
++    static isElementaryOperand(type) {
++        return this.numericRank(type) !== undefined || this.isCharacterLike(type)
++            || type instanceof basic_1.HexType || type instanceof basic_1.XStringType;
++    }
+     static numericRank(type) {
+         if (type instanceof basic_1.DecFloat34Type) {
+             return 6;
 diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
 index 6011254..45d7b4d 100644
 --- a/node_modules/@abaplint/core/build/src/abap/5_syntax/expressions/target.js
@@ -293,6 +670,19 @@ index 6011254..45d7b4d 100644
      static findTop(node, input) {
          if (node === undefined) {
              return undefined;
+diff --git a/node_modules/@abaplint/core/build/src/abap/5_syntax/structures/constants.js b/node_modules/@abaplint/core/build/src/abap/5_syntax/structures/constants.js
+index 45bffa6..9e2215b 100644
+--- a/node_modules/@abaplint/core/build/src/abap/5_syntax/structures/constants.js
++++ b/node_modules/@abaplint/core/build/src/abap/5_syntax/structures/constants.js
+@@ -71,7 +71,7 @@ class Constants {
+         if (components.length === 0) {
+             return { type: undefined, values };
+         }
+-        const type = new _typed_identifier_1.TypedIdentifier(name, input.filename, new Basic.StructureType(components), ["read_only" /* IdentifierMeta.ReadOnly */, "static" /* IdentifierMeta.Static */]);
++        const type = new _typed_identifier_1.TypedIdentifier(name, input.filename, new Basic.StructureType(components), ["read_only" /* IdentifierMeta.ReadOnly */, "static" /* IdentifierMeta.Static */], values);
+         return { type, values };
+     }
+ }
 diff --git a/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js b/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js
 index 5c04caf..8f428bd 100644
 --- a/node_modules/@abaplint/core/build/src/abap/types/basic/integer_type.js
@@ -443,6 +833,23 @@ index 2b6d5d5..c07e981 100644
              case "INT4":
                  return Types.IntegerType.get(extra);
              case "INT8":
+diff --git a/node_modules/@abaplint/core/build/src/lsp/_lookup.js b/node_modules/@abaplint/core/build/src/lsp/_lookup.js
+index c38b3ee..a784c70 100644
+--- a/node_modules/@abaplint/core/build/src/lsp/_lookup.js
++++ b/node_modules/@abaplint/core/build/src/lsp/_lookup.js
+@@ -199,8 +199,10 @@ class LSPLookup {
+     ////////////////////////////////////////////
+     static dumpType(variable) {
+         let value = variable.toText() + "\n\nType: " + variable.getType().toText(0);
+-        if (variable.getValue()) {
+-            value += "\n\nValue: ```" + variable.getValue() + "```";
++        const constantValue = variable.getValue();
++        // a structured constant has a value per component, which is not shown
++        if (typeof constantValue === "string" && constantValue !== "") {
++            value += "\n\nValue: ```" + constantValue + "```";
+         }
+         if (variable.getMeta().length > 0) {
+             value += "\n\nMeta: " + variable.getMeta().join(", ");
 diff --git a/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js b/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js
 index adc939f..d9efafc 100644
 --- a/node_modules/@abaplint/core/build/src/rules/_procedure_analysis.js
