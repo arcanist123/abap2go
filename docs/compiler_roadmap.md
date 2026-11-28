@@ -36,6 +36,158 @@ Priority, when choosing what to pick up next:
 
 This file is the source of the compiler's status.
 
+## Milestone 1: elementary fields, correct and compiled statically
+
+Defined 2026-11-28. **Every operation on elementary fields in a report's `START-OF-SELECTION` compiles to typed
+code, chosen at build time, whose results are those of the rule tables, and every cell of the tables is run on both
+the static and the generic path.** The milestone is reached when every exit criterion below holds; until then, work
+outside it waits unless the milestone needs it.
+
+**The root.** A report (`PROG`), and of it only `START-OF-SELECTION`: its blocks and the statements before the
+first one. Not part of the milestone: the other reporting events (`INITIALIZATION`, `END-OF-SELECTION`,
+`LOAD-OF-PROGRAM`, …), selection screens, `FORM`, local classes, methods and function modules, and the class root
+(`if_oo_adt_classrun` with `out->write( )`), which stays as it is. Output is `WRITE` of strings and string templates (see "Purpose").
+With no parameters, field symbols or references, every operand has a static type: in compiled code nothing is left
+to the generic path.
+
+**The data.** `DATA`, `CONSTANTS` and `TYPES` of the 16 elementary kinds (`c n d t x string xstring i int8 b s p f
+decfloat16 decfloat34 utclong`), typed directly or through a data element or domain of the package, with `VALUE`;
+inline declarations (`DATA(x) = …`); `sy-index`, `sy-fdpos` and `sy-subrc` as far as the statements below set them.
+
+**The operations**, each with every cell of its rule table, the exceptions and the value a target is left with:
+- moves: `=`, `MOVE`, `CLEAR`, `CONV`, `EXACT` (the conversion table, all 16 × 16 cells)
+- arithmetic: expressions, `+= -= *= /=`, `ADD`/`SUBTRACT`/`MULTIPLY`/`DIVIDE`, the numeric built-in functions
+  (`abs sign ceil floor trunc frac ipow sqrt exp log` and the others of the calculation type table), `b` and `s`
+  with their ranges and overflow
+- comparisons and predicates: `= <> < > <= >=`, `BETWEEN`, `IS INITIAL`, the string operators with `sy-fdpos`, the
+  byte and bit operators, `boolc( )`, `xsdbool( )`, `abap_true` and `abap_false`, in `IF`, `CASE`, `WHILE`,
+  `CHECK` and `ASSERT`
+- subfields: offset and length on every type where they are valid, the whole-field forms (`u(*)`, `i+0`, `i(4)`)
+  included
+- string templates with their format options (the output formatting table) and `&&`
+- built-in functions whose arguments and result are elementary, specified first as a table of their own (see the
+  exit criteria): the text and byte functions (`substring` and its variants, `condense`, `to_upper`, `to_lower`,
+  `to_mixed`, `from_mixed`, `translate`, `shift_left`, `shift_right`, `repeat`, `reverse`, `insert`, `segment`,
+  `cmax`, `cmin`, `escape`, `distance`, and `find`, `count`, `contains` and its variants and `replace` without
+  `regex` or `pcre`), the length functions (`strlen`, `xstrlen`, `numofchar`, `charlen`), the bit functions
+  (`bit-set`, `boolx`) and the `utclong` functions (`utclong_add`, `utclong_diff`, `utclong_current`)
+- the string and byte processing statements without `REGEX` or `PCRE`, in character and byte mode, with the
+  `sy-subrc` and `sy-fdpos` they set: `CONCATENATE` (with `SEPARATED BY` and `RESPECTING BLANKS`), `SPLIT` into
+  fields, `CONDENSE`, `TRANSLATE`, `SHIFT`, `OVERLAY`, `FIND` and `REPLACE` with a substring (`FIRST` and `ALL
+  OCCURRENCES`, `SECTION`, `IGNORING CASE`, `MATCH COUNT`, `MATCH OFFSET`, `MATCH LENGTH`, `REPLACEMENT …`),
+  `SET BIT` and `GET BIT`. They share the specification of the functions (see the exit criteria)
+- `DESCRIBE FIELD` with `TYPE`, `LENGTH … IN CHARACTER MODE` or `IN BYTE MODE` and `DECIMALS`: with static types
+  each result is a constant of the build
+- special values ([spec/special_values.md](spec/special_values.md)): every cell, with
+  `SPECIAL_VALUE_NOT_SUPPORTED` gone
+
+Not part of the milestone: `IN` (ranges tables are internal tables), regular expressions (the `regex` and `pcre`
+forms of the functions, `matches( )`, `match( )`, `FIND` and `REPLACE` with `REGEX` or `PCRE`, `SUBMATCHES`), the
+table forms of the string statements (`CONCATENATE LINES OF`, `SPLIT … INTO TABLE`, `FIND` and `REPLACE … IN
+TABLE`, `RESULTS`), the obsolete forms (`SEARCH`, `REPLACE` without `OCCURRENCE`), functions of tables (`lines( )`,
+`concat_lines_of( )`), `DESCRIBE FIELD` with `OUTPUT-LENGTH`, `EDIT MASK`, `HELP-ID` or `COMPONENTS`, RTTI,
+structures, internal tables, field symbols, references and objects.
+
+**The memory layout.** It is written down per kind: the Go representation, its size, the range of lengths and
+values, the initial value, and the invariants every operation keeps (a `c` field always holds its full length, a
+`p` value fits its digits and decimals, a `b` stays in 0 to 255, …). The tests check the invariants after every
+cell. `DESCRIBE FIELD … LENGTH … IN BYTE MODE` is where a program sees the size of a field, so the layout per kind
+has its test cases there. The byte layout stays as decided ([aot_for_abap.md](aot_for_abap.md), "Storage"): `CASTING` and every
+other operation that shows bytes of a field are refused at build time, and lifting that refusal is not part of
+the milestone.
+
+**The static path** ([aot_for_abap.md](aot_for_abap.md), "Static operands"): each cell of the conversion table is a
+Go function on native values, called directly for a static move; the calculation type of every expression and the
+comparison type of every comparison are fixed at build time, `i`, `int8` and `f` arithmetic is native Go with
+overflow checks, `p` and decfloat are direct calls. `abap.Convert`, `abap.Calculate` and `abap.Compare` dispatch to
+the same functions and stay as the generic path.
+
+Exit criteria:
+- [ ] the generated Go of a milestone program contains no call of `abap.Convert`, `abap.Calculate`,
+  `abap.Compare` or `abap.CompareCalculated`, and no `abap.Expr` tree
+- [ ] every cell of every rule table in `runtime/go/abap/testdata` (other than `IN` and `write.tsv`) is run against
+  the generic path, and end to end as a compiled program with static operands; the two agree, also in the exception
+  and in the value the target is left with. Today the predicate, case mapping and special value tables are run by
+  no test, and the calculation contexts and logical expressions only in part
+- [ ] the memory layout written down per kind, its invariants checked by the tests
+- [ ] the built-in functions and the string and byte processing statements of the milestone specified as a rule
+  table (`spec/functions.md` and its test cases): per function or statement form and operand kind the result type
+  and value, the exceptions, `sy-subrc` and `sy-fdpos`, the trailing blanks of `c` operands, a target too short for
+  the result, and the boundaries (offsets and lengths at and beyond the end, empty operands, characters outside the
+  Basic Multilingual Plane); a statement and the function that does the same give the same result where the keyword
+  documentation says they do; each cell run on both paths as above
+- [ ] `DESCRIBE FIELD` specified per kind (`spec/describe.md` and its test cases): the type code, the length in
+  both modes and the decimals, for every kind and length, also for fields typed through a data element
+- [ ] the syntax errors on elementary fields are reported before the lowering: the `VALUE` literal that does not
+  convert (abaplint#4712), the ranges of `b` and `s`, the non-Unicode-only forms; the scope pass refuses a program
+  without the Unicode flag or without fixed-point arithmetic; `COMPUTE` is typed by abaplint (PR abaplint#4844)
+- [ ] the lowering reports every "not compiled yet" finding of a program, and none is left for an operation of the
+  milestone
+- [ ] the transpiler fixtures within the milestone run end to end, the six literal moves as written
+- [ ] the data-dependent items on elementary fields are settled (see "Data-dependent differences"): `**`, `exp`,
+  `log` on `f`, case mapping, `DO n TIMES` and subfield bounds beyond the range of `i`
+- [ ] benchmarks of the static path against hand-written Go for integer, `p`, `f` and text kernels, recorded here
+- [ ] CI runs `npm test`
+
+### Steps
+
+In this order. Each step leaves `npm test` passing and records its status under "The compiler". The static path
+comes before the language is widened, so every operation added after it is built on that path once, instead of on
+the generic path first and moved later. It comes after the special values, which still change the value model (a
+decfloat that holds infinities and NaN, the sign of a NaN) and add cells to the three tables it makes static, so it
+is built on the final value model (revised 2026-11-28). The specifications of steps 6, 8 and 9 do not depend on the
+compiler and can be written ahead of their step.
+
+1. [ ] **Layer 2 and the scope pass** (in progress, priority set 2026-11-27; details under "Next"): the `VALUE` literal
+   that does not convert (abaplint#4712), the Unicode flag and fixed-point arithmetic in the scope pass, the
+   non-Unicode-only forms, and the ports of the PRs that only add checks, of those the milestone needs only: for the
+   statements compiled today abaplint#4739, #4741, #4761 and fork #1 to #3 (the fork's #4 to #6 come in step 7,
+   abaplint#4635 waits for classes). `COMPUTE` is compiled once an abaplint release
+   has PR abaplint#4844 and the pin is moved to it. The lowering collects every "not compiled yet" finding instead
+   of stopping at the first, so what a program still lacks shows in one run. CI runs `npm test`
+2. [ ] **The value model and the test harness**
+   - `spec/storage.md`: the layout per kind (Go representation, size, ranges of lengths and values, initial value,
+     invariants), the special values included (a decfloat that holds infinities and NaN, the sign of a NaN), and a
+     check of the invariants in the runtime that every test runner calls after each cell
+   - every rule table run against the generic path. Runners are added for the tables no test reads yet
+     (`calculation_contexts`, `comparison_expr`, `comparison_predicate*`, `case_upper`, `special_*`); cells of
+     operations the runtime lacks run as todos, as the transpiler fixtures do, so progress shows
+   - an end-to-end runner that turns the cells of a table into compiled programs, many cells per program to keep
+     builds short, as `test/result_field.test.ts` does for the result fields; the same todo rule
+3. [ ] **Special values on the generic path** (details under "Next"): decided first how an executable ends where
+   ABAP is expected to raise an internal runtime error (`MOD` of two decimal infinities) or not to finish (`ipow( )`
+   with base 1 and an infinite `f` exponent); then the runtime holds them as `spec/storage.md` says, the cells of
+   `special_conversion.tsv`, `special_calculation.tsv`, `special_comparison.tsv` and
+   `special_comparison_expr.tsv` pass on the generic path and end to end, and `SPECIAL_VALUE_NOT_SUPPORTED` goes.
+   The cells of `special_template.tsv` follow with string templates in step 6
+4. [ ] **The static path for what compiles today** ([aot_for_abap.md](aot_for_abap.md), "Static operands"): the
+   conversion cells as Go functions with `abap.Convert` dispatching to them, direct calls for static moves, the
+   calculation type and the comparison type fixed at build time, native `i`, `int8` and `f` arithmetic with
+   overflow checks, all checked against every cell, the special values included. A test asserts that the Go of every
+   end-to-end program has no call of the generic path. The benchmarks are recorded before and after
+5. [ ] **Declarations and moves**: `CONSTANTS`, `TYPES`, every data element and domain of the package, inline
+   declarations, `MOVE`, `CLEAR`, `CONV`, `EXACT`, `abap_true` and `abap_false`, `sy-subrc`; the whole-field
+   subfields (`u(*)`, `i+0`, `i(4)`, compiled as the field); the six transpiler fixtures that move a literal, run
+   as written
+6. [ ] **String templates, then `WRITE` of strings only**: the rest of the output formatting table specified (the
+   template rules per kind and the format options), templates and `&&` compiled, then `WRITE` of other operands
+   refused and its tests rewritten to `WRITE |{ x }|` (details under "Next")
+7. [ ] **Arithmetic and predicates**
+   - `ADD`, `SUBTRACT`, `MULTIPLY`, `DIVIDE` and the rest of `calculation_contexts.tsv`
+   - the numeric built-in functions: the rest of the calculation type table specified, `**`, `exp` and `log` on `f`
+     settled first (see "Data-dependent differences")
+   - `b` and `s` with their ranges and overflow, once an abaplint release has PR abaplint#4631
+   - `IS INITIAL`, the string operators with `sy-fdpos`, the byte and bit operators, `boolc( )` and `xsdbool( )`:
+     all of `comparison_expr.tsv` and `comparison_predicate*.tsv` except `IN`, with the checks of fork #4 to #6
+     ported to layer 2 first
+8. [ ] **Built-in functions and string statements**: `spec/functions.md` and its test cases, the case mapping
+   settled over non-ASCII characters first, then the functions and statements compiled on the static path
+9. [ ] **`DESCRIBE FIELD`**: `spec/describe.md` and its test cases, then compiled as constants of the build
+10. [ ] **The last data-dependent items**: `DO n TIMES` and the offsets and lengths of subfields beyond the range of
+    `i`, specified, then matched or made a runtime error
+11. [ ] **Close**: every transpiler fixture within the milestone runs, every exit criterion is checked off, and the
+    benchmarks are recorded here
+
 ## The compiler (status 2026-11-27)
 
 TypeScript on `@abaplint/core`, emitting Go (`src/`, runtime in `runtime/go`); `npm test` builds and runs small
@@ -264,8 +416,11 @@ Next:
     - the Unicode flag (below): the compiler does not read `UCCHECK`, so a program without it is compiled as Unicode
   - port the checks of the waiting PRs on the abaplint fork and of the abaplint PRs that only add checks (listed in
     [abaplint_roadmap.md](abaplint_roadmap.md), "Invalid syntax to fix, without a check in the compiler"), one at a
-    time, each leaving the abaplint patch as its port lands: abaplint#4739, #4741, #4635 and #4761, then fork #1 to
-    #6. The upstream PRs stay open for the maintainer, without further rebasing
+    time, each leaving the abaplint patch as its port lands, and only those milestone 1 needs (decided 2026-11-28):
+    abaplint#4739 (`RETRY`), #4741 (comparison types) and #4761, then fork #1 to #3 (`CASE`, `WHEN` and parentheses
+    in comparisons) in step 1; fork #4 to #6 (string and byte operators) in step 7, with those operators.
+    abaplint#4635 (a `READ-ONLY` attribute written from outside its class) waits until classes are compiled, and
+    stays in the patch until then. The upstream PRs stay open for the maintainer, without further rebasing
   - the non-Unicode-only forms in a Unicode program ([abaplint_roadmap.md](abaplint_roadmap.md), "Non-Unicode-only
     syntax"); refusing a program without the flag is the scope pass, below
   - `b` and `s`: the size, value range and overflow of `INT1` and `INT2`, once abaplint gives the size on the type
