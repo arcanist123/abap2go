@@ -250,18 +250,15 @@ export function lowerTarget(target: abaplint.Nodes.ExpressionNode, variables: Va
 }
 
 /**
- * The subfield of base given by its FieldOffset and FieldLength nodes. These ABAP syntax errors, which abaplint does
- * not report yet, are build errors: a subfield of a utclong, a static length of 0 in a flat field, static bounds
- * outside a field of type n, d or t.
+ * The subfield of base given by its FieldOffset and FieldLength nodes. A subfield of a utclong, a static length of 0
+ * in a flat field and static bounds outside a c or x field are reported by abaplint, static bounds outside an n, d
+ * or t field by layer 2 (src/check/substring.ts).
  */
 function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode)[],
     variables: Variables, where: Where): IRSubstring {
   const offsetNode = nodes.find(n => n instanceof abaplint.Nodes.ExpressionNode && n.get() instanceof Expressions.FieldOffset);
   const lengthNode = nodes.find(n => n instanceof abaplint.Nodes.ExpressionNode && n.get() instanceof Expressions.FieldLength);
   const text = `${base.name}${nodes.map(n => n.concatTokens()).join("")}`;
-  if (base.type.kind === "utclong") {
-    throw new BuildError(`${text}: type ${base.type.kind} does not permit subfields`, where);
-  }
   const flat = base.type.kind !== "string" && base.type.kind !== "xstring";
 
   // the offset or length: an integer or a variable
@@ -284,20 +281,7 @@ function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode 
 
   const staticOffset = offset === undefined ? 0 : offset.kind === "literal" ? parseInt(offset.value, 10) : undefined;
   const staticLength = length?.kind === "literal" ? parseInt(length.value, 10) : undefined;
-  if (staticLength === 0 && flat) {
-    throw new BuildError(`${text}: the length of a subfield must be greater than 0`, where);
-  }
   const size = flat ? flatLength(base.type) : undefined;
-  // static bounds outside a c or x field are reported by abaplint
-  const unchecked = ["n", "d", "t"].includes(base.type.kind) ? size : undefined;
-  // with a variable length, an offset outside the field is not a syntax error: the access raises at run time
-  if (unchecked !== undefined && staticOffset !== undefined && staticOffset >= unchecked && length?.kind !== "variable") {
-    throw new BuildError(`${text}: the offset ${staticOffset} is not within the length ${unchecked}`, where);
-  }
-  if (unchecked !== undefined && staticOffset !== undefined && staticLength !== undefined
-      && staticOffset + staticLength > unchecked) {
-    throw new BuildError(`${text}: the offset ${staticOffset} and length ${staticLength} exceed the length ${unchecked}`, where);
-  }
 
   // only the rest of a field from a static offset has a length of its own that is known here
   const rest = size !== undefined && length === undefined && staticOffset !== undefined;
@@ -324,17 +308,15 @@ function flatLength(t: IRType): number | undefined {
 
 /**
  * A number literal: type i within its range, beyond it type p without decimals, of length 8 for up to 15 digits and
- * length 16 for up to 31. Leading zeros and the sign do not count.
+ * length 16 for up to 31. Leading zeros and the sign do not count. More than 31 digits are reported by layer 2
+ * (src/check/literals.ts).
  */
-export function integerLiteral(digits: string, where: Where): IRLiteral {
+export function integerLiteral(digits: string): IRLiteral {
   const value = BigInt(digits);
   if (value >= -(2n ** 31n) && value < 2n ** 31n) {
     return { kind: "literal", type: { kind: "i" }, value: value.toString() };
   }
   const count = (value < 0n ? -value : value).toString().length;
-  if (count > 31) {
-    throw new BuildError(`${digits}: more than 31 digits`, where);
-  }
   return { kind: "literal", type: { kind: "p", length: count <= 15 ? 8 : 16, decimals: 0 }, value: value.toString() };
 }
 
@@ -349,7 +331,7 @@ export function lowerConstant(constant: abaplint.Nodes.ExpressionNode, where: Wh
   }
   const integer = constant.findDirectExpression(Expressions.Integer);
   if (integer !== undefined) {
-    return integerLiteral(integer.concatTokens().replace(/\s+/g, ""), where);
+    return integerLiteral(integer.concatTokens().replace(/\s+/g, ""));
   }
   throw new BuildError(`${constant.concatTokens()}: this literal is not supported yet`, where);
 }

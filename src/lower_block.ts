@@ -91,9 +91,7 @@ export class BlockLowerer {
       throw new BuildError(`${statement.concatTokens()}: no additions are supported yet`, where);
     }
     if (kind instanceof Statements.Continue) {
-      if (this.loops === 0) {
-        throw new BuildError("CONTINUE is only possible in a loop", where);
-      }
+      // outside a loop, a syntax error of layer 2 (src/check/loops.ts)
       return { kind: "continue" };
     }
     return kind instanceof Statements.Exit && this.loops > 0 ? { kind: "exit" } : { kind: "return" };

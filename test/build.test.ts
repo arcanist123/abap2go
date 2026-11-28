@@ -122,7 +122,7 @@ for (const [name, body, refused] of ddicRefusals) {
 const reportRefusals: [string, string, RegExp][] = [
   ["DATA of a reference", "REPORT zprobe.\nDATA x TYPE REF TO object.", /:2:1: x: type .* is not supported yet/],
   ["inline declaration of a calculation", "REPORT zprobe.\nDATA x TYPE i.\nDATA(y) = x + 1.", /:3:1: .*only variable = literal, variable or arithmetic expression/],
-  ["utclong operand", "REPORT zprobe.\nDATA u TYPE utclong.\nDATA x TYPE i.\nx = u + 1.", /utclong/],
+  ["utclong operand", "REPORT zprobe.\nDATA u TYPE utclong.\nDATA x TYPE i.\nx = u + 1.", /"u" is a time stamp of type utclong, it cannot be used in a calculation \[check_syntax\]/],
   ["abs( ) without its argument", "REPORT zprobe.\nDATA x TYPE i.\nx = abs( ).", /syntax check/],
   ["ipow( ) without exp", "REPORT zprobe.\nDATA x TYPE i.\nx = ipow( base = 2 ).", /syntax check/],
   ["ipow( ) with an unknown argument", "REPORT zprobe.\nDATA x TYPE i.\nx = ipow( base = 2 exp = 2 foo = 1 ).", /syntax check/],

@@ -82,20 +82,18 @@ test("substring: WRITE of subfields has their length", () => {
   assert.deepEqual(run("prog", source), { stdout: "bc  x\nb   x\n0229 2024\n" });
 });
 
-// What ABAP rejects as a syntax error is refused at build time, whether abaplint reports it or the compiler does.
+// What ABAP rejects as a syntax error is refused at build time by abaplint. Static bounds outside an n, d or t field
+// are reported by layer 2, see test/check/substring.test.ts.
 const refusals: [string, string, RegExp][] = [
   ["a static offset at the end of a flat field", "r = c5+5.", /syntax check/],
   ["a static offset beyond a flat field", "r = c5+6.", /syntax check/],
   ["a static offset at the end with a static length", "r = c5+5(1).", /syntax check/],
   ["static bounds beyond a flat field", "r = c5+4(2).", /syntax check/],
   ["static bounds beyond an x", "r = x4+3(2).", /syntax check/],
-  ["a static offset at the end of an n", "r = n4+4.", /offset 4 is not within|syntax check/],
-  ["a static offset at the end of a d", "r = d+8(1).", /offset 8 is not within|syntax check/],
-  ["static bounds beyond a t", "r = t+5(2).", /exceed the length 6|syntax check/],
-  ["a static length of 0", "r = c5+1(0).", /greater than 0|syntax check/],
+  ["a static length of 0", "r = c5+1(0).", /Substring length must be greater than 0 \[check_syntax\]/],
   ["a subfield of an i", "r = i+1(2).", /syntax check/],
-  ["a subfield of a utclong", "r = u+1(1).", /does not permit subfields|syntax check/],
-  ["writing a subfield of a utclong", "u(1) = r.", /does not permit subfields|syntax check/],
+  ["a subfield of a utclong", "r = u+1(1).", /"utclong" does not permit substrings to be accessed \[check_syntax\]/],
+  ["writing a subfield of a utclong", "u(1) = r.", /"utclong" does not permit substrings to be accessed \[check_syntax\]/],
   ["writing a subfield of a string", "s+1(1) = r.", /syntax check/],
   ["strlen( ) of an i", "i = strlen( i ).", /syntax check/],
   ["strlen( ) of an x", "i = strlen( x4 ).", /syntax check/],
@@ -107,3 +105,10 @@ for (const [name, body, refused] of refusals) {
     assert.match(result.refused, refused);
   });
 }
+
+// u(*) takes the whole utclong and is valid ABAP; the length * is not compiled yet.
+test("substring: the length * of a utclong is not compiled yet", () => {
+  const result = run("clas", classrun(DECLARATIONS + "DATA s2 TYPE string.\ns2 = u(*)."));
+  assert.match(result.refused ?? "", /u\(\*\): only an integer or a variable is supported as offset or length yet/);
+  assert.doesNotMatch(result.refused ?? "", /syntax check/);
+});

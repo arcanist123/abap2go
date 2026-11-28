@@ -71,39 +71,12 @@ export function lowerCalculate(target: IRTarget, assignOp: "+" | "-" | "*" | "/"
   if (assignOp !== undefined) {
     expression = { kind: "binary", op: assignOp, left: { kind: "operand", source: target }, right: expression };
   }
-  checkOperands(expression, where);
   return { kind: "calculate", target, expression };
 }
 
-/** An arithmetic expression (or a single numeric operand) as an IRExpr, with its operands checked. */
+/** An arithmetic expression (or a single numeric operand) as an IRExpr. A utclong operand is reported by abaplint. */
 export function lowerArithmetic(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRExpr {
-  const expression = lowerExpression(source, variables, where);
-  checkOperands(expression, where);
-  return expression;
-}
-
-/** An operand of utclong is a syntax error in ABAP, which abaplint does not report in every form yet. */
-function checkOperands(e: IRExpr, where: Where): void {
-  switch (e.kind) {
-    case "operand":
-      if (e.source.type.kind === "utclong") {
-        throw new BuildError(`${e.source.kind === "variable" ? e.source.name : "literal"}: utclong cannot be an operand of an arithmetic expression`, where);
-      }
-      return;
-    case "binary":
-      checkOperands(e.left, where);
-      checkOperands(e.right, where);
-      return;
-    case "unary":
-      checkOperands(e.operand, where);
-      return;
-    case "ipow":
-      checkOperands(e.base, where);
-      checkOperands(e.exp, where);
-      return;
-    case "strlen":
-      return;
-  }
+  return lowerExpression(source, variables, where);
 }
 
 /** A sign token: - or + before an operand. abaplint gives it its own token, outside the operand. */
@@ -258,7 +231,7 @@ function lowerOperand(node: abaplint.Nodes.ExpressionNode, variables: Variables,
 
 /** A constant as lowerConstant; text overrides an integer's written form (its digits without the sign). */
 function numberOrConstant(constant: abaplint.Nodes.ExpressionNode, where: Where, text?: string): IRLiteral {
-  return text !== undefined ? integerLiteral(text, where) : lowerConstant(constant, where);
+  return text !== undefined ? integerLiteral(text) : lowerConstant(constant, where);
 }
 
 function lowerFunction(node: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRExpr {
