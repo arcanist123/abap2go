@@ -71,19 +71,28 @@ export function chainType(chain: readonly Child[], input: CheckInput): abaplint.
     // a subfield of a date or time is of type n
     return new BasicTypes.NumericType(1);
   }
-  return type instanceof BasicTypes.CharacterType || type instanceof BasicTypes.NumericType
-    || type instanceof BasicTypes.HexType || type instanceof BasicTypes.StringType
-    || type instanceof BasicTypes.XStringType ? type : undefined;
+  // a numeric field takes only an offset or length that covers the whole of it, i+0 or p(8)
+  return [BasicTypes.CharacterType, BasicTypes.NumericType, BasicTypes.HexType, BasicTypes.StringType,
+    BasicTypes.XStringType, BasicTypes.IntegerType, BasicTypes.Integer8Type, BasicTypes.PackedType,
+    BasicTypes.FloatType, BasicTypes.DecFloat16Type, BasicTypes.DecFloat34Type].some(kind => type instanceof kind)
+    ? type : undefined;
 }
 
-/** The type of name or name-comp-...: a data object, perhaps with components; undefined for any other chain. */
+/**
+ * The type of name or name-comp-...: a data object, perhaps with components; undefined for any other chain. The name
+ * of a table with a header line is its header line.
+ */
 export function componentType(chain: readonly Child[], input: CheckInput): abaplint.AbstractType | undefined {
   const [field, ...rest] = chain;
-  if (field === undefined || !(field.get() instanceof Expressions.SourceField || field.get() instanceof Expressions.TargetField
-      || field.get() instanceof Expressions.SourceFieldSymbol)) {
+  const names = [Expressions.SourceField, Expressions.TargetField, Expressions.SourceFieldSymbol,
+    Expressions.TargetFieldSymbol];
+  if (field === undefined || !names.some(kind => field.get() instanceof kind)) {
     return undefined;
   }
   let type = findVariable(field.getFirstToken(), input)?.getType();
+  if (type instanceof BasicTypes.TableType && type.isWithHeader()) {
+    type = type.getRowType();
+  }
   for (let i = 0; i < rest.length; i += 2) {
     const component = rest[i + 1];
     if (rest[i].concatTokens() !== "-" || component === undefined || !(component.get() instanceof Expressions.ComponentName)

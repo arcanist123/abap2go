@@ -40,8 +40,9 @@ This file is the source of the compiler's status.
 
 Defined 2026-11-28. **Every operation on elementary fields in a report's `START-OF-SELECTION` compiles to typed
 code, chosen at build time, whose results are those of the rule tables, and every cell of the tables is run on both
-the static and the generic path.** The milestone is reached when every exit criterion below holds; until then, work
-outside it waits unless the milestone needs it.
+the static and the generic path.** The milestone is reached when every exit criterion below holds. Until then, what
+does not affect it is out of scope, abaplint work included, whether it is invalid code that is accepted or valid code
+that is rejected (2026-11-28).
 
 **The root.** A report (`PROG`), and of it only `START-OF-SELECTION`: its blocks and the statements before the
 first one. Not part of the milestone: the other reporting events (`INITIALIZATION`, `END-OF-SELECTION`,
@@ -144,10 +145,12 @@ compiler and can be written ahead of their step.
 
 1. [ ] **Layer 2 and the scope pass** (in progress, priority set 2026-11-27; details under "Next"): the `VALUE` literal
    that does not convert (abaplint#4712, done 2026-11-28), the Unicode flag and fixed-point arithmetic in the scope
-   pass (done 2026-11-28), the non-Unicode-only forms, and the ports of the PRs that only add checks, of those the milestone needs only: for the
-   statements compiled today abaplint#4739, #4741, #4761 and fork #1 to #3 (the fork's #4 to #6 come in step 7,
-   abaplint#4635 waits for classes). Done 2026-11-28: the pin is on 2.120.125, which has #4739 and the `COMPUTE`
-   fix (PR abaplint#4844), and #4741, #4761 and fork #1 to #3 are ported (`src/check/comparison.ts`,
+   pass (done 2026-11-28), the non-Unicode-only forms (those of the statements done 2026-11-28; those of the
+   operators and functions come with steps 7 and 8), and the ports of the PRs that only add checks, of those the
+   milestone needs only: for the statements compiled today abaplint#4739, #4741, #4761 and fork #1 to #3 (the fork's
+   #4 to #6 come in step 7, abaplint#4635 waits for classes). Done 2026-11-28: the pin is on 2.120.125, which has
+   #4739 and the `COMPUTE` fix (PR abaplint#4844), and #4741, #4761 and fork #1 to #3 are ported
+   (`src/check/comparison.ts`,
    `src/check/case.ts`) and out of the patch (`patches/abaplint-skipped.txt`, which keeps the fork's #4 to #6 out
    as well). `COMPUTE` can be compiled now. The lowering collects every "not compiled yet" finding instead
    of stopping at the first, so what a program still lacks shows in one run. CI runs `npm test`
@@ -436,8 +439,11 @@ Next (the order is that of the milestone's steps above; this list keeps the deta
     in comparisons) in step 1; fork #4 to #6 (string and byte operators) in step 7, with those operators.
     abaplint#4635 (a `READ-ONLY` attribute written from outside its class) waits until classes are compiled, and
     stays in the patch until then. The upstream PRs stay open for the maintainer, without further rebasing
-  - the non-Unicode-only forms in a Unicode program ([abaplint_roadmap.md](abaplint_roadmap.md), "Non-Unicode-only
-    syntax"); refusing a program without the flag is the scope pass, below
+  - [x] the non-Unicode-only forms in a Unicode program (2026-11-28, `src/check/additions.ts`,
+    `string_operands.ts`, `structure_offset.ts`): missing additions of `OPEN DATASET` and `DESCRIBE`, operands of
+    string and byte statements that are not character-like or byte-like, offsets and lengths on structures. What is
+    left, and where it belongs, is in [abaplint_roadmap.md](abaplint_roadmap.md), "Non-Unicode-only syntax";
+    refusing a program without the flag is the scope pass, below
   - `b` and `s`: the size, value range and overflow of `INT1` and `INT2`, once abaplint gives the size on the type
     (abaplint#4631, in the patch); the overflow at run time belongs to the lowering, the static range checks here (of
     `VALUE`, done)
