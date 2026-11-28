@@ -29,9 +29,14 @@ copy of their state.
 - **the syntax check has two layers** (2026-11-27, see "Two layers" below): abaplint is layer 1, abap2go's own
   checks are layer 2. Work here is layer 1 only: valid ABAP that abaplint fails to parse, rejects or mistypes, and
   a concrete syntax tree that abaplint builds wrongly, for valid or invalid code. Invalid ABAP that abaplint parses
-  into the right tree but accepts is checked in layer 2, in abap2go, and is not raised or fixed here any more
+  into the right tree but accepts is checked in layer 2, in abap2go, and is not fixed here any more; what no check
+  covers yet is recorded as an issue on the fork (see "Where issues go")
 - what the compiler runs into, within the scope it compiles, is fixed right away, before the other work: the
   compiler's types come from abaplint, so a mistyped expression becomes wrong native code
+- **until the compiler reaches milestone 1** ([compiler_roadmap.md](compiler_roadmap.md)), **only what affects it is
+  worked on** (2026-11-28). A case that no program of the milestone can run into, valid code that abaplint rejects
+  included, is out of scope: it may be recorded as an issue, but gets no test, fix or PR. The other rules here apply
+  within that scope
 
 ## Two layers
 
@@ -68,7 +73,8 @@ format. They cover:
 
 This cannot be handled in layer 2. abap2go does not ignore or filter out an abaplint finding: check_syntax stops
 typing the block at its first error, so the code after it has no types, and the compiler would build from a
-partial picture. Such a case is therefore always fixed in layer 1, and comes before every other layer 1 fix:
+partial picture. Where such a case affects milestone 1 (see "Rules"), it is therefore always fixed in layer 1, and
+comes before every other layer 1 fix:
 1. the case goes into abap2go's tests at once, with the abaplint issue linked, expecting the build to refuse it
    with abaplint's finding as long as abaplint gives one
 2. the fix goes into the patch the day it is written, and the same fix goes upstream as a PR branched from `main`.
@@ -86,9 +92,10 @@ in the patch at once, and never a correction inside the compiler.
 
 ### Layer 2 checks
 
-A layer 2 check is written, tested and changed at abap2go's pace, without an abaplint issue or PR. When an abaplint
-release reports the same case in every form, our check goes, and its test then expects abaplint's finding. A layer 2
-check can still be offered upstream later, as a single PR, where it may also help abaplint's users.
+A layer 2 check is written, tested and changed at abap2go's pace, without an abaplint PR, and needs no issue; an
+issue on the fork records a case that no check covers yet. When an abaplint release reports the same case in every
+form, our check goes, and its test then expects abaplint's finding. A layer 2 check can still be offered upstream
+later, as a single PR, where it may also help abaplint's users.
 
 ### Moving over
 
@@ -176,14 +183,14 @@ One waiting PR goes up at a time per chain, in the order listed; independent cha
 
 ### Where issues go
 
-New issues are raised on the fork, `arcanist123/abaplint` (2026-11-27), not upstream. In the upstream tracker the
-issues by the author already outnumber everyone else's, and a fix arrives upstream as a PR that explains itself, so
-an upstream issue next to it only adds to the maintainer's queue. The fork's issues are the backlog: public, worded
-by the same rules as upstream text, and closed by us when the fix is merged upstream, or as not needed.
+All new issues are raised on the fork, `arcanist123/abaplint` (2026-11-27), for valid code that abaplint mistreats
+as for invalid code that it accepts. Upstream gets PRs only (2026-11-28). In the upstream tracker the issues by the
+author already outnumber everyone else's, and a fix arrives upstream as a PR that explains itself, so an upstream
+issue next to it only adds to the maintainer's queue. The fork's issues are the backlog: public, worded by the same
+rules as upstream text, and closed by us when the fix is merged upstream, or as not needed.
 
 - the issues already raised upstream stay there, and PRs keep closing them with `closes #N`
-- an issue goes upstream only when it needs the maintainer: a design question (like
-  [#4755](https://github.com/abaplint/abaplint/issues/4755)), or a gap we are not going to fix ourselves
+- a case that an open issue already describes, upstream or on the fork, is not raised again
 - this may change if the maintainer says he would rather have the issues upstream
 
 ### When upstream changes or rejects a PR
@@ -262,7 +269,13 @@ Alongside: keep the patch current, and send up the waiting PRs as
 [PR #4741](https://github.com/abaplint/abaplint/pull/4741), which seven changes wait for, and then
 [PR #4761](https://github.com/abaplint/abaplint/pull/4761) are merged.
 
-Valid code rejected: nothing open that abap2go has run into. The last case, a static offset or length beyond a `c` or
+Valid code rejected: the cases found with the inventory of non-Unicode-only forms (2026-11-28) are open,
+[arcanist123/abaplint#28](https://github.com/arcanist123/abaplint/issues/28) to
+[#31](https://github.com/arcanist123/abaplint/issues/31) (see "Later"), and `BIG ENDIAN` of `OPEN DATASET`
+([#4644](https://github.com/abaplint/abaplint/issues/4644)). None affects milestone 1, so they are out of scope
+until it is reached: no tests and no fixes (see "Rules").
+
+The last case that abap2go ran into, a static offset or length beyond a `c` or
 `x` field while the other one is a variable (`c+5(off)`, `c+off(6)` with `c TYPE c LENGTH 5`,
 [#4742](https://github.com/abaplint/abaplint/issues/4742)), is fixed by
 [PR #4759](https://github.com/abaplint/abaplint/pull/4759), in 2.120.121: ABAP is expected to accept it and to decide
@@ -483,6 +496,10 @@ Valid ABAP that abaplint mistypes, fails to parse or rejects:
 | Issue | What | Pick up with |
 |---|---|---|
 | [arcanist123/abaplint#22](https://github.com/arcanist123/abaplint/issues/22) | an inline declaration from a calculation with a `c`, `n` or `string` operand (`DATA(x) = i * '2'.`, `i + n`, `i8 + '1'`, `+ n`) is typed `i`, `int8` or `n`. The text operand makes the calculation type `p`, so `p LENGTH 8 DECIMALS 0` is expected ([spec/calculation.md](spec/calculation.md), "Inline declarations"); found 2026-11-28 through open-steamgate's `ANOMALY-2026-09-17-character-operand-calculation-type`. How to fix it is not decided yet | inline declarations (compiler step 5) |
+| [arcanist123/abaplint#28](https://github.com/arcanist123/abaplint/issues/28) | `strlen( )` and `numofchar( )` of a flat character-like structure are reported as not compatible: valid code rejected | structures |
+| [arcanist123/abaplint#29](https://github.com/arcanist123/abaplint/issues/29) | a move of an `x`, `xstring` or `i` field into a flat character-like structure is reported as incompatible: valid code rejected | structure assignments |
+| [arcanist123/abaplint#30](https://github.com/arcanist123/abaplint/issues/30) | `SET BIT` and `GET BIT` of a parameter of type `data` or `simple` are reported as not byte-like: valid code rejected | parameters of subroutines and methods |
+| [arcanist123/abaplint#31](https://github.com/arcanist123/abaplint/issues/31) | the obsolete `ADD ... THEN ... UNTIL ... RANGE` and `WHILE ... VARY ... RANGE` do not parse | structures |
 | [#4756](https://github.com/abaplint/abaplint/issues/4756) | a literal passed to a parameter of the generic type `p` is reported as not compatible: valid code rejected | method calls with parameters |
 | [#4754](https://github.com/abaplint/abaplint/issues/4754) | `NEW lcl( )->attr = 1.` gives "Not an object reference, target" for any attribute | objects and `NEW` |
 | [#4779](https://github.com/abaplint/abaplint/issues/4779) | `NEW` with `LET`, `FOR`, `BASE`, `LINES OF` or default components in front of table rows does not parse | objects and `NEW` |
@@ -497,6 +514,10 @@ Invalid ABAP that abaplint accepts:
 | [#4806](https://github.com/abaplint/abaplint/issues/4806) | non-character operands of `CO` to `NP` in a `WHERE` condition of an internal table (`LOOP AT`, `DELETE`, `MODIFY`, `FOR`) are accepted: `ComponentCompare` checks no operand types. A numeric built-in function on the right is expected to be an error there too. The byte operators are not checked there either, their expected behaviour is not worked out | predicates and operators |
 | [#4712](https://github.com/abaplint/abaplint/issues/4712) | the literal of a `VALUE` addition that does not convert to a numeric type (`DATA i TYPE i VALUE 'abc'.`, a number outside the range) is accepted. A move of such a literal (`i = 'abc'.`) is expected to give only a warning: valid code, the conversion fails at run time | checked in layer 2 (2026-11-28, `src/check/value.ts`); the other types in [spec/conversion.md](spec/conversion.md), "The literal of VALUE" |
 | [#4642](https://github.com/abaplint/abaplint/issues/4642) | an assignment between flat structures with non-matching fragment views is accepted | structure assignments |
+| [arcanist123/abaplint#32](https://github.com/arcanist123/abaplint/issues/32) | a move or comparison between a structure and a field, and a comparison between two structures, whose fragment views do not match (`c = s.` with a numeric component in `s`) are accepted | structure assignments, with #4642 |
+| [arcanist123/abaplint#33](https://github.com/arcanist123/abaplint/issues/33) | a structure as an operand of `&&`, also a character-like one, is accepted | `&&` and string templates |
+| [arcanist123/abaplint#34](https://github.com/arcanist123/abaplint/issues/34) | `DO ... VARYING` and `WHILE ... VARY` without `RANGE` are accepted where the two fields are not components of one structure | `DO ... VARYING`, once structures are compiled |
+| [arcanist123/abaplint#35](https://github.com/arcanist123/abaplint/issues/35) | `BIT-NOT` and `xstrlen( )` of an operand that is not byte-like are accepted | milestone steps 7 and 8 |
 | [#4772](https://github.com/abaplint/abaplint/issues/4772) | parentheses around an actual parameter of a method are accepted when the formal parameter is character-like, a date, a table or of type `data`; with a numeric parameter they are valid | method calls with parameters |
 | [#4775](https://github.com/abaplint/abaplint/issues/4775) | parentheses around a single operand in `NEW`. A check has to cover the forms of [#4779](https://github.com/abaplint/abaplint/issues/4779) too once they parse | objects and `NEW` |
 | [#4776](https://github.com/abaplint/abaplint/issues/4776) | parentheses around the work area of `MODIFY`, `COLLECT`, `READ TABLE` and `DELETE TABLE`, and a calculation there for the last three | internal tables |
@@ -730,16 +751,45 @@ the default.
 `OPEN DATASET f.` with no addition parses since [PR #3571](https://github.com/abaplint/abaplint/pull/3571).
 Non-Unicode programs are out of scope for abap2go. It reads the UCCHECK flag of each program itself: its scope pass refuses a
 program without the flag, and its layer 2 checks reject the non-Unicode-only forms in the others. #4753 no longer
-blocks anything. The inventory below becomes the list of those checks. The forms found so far are a missing addition, visible
-in the tree, or a rule on types, so the checks do not depend on how abaplint resolves ambiguous parses
+blocks anything. The inventory below is the list of those checks. Each form is a missing addition, visible in the
+tree, or a rule on types, so the checks do not depend on how abaplint resolves ambiguous parses
 ([abaplint_ambiguous_parsing.md](abaplint_ambiguous_parsing.md), "Unicode flag").
 
-- [ ] [#4753](https://github.com/abaplint/abaplint/issues/4753) `OPEN DATASET f.` without `FOR ...` or
-  `IN ... MODE`; with no addition at all it parses since
-  [66bfba641](https://github.com/abaplint/abaplint/commit/66bfba641)
-  ([PR #3571](https://github.com/abaplint/abaplint/pull/3571)), which adds a test for it
-- [ ] also accepted, named in the comment: `DESCRIBE FIELD ... LENGTH` and `DESCRIBE DISTANCE` without
-  `IN ... MODE`, and an offset/length that reaches past the character-like start of a structure. Already errors:
-  `CONCATENATE` of byte-like fields without `IN BYTE MODE`, and `TRANSLATE ... CODE PAGE` (does not parse)
-- [ ] rest of the inventory: work out the expected behaviour of the other non-Unicode-only forms, compare with
-  abaplint
+Checked in layer 2 (2026-11-28; the rules are those of the ABAP keyword documentation for Unicode programs):
+- [x] missing additions (`src/check/additions.ts`): `OPEN DATASET` without `FOR ...` or `IN ... MODE`
+  ([#4753](https://github.com/abaplint/abaplint/issues/4753); with no addition at all it parses since
+  [66bfba641](https://github.com/abaplint/abaplint/commit/66bfba641)) and `IN TEXT MODE` without `ENCODING`;
+  `DESCRIBE FIELD ... LENGTH` and `DESCRIBE DISTANCE` without `IN ... MODE`
+- [x] operands that are not character-like, or in byte mode not byte-like (`src/check/string_operands.ts`):
+  `CONDENSE`, `TRANSLATE`, `SPLIT`, `CONCATENATE`, `OVERLAY`, `SHIFT`, `SEARCH`, `FIND`, `REPLACE ... IN BYTE
+  MODE`, `CLEAR ... WITH` (its value also of length 1), `SET BIT`, `GET BIT`; no `string` either for the target of
+  `UNPACK` and the field of `DESCRIBE FIELD ... LENGTH ... IN CHARACTER MODE`. A structure is character-like if
+  it is flat and has components of type `c`, `n`, `d` and `t` only, and never byte-like
+- [x] an offset or length on a structure (`src/check/structure_offset.ts`): only on a flat structure, within its
+  character-like initial part; without a length, or with `(*)`, only if it is character-like throughout
+- already errors in abaplint: `CONCATENATE` of byte-like fields without `IN BYTE MODE`, `REPLACE` in character mode
+  and `TRANSLATE ... CODE PAGE` (does not parse), and part of the rules above, whose cases stop layer 2 for the object
+
+Found and left for later (invalid code that is accepted; the issues are described under "Later"):
+- [ ] a move or comparison between a structure and a field, or between two structures, whose fragment views do not
+  match ([arcanist123/abaplint#32](https://github.com/arcanist123/abaplint/issues/32),
+  [#4642](https://github.com/abaplint/abaplint/issues/4642)). With the structure rules of the conversion table; the
+  compiler compiles no structure yet
+- [ ] a structure as an operand of `&&`
+  ([arcanist123/abaplint#33](https://github.com/arcanist123/abaplint/issues/33)), and `DO ... VARYING` and
+  `WHILE ... VARY` without a `RANGE` that is needed
+  ([arcanist123/abaplint#34](https://github.com/arcanist123/abaplint/issues/34))
+- [ ] with the string, byte and bit operators (milestone step 7): their operand types
+  ([#4799](https://github.com/abaplint/abaplint/issues/4799),
+  [#4800](https://github.com/abaplint/abaplint/issues/4800), fork #4 to #6) and `BIT-NOT` of an operand that is not
+  byte-like ([arcanist123/abaplint#35](https://github.com/arcanist123/abaplint/issues/35))
+- [ ] with the built-in functions (milestone step 8): `xstrlen( )` of a field that is not byte-like (also #35)
+- [ ] rest of the inventory, not gone through yet: parameter passing, `EXPORT` and `IMPORT`, the database and file
+  statements other than `OPEN DATASET`, table statements with structures, `ASSIGN ... CASTING` and Open SQL work
+  areas
+
+The inventory also found valid code that abaplint rejects, a layer 1 matter (see "Valid code that abaplint
+rejects"): [arcanist123/abaplint#28](https://github.com/arcanist123/abaplint/issues/28) to
+[#31](https://github.com/arcanist123/abaplint/issues/31) (see "Later"), and
+`OPEN DATASET ... IN LEGACY BINARY MODE BIG ENDIAN`, which does not parse
+([#4644](https://github.com/abaplint/abaplint/issues/4644)).
