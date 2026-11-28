@@ -1,16 +1,16 @@
 import * as abaplint from "@abaplint/core";
-import { BuildError } from "./errors";
+import { BuildError, InternalError, lowerEach, notCompiled } from "./errors";
 import { IRReport, IRStatement } from "./ir";
 import { BlockLowerer } from "./lower_block";
 import { lowerSource, Variables, Where } from "./lower_common";
 
 const { Statements, Expressions } = abaplint;
 
-/** Lowers an executable program. Only START-OF-SELECTION is supported, explicit or implicit, in one or more blocks. */
+/** Lowers an executable program. Only START-OF-SELECTION is compiled, explicit or implicit, in one or more blocks. */
 export function lowerReport(registry: abaplint.IRegistry, obj: abaplint.Objects.Program): IRReport {
   const subc = /<SUBC>([^<]*)<\/SUBC>/.exec(obj.getXML() ?? "")?.[1];
   if (subc !== "1") {
-    throw new BuildError(`root ${obj.getName()}: only executable programs (SUBC 1) can be roots, this one has SUBC ${subc ?? "unknown"}`);
+    throw notCompiled(`root ${obj.getName()}: only executable programs (SUBC 1) are compiled as roots yet, this one has SUBC ${subc ?? "unknown"}`);
   }
   const files = obj.getABAPFiles();
   if (files.length !== 1) {
@@ -22,7 +22,7 @@ export function lowerReport(registry: abaplint.IRegistry, obj: abaplint.Objects.
   let lineSize: number | undefined;
   const structure = file.getStructure();
   if (structure === undefined) {
-    throw new BuildError(`root ${obj.getName()}: the program does not parse`);
+    throw new InternalError(`root ${obj.getName()}: the program does not parse`);
   }
   const lowerer = new BlockLowerer(file, variables, (statement, where) => {
     const kind = statement.get();
@@ -32,20 +32,18 @@ export function lowerReport(registry: abaplint.IRegistry, obj: abaplint.Objects.
     } else if (kind instanceof Statements.Write) {
       return lowerWrite(statement, variables, where);
     }
-    throw new BuildError(`statement ${kind.constructor.name} is not supported yet`, where);
+    throw notCompiled(`statement ${kind.constructor.name} is not compiled yet`, where);
   });
   // each START-OF-SELECTION starts a block; the statements before the first one are a block of their own
-  const blocks: IRStatement[][] = [];
-  let nodes: (abaplint.Nodes.StatementNode | abaplint.Nodes.StructureNode)[] = [];
+  const parts: (abaplint.Nodes.StatementNode | abaplint.Nodes.StructureNode)[][] = [[]];
   for (const node of structure.getChildren()) {
     if (node instanceof abaplint.Nodes.StatementNode && node.get() instanceof Statements.StartOfSelection) {
-      blocks.push(lowerer.lower(nodes));
-      nodes = [];
+      parts.push([]);
     } else {
-      nodes.push(node as abaplint.Nodes.StatementNode | abaplint.Nodes.StructureNode);
+      parts[parts.length - 1].push(node as abaplint.Nodes.StatementNode | abaplint.Nodes.StructureNode);
     }
   }
-  blocks.push(lowerer.lower(nodes));
+  const blocks: IRStatement[][] = lowerEach(parts, nodes => lowerer.lower(nodes));
   return { kind: "report", name: obj.getName(), lineSize, blocks };
 }
 
@@ -58,11 +56,11 @@ function lowerReportStatement(statement: abaplint.Nodes.StatementNode, where: Wh
     let m: RegExpExecArray | null;
     if ((m = /^NO\s+STANDARD\s+PAGE\s+HEADING\b/.exec(rest)) !== null) {
       // The standard page header is not written to the text list (as in open-abap-gui's list processor), so this
-      // only matters once TOP-OF-PAGE is supported.
+      // only matters once TOP-OF-PAGE is compiled.
     } else if ((m = /^LINE-SIZE\s+(\d+)\b/.exec(rest)) !== null) {
       lineSize = parseInt(m[1], 10);
     } else {
-      throw new BuildError(`REPORT addition ${rest.split(/\s+/)[0]} is not supported yet`, where);
+      throw notCompiled(`REPORT addition ${rest.split(/\s+/)[0]} is not compiled yet`, where);
     }
     rest = rest.slice(m[0].length).trim();
   }
@@ -78,7 +76,7 @@ function lowerWrite(statement: abaplint.Nodes.StatementNode, variables: Variable
   const offsetLength = statement.findDirectExpression(Expressions.WriteOffsetLength);
   if (offsetLength !== undefined) {
     if (offsetLength.concatTokens() !== "/") {
-      throw new BuildError(`WRITE position ${offsetLength.concatTokens()} is not supported yet`, where);
+      throw notCompiled(`WRITE position ${offsetLength.concatTokens()} is not compiled yet`, where);
     }
     newLine = true;
     index++;
@@ -88,7 +86,7 @@ function lowerWrite(statement: abaplint.Nodes.StatementNode, variables: Variable
   // WRITE ( x ) is not taken as WRITE x: it is not compiled
   if (!(source instanceof abaplint.Nodes.ExpressionNode) || !(source.get() instanceof Expressions.Source) || index + 2 !== children.length
       || source.getFirstToken().getStr() === "(") {
-    throw new BuildError("only WRITE [/] <literal or variable>. is supported yet, no additions", where);
+    throw notCompiled("only WRITE [/] <literal or variable>. is compiled yet, no additions", where);
   }
   const value = lowerSource(source, variables, where, "WRITE of");
   // sy-index needs no check: its data element, SYST_INDEX, is expected to have the output length of its type i

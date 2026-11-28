@@ -582,16 +582,16 @@ START-OF-SELECTION.
 
 const refusals: [string, string, RegExp][] = [
   ["RETURN with an operand outside a functional method", "RETURN 1.", /does not have a RETURNING parameter/],
-  ["EXIT FROM STEP-LOOP", "EXIT FROM STEP-LOOP.", /no additions are supported/],
-  ["EXIT FROM SQL", "EXIT FROM SQL.", /no additions are supported/],
+  ["EXIT FROM STEP-LOOP", "EXIT FROM STEP-LOOP.", /no additions are compiled/],
+  ["EXIT FROM SQL", "EXIT FROM SQL.", /no additions are compiled/],
   ["CHECK without a condition", "CHECK sy-index.", /only CHECK <condition>/],
   ["DO VARYING", "DATA a TYPE i.\nDATA b TYPE i.\nDATA c TYPE i.\nDO 2 TIMES VARYING a FROM b NEXT c.\nENDDO.", /not VARYING/],
-  ["WHILE VARY", "DATA a TYPE i.\nDATA b TYPE i.\nDATA c TYPE i.\nWHILE 1 = 0 VARY a FROM b NEXT c.\nENDWHILE.", /VARY is not supported/],
+  ["WHILE VARY", "DATA a TYPE i.\nDATA b TYPE i.\nDATA c TYPE i.\nWHILE 1 = 0 VARY a FROM b NEXT c.\nENDWHILE.", /VARY is not compiled yet/],
   ["CASE without WHEN in a class", "DATA a TYPE i.\nCASE a.\nENDCASE.", /followed directly by WHEN/],
   ["CASE with only statements in a class", "DATA a TYPE i.\nCASE a.\na = 1.\nENDCASE.", /followed directly by WHEN/],
   ["a statement before the first WHEN in a class", "DATA a TYPE i.\nCASE a.\na = 1.\nWHEN 1.\nENDCASE.", /followed directly by WHEN/],
   ["a statement before WHEN OTHERS in a class", "DATA a TYPE i.\nCASE a.\na = 1.\nWHEN OTHERS.\nENDCASE.", /followed directly by WHEN/],
-  ["CASE of an arithmetic expression with a utclong value", "DATA a TYPE i.\nDATA u TYPE utclong.\nCASE a + 1.\nWHEN u.\nENDCASE.", /against an arithmetic expression is not supported/],
+  ["CASE of an arithmetic expression with a utclong value", "DATA a TYPE i.\nDATA u TYPE utclong.\nCASE a + 1.\nWHEN u.\nENDCASE.", /against an arithmetic expression is not compiled yet/],
   ["CASE of a utclong with an i value", "DATA u TYPE utclong.\nCASE u.\nWHEN 1.\nENDCASE.", /syntax check/],
   ["DO u TIMES with a utclong", "DATA u TYPE utclong.\nDO u TIMES.\nENDDO.", /must be numeric/],
   ["DO with a utclong expression", "DATA u TYPE utclong.\nDO u + 1 TIMES.\nENDDO.", /cannot be used in a calculation \[check_syntax\]/],
@@ -599,7 +599,7 @@ const refusals: [string, string, RegExp][] = [
   ["utclong compared with i", "DATA u TYPE utclong.\nIF u = 1.\nENDIF.", /syntax check/],
   ["a text operand against an arithmetic expression", "DATA a TYPE i.\nDATA c TYPE c LENGTH 3.\nIF a + 0 = c.\nENDIF.", /syntax check/],
   ["IS INITIAL", "DATA a TYPE i.\nIF a IS INITIAL.\nENDIF.", /not IS, IN or other predicates/],
-  ["a write to sy-index", "DO 2 TIMES.\nsy-index = 1.\nENDDO.", /only a variable or a subfield is supported as target/],
+  ["a write to sy-index", "DO 2 TIMES.\nsy-index = 1.\nENDDO.", /only a variable or a subfield is compiled as target/],
 ];
 for (const [name, body, refused] of refusals) {
   test(`refused: ${name}`, () => {

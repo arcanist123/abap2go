@@ -1,5 +1,5 @@
 import * as abaplint from "@abaplint/core";
-import { BuildError } from "./errors";
+import { InternalError, lowerAll, notCompiled } from "./errors";
 import { IRArithOp, IRCalculate, IRExpr, IRLiteral, IRTarget } from "./ir";
 import { integerLiteral, lowerConstant, lowerFieldChain, lowerSource, Variables, Where } from "./lower_common";
 
@@ -65,9 +65,7 @@ export function isDataObjectFunction(source: abaplint.Nodes.ExpressionNode): boo
 }
 
 /** target = expression. or target op= expression. (op one of + - * /) as a calculation. */
-export function lowerCalculate(target: IRTarget, assignOp: "+" | "-" | "*" | "/" | undefined,
-    source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRCalculate {
-  let expression = lowerExpression(source, variables, where);
+export function calculation(target: IRTarget, assignOp: "+" | "-" | "*" | "/" | undefined, expression: IRExpr): IRCalculate {
   if (assignOp !== undefined) {
     expression = { kind: "binary", op: assignOp, left: { kind: "operand", source: target }, right: expression };
   }
@@ -94,46 +92,51 @@ type Item =
  * ( Source ). The chain is flattened into signs, operands and operators and grouped again by ABAP's priorities.
  */
 function lowerExpression(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRExpr {
-  const items: Item[] = [];
-  flatten(source, variables, where, items);
-  return group(items, where);
+  return group(flatten(source, variables, where), where);
 }
 
-function flatten(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where, items: Item[]): void {
+function flatten(source: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): Item[] {
   const children = source.getChildren();
+  const signs: Item[] = [];
   let i = 0;
   while (children[i] !== undefined && isSign(children[i])) {
-    items.push({ kind: "sign", negate: children[i].concatTokens() === "-" });
+    signs.push({ kind: "sign", negate: children[i].concatTokens() === "-" });
     i++;
   }
   const first = children[i];
+  const unsupported = () => notCompiled(`${source.concatTokens()}: not compiled in an arithmetic expression yet`, where);
+  let operand: () => Item[];
   if (first?.concatTokens() === "(" && !(first instanceof abaplint.Nodes.ExpressionNode)) {
     const inner = children[i + 1];
     if (!(inner instanceof abaplint.Nodes.ExpressionNode) || children[i + 2]?.concatTokens() !== ")") {
-      throw new BuildError(`${source.concatTokens()}: unexpected parentheses`, where);
+      throw new InternalError(`${source.concatTokens()}: unexpected parentheses`, where);
     }
-    items.push({ kind: "operand", expr: lowerExpression(inner, variables, where) });
+    operand = () => [{ kind: "operand", expr: lowerExpression(inner, variables, where) }];
     i += 3;
   } else if (first instanceof abaplint.Nodes.ExpressionNode) {
-    items.push(...lowerOperand(first, variables, where));
+    operand = () => lowerOperand(first, variables, where);
     i++;
   } else {
-    throw new BuildError(`${source.concatTokens()}: not supported in an arithmetic expression yet`, where);
+    throw unsupported();
   }
 
   const op = children[i];
   if (op === undefined) {
-    return;
+    return [...signs, ...operand()];
   }
   const rest = children[i + 1];
   const opText = op.concatTokens().toUpperCase();
   if (!(op instanceof abaplint.Nodes.ExpressionNode) || !(op.get() instanceof Expressions.ArithOperator)
       || OPERATORS[opText] === undefined || !(rest instanceof abaplint.Nodes.ExpressionNode)
       || !(rest.get() instanceof Expressions.Source) || i + 2 !== children.length) {
-    throw new BuildError(`${source.concatTokens()}: not supported in an arithmetic expression yet`, where);
+    // what follows an operator that is not compiled is not looked at: it need not be arithmetic. The operand
+    // before it is, and lowerAll throws what it and the operator lack.
+    return lowerAll(operand, (): never => {
+      throw unsupported();
+    })[0];
   }
-  items.push({ kind: "operator", op: OPERATORS[opText] });
-  flatten(rest, variables, where, items);
+  const [left, right] = lowerAll(operand, () => flatten(rest, variables, where));
+  return [...signs, ...left, { kind: "operator", op: OPERATORS[opText] }, ...right];
 }
 
 /**
@@ -143,7 +146,7 @@ function flatten(source: abaplint.Nodes.ExpressionNode, variables: Variables, wh
  */
 function group(items: Item[], where: Where): IRExpr {
   let pos = 0;
-  const malformed = () => new BuildError("malformed arithmetic expression", where);
+  const malformed = () => new InternalError("malformed arithmetic expression", where);
   const operatorAt = (ops: IRArithOp[]): IRArithOp | undefined => {
     const item = items[pos];
     return item?.kind === "operator" && ops.includes(item.op) ? item.op : undefined;
@@ -219,14 +222,14 @@ function lowerOperand(node: abaplint.Nodes.ExpressionNode, variables: Variables,
   if (node.get() instanceof Expressions.FieldChain) {
     const field = lowerFieldChain(node, variables, where);
     if (field === undefined) {
-      throw new BuildError(`${node.concatTokens()}: only variables and their subfields are supported as operands yet`, where);
+      throw notCompiled(`${node.concatTokens()}: only variables and their subfields are compiled as operands yet`, where);
     }
     return [operand({ kind: "operand", source: field })];
   }
   if (node.get() instanceof Expressions.MethodCallChain) {
     return [operand(lowerFunction(node, variables, where))];
   }
-  throw new BuildError(`${node.concatTokens()}: not supported as an operand yet`, where);
+  throw notCompiled(`${node.concatTokens()}: not compiled as an operand yet`, where);
 }
 
 /** A constant as lowerConstant; text overrides an integer's written form (its digits without the sign). */
@@ -237,10 +240,10 @@ function numberOrConstant(constant: abaplint.Nodes.ExpressionNode, where: Where,
 function lowerFunction(node: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRExpr {
   const name = functionName(node);
   if (name === undefined) {
-    throw new BuildError(`${node.concatTokens()}: method calls are not supported in arithmetic expressions yet`, where);
+    throw notCompiled(`${node.concatTokens()}: method calls are not compiled in arithmetic expressions yet`, where);
   }
   if (variables.hasMethod(name)) {
-    throw new BuildError(`${name}( ): a method of the same name hides the built-in function; not supported yet`, where);
+    throw notCompiled(`${name}( ): a method of the same name hides the built-in function; not compiled yet`, where);
   }
   const param = node.findFirstExpression(Expressions.MethodCallParam);
   const args = new Map<string, abaplint.Nodes.ExpressionNode>();
@@ -262,7 +265,8 @@ function lowerFunction(node: abaplint.Nodes.ExpressionNode, variables: Variables
     return { kind: "strlen", arg: lowerSource(args.get("val")!, variables, where, "strlen( ) of") };
   }
   if (name === "ipow") {
-    return { kind: "ipow", base: arg("base"), exp: arg("exp") };
+    const [base, exp] = lowerAll(() => arg("base"), () => arg("exp"));
+    return { kind: "ipow", base, exp };
   }
   return { kind: "unary", fn: name as "abs" | "sqrt", operand: arg("val") };
 }

@@ -396,11 +396,11 @@ ${body}`)).refused ?? "";
   assert.match(refused(`TRY.
     n = 1.
   CATCH cx_root INTO DATA(o).
-ENDTRY.`), /CATCH \.\.\. INTO is not supported yet/);
+ENDTRY.`), /CATCH \.\.\. INTO is not compiled yet/);
   assert.match(refused(`TRY.
     n = 1.
   CATCH BEFORE UNWIND cx_root.
-ENDTRY.`), /CATCH BEFORE UNWIND is not supported yet/);
+ENDTRY.`), /CATCH BEFORE UNWIND is not compiled yet/);
   assert.match(refused(`TRY.
     n = 1.
   CATCH if_oo_adt_classrun.
