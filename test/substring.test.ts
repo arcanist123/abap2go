@@ -106,9 +106,35 @@ for (const [name, body, refused] of refusals) {
   });
 }
 
-// u(*) takes the whole utclong and is valid ABAP; the length * is not compiled yet.
-test("substring: the length * of a utclong is not compiled yet", () => {
-  const result = run("clas", classrun(DECLARATIONS + "DATA s2 TYPE string.\ns2 = u(*)."));
-  assert.match(result.refused ?? "", /u\(\*\): only an integer or a variable is supported as offset or length yet/);
-  assert.doesNotMatch(result.refused ?? "", /syntax check/);
-});
+// Offset/length access that takes a whole numeric field is valid ABAP, as is u(*) for a utclong; none of it is
+// compiled yet.
+const NUMERIC = `DATA i8 TYPE int8.
+DATA p TYPE p LENGTH 5.
+DATA f TYPE f.
+DATA df16 TYPE decfloat16.
+DATA df34 TYPE decfloat34.
+`;
+const numeric: [string, string, string, string][] = [
+  ["an offset of 0 in an i", "r = i+0.", "i+0", "i"],
+  ["the length * of an i", "r = i(*).", "i(*)", "i"],
+  ["the length of an i", "r = i(4).", "i(4)", "i"],
+  ["an offset and length of an i as target", "i+0(4) = '1'.", "i+0(4)", "i"],
+  ["an int8", "r = i8+0.", "i8+0", "int8"],
+  ["a p", "r = p(5).", "p(5)", "p"],
+  ["an f", "r = f(8).", "f(8)", "f"],
+  ["a decfloat16", "r = df16+0.", "df16+0", "decfloat16"],
+  ["a decfloat34", "r = df34+0.", "df34+0", "decfloat34"],
+  ["in WRITE", "WRITE i+0.", "i+0", "i"],
+  ["in a calculation", "i = i+0 + 1.", "i+0", "i"],
+  ["in a comparison", "IF i+0 = 1.\nENDIF.", "i+0", "i"],
+  ["the length * of a utclong", "r = u(*).", "u(*)", "utclong"],
+];
+for (const [name, body, text, type] of numeric) {
+  test(`substring not compiled yet: ${name}`, () => {
+    const result = run("prog", "REPORT zprobe.\n" + DECLARATIONS + NUMERIC + body);
+    const refused = result.refused ?? "";
+    assert.ok(refused.includes(`${text}: offset/length access to a field of type ${type} is not compiled yet`),
+      refused || `built, stdout ${JSON.stringify(result.stdout)}`);
+    assert.doesNotMatch(refused, /syntax check/);
+  });
+}
