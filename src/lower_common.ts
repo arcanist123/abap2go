@@ -252,14 +252,19 @@ export function lowerTarget(target: abaplint.Nodes.ExpressionNode, variables: Va
 /**
  * The subfield of base given by its FieldOffset and FieldLength nodes. A subfield of a utclong, a static length of 0
  * in a flat field and static bounds outside a c or x field are reported by abaplint, static bounds outside an n, d
- * or t field by layer 2 (src/check/substring.ts).
+ * or t field by layer 2 (src/check/substring.ts). Offset/length access to a numeric field that passes both is valid
+ * ABAP and not compiled yet.
  */
 function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode)[],
     variables: Variables, where: Where): IRSubstring {
   const offsetNode = nodes.find(n => n instanceof abaplint.Nodes.ExpressionNode && n.get() instanceof Expressions.FieldOffset);
   const lengthNode = nodes.find(n => n instanceof abaplint.Nodes.ExpressionNode && n.get() instanceof Expressions.FieldLength);
   const text = `${base.name}${nodes.map(n => n.concatTokens()).join("")}`;
+  const size = flatLength(base.type);
   const flat = base.type.kind !== "string" && base.type.kind !== "xstring";
+  if (flat && size === undefined) {
+    throw new BuildError(`${text}: offset/length access to a field of type ${base.type.kind} is not compiled yet`, where);
+  }
 
   // the offset or length: an integer or a variable
   const position = (node: abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode | undefined): IRLiteral | IRVariable | undefined => {
@@ -281,7 +286,6 @@ function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode 
 
   const staticOffset = offset === undefined ? 0 : offset.kind === "literal" ? parseInt(offset.value, 10) : undefined;
   const staticLength = length?.kind === "literal" ? parseInt(length.value, 10) : undefined;
-  const size = flat ? flatLength(base.type) : undefined;
 
   // only the rest of a field from a static offset has a length of its own that is known here
   const rest = size !== undefined && length === undefined && staticOffset !== undefined;

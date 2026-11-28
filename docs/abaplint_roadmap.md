@@ -244,9 +244,9 @@ length of 0. The PRs written for them stay open upstream. The waiting PRs
 written for [#4743](https://github.com/abaplint/abaplint/issues/4743) (more than 31 digits).
 
 The lowering has no syntax check left; what it refuses beyond the findings of both layers is what it does not
-compile yet. With [PR #4830](https://github.com/abaplint/abaplint/pull/4830), in 2.120.123, `i+0`, `i(*)` and `i(4)` are valid and reach the compiler, which has to refuse
-a subfield of a numeric type as not supported yet (not as a syntax error) or compile it as the whole field; `p(5)`,
-which the release already accepts, needs the same look.
+compile yet. That includes a subfield of a numeric type: `i+0`, `i(*)` and `i(4)`, valid with
+[PR #4830](https://github.com/abaplint/abaplint/pull/4830), in 2.120.123, and `p(5)` are refused as not supported
+yet, not as syntax errors (2026-11-28).
 
 Valid code mistyped: [arcanist123/abaplint#16](https://github.com/arcanist123/abaplint/issues/16), a data element of
 data type `UTCL` typed `c LENGTH 27`, is fixed by [PR #4832](https://github.com/abaplint/abaplint/pull/4832), in

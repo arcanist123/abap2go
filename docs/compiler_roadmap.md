@@ -254,8 +254,9 @@ Next:
     goes upstream before the items below ([abaplint_roadmap.md](abaplint_roadmap.md), "First: `COMPUTE`
     upstream"); the compiler refuses `COMPUTE` until then
   - then, what the compiler needs of layer 2 today, in this order:
-    - a subfield of a numeric type (`i+0`, `i(4)`, valid since abaplint#4830, in 2.120.123) reaches
-      `lowerSubstring` and gives Go that does not build: refuse it as not compiled yet (a lowering fix, not layer 2)
+    - [x] a subfield of a numeric type (2026-11-28, `src/lower_common.ts`, `test/substring.test.ts`): `i+0`, `i(4)`,
+      `p(5)` and the like are valid ABAP (abaplint#4830, in 2.120.123) and gave Go that does not build. The lowering
+      now refuses them as not compiled yet, as it does `u(*)`
     - a `VALUE` literal that does not convert to its field's type (`DATA x TYPE i VALUE 3000000000.`, a `b` of
       `VALUE 300`) is expected to be a syntax error; abaplint accepts every such literal (abaplint#4712, open) and
       the compiler builds it, so it fails at run time. A layer 2 check, which also covers the range of `b` and `s`
@@ -274,11 +275,9 @@ Next:
     call, by rebuilding the text abaplint lexes for the expansion; a test fails if abaplint changes how it expands
   - a layer 2 check goes once an abaplint release reports its case in every form; its tests then expect abaplint's
     finding
-  - not syntax checks, so they stay in the lowering: the refusal of a `utclong` after `WHEN` against a calculated
-    `CASE` operand (`caseValue` in `src/lower_cond.ts`), valid code not compiled yet; and with PR abaplint#4830, in
-    2.120.123, `i+0`, `i(*)` and `i(4)` are valid and reach `lowerSubstring`: refuse a subfield of a numeric type as
-    not supported yet, or compile it as the whole field. `p(5)`, which the release already accepts, needs the same
-    look
+  - not syntax checks, so they stay in the lowering: the refusals of valid code not compiled yet, a `utclong` after
+    `WHEN` against a calculated `CASE` operand (`caseValue` in `src/lower_cond.ts`) and a subfield of a numeric type
+    (`lowerSubstring`), which could be compiled as the whole field
 - [ ] control flow, the rest: `IS INITIAL`, `IN` and the string, byte and bit operators with `sy-fdpos`
   ([spec/comparison.md](spec/comparison.md), "Predicate expressions and comparison operators"; `IN` once ranges
   tables are compiled), their cells run by the tests; the other predicates once the comparison table has them;
