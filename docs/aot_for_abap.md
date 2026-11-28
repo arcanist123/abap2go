@@ -72,10 +72,11 @@ accepted: abap2go compiles only part of valid ABAP, and refuses the rest for its
 
 - **Layer 1, abaplint:** its parser, check_syntax, and the rules `src/validation.ts` turns on for syntax errors
   check_syntax does not report. It also gives the compiler its syntax tree and types. Where it fails to parse,
-  rejects or mistypes valid ABAP, the fix goes into abaplint, carried here in `patches/` and sent upstream as a PR.
+  rejects or mistypes valid ABAP, leaves it untyped, or builds a wrong syntax tree for valid or invalid code, the fix
+  goes into abaplint, carried here in `patches/` and sent upstream as a PR.
 - **Layer 2, abap2go's own checks** in `src/check/`, run after layer 1 on its tree and types: invalid ABAP that
-  abaplint accepts, the Unicode flag of each program, the internal types `b` and `s`, and the absolute positions of
-  code expanded from macros.
+  abaplint parses into the right tree but accepts, the Unicode flag of each program, the internal types `b` and
+  `s`, and the absolute positions of code expanded from macros.
 
 Non-Unicode programs are out of scope. A layer 2 check goes once an abaplint release reports its case in every form, so the two do not
 drift apart. Valid code that abaplint rejects cannot be worked around in layer 2, since check_syntax stops typing

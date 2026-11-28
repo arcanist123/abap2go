@@ -27,8 +27,9 @@ copy of their state.
   positions and lengths, its formatting additions, `WRITE … TO` and the output lengths of dictionary types are not
   picked up or raised either
 - **the syntax check has two layers** (2026-11-27, see "Two layers" below): abaplint is layer 1, abap2go's own
-  checks are layer 2. Work here is layer 1 only: valid ABAP that abaplint fails to parse, rejects or mistypes.
-  Invalid ABAP that abaplint accepts is checked in layer 2, in abap2go, and is not raised or fixed here any more
+  checks are layer 2. Work here is layer 1 only: valid ABAP that abaplint fails to parse, rejects or mistypes, and
+  a concrete syntax tree that abaplint builds wrongly, for valid or invalid code. Invalid ABAP that abaplint parses
+  into the right tree but accepts is checked in layer 2, in abap2go, and is not raised or fixed here any more
 - what the compiler runs into, within the scope it compiles, is fixed right away, before the other work: the
   compiler's types come from abaplint, so a mistyped expression becomes wrong native code
 
@@ -40,7 +41,11 @@ Decided 2026-11-27.
 release and the patch. What it reports is accepted as reported. Raised and fixed here, and sent upstream:
 - valid ABAP that does not parse
 - valid ABAP that check_syntax rejects
-- valid ABAP that is typed wrongly: a wrong built-in type, a lost length or size, `VoidType` where a type is known
+- valid ABAP that is typed wrongly: a wrong built-in type, a lost length or size, `VoidType` where a type is known,
+  or no types and references at all, where the syntax check skips a statement
+- a concrete syntax tree built wrongly, for valid or invalid code: a statement or expression parsed as the wrong
+  node, or with its parts in the wrong place. Layer 2 and the compiler both read the tree, so it has to describe the
+  code as ABAP reads it; a check in layer 2 cannot make up for a wrong tree
 
 A type fix is kept as small as it can be and
 comes with what keeps valid code valid; it does not add checks of its own. The patch holds such fixes only until a
@@ -221,20 +226,23 @@ argument otherwise).
 Reviewed 2026-11-26 against abaplint `main` `fc504b57`: every open issue in this file still behaves on `main` as it
 describes. PRs and fork issues reviewed again on 2026-11-27.
 
-**First: the compiler's last syntax checks move to layer 2** (priority set 2026-11-27, revised the same day by "Two
-layers"). The compiler still refuses six cases as syntax errors of its own, in its lowering (see "Syntax checks to
-move out of the compiler"): `CONTINUE` outside a loop, a `utclong` in a calculation, a subfield of a `utclong`, a
-static length of 0, static bounds of `n`, `d`, `t`, and more than 31 digits. They move to `src/check/` as they are,
-with their tests, before any other work here; none of them waits for an abaplint PR or release any more. The PRs
-written for them stay open upstream. The waiting PRs for them,
-[arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) and
-[arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21), are closed (2026-11-28): the compiler
-refuses both cases itself, so the patch does not need them. No PR is written for
-[#4743](https://github.com/abaplint/abaplint/issues/4743) (more than 31 digits). 2.120.123 reports three of the six:
-a `utclong` in a calculation, a subfield of a `utclong` and a static length of 0; each of these checks goes once
-that release is found to report its case in every form.
+**First: `COMPUTE` upstream** (priority set 2026-11-28). abaplint's syntax check skips the statement, so valid code
+in it gets no types or references (see "Open, layer 1" under "Syntax checks to move out of the compiler"). A layer
+1 defect goes upstream early, since review takes time, and the patch carries it meanwhile: a `Compute` handler
+that checks the statement as the assignment it stands for, with tests for the valid forms and the invalid ones it
+then reports. Then rerun `scripts/abaplint-patch.sh`. The compiler's own items wait behind it (see
+[compiler_roadmap.md](compiler_roadmap.md), "Next").
 
-After that the lowering has no syntax check; what it refuses beyond the findings of both layers is what it does not
+**Done 2026-11-28: the compiler's last syntax checks are in layer 2 or gone** (priority set 2026-11-27, revised the
+same day by "Two layers"; see "Syntax checks to move out of the compiler"). Three moved to `src/check/`:
+`CONTINUE` outside a loop, static bounds of `n`, `d`, `t`, and more than 31 digits. Three went, since 2.120.123
+reports every form the lowering checked: a `utclong` in a calculation, a subfield of a `utclong` and a static
+length of 0. The PRs written for them stay open upstream. The waiting PRs
+[arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14) and
+[arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21) are closed (2026-11-28), and no PR is
+written for [#4743](https://github.com/abaplint/abaplint/issues/4743) (more than 31 digits).
+
+The lowering has no syntax check left; what it refuses beyond the findings of both layers is what it does not
 compile yet. With [PR #4830](https://github.com/abaplint/abaplint/pull/4830), in 2.120.123, `i+0`, `i(*)` and `i(4)` are valid and reach the compiler, which has to refuse
 a subfield of a numeric type as not supported yet (not as a syntax error) or compile it as the whole field; `p(5)`,
 which the release already accepts, needs the same look.
@@ -383,10 +391,10 @@ onto 2.120.123 first, branch `substring-bounds-ndt-4746`). Both branches stay on
 
 ### Syntax checks to move out of the compiler
 
-The compiler still has syntax checks of its own in its lowering. Since 2026-11-27 they move to layer 2 (see "Two
-layers"), not out of abap2go: each one goes to `src/check/`, and is removed only once an abaplint release reports
-the case in every form. The list below records what abaplint reports and what it does not. Compared on 2026-11-26
-with 2.120.120 and the patch.
+The lowering had syntax checks of its own. Since 2026-11-27 they move to layer 2 (see "Two layers"), not out of
+abap2go: each one goes to `src/check/`, and is removed only once an abaplint release reports the case in every
+form. Since 2026-11-28 the lowering has none left. The list below records what abaplint reports and what it does
+not. Compared on 2026-11-26 with 2.120.120 and the patch, the last six on 2026-11-28 with 2.120.123 and the patch.
 
 Removed that day, since abaplint reports them:
 - `RETURN`, `EXIT`, `CONTINUE` and `CHECK` leaving a `CLEANUP` block, a subfield of a string as a target, and
@@ -414,44 +422,50 @@ Removed 2026-11-27, since abaplint reports them:
 - static bounds outside a `c` or `x` field (`c+5`, `c+4(2)`); `n`, `d` and `t` are below
 - a missing, unknown or repeated argument of `abs( )`, `sqrt( )`, `ipow( )` or `strlen( )`
 
-abaplint accepts these, in every form or in some, or the release and the patch do not report them yet, so the fix goes
-into abaplint. These six are the first priority (see "Now").
-- [ ] `CONTINUE` outside a loop (`src/lower_block.ts`): issue [#3660](https://github.com/abaplint/abaplint/issues/3660),
-  with [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-27). Its copy,
-  waiting PR [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14), is closed (2026-11-28): the
-  check moves to layer 2
-- [ ] [#4729](https://github.com/abaplint/abaplint/issues/4729) `utclong` in an arithmetic expression, `u + 1`
-  (`src/lower_arith.ts`). Some forms were reported (`abs( u )`, `i += u`), `i = u + 1` was not. Fixed in
-  [PR #4828](https://github.com/abaplint/abaplint/pull/4828), in 2.120.123:
-  arithmetic expressions and signs, `+=`, `-=`, `*=` and `/=` (also after `NEXT`), `ADD`, `SUBTRACT`, `MULTIPLY`,
-  `DIVIDE`, `nmax( )` and `nmin( )`. The comparison `u = i + 1` is reported by
-  [PR #4741](https://github.com/abaplint/abaplint/pull/4741). A dictionary type `UTCL` is covered since
-  [PR #4832](https://github.com/abaplint/abaplint/pull/4832). Not covered: an operand
-  after a constructor expression (see "Backlog"). #4828 only says "part of #4729": close the issue once #4741 is
-  merged too. The compiler's check goes once 2.120.123 is found to report every form
-- [ ] [#4730](https://github.com/abaplint/abaplint/issues/4730) a subfield of length 0 of a flat field, `c+1(0)`
-  (`src/lower_common.ts`). Fixed in [PR #4829](https://github.com/abaplint/abaplint/pull/4829), in 2.120.123: a
-  literal length of 0 on a `c`, `n`, `d`, `t` or `x` field, a structure, and the generic types `c`, `n`,
-  `x`, `clike`, `csequence`, `xsequence` and `simple`. A `string`, an `xstring`, `any` and `data` stay valid, and so
-  are two positions: the source of `ASSIGN` (`ASSIGN c+1(0) TO <fs>.`) and the target of `WRITE … TO`. A refusal of
-  these two in the compiler is a form it does not compile, not a syntax check. Not covered: a constant of value 0 as
-  the length (arcanist123/abaplint#18, see "Later"). The compiler's check of the invalid forms goes once 2.120.123
-  is found to report every form
-- [ ] [#4743](https://github.com/abaplint/abaplint/issues/4743) a number literal of more than 31 digits
-  (`src/lower_common.ts`): leading zeros are expected to count and the sign not, while the compiler strips leading
-  zeros before counting. Also in a `VALUE` addition, which `Constant.runSyntax` does not see
-- [ ] [#4745](https://github.com/abaplint/abaplint/issues/4745) a subfield of a `utclong`, `s = u+1(1)`, `u(1) = s`
-  (`src/lower_common.ts`). Fixed in [PR #4828](https://github.com/abaplint/abaplint/pull/4828), in 2.120.123, also
-  for a field symbol of type `utclong`. The offset `0` and the length `*` take the whole field and stay valid (`u+0`,
-  `u(*)`, `u+0(*)`). The compiler's check, which also refuses these valid forms, goes once 2.120.123 is found to report
-  every invalid form. A dictionary type `UTCL` is covered since
-  [PR #4832](https://github.com/abaplint/abaplint/pull/4832)
-- [ ] [#4746](https://github.com/abaplint/abaplint/issues/4746) static bounds outside a flat field of type `n`, `d`
-  or `t`, `d+8`, `n(6)` (`src/lower_common.ts`). Fixed in waiting PR
-  [arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21), closed 2026-11-28: the check moves to
-  layer 2. As for `c` and `x`, field symbols are not
-  checked, and with a variable offset or length the other one is not checked against the field. A generic `n` parameter
-  is not checked. A constant as offset or length beyond the field is arcanist123/abaplint#18 (see "Later")
+Moved to layer 2 on 2026-11-28, since abaplint does not report them; each goes once a release does:
+- [x] `CONTINUE` outside a loop, in every processing block (`src/check/loops.ts`): issue
+  [#3660](https://github.com/abaplint/abaplint/issues/3660), with
+  [PR #4653](https://github.com/abaplint/abaplint/pull/4653) of another author open (updated 2026-11-27). Its copy,
+  waiting PR [arcanist123/abaplint#14](https://github.com/arcanist123/abaplint/pull/14), is closed (2026-11-28)
+- [x] [#4743](https://github.com/abaplint/abaplint/issues/4743) a number literal of more than 31 digits
+  (`src/check/literals.ts`), also in a `VALUE` addition, which `Constant.runSyntax` does not see. Leading zeros are
+  expected to count and the sign not; the lowering used to strip leading zeros before counting
+- [x] [#4746](https://github.com/abaplint/abaplint/issues/4746) static bounds outside a flat field of type `n`, `d`
+  or `t`, `d+8`, `n(6)` (`src/check/substring.ts`), by the rules abaplint applies to `c` and `x`: with a variable
+  offset or length the other one is not checked against the field. Unlike abaplint for `c` and `x`, a constant as
+  offset or length counts as static, as it is expected to, and a component of a structure is checked. Field symbols
+  and generic `n` parameters are not checked. Waiting PR
+  [arcanist123/abaplint#21](https://github.com/arcanist123/abaplint/pull/21) is closed (2026-11-28)
+
+Removed 2026-11-28, since 2.120.123 reports every form the lowering checked; their tests expect abaplint's finding:
+- [x] [#4729](https://github.com/abaplint/abaplint/issues/4729) `utclong` in an arithmetic expression, `u + 1`.
+  Fixed in [PR #4828](https://github.com/abaplint/abaplint/pull/4828), in 2.120.123: arithmetic expressions and
+  signs, `+=`, `-=`, `*=` and `/=` (also after `NEXT`), `ADD`, `SUBTRACT`, `MULTIPLY`, `DIVIDE`, `nmax( )` and
+  `nmin( )`, in assignments, conditions, `CASE`, `DO … TIMES`, `CONV`, templates and inline declarations. The
+  comparison `u = i + 1` is reported by [PR #4741](https://github.com/abaplint/abaplint/pull/4741). A dictionary
+  type `UTCL` is covered since [PR #4832](https://github.com/abaplint/abaplint/pull/4832). Not covered: an operand
+  after a constructor expression (see "Backlog"), and `COMPUTE` (below). #4828 only says "part of #4729": close the
+  issue once #4741 is merged too
+- [x] [#4730](https://github.com/abaplint/abaplint/issues/4730) a subfield of length 0 of a flat field, `c+1(0)`.
+  Fixed in [PR #4829](https://github.com/abaplint/abaplint/pull/4829), in 2.120.123: a literal length of 0 on a `c`,
+  `n`, `d`, `t` or `x` field, a structure, and the generic types `c`, `n`, `x`, `clike`, `csequence`, `xsequence`
+  and `simple`. A `string`, an `xstring`, `any` and `data` stay valid, and so are two positions: the source of
+  `ASSIGN` (`ASSIGN c+1(0) TO <fs>.`) and the target of `WRITE … TO`. Not covered: a constant of value 0 as the
+  length (arcanist123/abaplint#18, see "Later")
+- [x] [#4745](https://github.com/abaplint/abaplint/issues/4745) a subfield of a `utclong`, `s = u+1(1)`, `u(1) = s`.
+  Fixed in [PR #4828](https://github.com/abaplint/abaplint/pull/4828), in 2.120.123, also for a field symbol of
+  type `utclong` and a dictionary type `UTCL`. The offset `0` and the length `*` take the whole field and stay
+  valid (`u+0`, `u(*)`, `u+0(*)`); the lowering, which refused them as syntax errors, now refuses the length `*` as
+  not compiled yet
+
+Open, layer 1: abaplint parses `COMPUTE` into the right tree (a `Compute` statement with its `Target` and `Source`),
+but its syntax check has no handler for the statement and skips it. Nothing in it is resolved or typed: valid code
+such as `COMPUTE r = i + 1.` gets no references and no types, where `r = i + 1.` gets a write to `r` and a read of
+`i`. As a consequence, `COMPUTE r = zzz + 1.` with an unknown `zzz`, `COMPUTE r = u + 1.` with a `utclong` and
+`COMPUTE s = c5(0).` are accepted, while ABAP is expected to reject each of them. Valid code left untyped is a layer 1
+defect, so the fix goes upstream: a handler that checks `COMPUTE` (with or without `EXACT`) as the assignment it
+stands for. No layer 2 check is written for it, since layer 2 cannot type a statement on its own. The compiler does
+not compile `COMPUTE` yet and refuses it as not supported; it needs the fix before it does.
 
 Dropped 2026-11-27, since it is no syntax error: a `utclong` value after `WHEN` when the operand of `CASE` is an
 arithmetic expression, `CASE i + 1. WHEN u.`, is expected to be valid, unlike `CASE i. WHEN u.`, so abaplint is right
@@ -478,7 +492,7 @@ Invalid ABAP that abaplint accepts:
 |---|---|---|
 | [#4801](https://github.com/abaplint/abaplint/issues/4801) | `IN` with a right operand that is not a ranges table (`i IN c`, another line type, `( r )`, `VALUE #( )`), and an arithmetic expression before a table with a character-like `low`, are accepted | predicates and operators, `IN` once ranges tables are compiled |
 | [#4806](https://github.com/abaplint/abaplint/issues/4806) | non-character operands of `CO` to `NP` in a `WHERE` condition of an internal table (`LOOP AT`, `DELETE`, `MODIFY`, `FOR`) are accepted: `ComponentCompare` checks no operand types. A numeric built-in function on the right is expected to be an error there too. The byte operators are not checked there either, their expected behaviour is not worked out | predicates and operators |
-| [#4712](https://github.com/abaplint/abaplint/issues/4712) | the literal of a `VALUE` addition that does not convert to a numeric type (`DATA i TYPE i VALUE 'abc'.`, a number outside the range) is accepted. A move of such a literal (`i = 'abc'.`) is expected to give only a warning: valid code, the conversion fails at run time | `CONSTANTS` and `DATA … VALUE` with static operands |
+| [#4712](https://github.com/abaplint/abaplint/issues/4712) | the literal of a `VALUE` addition that does not convert to a numeric type (`DATA i TYPE i VALUE 'abc'.`, a number outside the range) is accepted. A move of such a literal (`i = 'abc'.`) is expected to give only a warning: valid code, the conversion fails at run time | now, in layer 2: the compiler compiles `DATA … VALUE` and builds such a literal, which fails at run time (see [compiler_roadmap.md](compiler_roadmap.md), "Next") |
 | [#4642](https://github.com/abaplint/abaplint/issues/4642) | an assignment between flat structures with non-matching fragment views is accepted | structure assignments |
 | [#4772](https://github.com/abaplint/abaplint/issues/4772) | parentheses around an actual parameter of a method are accepted when the formal parameter is character-like, a date, a table or of type `data`; with a numeric parameter they are valid | method calls with parameters |
 | [#4775](https://github.com/abaplint/abaplint/issues/4775) | parentheses around a single operand in `NEW`. A check has to cover the forms of [#4779](https://github.com/abaplint/abaplint/issues/4779) too once they parse | objects and `NEW` |

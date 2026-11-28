@@ -581,7 +581,6 @@ START-OF-SELECTION.
 }
 
 const refusals: [string, string, RegExp][] = [
-  ["CONTINUE outside a loop", "IF 1 = 1. CONTINUE. ENDIF.", /CONTINUE is only possible in a loop/],
   ["RETURN with an operand outside a functional method", "RETURN 1.", /does not have a RETURNING parameter/],
   ["EXIT FROM STEP-LOOP", "EXIT FROM STEP-LOOP.", /no additions are supported/],
   ["EXIT FROM SQL", "EXIT FROM SQL.", /no additions are supported/],
@@ -595,7 +594,7 @@ const refusals: [string, string, RegExp][] = [
   ["CASE of an arithmetic expression with a utclong value", "DATA a TYPE i.\nDATA u TYPE utclong.\nCASE a + 1.\nWHEN u.\nENDCASE.", /against an arithmetic expression is not supported/],
   ["CASE of a utclong with an i value", "DATA u TYPE utclong.\nCASE u.\nWHEN 1.\nENDCASE.", /syntax check/],
   ["DO u TIMES with a utclong", "DATA u TYPE utclong.\nDO u TIMES.\nENDDO.", /must be numeric/],
-  ["DO with a utclong expression", "DATA u TYPE utclong.\nDO u + 1 TIMES.\nENDDO.", /utclong/],
+  ["DO with a utclong expression", "DATA u TYPE utclong.\nDO u + 1 TIMES.\nENDDO.", /cannot be used in a calculation \[check_syntax\]/],
   ["d compared with t", "DATA d TYPE d.\nDATA t TYPE t.\nIF d = t.\nENDIF.", /syntax check/],
   ["utclong compared with i", "DATA u TYPE utclong.\nIF u = 1.\nENDIF.", /syntax check/],
   ["a text operand against an arithmetic expression", "DATA a TYPE i.\nDATA c TYPE c LENGTH 3.\nIF a + 0 = c.\nENDIF.", /syntax check/],

@@ -237,19 +237,30 @@ Next:
 - [ ] **first: layer 2 of the syntax check, `src/check/`** (priority set 2026-11-27, before every other item here;
   the design is [aot_for_abap.md](aot_for_abap.md), "The syntax check in two layers", the rules are
   [abaplint_roadmap.md](abaplint_roadmap.md), "Two layers")
-  - the pass: `check(registry): Issue[]` in `src/check/index.ts`, called in `src/load.ts` right after `validate()`,
-    so every finding of both layers is reported before any lowering. It takes the scopes from the same syntax run as
-    `src/validation.ts` and `src/lower_common.ts` (abaplint caches it on the object), uses only abaplint's public
-    API, and reports in abaplint's `Issue` format. One file per group of checks, one test file per check file in
-    `test/check/`
-  - move the lowering's six syntax checks there, as they are, with their tests: `CONTINUE` outside a loop
-    (`src/lower_block.ts`), a `utclong` as an operand of a calculation (`checkOperands` in `src/lower_arith.ts`) and
-    with a subfield, a static length of 0 on a flat field, static bounds outside an `n`, `d` or `t` field (all
-    `lowerSubstring` in `src/lower_common.ts`), and a number literal of more than 31 digits (`integerLiteral` in
-    `src/lower_common.ts`). None waits for an abaplint PR or release any more. 2.120.123 reports three of them, a
-    `utclong` in a calculation, a subfield of a `utclong` and a static length of 0 (abaplint#4828, #4829): each of
-    these goes instead, once that release is found to report its case in every form. The waiting PRs for the other
-    two that abaplint does not report, `CONTINUE` and the bounds of `n`, `d` and `t` (fork #14 and #21), are closed
+  - [x] the pass (2026-11-28): `check(registry, layer1): Issue[]` in `src/check/index.ts`, called in `src/load.ts`
+    right after `validate()`, so every finding of both layers is reported before any lowering. It takes the scopes
+    from the same syntax run as `src/validation.ts` and `src/lower_common.ts` (abaplint caches it on the object),
+    uses only abaplint's public API, and reports in abaplint's `Issue` format, with a key per check. An object with
+    a finding of layer 1 is left out, as abaplint stops typing it at its first error. One file per group of checks,
+    one test file per check file in `test/check/`, run without Go (`syntaxCheck` in `test/harness.ts`)
+  - [x] the lowering's six syntax checks (2026-11-28). Three moved: `CONTINUE` outside a loop
+    (`src/check/loops.ts`), static bounds outside an `n`, `d` or `t` field, constants and components of structures
+    included (`src/check/substring.ts`), and a number literal of more than 31 digits, where leading zeros now count
+    as they are expected to (`src/check/literals.ts`). Three went, as 2.120.123 reports every form the lowering
+    checked (abaplint#4828, #4829): a `utclong` in a calculation, a subfield of a `utclong` and a static length of
+    0; their tests expect abaplint's finding. The lowering refused the valid `u(*)` as a syntax error; it now
+    refuses it as not compiled yet. The lowering has no syntax check left
+  - first, in abaplint: the syntax check skips `COMPUTE` (no handler), so valid code in it is not typed. The fix
+    goes upstream before the items below ([abaplint_roadmap.md](abaplint_roadmap.md), "First: `COMPUTE`
+    upstream"); the compiler refuses `COMPUTE` until then
+  - then, what the compiler needs of layer 2 today, in this order:
+    - a subfield of a numeric type (`i+0`, `i(4)`, valid since abaplint#4830, in 2.120.123) reaches
+      `lowerSubstring` and gives Go that does not build: refuse it as not compiled yet (a lowering fix, not layer 2)
+    - a `VALUE` literal that does not convert to its field's type (`DATA x TYPE i VALUE 3000000000.`, a `b` of
+      `VALUE 300`) is expected to be a syntax error; abaplint accepts every such literal (abaplint#4712, open) and
+      the compiler builds it, so it fails at run time. A layer 2 check, which also covers the range of `b` and `s`
+      below. A move of such a literal (`b = 300.`) is expected to give only a warning and stays a run-time error
+    - the Unicode flag (below): the compiler does not read `UCCHECK`, so a program without it is compiled as Unicode
   - port the checks of the waiting PRs on the abaplint fork and of the abaplint PRs that only add checks (listed in
     [abaplint_roadmap.md](abaplint_roadmap.md), "Invalid syntax to fix, without a check in the compiler"), one at a
     time, each leaving the abaplint patch as its port lands: abaplint#4739, #4741, #4635 and #4761, then fork #1 to
@@ -280,8 +291,8 @@ Next:
   - a literal that does not convert to its static target, moved by `=` (`i = 'abc'.`), is expected to give only a
     warning: valid code, whose conversion fails at run time as for a variable. Such a move already compiles and
     raises when it runs, and stays so when its cell is chosen at build time; the six "as written" transpiler fixtures
-    are its test cases. Only the literal of a `VALUE` addition that would raise is a syntax error, to be reported by
-    abaplint (abaplint#4712)
+    are its test cases. Only the literal of a `VALUE` addition that would raise is a syntax error, reported by
+    layer 2 (abaplint#4712, see the first item)
   - their status lines still say "syntax error": change them to the result of the run. Two of the six build today
     (`arithmetics`, `integer_operations` "from text"), four wait for `abap_true`, `CLEAR` and `TYPES`
 - [ ] the rest of `calculation_contexts.tsv` as its statements are compiled: inline declarations, templates, `CONV`,

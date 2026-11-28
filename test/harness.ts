@@ -4,6 +4,7 @@ import * as path from "node:path";
 import { execFileSync } from "node:child_process";
 import { build } from "../src/build";
 import { BuildError } from "../src/errors";
+import { loadPackages } from "../src/load";
 
 const MANIFEST = fs.readFileSync(path.join(__dirname, "..", "..", "examples", "hello", ".abapgit.xml"), "utf-8");
 const PROG_XML = (name: string) => `<?xml version="1.0" encoding="utf-8"?>
@@ -28,12 +29,8 @@ const CLAS_XML = (name: string) => `<?xml version="1.0" encoding="utf-8"?>
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "abap2go-test-"));
 let counter = 0;
 
-/**
- * Builds the root from one source file and returns its stdout, or the refusal message, or the runtime error.
- * With a user setup, the executable runs with --user-setup pointing at it; a run it rejects (exit code 2) gives
- * rejected with its message. files are more files of the package, by file name (data elements, domains).
- */
-export function run(kind: "prog" | "clas", source: string, userSetup?: object, files: Record<string, string> = {}): { stdout?: string; refused?: string; failed?: string; rejected?: string } {
+/** Writes a package of one source file and more files, by file name, and returns its folder and root name. */
+function writePackage(kind: "prog" | "clas", source: string, files: Record<string, string>): { dir: string; name: string } {
   const dir = path.join(tmp, String(counter++));
   const name = kind === "prog" ? "ZPROBE" : "ZCL_PROBE";
   fs.mkdirSync(path.join(dir, "src"), { recursive: true });
@@ -43,6 +40,33 @@ export function run(kind: "prog" | "clas", source: string, userSetup?: object, f
   }
   fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.abap`), source);
   fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.xml`), kind === "prog" ? PROG_XML(name) : CLAS_XML(name));
+  return { dir, name };
+}
+
+/**
+ * Runs both layers of the syntax check over a package of one source file, without lowering or Go, and returns the
+ * findings as `row:col: message [key]`, empty if it passes.
+ */
+export function syntaxCheck(kind: "prog" | "clas", source: string, files: Record<string, string> = {}): string[] {
+  const { dir } = writePackage(kind, source, files);
+  try {
+    loadPackages([dir]);
+    return [];
+  } catch (e) {
+    if (!(e instanceof BuildError)) {
+      throw e;
+    }
+    return e.message.split("\n").slice(1).map(line => line.replace(/^.*?:(?=\d+:\d+: )/, ""));
+  }
+}
+
+/**
+ * Builds the root from one source file and returns its stdout, or the refusal message, or the runtime error.
+ * With a user setup, the executable runs with --user-setup pointing at it; a run it rejects (exit code 2) gives
+ * rejected with its message. files are more files of the package, by file name (data elements, domains).
+ */
+export function run(kind: "prog" | "clas", source: string, userSetup?: object, files: Record<string, string> = {}): { stdout?: string; refused?: string; failed?: string; rejected?: string } {
+  const { dir, name } = writePackage(kind, source, files);
   let exe: string;
   try {
     exe = build({ inputs: [dir], root: name, out: path.join(dir, "out") });
@@ -97,4 +121,4 @@ export const dtel = (name: string, fields: string) => ({
 });
 export const doma = (name: string, fields: string) => ({
   [`${name.toLowerCase()}.doma.xml`]: abapgit("LCL_OBJECT_DOMA", `   <DD01V><DOMNAME>${name}</DOMNAME><DDLANGUAGE>E</DDLANGUAGE>${fields}<DDTEXT>t</DDTEXT></DD01V>`),
-});
+});
