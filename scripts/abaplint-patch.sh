@@ -4,8 +4,8 @@
 # not released), plus the open waiting PRs on the author's fork (fixes that need the code of an open upstream PR
 # and so cannot go upstream yet, see docs/abaplint_roadmap.md, "Waiting PRs on the fork"). Each one is merged into
 # a scratch worktree of the abaplint checkout, so the checkout itself is left alone. The upstream PRs are merged
-# first, then the waiting PRs in the order they were opened. When both lists come out empty, delete the patch and
-# the postinstall hook.
+# first, then the waiting PRs in the order they were opened. A PR listed in patches/abaplint-skipped.txt is left
+# out. When both lists come out empty, delete the patch and the postinstall hook.
 #
 # usage: scripts/abaplint-patch.sh <abaplint checkout> [<version>]
 #   <version> defaults to the @abaplint/core version in package.json; to move to a newer release,
@@ -19,6 +19,9 @@ version=${2:-$(cd "$root" && node -p "require('./package.json').dependencies['@a
 work=$(mktemp -d)
 trap 'git -C "$repo" worktree remove --force "$work/abl" 2>/dev/null; rm -rf "$work"' EXIT
 
+# whether patches/abaplint-skipped.txt names the PR, as the first word of a line
+skipped() { grep -qE "^$1([[:space:]]|$)" "$root/patches/abaplint-skipped.txt"; }
+
 upstream=https://github.com/abaplint/abaplint.git
 git -C "$repo" fetch -q "$upstream" --tags
 git -C "$repo" worktree add -q --detach "$work/abl" "v$version"
@@ -31,6 +34,7 @@ build pristine
 prs=$(gh pr list -R abaplint/abaplint --author "$author" --state all --limit 500 \
   --json number,state,mergeCommit -q '.[] | select(.state != "CLOSED") | "\(.number) \(.mergeCommit.oid // "-")"' |
   while read -r n c; do
+    if skipped "abaplint#$n"; then continue; fi
     if [ "$c" = "-" ] || ! git merge-base --is-ancestor "$c" "v$version" 2>/dev/null; then echo "$n"; fi
   done | sort -n)
 echo "PRs not in $version: $(echo $prs)"
@@ -41,7 +45,10 @@ for n in $prs; do
   git branch -q -D "abap2go-pr$n"
 done
 fork=https://github.com/$author/abaplint.git
-waiting=$(gh pr list -R "$author/abaplint" --state open --limit 100 --json number -q '.[].number' | sort -n)
+waiting=$(gh pr list -R "$author/abaplint" --state open --limit 100 --json number -q '.[].number' | sort -n |
+  while read -r n; do
+    if ! skipped "$author/abaplint#$n"; then echo "$n"; fi
+  done)
 echo "waiting PRs on the fork: $(echo $waiting)"
 for n in $waiting; do
   git fetch -q "$fork" "+pull/$n/head:abap2go-fork$n"
