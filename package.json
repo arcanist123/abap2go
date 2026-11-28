@@ -15,7 +15,7 @@
     "classrun": "tsc && node build/src/cli.js --input examples/classrun --root ZCL_HELLO --out out/classrun"
   },
   "dependencies": {
-    "@abaplint/core": "2.120.122"
+    "@abaplint/core": "2.120.123"
   },
   "devDependencies": {
     "@types/node": "^22.20.5",

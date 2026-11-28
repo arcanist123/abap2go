@@ -35,7 +35,7 @@ prs=$(gh pr list -R abaplint/abaplint --author "$author" --state all --limit 500
   done | sort -n)
 echo "PRs not in $version: $(echo $prs)"
 for n in $prs; do
-  git fetch -q "$upstream" "pull/$n/head:abap2go-pr$n"
+  git fetch -q "$upstream" "+pull/$n/head:abap2go-pr$n"
   git -c user.name=abap2go -c user.email=abap2go@invalid merge -q --no-edit "abap2go-pr$n" ||
     { echo "PR $n does not merge cleanly onto $version"; exit 1; }
   git branch -q -D "abap2go-pr$n"
@@ -44,7 +44,7 @@ fork=https://github.com/$author/abaplint.git
 waiting=$(gh pr list -R "$author/abaplint" --state open --limit 100 --json number -q '.[].number' | sort -n)
 echo "waiting PRs on the fork: $(echo $waiting)"
 for n in $waiting; do
-  git fetch -q "$fork" "pull/$n/head:abap2go-fork$n"
+  git fetch -q "$fork" "+pull/$n/head:abap2go-fork$n"
   git -c user.name=abap2go -c user.email=abap2go@invalid merge -q --no-edit "abap2go-fork$n" ||
     { echo "fork PR $n does not merge cleanly onto $version and the upstream PRs"; exit 1; }
   git branch -q -D "abap2go-fork$n"
