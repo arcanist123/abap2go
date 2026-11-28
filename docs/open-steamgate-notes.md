@@ -1,7 +1,7 @@
 # Notes on open-steamgate's Go backend
 
 Measurements of gogen, the ABAP → Go backend of [open-steamgate](https://github.com/oisee/open-steamgate)
-(`tools/gogen/`, MIT), taken from its source and by running it, at `main` `9d2f0529`, 2026-11-24. gogen is an
+(`tools/gogen/`, MIT), taken from its source and by running it, at `main` `9d2f0529` (committed 2026-11-19), on 2026-11-24. gogen is an
 impressive body of work and the closest prior art to abap2go; these notes record what was measured, as input to
 [aot_for_abap.md](aot_for_abap.md), and are not a review of the project. Numbers are from one machine and one
 set of probe programs, so they are indications, not benchmarks.
@@ -110,7 +110,40 @@ Cause: `tools/gogen/frontend-types-signatures.mjs:137` builds the "shape" that d
 the same from component **names** only, never from their types. Any two structures in one class with equal field
 names and different field types are affected, not only RTTI code. Fix: put each component's type into the shape. Reported as
 [oisee/open-steamgate#1012](https://github.com/oisee/open-steamgate/issues/1012) (2026-11-24), with a minimal
-reproducer: two methods whose `b` is `c LENGTH 5` and `string`; the second returns 5 instead of 11.
+reproducer: two methods whose `b` is `c LENGTH 5` and `string`; the second returns 5 instead of 11. Fixed on
+2026-11-27 (`ca2bd439`): the shape includes each component's type.
+
+## Rechecked on 2026-11-28
+
+At `main` `5b53c2e0`, with a local checkout (`external/open-steamgate`, ignored by git):
+- still as measured: the closure with a deferred `MessageCallScope` around every method call, the reflection in
+  `BumpTable`, `p` as a decimal string parsed for each operation (`PFit` in `go/abap/packed.go`), HASHED and
+  SORTED tables as slices read by a linear scan, the 52-line class closure, `abap.Data` and `abap.Type` as
+  described
+- fixed: [#1012](https://github.com/oisee/open-steamgate/issues/1012) (above) and
+  [#989](https://github.com/oisee/open-steamgate/issues/989), a leading minus taken for the whole expression
+  (`197a3e94`)
+
+## `ANORMALIES.md` against the rule tables
+
+Checked 2026-11-28. Of about 270 entries, 43 concern elementary fields. Their SAP results were run through
+abap2go as 141 cases (moves, `DIV` and `MOD` with negative divisors, `p` with decimals, `/` rounded within an `i`
+calculation, `f` into `i`, byte comparisons and moves, `c` into `x`, `int8` boundaries): abap2go gives every
+result the entries name, apart from two points where an entry itself is off:
+- `ANOMALY-2026-11-09-space-eq-string-substring` takes `s+1(1) = space` to be true for `` s = `A ` ``, and says the
+  result is unmeasured. ABAP is expected to give false: the `c` operand becomes an empty string, and a blank string
+  is not equal to an empty one. abap2go gives false
+- `ANOMALY-2026-09-30-concat-packed-drops-decimals` and `ANOMALY-2026-11-14-packed-21-format` give a positive `p`
+  in a `string` as `10.50`. The conversion keeps the place of the sign, `10.50 `, as `conversion.tsv` has it; the
+  trailing blank goes only with a `CONDENSE`
+
+The other elementary entries are about the transpiler's JS runtime, settled upstream, or outside the milestone
+(templates, `&&`, `FIND`, `REPLACE`, the string functions, list output). They are cells for the specifications of
+string templates and of the built-in functions. One is for abaplint:
+`ANOMALY-2026-09-17-character-operand-calculation-type` (an inline declaration from `i * '2'` is
+`p LENGTH 8 DECIMALS 0`) is still typed `i` by abaplint 2.120.125 (see [abaplint_roadmap.md](abaplint_roadmap.md)).
+`sin( )` and `cos( )` follow the C library (`ANOMALY-2026-09-23-sin-cos-libm`); Go's `math.Sin` gives the value the
+entry names for its one argument, which settles nothing for the other inputs.
 
 ## What this means for abap2go
 
