@@ -75,8 +75,8 @@ accepted: abap2go compiles only part of valid ABAP, and refuses the rest for its
   rejects or mistypes valid ABAP, leaves it untyped, or builds a wrong syntax tree for valid or invalid code, the fix
   goes into abaplint, carried here in `patches/` and sent upstream as a PR.
 - **Layer 2, abap2go's own checks** in `src/check/`, run after layer 1 on its tree and types: invalid ABAP that
-  abaplint parses into the right tree but accepts, the Unicode flag of each program, the internal types `b` and
-  `s`, and the absolute positions of code expanded from macros.
+  abaplint parses into the right tree but accepts, the non-Unicode-only forms, the internal types `b` and `s`, and
+  the absolute positions of code expanded from macros.
 
 Non-Unicode programs are out of scope. A layer 2 check goes once an abaplint release reports its case in every form, so the two do not
 drift apart. Valid code that abaplint rejects cannot be worked around in layer 2, since check_syntax stops typing
@@ -84,10 +84,42 @@ at its first error; it is always fixed in layer 1. The rules are in [abaplint_ro
 "Two layers".
 
 Not a syntax check, so part of abap2go:
-- refusing valid ABAP because of the restrictions of AOT compilation (code named dynamically, `CASTING`,
-  `GENERATE SUBROUTINE POOL`, ...);
-- refusing valid ABAP that is not compiled yet;
+- refusing valid ABAP outside abap2go's scope, in the scope pass, and valid ABAP not compiled yet, in the lowering
+  (see "Four kinds of refusal");
 - the run-time rules for generic operands, where a pair that is a syntax error with static types is a run-time error.
+
+## Four kinds of refusal
+
+**Decided 2026-11-28.** Every refusal of a build is of one of four kinds, and each kind has one place:
+
+| Kind | What it means | Where |
+|---|---|---|
+| Syntax error | invalid ABAP | layers 1 and 2, above |
+| Out of scope | valid ABAP that abap2go does not compile by design | the scope pass, `src/scope/` |
+| Not compiled yet | valid ABAP in scope that the lowering cannot compile yet | the lowering |
+| Internal error | a case the checks before the lowering rule out; a bug in abap2go | the lowering |
+
+`src/load.ts` runs layer 1, layer 2 and the scope pass over the whole world, and reports every finding of the
+three before any lowering, under two headings: "do not pass the syntax check" and "use ABAP that abap2go does not
+support". The user can tell code that is wrong from code that abap2go does not take.
+
+**The scope pass.** A rule is in scope when it has a reason that holds whatever the lowering learns: the
+restrictions of AOT compilation (code named dynamically, `CASTING`, `GENERATE SUBROUTINE POOL`, ...), program
+attributes abap2go does not support (a program without the Unicode flag `UCCHECK`, or without fixed-point arithmetic
+`FIXPT`), and code whose meaning abap2go cannot be sure of (a statement with more than one reading, a macro defined
+twice in an object; see [abaplint_ambiguous_parsing.md](abaplint_ambiguous_parsing.md)). A rule goes when its reason
+does. Its checks may look at the whole program, not one statement, so it is a pass over the registry, like layer 2.
+An abaplint rule that reports such cases, such as `ambiguous_statement`, is turned on in `src/validation.ts` and its
+findings are moved from layer 1 to the scope pass (`SCOPE_RULES`), so that they do not keep layer 2 from checking the
+object. The lowering assumes what the scope pass guarantees, as it does for the syntax check.
+
+The Unicode flag is split: refusing a program without it is scope; the non-Unicode-only forms in a Unicode program
+are syntax errors, in layer 2.
+
+**The lowering** keeps only what it alone knows: whether it can compile a statement. A separate pass would repeat
+that knowledge and drift from it with every statement the lowering learns. It refuses with a finding that says
+"not compiled yet", and is to collect these and report them all, as the checks before it do, rather than stop at
+the first. An internal error has its own error class, so that it reads as a bug in abap2go, not as a limit.
 
 ## Goal and scope
 

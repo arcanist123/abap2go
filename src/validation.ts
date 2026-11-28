@@ -1,8 +1,9 @@
-// The checks the input must pass, the same way abaplint/transpiler validates its input: its configuration and its
-// filter for ambiguous statements, from packages/transpiler/src/validation.ts (abaplint/transpiler at 055af9c8).
+// The checks the input must pass, the same way abaplint/transpiler validates its input: its configuration, from
+// packages/transpiler/src/validation.ts (abaplint/transpiler at 055af9c8).
 // Copyright (c) abaplint, MIT License, see LICENSES/abaplint-transpiler.txt.
 //
-// Differences: the release is v758 (the transpiler's skipVersionCheck), and forbidden_identifier is left out: it
+// Differences: the release is v758 (the transpiler's skipVersionCheck), the transpiler's filter that lets some
+// ambiguous DELETE and MODIFY statements through is left out, and forbidden_identifier is left out: it
 // keeps ABAP names from clashing with the names the transpiler generates in JavaScript, which abap2go does not have.
 // Some of the rules report what ABAP reports as syntax errors but abaplint's check_syntax does not (unknown types,
 // methods not implemented, END OF names); see "Rules that replace the syntax check" in docs/abaplint_roadmap.md.
@@ -48,43 +49,12 @@ export const config = {
   },
 };
 
-/** The issues of the registry under the configuration; every one is an error. */
+/**
+ * The issues of the registry under the configuration; every one refuses the build. Most are syntax errors (layer 1);
+ * those of the rules in SCOPE_RULES (src/scope/), such as ambiguous_statement, are valid ABAP outside abap2go's
+ * scope.
+ */
 export function validate(registry: abaplint.IRegistry): readonly abaplint.Issue[] {
   registry.setConfig(new abaplint.Config(JSON.stringify(config)));
-  const scopes = new Map<abaplint.ABAPObject, abaplint.ISpaghettiScope>();
-  return registry.findIssues().filter(i => i.getKey() !== "ambiguous_statement" || !isUnambiguous(registry, i, scopes));
-}
-
-/**
- * DELETE name., DELETE name FROM x., MODIFY name. and MODIFY name FROM x. read two ways, so abaplint calls them
- * ambiguous. ABAP decides by the name: a variable of table type is the internal table, anything else the database
- * table.
- */
-function isUnambiguous(registry: abaplint.IRegistry, issue: abaplint.Issue,
-                       scopes: Map<abaplint.ABAPObject, abaplint.ISpaghettiScope>): boolean {
-  const file = registry.getFileByName(issue.getFilename());
-  const obj = file ? registry.findObjectForFile(file) : undefined;
-  if (!(obj instanceof abaplint.ABAPObject)) {
-    return false;
-  }
-  const statement = obj.getABAPFileByName(issue.getFilename())?.getStatements()
-    .find(s => s.getStart().equals(issue.getStart()));
-  const token = statement?.getTokens()[1];
-  if (statement === undefined || token === undefined || token.getStr().toUpperCase() === "TABLE") {
-    return false;
-  }
-  const modify = statement.getFirstToken().getStr().toUpperCase() === "MODIFY";
-  if (!modify && !(statement.get() instanceof abaplint.Statements.DeleteInternal)) {
-    return false;
-  }
-  let spaghetti = scopes.get(obj);
-  if (spaghetti === undefined) {
-    spaghetti = new abaplint.SyntaxLogic(registry, obj).run().spaghetti;
-    scopes.set(obj, spaghetti);
-  }
-  const variable = spaghetti.lookupPosition(token.getStart(), issue.getFilename())?.findVariable(token.getStr());
-  if (variable?.getType() instanceof abaplint.BasicTypes.TableType) {
-    return true;
-  }
-  return variable !== undefined || statement.findExpressionAfterToken("FROM") !== undefined;
+  return registry.findIssues();
 }
