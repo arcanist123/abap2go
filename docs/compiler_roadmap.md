@@ -152,8 +152,8 @@ compiler and can be written ahead of their step.
    #4739 and the `COMPUTE` fix (PR abaplint#4844), and #4741, #4761 and fork #1 to #3 are ported
    (`src/check/comparison.ts`,
    `src/check/case.ts`) and out of the patch (`patches/abaplint-skipped.txt`, which keeps the fork's #4 to #6 out
-   as well). `COMPUTE` can be compiled now. The lowering collects every "not compiled yet" finding instead
-   of stopping at the first, so what a program still lacks shows in one run. CI runs `npm test`
+   as well). `COMPUTE` can be compiled now. Done 2026-11-28: the lowering collects every "not compiled yet" finding
+   instead of stopping at the first, so what a program still lacks shows in one run. Left: CI runs `npm test`
 2. [ ] **The value model and the test harness**
    - `spec/storage.md`: the layout per kind (Go representation, size, ranges of lengths and values, initial value,
      invariants), the special values included (a decfloat that holds infinities and NaN, the sign of a NaN), and a
@@ -469,9 +469,16 @@ Next (the order is that of the milestone's steps above; this list keeps the deta
   - an object that defines the same macro name more than once
   - the restrictions of AOT compilation the lowering refuses today (code named dynamically, `CASTING`, ...), as they
     come up
-- [ ] the lowering's refusals: collect every "not compiled yet" finding and report them all, instead of stopping at
-  the first; internal errors (a case the checks rule out, such as "malformed arithmetic expression") get their own
-  error class ([aot_for_abap.md](aot_for_abap.md), "Four kinds of refusal")
+- [x] the lowering's refusals (2026-11-28, `src/errors.ts`, `test/not_compiled.test.ts`): every "not compiled yet"
+  finding is collected and reported at once (`NotCompiled`), and internal errors (a case the checks rule out, such as
+  "malformed arithmetic expression") have their own error class, `InternalError`, which ends the build at once
+  ([aot_for_abap.md](aot_for_abap.md), "Four kinds of refusal")
+  - looked at after a finding: the other statements and blocks, the parts of a control structure, the operands of a
+    logical expression, a comparison, a move and an arithmetic expression, function arguments, subfield bounds, and
+    the blocks inside a structure that is not compiled (`LOOP`, `FORM`, the methods of a local class)
+  - not looked at: the rest of a statement that is not compiled, and what follows an operator that is not compiled.
+    A variable of a type that is not compiled is reported at every use. A root that cannot be one (not an executable
+    program, a class without `IF_OO_ADT_CLASSRUN`) is reported alone
 - [ ] control flow, the rest: `IS INITIAL`, `IN` and the string, byte and bit operators with `sy-fdpos`
   ([spec/comparison.md](spec/comparison.md), "Predicate expressions and comparison operators"; `IN` once ranges
   tables are compiled), their cells run by the tests; the other predicates once the comparison table has them;

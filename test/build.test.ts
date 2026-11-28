@@ -120,19 +120,19 @@ for (const [name, body, refused] of ddicRefusals) {
 }
 
 const reportRefusals: [string, string, RegExp][] = [
-  ["DATA of a reference", "REPORT zprobe.\nDATA x TYPE REF TO object.", /:2:1: x: type .* is not supported yet/],
+  ["DATA of a reference", "REPORT zprobe.\nDATA x TYPE REF TO object.", /:2:1: x: type .* is not compiled yet/],
   ["inline declaration of a calculation", "REPORT zprobe.\nDATA x TYPE i.\nDATA(y) = x + 1.", /:3:1: .*only variable = literal, variable or arithmetic expression/],
   ["utclong operand", "REPORT zprobe.\nDATA u TYPE utclong.\nDATA x TYPE i.\nx = u + 1.", /"u" is a time stamp of type utclong, it cannot be used in a calculation \[check_syntax\]/],
   ["abs( ) without its argument", "REPORT zprobe.\nDATA x TYPE i.\nx = abs( ).", /syntax check/],
   ["ipow( ) without exp", "REPORT zprobe.\nDATA x TYPE i.\nx = ipow( base = 2 ).", /syntax check/],
   ["ipow( ) with an unknown argument", "REPORT zprobe.\nDATA x TYPE i.\nx = ipow( base = 2 exp = 2 foo = 1 ).", /syntax check/],
   ["strlen( ) with two arguments", "REPORT zprobe.\nDATA x TYPE i.\nx = strlen( a = `a` b = `b` ).", /syntax check/],
-  ["a method call in an expression","REPORT zprobe.\nDATA x TYPE i.\nx = cl_abap_random=>create( )->int( ) + 1.", /not supported|syntax check/],
+  ["a method call in an expression","REPORT zprobe.\nDATA x TYPE i.\nx = cl_abap_random=>create( )->int( ) + 1.", /not compiled|syntax check/],
   ["WRITE of an expression", "REPORT zprobe.\nDATA x TYPE i.\nWRITE x + 1.", /WRITE of x \+ 1: only a literal, a variable or a subfield/],
   ["WRITE addition", "REPORT zprobe.\nWRITE 'a' COLOR 1.", /no additions/],
-  ["WRITE of a constant", "REPORT zprobe.\nCONSTANTS c TYPE string VALUE `a`.\nWRITE c.", /statement Constant is not supported yet/],
-  ["other events", "REPORT zprobe.\nINITIALIZATION.\nSTART-OF-SELECTION.\nWRITE 'a'.", /statement Initialization is not supported yet/],
-  ["TOP-OF-PAGE", "REPORT zprobe.\nTOP-OF-PAGE.\nWRITE 'h'.\nSTART-OF-SELECTION.\nWRITE 'a'.", /statement TopOfPage is not supported yet/],
+  ["WRITE of a constant", "REPORT zprobe.\nCONSTANTS c TYPE string VALUE `a`.\nWRITE c.", /statement Constant is not compiled yet/],
+  ["other events", "REPORT zprobe.\nINITIALIZATION.\nSTART-OF-SELECTION.\nWRITE 'a'.", /statement Initialization is not compiled yet/],
+  ["TOP-OF-PAGE", "REPORT zprobe.\nTOP-OF-PAGE.\nWRITE 'h'.\nSTART-OF-SELECTION.\nWRITE 'a'.", /statement TopOfPage is not compiled yet/],
   ["REPORT addition", "REPORT zprobe MESSAGE-ID zz.\nWRITE 'a'.", /REPORT addition MESSAGE-ID/],
   ["syntax error", "REPORT zprobe.\nWRITE foo.", /do not pass the syntax check[\s\S]*"foo" not found/],
   // checked as abaplint/transpiler checks its input: an unknown type is an error, not a void type
@@ -240,7 +240,7 @@ test("report: DATA and moves run before WRITE", () => {
 
 const classrunRefusals: [string, string, RegExp][] = [
   ["chained write", "out->write( 'a' )->write( 'b' ).", /only out->write/],
-  ["other statement", "DATA x TYPE i. CLEAR x.", /statement Clear is not supported yet/],
+  ["other statement", "DATA x TYPE i. CLEAR x.", /statement Clear is not compiled yet/],
   ["non-literal data", "out->write( sy-uname ).", /only a literal, a variable or a subfield/],
 ];
 for (const [name, body, refused] of classrunRefusals) {
@@ -264,7 +264,7 @@ CLASS zcl_probe IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 `;
-  assert.match(run("clas", source).refused ?? "", /CONSTRUCTOR is not supported yet/);
+  assert.match(run("clas", source).refused ?? "", /CONSTRUCTOR is not compiled yet/);
 });
 
 test("class without IF_OO_ADT_CLASSRUN is not a root", () => {

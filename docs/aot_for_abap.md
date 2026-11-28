@@ -118,8 +118,9 @@ are syntax errors, in layer 2.
 
 **The lowering** keeps only what it alone knows: whether it can compile a statement. A separate pass would repeat
 that knowledge and drift from it with every statement the lowering learns. It refuses with a finding that says
-"not compiled yet", and is to collect these and report them all, as the checks before it do, rather than stop at
-the first. An internal error has its own error class, so that it reads as a bug in abap2go, not as a limit.
+"not compiled yet", and collects these and reports them all, as the checks before it do, rather than stop at the
+first: each part that does not depend on another is lowered whether or not the one before it could be. An internal
+error has its own error class, so that it reads as a bug in abap2go, not as a limit, and ends the build at once.
 
 ## Goal and scope
 

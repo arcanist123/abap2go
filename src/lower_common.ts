@@ -1,11 +1,11 @@
 import * as abaplint from "@abaplint/core";
-import { BuildError } from "./errors";
+import { InternalError, lowerAll, notCompiled, Where } from "./errors";
 import { IRCalculate, IRData, IRLiteral, IRMove, IRSource, IRSubstring, IRSystemField, IRTarget, IRType, IRVariable } from "./ir";
-import { isArithmetic, lowerCalculate, unparenthesized } from "./lower_arith";
+import { calculation, isArithmetic, lowerArithmetic, unparenthesized } from "./lower_arith";
 
 const { Expressions, BasicTypes } = abaplint;
 
-export type Where = { file: string; row: number; col: number };
+export type { Where };
 
 export function position(file: abaplint.ABAPFile, node: abaplint.Nodes.StatementNode | abaplint.Nodes.ExpressionNode): Where {
   const start = node.getFirstToken().getStart();
@@ -84,7 +84,7 @@ export class Variables {
   }
 
   /**
-   * A build error unless WRITE formats the variable by the rules of docs/spec/write.md: a built-in type, or a
+   * Refused unless WRITE formats the variable by the rules of docs/spec/write.md: a built-in type, or a
    * data element with the output length of its built-in type and no conversion exit (the sign flag of a domain
    * does not change the output).
    */
@@ -94,37 +94,37 @@ export class Variables {
       return;
     }
     if (origin.kind === "other") {
-      throw new BuildError(`WRITE of ${v.name}: typed with ${origin.text}; only built-in types and data elements are supported yet`, where);
+      throw notCompiled(`WRITE of ${v.name}: typed with ${origin.text}; only built-in types and data elements are compiled yet`, where);
     }
     const dtel = this.registry.getObject("DTEL", origin.name);
     const dtelXML = dtel?.getXML() ?? "";
     const domainName = xmlField(dtelXML, "DOMNAME");
     const attributes = domainName === "" ? dtelXML : this.registry.getObject("DOMA", domainName)?.getXML();
     if (attributes === undefined) {
-      throw new BuildError(`WRITE of ${v.name}: domain ${domainName} of data element ${origin.name} not found`, where);
+      throw notCompiled(`WRITE of ${v.name}: domain ${domainName} of data element ${origin.name} not found`, where);
     }
     const convexit = xmlField(attributes, "CONVEXIT");
     if (convexit !== "") {
-      throw new BuildError(`WRITE of ${v.name}: conversion exit ${convexit} of data element ${origin.name} is not supported yet`, where);
+      throw notCompiled(`WRITE of ${v.name}: conversion exit ${convexit} of data element ${origin.name} is not compiled yet`, where);
     }
     const builtin = outputLength(v.type);
     const outputLen = parseInt(xmlField(attributes, "OUTPUTLEN") || "0", 10);
     if (builtin === undefined || outputLen !== builtin) {
-      throw new BuildError(`WRITE of ${v.name}: data element ${origin.name} has output length ${outputLen}, `
-        + `only the output length of the built-in type (${builtin ?? "none"}) is supported yet`, where);
+      throw notCompiled(`WRITE of ${v.name}: data element ${origin.name} has output length ${outputLen}, `
+        + `only the output length of the built-in type (${builtin ?? "none"}) is compiled yet`, where);
     }
   }
 
-  /** The variable name as visible at node, or a build error. */
+  /** The variable name as visible at node; refused if it is not a variable of the root. */
   find(name: string, node: abaplint.Nodes.StatementNode | abaplint.Nodes.ExpressionNode, where: Where): IRVariable {
     const scope = this.spaghetti.lookupPosition(node.getFirstToken().getStart(), this.file.getFilename());
     const found = scope?.findVariable(name);
     if (found === undefined) {
-      throw new BuildError(`${name}: variable not found`, where);
+      throw new InternalError(`${name}: variable not found`, where);
     }
     // built-in data objects (abap_true, space, sy) and constants are not variables of the root
     if (found.getFilename() !== this.file.getFilename() || found.getMeta().includes("read_only" as abaplint.IdentifierMeta)) {
-      throw new BuildError(`${name}: only variables declared with DATA in the root are supported yet, not constants or built-in data objects`, where);
+      throw notCompiled(`${name}: only variables declared with DATA in the root are compiled yet, not constants or built-in data objects`, where);
     }
     return { kind: "variable", name: name.toLowerCase(), type: irType(found.getType(), name, where) };
   }
@@ -154,7 +154,7 @@ export function outputLength(t: IRType): number | undefined {
   }
 }
 
-/** The elementary type abaplint gives a variable; anything else is a build error. */
+/** The elementary type abaplint gives a variable; any other is refused. */
 export function irType(type: abaplint.AbstractType, name: string, where: Where): IRType {
   if (type instanceof BasicTypes.CharacterType) {
     return { kind: "c", length: type.getLength() };
@@ -190,12 +190,12 @@ export function irType(type: abaplint.AbstractType, name: string, where: Where):
   } else if (type instanceof BasicTypes.UTCLongType) {
     return { kind: "utclong" };
   }
-  throw new BuildError(`${name}: type ${type.toText(0)} is not supported yet, only elementary types`, where);
+  throw notCompiled(`${name}: type ${type.toText(0)} is not compiled yet, only elementary types`, where);
 }
 
 const SIMPLE_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
-/** A Source that is a literal, a variable or a subfield of a variable, perhaps in parentheses, or a build error. */
+/** A Source that is a literal, a variable or a subfield of a variable, perhaps in parentheses; any other is refused. */
 export function lowerSource(node: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where, what: string): IRSource {
   const source = unparenthesized(node);
   const constant = source.getChildren().length === 1 ? source.findDirectExpression(Expressions.Constant) : undefined;
@@ -213,7 +213,7 @@ export function lowerSource(node: abaplint.Nodes.ExpressionNode, variables: Vari
       return field;
     }
   }
-  throw new BuildError(`${what} ${text}: only a literal, a variable or a subfield is supported yet`, where);
+  throw notCompiled(`${what} ${text}: only a literal, a variable or a subfield is compiled yet`, where);
 }
 
 /**
@@ -238,12 +238,12 @@ function isOffsetOrLength(node: abaplint.Nodes.ExpressionNode | abaplint.Nodes.T
     && (node.get() instanceof Expressions.FieldOffset || node.get() instanceof Expressions.FieldLength);
 }
 
-/** A Target that is a variable or a subfield of a flat variable, or a build error. */
+/** A Target that is a variable or a subfield of a flat variable; any other is refused. */
 export function lowerTarget(target: abaplint.Nodes.ExpressionNode, variables: Variables, where: Where): IRTarget {
   const [field, ...rest] = target.getChildren();
   if (!(field instanceof abaplint.Nodes.ExpressionNode) || !(field.get() instanceof Expressions.TargetField)
       || !SIMPLE_NAME.test(field.concatTokens()) || !rest.every(isOffsetOrLength)) {
-    throw new BuildError(`${target.concatTokens()}: only a variable or a subfield is supported as target yet`, where);
+    throw notCompiled(`${target.concatTokens()}: only a variable or a subfield is compiled as target yet`, where);
   }
   const base = variables.find(field.concatTokens(), field, where);
   return rest.length === 0 ? base : lowerSubstring(base, rest, variables, where);
@@ -263,7 +263,7 @@ function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode 
   const size = flatLength(base.type);
   const flat = base.type.kind !== "string" && base.type.kind !== "xstring";
   if (flat && size === undefined) {
-    throw new BuildError(`${text}: offset/length access to a field of type ${base.type.kind} is not compiled yet`, where);
+    throw notCompiled(`${text}: offset/length access to a field of type ${base.type.kind} is not compiled yet`, where);
   }
 
   // the offset or length: an integer or a variable
@@ -279,10 +279,9 @@ function lowerSubstring(base: IRVariable, nodes: (abaplint.Nodes.ExpressionNode 
     if (value.length === 1 && value[0] instanceof abaplint.Nodes.ExpressionNode && SIMPLE_NAME.test(valueText)) {
       return variables.find(valueText, value[0], where);
     }
-    throw new BuildError(`${text}: only an integer or a variable is supported as offset or length yet`, where);
+    throw notCompiled(`${text}: only an integer or a variable is compiled as offset or length yet`, where);
   };
-  const offset = position(offsetNode);
-  const length = position(lengthNode);
+  const [offset, length] = lowerAll(() => position(offsetNode), () => position(lengthNode));
 
   const staticOffset = offset === undefined ? 0 : offset.kind === "literal" ? parseInt(offset.value, 10) : undefined;
   const staticLength = length?.kind === "literal" ? parseInt(length.value, 10) : undefined;
@@ -337,14 +336,14 @@ export function lowerConstant(constant: abaplint.Nodes.ExpressionNode, where: Wh
   if (integer !== undefined) {
     return integerLiteral(integer.concatTokens().replace(/\s+/g, ""));
   }
-  throw new BuildError(`${constant.concatTokens()}: this literal is not supported yet`, where);
+  throw notCompiled(`${constant.concatTokens()}: this literal is not compiled yet`, where);
 }
 
 /** DATA name TYPE elementary [VALUE literal | VALUE IS INITIAL]. */
 export function lowerData(statement: abaplint.Nodes.StatementNode, variables: Variables, where: Where): IRData {
   const name = statement.findFirstExpression(Expressions.DefinitionName)?.concatTokens();
   if (name === undefined) {
-    throw new BuildError(`${statement.concatTokens()}: not supported yet`, where);
+    throw notCompiled(`${statement.concatTokens()}: not compiled yet`, where);
   }
   const variable = variables.find(name, statement, where);
   variables.declare(name, statement);
@@ -353,7 +352,7 @@ export function lowerData(statement: abaplint.Nodes.StatementNode, variables: Va
   if (valueNode !== undefined && !/^VALUE\s+IS\s+INITIAL$/i.test(valueNode.concatTokens())) {
     const constant = valueNode.findDirectExpression(Expressions.Constant);
     if (constant === undefined) {
-      throw new BuildError(`${valueNode.concatTokens()}: only a literal is supported as VALUE yet`, where);
+      throw notCompiled(`${valueNode.concatTokens()}: only a literal is compiled as VALUE yet`, where);
     }
     value = lowerConstant(constant, where);
   }
@@ -371,18 +370,13 @@ export function lowerMove(statement: abaplint.Nodes.StatementNode, variables: Va
   const operator = children.slice(1, -2).map(c => c.concatTokens()).join("");
   if (targets.length !== 1 || sources.length !== 1 || targets[0].findDirectExpression(Expressions.InlineData) !== undefined
       || !["=", "+=", "-=", "*=", "/="].includes(operator)) {
-    throw new BuildError(`${statement.concatTokens()}: only variable = literal, variable or arithmetic expression is supported yet`, where);
+    throw notCompiled(`${statement.concatTokens()}: only variable = literal, variable or arithmetic expression is compiled yet`, where);
   }
-  const variable = lowerTarget(targets[0], variables, where);
-  if (operator !== "=") {
-    return lowerCalculate(variable, operator[0] as "+" | "-" | "*" | "/", sources[0], variables, where);
+  const target = () => lowerTarget(targets[0], variables, where);
+  if (operator !== "=" || isArithmetic(sources[0])) {
+    const [variable, expression] = lowerAll(target, () => lowerArithmetic(sources[0], variables, where));
+    return calculation(variable, operator === "=" ? undefined : operator[0] as "+" | "-" | "*" | "/", expression);
   }
-  if (isArithmetic(sources[0])) {
-    return lowerCalculate(variable, undefined, sources[0], variables, where);
-  }
-  return {
-    kind: "move",
-    target: variable,
-    source: lowerSource(sources[0], variables, where, "assignment of"),
-  };
+  const [variable, source] = lowerAll(target, () => lowerSource(sources[0], variables, where, "assignment of"));
+  return { kind: "move", target: variable, source };
 }

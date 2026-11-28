@@ -1,5 +1,5 @@
 import * as abaplint from "@abaplint/core";
-import { BuildError } from "./errors";
+import { BuildError, lowerAll, lowerEach, notCompiled } from "./errors";
 import { IRClassrun, IRStatement } from "./ir";
 import { lowerSource, Variables, Where } from "./lower_common";
 import { BlockLowerer } from "./lower_block";
@@ -17,17 +17,7 @@ export function lowerClassrun(registry: abaplint.IRegistry, obj: abaplint.Object
     throw new BuildError(`root ${name}: no class definition found`);
   }
   if (!definition.interfaces.some(i => i.name.toUpperCase() === CLASSRUN)) {
-    throw new BuildError(`root ${name}: a class root must implement ${CLASSRUN} itself`);
-  }
-  // Creating the instance runs constructors; none are supported yet.
-  if (definition.superClassName !== undefined) {
-    throw new BuildError(`root ${name}: INHERITING FROM is not supported yet`);
-  }
-  for (const method of definition.methods) {
-    const methodName = method.name.toUpperCase();
-    if (methodName === "CONSTRUCTOR" || methodName === "CLASS_CONSTRUCTOR") {
-      throw new BuildError(`root ${name}: ${methodName} is not supported yet`);
-    }
+    throw notCompiled(`root ${name}: a class root must implement ${CLASSRUN} itself, other classes are not compiled as roots yet`);
   }
   if (definition.isAbstract) {
     throw new BuildError(`root ${name}: an abstract class cannot be instantiated`);
@@ -49,15 +39,24 @@ export function lowerClassrun(registry: abaplint.IRegistry, obj: abaplint.Object
     if (statement.get() instanceof Statements.Call) {
       return lowerOutWrite(statement, variables, where);
     }
-    throw new BuildError(`statement ${statement.get().constructor.name} is not supported yet`, where);
+    throw notCompiled(`statement ${statement.get().constructor.name} is not compiled yet`, where);
   });
-  const body = lowerer.lower(method.getChildren().slice(1, -1)); // without METHOD and ENDMETHOD
+  // Creating the instance runs constructors; none are compiled yet.
+  const additions = [
+    ...definition.superClassName === undefined ? [] : ["INHERITING FROM"],
+    ...definition.methods.map(m => m.name.toUpperCase()).filter(m => m === "CONSTRUCTOR" || m === "CLASS_CONSTRUCTOR"),
+  ];
+  const [, body] = lowerAll(
+    () => lowerEach(additions, addition => {
+      throw notCompiled(`root ${name}: ${addition} is not compiled yet`);
+    }),
+    () => lowerer.lower(method.getChildren().slice(1, -1))); // without METHOD and ENDMETHOD
   return { kind: "classrun", name, body };
 }
 
 /** out->write( x ). or out->write( data = x [name = y] ). with literals and variables. */
 function lowerOutWrite(statement: abaplint.Nodes.StatementNode, variables: Variables, where: Where): IRStatement {
-  const unsupported = () => new BuildError(`${statement.concatTokens()}: only out->write( ... ) is supported yet`, where);
+  const unsupported = () => notCompiled(`${statement.concatTokens()}: only out->write( ... ) is compiled yet`, where);
 
   const chain = statement.findDirectExpression(Expressions.MethodCallChain);
   const parts = chain?.getChildren() ?? [];
@@ -97,9 +96,9 @@ function lowerOutWrite(statement: abaplint.Nodes.StatementNode, variables: Varia
   }
 
   // DATA is TYPE any and is converted to a string by the console; NAME is TYPE string, converted when passed.
-  return {
-    kind: "console_write",
-    value: lowerSource(data, variables, where, "out->write of"),
-    name: name === undefined ? undefined : lowerSource(name, variables, where, "out->write name"),
-  };
+  const dataSource = data;
+  const [value, label] = lowerAll(
+    () => lowerSource(dataSource, variables, where, "out->write of"),
+    () => name === undefined ? undefined : lowerSource(name, variables, where, "out->write name"));
+  return { kind: "console_write", value, name: label };
 }

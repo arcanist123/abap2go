@@ -1,3 +1,4 @@
+import { InternalError } from "./errors";
 import {
   IRArithOp, IRComparand, IRCompareOp, IRCondition, IRData, IRExpr, IRFunction, IRRoot, IRSource, IRStatement,
   IRResult, IRSubstring, IRTarget, IRType, IRVariable,
@@ -203,7 +204,7 @@ function leave(name: string, depth: number, go: () => string): string {
 function jump(kind: "break" | "continue"): string {
   const loop = loops[loops.length - 1];
   if (loop === undefined) {
-    throw new Error("internal error: EXIT, CONTINUE or CHECK outside a loop");
+    throw new InternalError("EXIT, CONTINUE or CHECK outside a loop");
   }
   return leave(`${kind[0]}${loop.label.slice("loop".length)}`, loop.depth, () => {
     loop.used = true;
@@ -474,7 +475,7 @@ function typeValue(source: IRComparand): string {
 function temporary(source: IRSubstring | IRFunction | IRResult): string {
   const name = temporaries.get(source);
   if (name === undefined) {
-    throw new Error("internal error: subfield or function not computed before its use");
+    throw new InternalError("subfield or function not computed before its use");
   }
   return name;
 }
