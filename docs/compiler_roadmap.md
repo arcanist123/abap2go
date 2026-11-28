@@ -144,7 +144,7 @@ compiler and can be written ahead of their step.
 
 1. [ ] **Layer 2 and the scope pass** (in progress, priority set 2026-11-27; details under "Next"): the `VALUE` literal
    that does not convert (abaplint#4712, done 2026-11-28), the Unicode flag and fixed-point arithmetic in the scope
-   pass, the non-Unicode-only forms, and the ports of the PRs that only add checks, of those the milestone needs only: for the
+   pass (done 2026-11-28), the non-Unicode-only forms, and the ports of the PRs that only add checks, of those the milestone needs only: for the
    statements compiled today abaplint#4739, #4741, #4761 and fork #1 to #3 (the fork's #4 to #6 come in step 7,
    abaplint#4635 waits for classes). Done 2026-11-28: the pin is on 2.120.125, which has #4739 and the `COMPUTE`
    fix (PR abaplint#4844), and #4741, #4761 and fork #1 to #3 are ported (`src/check/comparison.ts`,
@@ -426,7 +426,8 @@ Next (the order is that of the milestone's steps above; this list keeps the deta
       (`value_literal.tsv`). A move of such a literal (`b = 300.`) stays valid and a run-time error. The cells found
       that the runtime did not finish a conversion of a text with an exponent far beyond a decimal floating point
       number (`'1E99999999999'`): fixed. Left: a constant named after `VALUE`, with `CONSTANTS` in step 5
-    - the Unicode flag (below): the compiler does not read `UCCHECK`, so a program without it is compiled as Unicode
+    - [x] the Unicode flag (2026-11-28): the compiler did not read `UCCHECK`, so a program without it was compiled as
+      Unicode. The scope pass refuses it now (below)
   - port the checks of the waiting PRs on the abaplint fork and of the abaplint PRs that only add checks (listed in
     [abaplint_roadmap.md](abaplint_roadmap.md), "Invalid syntax to fix, without a check in the compiler"), one at a
     time, each leaving the abaplint patch as its port lands, and only those milestone 1 needs (decided 2026-11-28):
@@ -453,8 +454,11 @@ Next (the order is that of the milestone's steps above; this list keeps the deta
     checking the object. The test harness `syntaxCheck` returns the findings of both headings
   - [x] statements with more than one meaning (2026-11-28, [abaplint_ambiguous_parsing.md](abaplint_ambiguous_parsing.md),
     "Rule for now"): every `ambiguous_statement` finding, also where the name would decide (`test/scope/ambiguous.test.ts`)
-  - the Unicode flag: read `UCCHECK` from each program's XML (`UNICODE` for a class), refuse a program without it
-  - fixed-point arithmetic: read `FIXPT` with it, refuse a program without it
+  - [x] the Unicode flag and fixed-point arithmetic (2026-11-28, `src/scope/attributes.ts`,
+    `test/scope/attributes.test.ts`): read from the XML of each program, function group, class and interface; an object
+    whose XML lacks the flag (`unicode_flag`) or `FIXPT` (`fixed_point_arithmetic`) is refused, one without an XML file
+    is taken to have both ([abaplint_ambiguous_parsing.md](abaplint_ambiguous_parsing.md), "Program attributes"). The
+    exception classes of `lib/` had no `FIXPT` and have it now
   - an object that defines the same macro name more than once
   - the restrictions of AOT compilation the lowering refuses today (code named dynamically, `CASTING`, ...), as they
     come up
