@@ -129,13 +129,15 @@ At `main` `5b53c2e0`, with a local checkout (`external/open-steamgate`, ignored 
 Checked 2026-11-28. Of about 270 entries, 43 concern elementary fields. Their SAP results were run through
 abap2go as 141 cases (moves, `DIV` and `MOD` with negative divisors, `p` with decimals, `/` rounded within an `i`
 calculation, `f` into `i`, byte comparisons and moves, `c` into `x`, `int8` boundaries): abap2go gives every
-result the entries name, apart from two points where an entry itself is off:
+result the entries name, apart from two points where an entry itself is off (corrected in
+[oisee/open-steamgate#1021](https://github.com/oisee/open-steamgate/pull/1021)):
 - `ANOMALY-2026-11-09-space-eq-string-substring` takes `s+1(1) = space` to be true for `` s = `A ` ``, and says the
   result is unmeasured. ABAP is expected to give false: the `c` operand becomes an empty string, and a blank string
   is not equal to an empty one. abap2go gives false
 - `ANOMALY-2026-09-30-concat-packed-drops-decimals` and `ANOMALY-2026-11-14-packed-21-format` give a positive `p`
-  in a `string` as `10.50`. The conversion keeps the place of the sign, `10.50 `, as `conversion.tsv` has it; the
-  trailing blank goes only with a `CONDENSE`
+  moved into a `string` as `10.50`. The move keeps the place of the sign, `10.50 `, as `conversion.tsv` has it.
+  `&&` and string templates are expected to format it without that place, `10.50` and `-10.50` with the minus in
+  front, so the `&&` result of the first entry stands. Both are cells for the specification of string templates
 
 The other elementary entries are about the transpiler's JS runtime, settled upstream, or outside the milestone
 (templates, `&&`, `FIND`, `REPLACE`, the string functions, list output). They are cells for the specifications of
