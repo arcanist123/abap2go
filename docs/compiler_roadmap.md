@@ -73,7 +73,10 @@ Done:
   2026-11-24): `@abaplint/core` is pinned to an upstream release, and `patch-package` applies
   `patches/@abaplint+core+<version>.patch` on `npm install`. The patch holds the abap2go PRs to abaplint that the
   release does not contain yet, open or merged but unreleased (listed in `patches/abaplint-prs.txt`);
-  `scripts/abaplint-patch.sh` regenerates it, and each PR drops out once a release has it. The fixes the compiler's
+  `scripts/abaplint-patch.sh` regenerates it, and each PR drops out once a release has it. Pinned to 2.120.123 since
+  2026-11-28. The PRs that only add checks leave the patch as layer 2 takes them over, and #4684 (EXEC SQL and AMDP,
+  which the compiler does not compile) is dropped, so the patch is to end up with the one layer 1 fix below that no
+  release has yet, abaplint#4631 (INT1 and INT2). The fixes the compiler's
   features rest on (all work in abaplint: [abaplint_roadmap.md](abaplint_roadmap.md)):
   - `WRITE` of a utclong (abaplint#4700, PR abaplint#4701), which now compiles; released in 2.120.119, so no
     longer in the patch
@@ -131,7 +134,7 @@ Done:
     and short-circuit evaluation (a subfield is computed only when its comparison is evaluated). 340 of the 404 cells
     of `comparison_expr.tsv` run end to end (`test/comparison_expr.test.ts`); the others wait for `IS INITIAL`,
     `CONV`, `boolc( )`, `xsdbool( )`, `utclong_current( )` and `abap_true`
-  - `NOT` repeated any number of times (2026-11-25, abaplint #4714, in the abaplint patch): an even number cancels out
+  - `NOT` repeated any number of times (2026-11-25, abaplint #4714, PR abaplint#4716, in 2.120.121): an even number cancels out
   - `DATA` is not executable: every variable of a processing block exists from its start with its start value, also
     one declared in a loop or a branch
   - refused: `DO … VARYING`, `WHILE … VARY`, in classes `CASE` without `WHEN` and statements between `CASE` and the
@@ -228,7 +231,7 @@ Done:
   `src/lower_block.ts`, `test/control_flow.test.ts`; before it was refused): ABAP is expected to give only a warning
   there. The statements run after the operand is evaluated and before it is compared; what they can change in it is in
   [spec/comparison.md](spec/comparison.md), "CASE". In classes both are syntax errors, which abaplint reports
-  (abaplint#4744, in the abaplint patch)
+  (abaplint#4744, PR abaplint#4784, in 2.120.123)
 
 Next:
 - [ ] **first: layer 2 of the syntax check, `src/check/`** (priority set 2026-11-27, before every other item here;
@@ -243,10 +246,14 @@ Next:
     (`src/lower_block.ts`), a `utclong` as an operand of a calculation (`checkOperands` in `src/lower_arith.ts`) and
     with a subfield, a static length of 0 on a flat field, static bounds outside an `n`, `d` or `t` field (all
     `lowerSubstring` in `src/lower_common.ts`), and a number literal of more than 31 digits (`integerLiteral` in
-    `src/lower_common.ts`). None waits for an abaplint PR or release any more
+    `src/lower_common.ts`). None waits for an abaplint PR or release any more. 2.120.123 reports three of them, a
+    `utclong` in a calculation, a subfield of a `utclong` and a static length of 0 (abaplint#4828, #4829): each of
+    these goes instead, once that release is found to report its case in every form. The waiting PRs for the other
+    two that abaplint does not report, `CONTINUE` and the bounds of `n`, `d` and `t` (fork #14 and #21), are closed
   - port the checks of the waiting PRs on the abaplint fork and of the abaplint PRs that only add checks (listed in
-    [abaplint_roadmap.md](abaplint_roadmap.md), "Invalid syntax to fix, without a check in the compiler"), each
-    leaving the abaplint patch as its port lands
+    [abaplint_roadmap.md](abaplint_roadmap.md), "Invalid syntax to fix, without a check in the compiler"), one at a
+    time, each leaving the abaplint patch as its port lands: abaplint#4739, #4741, #4635 and #4761, then fork #1 to
+    #6. The upstream PRs stay open for the maintainer, without further rebasing
   - the Unicode flag: read `UCCHECK` from each program's XML, refuse a program without it as not supported, and
     check the non-Unicode-only forms in the rest ([abaplint_roadmap.md](abaplint_roadmap.md), "Non-Unicode-only
     syntax")
@@ -257,8 +264,8 @@ Next:
   - a layer 2 check goes once an abaplint release reports its case in every form; its tests then expect abaplint's
     finding
   - not syntax checks, so they stay in the lowering: the refusal of a `utclong` after `WHEN` against a calculated
-    `CASE` operand (`caseValue` in `src/lower_cond.ts`), valid code not compiled yet; and with PR abaplint#4830 in the
-    patch, `i+0`, `i(*)` and `i(4)` become valid and reach `lowerSubstring`: refuse a subfield of a numeric type as
+    `CASE` operand (`caseValue` in `src/lower_cond.ts`), valid code not compiled yet; and with PR abaplint#4830, in
+    2.120.123, `i+0`, `i(*)` and `i(4)` are valid and reach `lowerSubstring`: refuse a subfield of a numeric type as
     not supported yet, or compile it as the whole field. `p(5)`, which the release already accepts, needs the same
     look
 - [ ] control flow, the rest: `IS INITIAL`, `IN` and the string, byte and bit operators with `sy-fdpos`
