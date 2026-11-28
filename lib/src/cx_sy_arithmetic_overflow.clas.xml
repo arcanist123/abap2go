@@ -8,6 +8,7 @@
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <CATEGORY>40</CATEGORY>
+    <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
   </asx:values>

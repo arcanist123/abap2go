@@ -6,6 +6,7 @@
 // ambiguous statement, for example, once the compiler resolves it (docs/abaplint_ambiguous_parsing.md).
 
 import * as abaplint from "@abaplint/core";
+import { programAttributes } from "./attributes";
 
 /**
  * abaplint rules whose findings are out of scope, not syntax errors. Their findings are taken out of layer 1, so
@@ -22,6 +23,6 @@ export function isScopeFinding(issue: abaplint.Issue): boolean {
 }
 
 /** The out-of-scope findings of the registry: those of the abaplint rules above, then abap2go's own. */
-export function scope(_registry: abaplint.IRegistry, findings: readonly abaplint.Issue[]): abaplint.Issue[] {
-  return [...findings];
+export function scope(registry: abaplint.IRegistry, findings: readonly abaplint.Issue[]): abaplint.Issue[] {
+  return [...findings, ...programAttributes(registry)];
 }

@@ -35,11 +35,12 @@ function writePackage(kind: "prog" | "clas", source: string, files: Record<strin
   const name = kind === "prog" ? "ZPROBE" : "ZCL_PROBE";
   fs.mkdirSync(path.join(dir, "src"), { recursive: true });
   fs.writeFileSync(path.join(dir, ".abapgit.xml"), MANIFEST);
+  fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.abap`), source);
+  fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.xml`), kind === "prog" ? PROG_XML(name) : CLAS_XML(name));
+  // last, so that a test can replace the XML of the root
   for (const [file, content] of Object.entries(files)) {
     fs.writeFileSync(path.join(dir, "src", file), content);
   }
-  fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.abap`), source);
-  fs.writeFileSync(path.join(dir, "src", `${name.toLowerCase()}.${kind}.xml`), kind === "prog" ? PROG_XML(name) : CLAS_XML(name));
   return { dir, name };
 }
 

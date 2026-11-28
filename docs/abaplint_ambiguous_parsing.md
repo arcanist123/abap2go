@@ -88,8 +88,8 @@ macros include and the definitions in methods together.
 ### Unicode flag (kind 3)
 
 abaplint's grammar accepts old and modern forms together, and its syntax check assumes Unicode. abap2go refuses a
-program without `UCCHECK` in the scope pass and checks the non-Unicode-only forms in layer 2 ([abaplint_roadmap.md](abaplint_roadmap.md),
-"Non-Unicode-only syntax").
+program without `UCCHECK` in the scope pass (done, see "Program attributes" below) and is to check the non-Unicode-only
+forms in layer 2 ([abaplint_roadmap.md](abaplint_roadmap.md), "Non-Unicode-only syntax").
 
 This plan does not depend on kind 1. The forms found so far are of two sorts, and neither is a choice between two
 parses:
@@ -106,7 +106,26 @@ non-Unicode one. No such case is known; the inventory below would show one.
 
 Per the ABAP keyword documentation, without the fixed-point arithmetic attribute the decimal places of a `p` field
 are ignored in calculations. abaplint does not read `FIXPT`, and the compiler compiles every
-program as if it were set. Not handled yet. As for Unicode: read the flag and refuse a program without it.
+program as if it were set. As for Unicode: abap2go reads the flag and refuses a program without it (done, see below).
+
+### Program attributes
+
+`src/scope/attributes.ts` reads both flags from the abapGit XML, which leaves out a field that is not set:
+
+| Object | Element | Unicode flag | Fixed-point flag |
+|---|---|---|---|
+| program | `PROGDIR` | `UCCHECK` | `FIXPT` |
+| function group | `PROGDIR` of the main program | `UCCHECK` | `FIXPT` |
+| class | `VSEOCLASS` | `UNICODE` | `FIXPT` |
+| interface | `VSEOINTERF` | `UNICODE` | none |
+
+- The Unicode flag holds the ABAP language version in modern ABAP (`X`, or a digit for a restricted version such as
+  ABAP for Cloud Development). Every version is taken to be a Unicode one, so any value passes. `FIXPT` has to be `X`.
+- An include program (`SUBC` `I`) is expected to take the attributes of the program that includes it, so its own flags
+  are not read.
+- An object without the XML file that holds its flags (of a function group, that of its main program) is taken to have
+  both set (decided 2026-11-28): open-abap-core has no XML file for most of its classes. An XML file that lacks the
+  element or a flag is refused.
 
 ## Rule for now
 
@@ -115,7 +134,7 @@ refusal is the scope pass (`src/scope/`, see [aot_for_abap.md](aot_for_abap.md),
 is valid ABAP, so it is reported as not supported, not as a syntax error. This holds for every kind above:
 - kind 1: every `ambiguous_statement` finding stops the build (done)
 - kind 2: an object that defines the same macro name more than once is refused (to do)
-- kind 3: a program without `UCCHECK` or without `FIXPT` is refused (to do)
+- kind 3: a program without `UCCHECK` or without `FIXPT` is refused (done, `test/scope/attributes.test.ts`)
 
 A case moves to one of the other answers below only when code that abap2go must compile needs it.
 
