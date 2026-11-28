@@ -88,16 +88,17 @@ macros include and the definitions in methods together.
 ### Unicode flag (kind 3)
 
 abaplint's grammar accepts old and modern forms together, and its syntax check assumes Unicode. abap2go refuses a
-program without `UCCHECK` in the scope pass (done, see "Program attributes" below) and is to check the non-Unicode-only
+program without `UCCHECK` in the scope pass (done, see "Program attributes" below) and checks the non-Unicode-only
 forms in layer 2 ([abaplint_roadmap.md](abaplint_roadmap.md), "Non-Unicode-only syntax").
 
-This plan does not depend on kind 1. The forms found so far are of two sorts, and neither is a choice between two
+This does not depend on kind 1. The forms found so far are of two sorts, and neither is a choice between two
 parses:
 - a missing addition, visible in the tree: `OPEN DATASET f.` without `FOR …` or `IN … MODE`, `DESCRIBE FIELD …
   LENGTH` and `DESCRIBE DISTANCE` without `IN … MODE`. The matchers in `open_dataset.ts` and `describe.ts` keep the
   additions as their own tokens, so a check sees whether they are there
-- a rule on types: an offset/length that reaches past the character-like start of a structure. The tree is the same
-  in both kinds of program; the check needs the type of the operand, which layer 2 has
+- a rule on types: an operand of a string or byte statement of the wrong kind, an offset/length that reaches past the
+  character-like start of a structure. The tree is the same in both kinds of program; the check needs the type of the
+  operand, which layer 2 has
 
 It would depend on kind 1 only if the same tokens were read as a different statement in a Unicode program than in a
 non-Unicode one. No such case is known; the inventory below would show one.

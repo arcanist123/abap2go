@@ -56,7 +56,7 @@ function fieldLength(type: abaplint.AbstractType | undefined): number | undefine
 }
 
 /** The offset or length as a number if it is an integer or a constant of integer value, else undefined. */
-function staticValue(node: abaplint.Nodes.ExpressionNode, input: CheckInput): number | undefined {
+export function staticValue(node: abaplint.Nodes.ExpressionNode, input: CheckInput): number | undefined {
   const value = node.getChildren().filter(c => !["+", "(", ")"].includes(c.concatTokens()));
   if (value.length !== 1) {
     return undefined;
