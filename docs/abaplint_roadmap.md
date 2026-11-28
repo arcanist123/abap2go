@@ -236,10 +236,8 @@ describes. PRs and fork issues reviewed again on 2026-11-27.
 **Done 2026-11-28: `COMPUTE` upstream** (priority set the same day). abaplint's syntax check skipped the statement,
 so valid code in it got no types or references (see "Open, layer 1" under "Syntax checks to move out of the
 compiler"). [PR #4844](https://github.com/abaplint/abaplint/pull/4844) adds a `Compute` handler that checks the
-statement as the assignment it stands for; merged 2026-11-28, not released yet. abap2go does not wait for it: the
-compiler does not compile `COMPUTE` yet, so the patch is not rebuilt for it alone, and the fix comes with the next
-release, or the next run of `scripts/abaplint-patch.sh` if that is sooner. The compiler's own items are next
-(see [compiler_roadmap.md](compiler_roadmap.md), "Next").
+statement as the assignment it stands for; merged 2026-11-28, in 2.120.125, the pin since then. The compiler's own
+items are next (see [compiler_roadmap.md](compiler_roadmap.md), "Next").
 
 **Done 2026-11-28: the compiler's last syntax checks are in layer 2 or gone** (priority set 2026-11-27, revised the
 same day by "Two layers"; see "Syntax checks to move out of the compiler"). Three moved to `src/check/`:
@@ -284,7 +282,11 @@ at run time (`CX_SY_RANGE_OUT_OF_BOUNDS`), while a constant counts as static.
 [#4726](https://github.com/abaplint/abaplint/issues/4726) is fixed by
 [PR #4727](https://github.com/abaplint/abaplint/pull/4727), in 2.120.121.
 
-Valid code mistyped: nothing open. The last case, a number literal beyond the range of `i` typed `i`
+Valid code mistyped: [arcanist123/abaplint#36](https://github.com/arcanist123/abaplint/issues/36), an inline
+declaration from a signed or parenthesised calculation, is open and waits for compiler step 5 (see "Later").
+[arcanist123/abaplint#22](https://github.com/arcanist123/abaplint/issues/22), the same from a calculation with a
+character-like operand, is fixed by [PR #4851](https://github.com/abaplint/abaplint/pull/4851), in the patch
+(2026-11-28). Before them, a number literal beyond the range of `i` typed `i`
 ([#4736](https://github.com/abaplint/abaplint/issues/4736)), is fixed by
 [PR #4737](https://github.com/abaplint/abaplint/pull/4737), in 2.120.121: such a literal is expected to be a `p`
 without decimals, of length 8 for up to 15 digits (leading zeros not counted) and length 16 above. The compiler types
@@ -478,7 +480,7 @@ such as `COMPUTE r = i + 1.` gets no references and no types, where `r = i + 1.`
 `i`. As a consequence, `COMPUTE r = zzz + 1.` with an unknown `zzz`, `COMPUTE r = u + 1.` with a `utclong` and
 `COMPUTE s = c5(0).` are accepted, while ABAP is expected to reject each of them. Valid code left untyped is a layer 1
 defect, so the fix goes upstream: a handler that checks `COMPUTE` (with or without `EXACT`) as the assignment it
-stands for, in [PR #4844](https://github.com/abaplint/abaplint/pull/4844) (merged 2026-11-28, not released yet).
+stands for, in [PR #4844](https://github.com/abaplint/abaplint/pull/4844) (in 2.120.125).
 No layer 2 check is written for it, since layer 2 cannot type a statement on its own. The compiler does not compile
 `COMPUTE` yet and refuses it as not supported; it needs the fix before it does.
 
@@ -495,7 +497,8 @@ Valid ABAP that abaplint mistypes, fails to parse or rejects:
 
 | Issue | What | Pick up with |
 |---|---|---|
-| [arcanist123/abaplint#22](https://github.com/arcanist123/abaplint/issues/22) | an inline declaration from a calculation with a `c`, `n` or `string` operand (`DATA(x) = i * '2'.`, `i + n`, `i8 + '1'`, `+ n`) is typed `i`, `int8` or `n`. The text operand makes the calculation type `p`, so `p LENGTH 8 DECIMALS 0` is expected ([spec/calculation.md](spec/calculation.md), "Inline declarations"); found 2026-11-28 through open-steamgate's `ANOMALY-2026-09-17-character-operand-calculation-type`. How to fix it is not decided yet | inline declarations (compiler step 5) |
+| [arcanist123/abaplint#22](https://github.com/arcanist123/abaplint/issues/22) | an inline declaration from a calculation with a `c`, `n` or `string` operand (`DATA(x) = i * '2'.`, `i + n`, `i8 + '1'`, `+ n`) was typed `i`, `int8` or `n`; `p LENGTH 8 DECIMALS 0` is expected ([spec/calculation.md](spec/calculation.md), "Inline declarations"). Found 2026-11-28 through open-steamgate's `ANOMALY-2026-09-17-character-operand-calculation-type`. Fixed by [PR #4851](https://github.com/abaplint/abaplint/pull/4851), in the patch (2026-11-28): such an operand counts as `p` in every calculation, so conditions, parameters and the other uses see `p` too, also after a sign and for a string template after an operator. A signed packed value now fits a packed parameter of any length and decimals. Close the issue once the PR is merged | inline declarations (compiler step 5) |
+| [arcanist123/abaplint#36](https://github.com/arcanist123/abaplint/issues/36) | an inline declaration from a calculation that starts with a sign or is in parentheses (`DATA(x) = - p.`, `( p + 1 )`, `+ d`) gets the type of the operand; `p LENGTH 8 DECIMALS 0`, and `i` for `d`, `t` and `x`, are expected. Found 2026-11-28 while fixing #22. It changes `source.ts`, which [PR #4851](https://github.com/abaplint/abaplint/pull/4851) changes too, so the fix builds on that PR unless it is merged first | inline declarations (compiler step 5) |
 | [arcanist123/abaplint#28](https://github.com/arcanist123/abaplint/issues/28) | `strlen( )` and `numofchar( )` of a flat character-like structure are reported as not compatible: valid code rejected | structures |
 | [arcanist123/abaplint#29](https://github.com/arcanist123/abaplint/issues/29) | a move of an `x`, `xstring` or `i` field into a flat character-like structure is reported as incompatible: valid code rejected | structure assignments |
 | [arcanist123/abaplint#30](https://github.com/arcanist123/abaplint/issues/30) | `SET BIT` and `GET BIT` of a parameter of type `data` or `simple` are reported as not byte-like: valid code rejected | parameters of subroutines and methods |
@@ -532,7 +535,7 @@ Invalid ABAP that abaplint accepts:
 | [arcanist123/abaplint#12](https://github.com/arcanist123/abaplint/issues/12) | a bit expression compared with an operand that is not byte-like (`x BIT-AND x = c`) is accepted; with a numeric operand `=`, `<>` and `<` are already reported next to `BIT-AND` | bit expressions |
 | [arcanist123/abaplint#13](https://github.com/arcanist123/abaplint/issues/13) | a bit expression used as a number (`i = BIT-NOT x.`, as the argument of a numeric function, as a numeric actual parameter) is accepted. `c` and `string` targets are expected to be valid | bit expressions |
 | [#4785](https://github.com/abaplint/abaplint/issues/4785) | in a class, `CASE TYPE OF` without any `WHEN`, or with `DATA` before the first one, is accepted; outside classes only a warning is expected. It builds on the check of [PR #4784](https://github.com/abaplint/abaplint/pull/4784), in 2.120.123 | objects and `CASE TYPE OF` |
-| [arcanist123/abaplint#18](https://github.com/arcanist123/abaplint/issues/18) | a constant as offset or length is not checked against the field: beyond it (`c+lc_off`, `c(lc_len)`) and a length of value 0 are accepted, also after [PR #4829](https://github.com/abaplint/abaplint/pull/4829). With a variable offset a constant length beyond the field is expected to be valid. [PR #4759](https://github.com/abaplint/abaplint/pull/4759) also accepts `c+5(ref->lc_len)`, a constant behind `->`, as if it were a variable, which the issue does not cover. The test "ok, offset given by a constant" expects no error | `CONSTANTS`, before a constant is an offset or length |
+| [arcanist123/abaplint#18](https://github.com/arcanist123/abaplint/issues/18) | a constant as offset or length is not checked against the field: beyond it (`c+lc_off`, `c(lc_len)`) and a length of value 0 are accepted, also after [PR #4829](https://github.com/abaplint/abaplint/pull/4829). With a variable offset a constant length beyond the field is expected to be valid. [PR #4759](https://github.com/abaplint/abaplint/pull/4759) also accepts `c+5(ref->lc_len)`, a constant behind `->`, as if it were a variable, which the issue does not cover. The test "ok, offset given by a constant" expects no error. Fixed by [PR #4850](https://github.com/abaplint/abaplint/pull/4850), in the patch (2026-11-28), for whole numbers without a sign; what is left is arcanist123/abaplint#24 to #27 | `CONSTANTS`, before a constant is an offset or length |
 | [arcanist123/abaplint#19](https://github.com/arcanist123/abaplint/issues/19) | an offset or length on the source of `ASSIGN` to an inline declared field symbol (`ASSIGN c+1(2) TO FIELD-SYMBOL(<fs>).`) is accepted. With a declared field symbol it is expected to be valid | field symbols and `ASSIGN` |
 | [arcanist123/abaplint#20](https://github.com/arcanist123/abaplint/issues/20) | `ASSIGN` of a data object with an offset but without a length (`ASSIGN c+2 TO <fs>.`) is accepted. With a length or `*`, and with a source which starts with a field symbol (`<c>+2`), it is expected to be valid | field symbols and `ASSIGN` |
 
@@ -577,24 +580,26 @@ HTML tag in ABAP Doc is expected to give warnings only ([#4655](https://github.c
 
 ## In the patch
 
-PRs that the pinned release, 2.120.123, does not contain, as of 2026-11-28. The patch also holds waiting PRs
-arcanist123/abaplint#1 to #6, which are not in this table (see "Waiting PRs on the fork").
-
-The checks among them move to layer 2 (see "Two layers"), each leaving the patch once its port lands. #4684 leaves
-as well, since abap2go refuses `EXEC SQL` and does not compile AMDP. That leaves #4631 as the patch's only PR, a
-layer 1 fix the compiler needs for `b` and `s`; the patch stays for it until a release has it.
+PRs that the pinned release, 2.120.125, does not contain, as of 2026-11-28; `patches/abaplint-prs.txt` is the list.
+Left out by `patches/abaplint-skipped.txt` are the checks ported to layer 2
+([PR #4741](https://github.com/abaplint/abaplint/pull/4741) and
+[PR #4761](https://github.com/abaplint/abaplint/pull/4761), see "Two layers"), the waiting PRs
+arcanist123/abaplint#1 to #6, and [PR #4684](https://github.com/abaplint/abaplint/pull/4684), since abap2go refuses
+`EXEC SQL` and does not compile AMDP.
 
 | PR | What | State |
 |---|---|---|
 | [#4631](https://github.com/abaplint/abaplint/pull/4631) | INT1 and INT2 keep their size ([#4630](https://github.com/abaplint/abaplint/issues/4630)); the compiler declares `b` and `s` through data elements | open |
 | [#4633](https://github.com/abaplint/abaplint/pull/4633) | `METHODS` see only the types defined above them ([#2556](https://github.com/abaplint/abaplint/issues/2556)) | draft, changes requested, parked (see "Parked") |
 | [#4635](https://github.com/abaplint/abaplint/pull/4635) | a write to a `READ-ONLY` attribute from outside the class ([#2097](https://github.com/abaplint/abaplint/issues/2097)). It also covers [#2611](https://github.com/abaplint/abaplint/issues/2611): add `closes #2611` to the PR, or comment on #2611 after the merge | open |
-| [#4684](https://github.com/abaplint/abaplint/pull/4684) | `\|` and `}` in EXEC SQL or an AMDP body taken as a string template, valid code mis-lexed ([#4329](https://github.com/abaplint/abaplint/issues/4329)) | open |
-| [#4739](https://github.com/abaplint/abaplint/pull/4739) | `RETRY` outside a `CATCH` block is an error ([#4723](https://github.com/abaplint/abaplint/issues/4723)) | open |
-| [#4741](https://github.com/abaplint/abaplint/pull/4741) | comparisons without a comparison type, also after `WHEN`, and calculations compared with non-numeric operands are errors ([#4728](https://github.com/abaplint/abaplint/issues/4728), [#4738](https://github.com/abaplint/abaplint/issues/4738)) | open |
-| [#4761](https://github.com/abaplint/abaplint/pull/4761) | an arithmetic expression or a calculating built-in function after `WHEN` is an error ([#4747](https://github.com/abaplint/abaplint/issues/4747)) | draft, waits for #4741 |
+| [#4849](https://github.com/abaplint/abaplint/pull/4849) | `EXACT #( )` without a target type takes the type of its argument ([arcanist123/abaplint#23](https://github.com/arcanist123/abaplint/issues/23)) | open |
+| [#4850](https://github.com/abaplint/abaplint/pull/4850) | a constant as substring offset or length is checked against the field ([arcanist123/abaplint#18](https://github.com/arcanist123/abaplint/issues/18)) | open |
+| [#4851](https://github.com/abaplint/abaplint/pull/4851) | a calculation with a character-like operand is typed `p` ([arcanist123/abaplint#22](https://github.com/arcanist123/abaplint/issues/22)) | open |
 
 Released and out of the patch:
+- in 2.120.125: [PR #4739](https://github.com/abaplint/abaplint/pull/4739) (`RETRY` outside a `CATCH` block,
+  [#4723](https://github.com/abaplint/abaplint/issues/4723)), [PR #4844](https://github.com/abaplint/abaplint/pull/4844)
+  (`COMPUTE` checked as an assignment)
 - in 2.120.123: [PR #4784](https://github.com/abaplint/abaplint/pull/4784) (in a class, `CASE` without `WHEN`,
   [#4744](https://github.com/abaplint/abaplint/issues/4744)), [PR #4811](https://github.com/abaplint/abaplint/pull/4811)
   (a calculation before `IS [NOT] INITIAL`, [#4802](https://github.com/abaplint/abaplint/issues/4802)),
