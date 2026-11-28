@@ -482,6 +482,7 @@ Valid ABAP that abaplint mistypes, fails to parse or rejects:
 
 | Issue | What | Pick up with |
 |---|---|---|
+| [arcanist123/abaplint#22](https://github.com/arcanist123/abaplint/issues/22) | an inline declaration from a calculation with a `c`, `n` or `string` operand (`DATA(x) = i * '2'.`, `i + n`, `i8 + '1'`, `+ n`) is typed `i`, `int8` or `n`. The text operand makes the calculation type `p`, so `p LENGTH 8 DECIMALS 0` is expected ([spec/calculation.md](spec/calculation.md), "Inline declarations"); found 2026-11-28 through open-steamgate's `ANOMALY-2026-09-17-character-operand-calculation-type`. How to fix it is not decided yet | inline declarations (compiler step 5) |
 | [#4756](https://github.com/abaplint/abaplint/issues/4756) | a literal passed to a parameter of the generic type `p` is reported as not compatible: valid code rejected | method calls with parameters |
 | [#4754](https://github.com/abaplint/abaplint/issues/4754) | `NEW lcl( )->attr = 1.` gives "Not an object reference, target" for any attribute | objects and `NEW` |
 | [#4779](https://github.com/abaplint/abaplint/issues/4779) | `NEW` with `LET`, `FOR`, `BASE`, `LINES OF` or default components in front of table rows does not parse | objects and `NEW` |

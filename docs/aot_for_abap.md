@@ -385,8 +385,8 @@ from the program.
   - *Its gaps become build errors:* Open SQL forms the borrowed lowering does not cover (`FOR ALL ENTRIES`, `JOIN`,
     `GROUP BY`, dynamic clauses, `IS NULL`, run-time `NotCompiled` stubs in gogen) are refused at build time under
     the guiding principle, so the environment's coverage decides which programs compile.
-  - *Borrowed knowledge too:* open-steamgate's `ANORMALIES.md` (SAP-vs-open-abap differences) and the 304 test
-    classes in `tools/gogen/testdata*` with their expected answers seed the rule-table specification. The compiler
+  - *Borrowed knowledge too:* open-steamgate's `ANORMALIES.md` (SAP-vs-open-abap differences) and the test
+    classes in `tools/gogen/testdata*` (347 on 2026-11-28) with their expected answers seed the rule-table specification. The compiler
     itself (frontend, IR, emitter, value model) is not taken over as a whole: this design changes its value model,
     its refusal model (build time instead of run time) and its closure model (one root). Its parts are ported one
     by one under the next decision.
@@ -425,10 +425,10 @@ from the program.
   - *Its test cases become abap2go's:* a ported construct brings its test classes along. Where an expected answer
     contradicts a cell of the rule tables, the cell is reopened and settled, not adopted silently.
   - *Done means passing the tables:* a ported part is finished when it passes the rule-table cells it touches.
-    That is also where its bugs are caught: two of the kind the guiding principle forbids are known in gogen
+    That is also where its bugs are caught: two of the kind the guiding principle forbids were found in gogen
     ([oisee/open-steamgate#1012](https://github.com/oisee/open-steamgate/issues/1012), structures merged into one
     type, and [#989](https://github.com/oisee/open-steamgate/issues/989), a leading minus applied to the whole
-    expression).
+    expression), both fixed on 2026-11-27.
   - *Attribution:* every port names its source file and the pinned commit in a header comment and in `NOTICE`.
 - **Storage: native values, text as UTF-16, no layout (revised 2026-11-25).** Values are native types (`int32`,
   `int64`, `float64`, fixed-point integers for `p`) for the fastest typed code.

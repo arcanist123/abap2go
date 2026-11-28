@@ -1,0 +1,13 @@
+# PRs that scripts/abaplint-patch.sh leaves out of the patch, one per line, with the reason.
+# See "Two layers" in docs/abaplint_roadmap.md. A waiting PR contains the branch it builds on, so skipping a PR
+# takes effect only when the ones stacked on it are skipped too.
+
+abaplint#4684              EXEC SQL and AMDP, which abap2go does not compile
+abaplint#4741              checks only, ported to src/check/
+abaplint#4761              checks only, ported to src/check/
+arcanist123/abaplint#1     checks only, ported to src/check/
+arcanist123/abaplint#2     checks only, ported to src/check/
+arcanist123/abaplint#3     checks only, ported to src/check/
+arcanist123/abaplint#4     checks only, to be ported with the string operators; contains #1 to #3
+arcanist123/abaplint#5     checks only, to be ported with the byte operators; contains #4
+arcanist123/abaplint#6     checks only, to be ported with the string operators; contains #5

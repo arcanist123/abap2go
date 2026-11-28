@@ -1,9 +1,8 @@
 import * as abaplint from "@abaplint/core";
 import { CheckInput, expressions, issueAt } from "./input";
+import { componentType, findVariable } from "./types";
 
 const { Expressions, BasicTypes } = abaplint;
-
-type Child = abaplint.Nodes.ExpressionNode | abaplint.Nodes.TokenNode;
 
 /**
  * Static bounds outside a field of type n, d or t, as abaplint reports them for c and x: with a static offset and no
@@ -19,8 +18,8 @@ export function substringBounds(input: CheckInput): abaplint.Issue[] {
     if (at <= 0) {
       continue;
     }
-    const size = fieldLength(baseType(children.slice(0, at), input));
-    if (size === undefined) {
+    const size = fieldLength(componentType(children.slice(0, at), input));
+    if (size === undefined || children[0].get() instanceof Expressions.SourceFieldSymbol) {
       continue;
     }
     const offsetNode = children.find(c => c.get() instanceof Expressions.FieldOffset);
@@ -40,7 +39,7 @@ export function substringBounds(input: CheckInput): abaplint.Issue[] {
   return issues;
 }
 
-function isOffsetOrLength(node: Child): boolean {
+function isOffsetOrLength(node: abaplint.INode): boolean {
   return node.get() instanceof Expressions.FieldOffset || node.get() instanceof Expressions.FieldLength;
 }
 
@@ -54,24 +53,6 @@ function fieldLength(type: abaplint.AbstractType | undefined): number | undefine
     return 6;
   }
   return undefined;
-}
-
-/** The type of name or name-comp-...: a data object, perhaps with components; undefined for any other chain. */
-function baseType(chain: Child[], input: CheckInput): abaplint.AbstractType | undefined {
-  const [field, ...rest] = chain;
-  if (!(field.get() instanceof Expressions.SourceField || field.get() instanceof Expressions.TargetField)) {
-    return undefined;
-  }
-  let type = findVariable(field.getFirstToken(), input)?.getType();
-  for (let i = 0; i < rest.length; i += 2) {
-    const component = rest[i + 1];
-    if (rest[i].concatTokens() !== "-" || component === undefined || !(component.get() instanceof Expressions.ComponentName)
-        || !(type instanceof BasicTypes.StructureType)) {
-      return undefined;
-    }
-    type = type.getComponentByName(component.concatTokens());
-  }
-  return type;
 }
 
 /** The offset or length as a number if it is an integer or a constant of integer value, else undefined. */
@@ -96,8 +77,4 @@ function staticValue(node: abaplint.Nodes.ExpressionNode, input: CheckInput): nu
     return undefined;
   }
   return parseInt(constValue, 10);
-}
-
-function findVariable(token: abaplint.Token, input: CheckInput): abaplint.TypedIdentifier | undefined {
-  return input.spaghetti.lookupPosition(token.getStart(), input.file.getFilename())?.findVariable(token.getStr());
 }

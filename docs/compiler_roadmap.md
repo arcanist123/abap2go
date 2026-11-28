@@ -107,7 +107,10 @@ Exit criteria:
   `abap.Compare` or `abap.CompareCalculated`, and no `abap.Expr` tree
 - [ ] every cell of every rule table in `runtime/go/abap/testdata` (other than `IN` and `write.tsv`) is run against
   the generic path, and end to end as a compiled program with static operands; the two agree, also in the exception
-  and in the value the target is left with. Today the predicate, case mapping and special value tables are run by
+  and in the value the target is left with, except where the specifications say they differ by design: a pair
+  without a comparison type (a syntax error with static types, `COMPARE_NOT_SUPPORTED` on the generic path) and an
+  `f` NaN compared with an `f` ([spec/special_values.md](spec/special_values.md)). Those cells have their own
+  expected result on the static path. Today the predicate, case mapping and special value tables are run by
   no test, and the calculation contexts and logical expressions only in part
 - [ ] the memory layout written down per kind, its invariants checked by the tests
 - [ ] the built-in functions and the string and byte processing statements of the milestone specified as a rule
@@ -120,7 +123,8 @@ Exit criteria:
   both modes and the decimals, for every kind and length, also for fields typed through a data element
 - [ ] the syntax errors on elementary fields are reported before the lowering: the `VALUE` literal that does not
   convert (abaplint#4712), the ranges of `b` and `s`, the non-Unicode-only forms; the scope pass refuses a program
-  without the Unicode flag or without fixed-point arithmetic; `COMPUTE` is typed by abaplint (PR abaplint#4844)
+  without the Unicode flag or without fixed-point arithmetic; `COMPUTE` is typed by abaplint (PR abaplint#4844, in
+  2.120.125)
 - [ ] the lowering reports every "not compiled yet" finding of a program, and none is left for an operation of the
   milestone
 - [ ] the transpiler fixtures within the milestone run end to end, the six literal moves as written
@@ -142,8 +146,10 @@ compiler and can be written ahead of their step.
    that does not convert (abaplint#4712), the Unicode flag and fixed-point arithmetic in the scope pass, the
    non-Unicode-only forms, and the ports of the PRs that only add checks, of those the milestone needs only: for the
    statements compiled today abaplint#4739, #4741, #4761 and fork #1 to #3 (the fork's #4 to #6 come in step 7,
-   abaplint#4635 waits for classes). `COMPUTE` is compiled once an abaplint release
-   has PR abaplint#4844 and the pin is moved to it. The lowering collects every "not compiled yet" finding instead
+   abaplint#4635 waits for classes). Done 2026-11-28: the pin is on 2.120.125, which has #4739 and the `COMPUTE`
+   fix (PR abaplint#4844), and #4741, #4761 and fork #1 to #3 are ported (`src/check/comparison.ts`,
+   `src/check/case.ts`) and out of the patch (`patches/abaplint-skipped.txt`, which keeps the fork's #4 to #6 out
+   as well). `COMPUTE` can be compiled now. The lowering collects every "not compiled yet" finding instead
    of stopping at the first, so what a program still lacks shows in one run. CI runs `npm test`
 2. [ ] **The value model and the test harness**
    - `spec/storage.md`: the layout per kind (Go representation, size, ranges of lengths and values, initial value,
@@ -168,7 +174,10 @@ compiler and can be written ahead of their step.
 5. [ ] **Declarations and moves**: `CONSTANTS`, `TYPES`, every data element and domain of the package, inline
    declarations, `MOVE`, `CLEAR`, `CONV`, `EXACT`, `abap_true` and `abap_false`, `sy-subrc`; the whole-field
    subfields (`u(*)`, `i+0`, `i(4)`, compiled as the field); the six transpiler fixtures that move a literal, run
-   as written
+   as written. Before them, in abaplint, the types the compiler would take over wrongly: an operand after a
+   constructor expression (`CONV i( 1 ) + p` typed `i`, arcanist123/abaplint#17), a constant as offset or length
+   (arcanist123/abaplint#18) and an inline declaration from a calculation with a text operand (`DATA(x) = i * '2'.`
+   typed `i`, arcanist123/abaplint#22; how to fix it is not decided yet)
 6. [ ] **String templates, then `WRITE` of strings only**: the rest of the output formatting table specified (the
    template rules per kind and the format options), templates and `&&` compiled, then `WRITE` of other operands
    refused and its tests rewritten to `WRITE |{ x }|` (details under "Next")
@@ -176,7 +185,7 @@ compiler and can be written ahead of their step.
    - `ADD`, `SUBTRACT`, `MULTIPLY`, `DIVIDE` and the rest of `calculation_contexts.tsv`
    - the numeric built-in functions: the rest of the calculation type table specified, `**`, `exp` and `log` on `f`
      settled first (see "Data-dependent differences")
-   - `b` and `s` with their ranges and overflow, once an abaplint release has PR abaplint#4631
+   - `b` and `s` with their ranges and overflow, on the patch, which carries PR abaplint#4631 until a release has it
    - `IS INITIAL`, the string operators with `sy-fdpos`, the byte and bit operators, `boolc( )` and `xsdbool( )`:
      all of `comparison_expr.tsv` and `comparison_predicate*.tsv` except `IN`, with the checks of fork #4 to #6
      ported to layer 2 first
@@ -225,8 +234,9 @@ Done:
   2026-11-24): `@abaplint/core` is pinned to an upstream release, and `patch-package` applies
   `patches/@abaplint+core+<version>.patch` on `npm install`. The patch holds the abap2go PRs to abaplint that the
   release does not contain yet, open or merged but unreleased (listed in `patches/abaplint-prs.txt`);
-  `scripts/abaplint-patch.sh` regenerates it, and each PR drops out once a release has it. Pinned to 2.120.123 since
-  2026-11-28. The PRs that only add checks leave the patch as layer 2 takes them over, and #4684 (EXEC SQL and AMDP,
+  `scripts/abaplint-patch.sh` regenerates it, and each PR drops out once a release has it; a PR listed in
+  `patches/abaplint-skipped.txt` is left out. Pinned to 2.120.125 since 2026-11-28; the patch holds #4631, #4633
+  and #4635. The PRs that only add checks leave the patch as layer 2 takes them over, and #4684 (EXEC SQL and AMDP,
   which the compiler does not compile) is dropped, so the patch is to end up with the one layer 1 fix below that no
   release has yet, abaplint#4631 (INT1 and INT2). The fixes the compiler's
   features rest on (all work in abaplint: [abaplint_roadmap.md](abaplint_roadmap.md)):
@@ -385,7 +395,7 @@ Done:
   [spec/comparison.md](spec/comparison.md), "CASE". In classes both are syntax errors, which abaplint reports
   (abaplint#4744, PR abaplint#4784, in 2.120.123)
 
-Next:
+Next (the order is that of the milestone's steps above; this list keeps the details of each item):
 - [ ] **first: layer 2 of the syntax check, `src/check/`** (priority set 2026-11-27, before every other item here;
   the design is [aot_for_abap.md](aot_for_abap.md), "The syntax check in two layers", the rules are
   [abaplint_roadmap.md](abaplint_roadmap.md), "Two layers")
@@ -402,9 +412,9 @@ Next:
     checked (abaplint#4828, #4829): a `utclong` in a calculation, a subfield of a `utclong` and a static length of
     0; their tests expect abaplint's finding. The lowering refused the valid `u(*)` as a syntax error; it now
     refuses it as not compiled yet. The lowering has no syntax check left
-  - first, in abaplint: the syntax check skips `COMPUTE` (no handler), so valid code in it is not typed. The fix
-    goes upstream before the items below ([abaplint_roadmap.md](abaplint_roadmap.md), "First: `COMPUTE`
-    upstream"); the compiler refuses `COMPUTE` until then
+  - [x] first, in abaplint: the syntax check skipped `COMPUTE` (no handler), so valid code in it was not typed.
+    Fixed upstream by PR abaplint#4844, in 2.120.125, the pin since 2026-11-28; the compiler still refuses
+    `COMPUTE` until it compiles it
   - then, what the compiler needs of layer 2 today, in this order:
     - [x] a subfield of a numeric type (2026-11-28, `src/lower_common.ts`, `test/substring.test.ts`): `i+0`, `i(4)`,
       `p(5)` and the like are valid ABAP (abaplint#4830, in 2.120.123) and gave Go that does not build. The lowering
@@ -640,5 +650,7 @@ critical path: the rule tables stay abap2go's own, and every part taken has to p
 - [ ] the lowering of statements, construct by construct as the compiler grows, each with its test classes from
   `tools/gogen/testdata*`; expected answers that contradict a rule-table cell reopen that cell
 - [ ] `ANORMALIES.md`: each entry checked against the rule tables; an entry outside them becomes a cell or a work
-  item
+  item. The 43 entries on elementary fields are checked (2026-11-28, [open-steamgate-notes.md](open-steamgate-notes.md),
+  "`ANORMALIES.md` against the rule tables"): abaplint mistypes one, the rest agree or are cells of the template
+  and function specifications. Left: the entries on tables, the database and the environment, as those parts come
 - [ ] attribution kept current: `NOTICE` names every file taken or ported, with the pinned commit
